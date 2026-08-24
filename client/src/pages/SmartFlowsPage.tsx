@@ -60,6 +60,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 // Replyagent date format: "YYYY-MM-DD hh:mm am/pm" (12-hour, lowercase meridiem).
 // Source: gateway-frontend AppStore (date_format=YYYY-MM-DD, time_format=hh:mm a).
@@ -80,6 +81,7 @@ const formatDateTime = (d?: string | Date | null): string => {
 
 export default function SmartFlowsPage() {
     const [, setLocation] = useLocation();
+    const workspaceTz = useWorkspaceTimezone();
     const [searchText, setSearchText] = useState("");
     // Single-select filters (replyagent parity): one option selected at a time, with
     // an "all" sentinel meaning no filter. The CustomDropdown is run in
@@ -747,11 +749,11 @@ export default function SmartFlowsPage() {
                                             {/* Date on top, time beneath — reference layout */}
                                             <div className="flex flex-col leading-tight">
                                                 <span className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
-                                                    {flow.updated_at ? new Date(flow.updated_at).toLocaleDateString("en-GB") : "—"}
+                                                    {flow.updated_at ? formatInWorkspaceTz(flow.updated_at, "dd/MM/yyyy", workspaceTz) : "—"}
                                                 </span>
                                                 <span className="text-[10px] font-medium text-slate-400 tabular-nums">
                                                     {flow.updated_at
-                                                        ? new Date(flow.updated_at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })
+                                                        ? formatInWorkspaceTz(flow.updated_at, "HH:mm", workspaceTz)
                                                         : ""}
                                                 </span>
                                             </div>
@@ -870,7 +872,7 @@ export default function SmartFlowsPage() {
 
             {/* Create Flow Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white dark:bg-background rounded-lg shadow-xl max-w-lg w-full transform transition-all">
                         <div className="px-6 pt-6 pb-4">
                             <h3 className="text-lg font-medium leading-6 mb-1">Create a Smart Flow</h3>
@@ -937,7 +939,7 @@ export default function SmartFlowsPage() {
 
             {/* Create Folder Modal */}
             {showFolderModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white dark:bg-background rounded-lg shadow-xl max-w-lg w-full transform transition-all">
                         <div className="px-6 pt-6 pb-4">
                             <h3 className="text-lg font-medium leading-6 mb-1">Create New Folder</h3>

@@ -48,6 +48,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 // Replyagent's `for` filter: which entity a tag is scoped to. Backend
 // translates these to Laravel namespace paths under the hood.
@@ -87,6 +88,7 @@ export default function TagsSection() {
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const workspaceTz = useWorkspaceTimezone();
 
   // ── Filter / sort / pagination state ─────────────────────────────
   const [search, setSearch] = useState("");
@@ -190,12 +192,12 @@ export default function TagsSection() {
         folderId: t.folder_id != null ? String(t.folder_id) : null,
         taggableType: t.taggable_type,
         lastEdited: t.updated_at
-          ? new Date(t.updated_at).toISOString().split("T")[0]
+          ? formatInWorkspaceTz(t.updated_at, "yyyy-MM-dd", workspaceTz)
           : t.created_at
-            ? new Date(t.created_at).toISOString().split("T")[0]
+            ? formatInWorkspaceTz(t.created_at, "yyyy-MM-dd", workspaceTz)
             : "-",
       }));
-  }, [tagsData, forFilter]);
+  }, [tagsData, forFilter, workspaceTz]);
 
   const folders: TagFolder[] = useMemo(() => {
     return (tagsData?.folders ?? []).map((f: any) => ({

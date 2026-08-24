@@ -464,7 +464,7 @@ export default function ManageAgentSection() {
       <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
-          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+          <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => { resetForm(); setView("list"); }}
@@ -503,10 +503,10 @@ export default function ManageAgentSection() {
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex">
-              {/* Sidebar */}
-              <div className={cn("w-60 shrink-0 border-r p-4 space-y-1", border, softBg)}>
-                <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 gap-1">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              {/* Top tab bar — matches the Live Chat settings page's tab style. */}
+              <div className={cn("px-8 border-b flex justify-start overflow-x-auto", border)}>
+                <TabsList className="h-auto p-0 gap-6 bg-transparent border-none flex justify-start rounded-none">
                   {[
                     { value: "agent", label: "Agent", icon: User },
                     { value: "2fa", label: "2FA", icon: ShieldCheck },
@@ -521,10 +521,10 @@ export default function ManageAgentSection() {
                       key={tab.value}
                       value={tab.value}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all text-left justify-start bg-transparent",
-                        "data-[state=active]:!bg-primary data-[state=active]:!text-white data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20",
-                        "data-[state=inactive]:hover:bg-primary/5 data-[state=inactive]:hover:text-primary",
-                        dark ? "text-slate-400" : "text-slate-500"
+                        "flex items-center gap-2 px-1 py-4 rounded-none text-[12px] font-semibold transition-all shadow-none bg-transparent border-b-2 border-transparent whitespace-nowrap",
+                        "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary",
+                        "hover:text-primary",
+                        dark ? "text-slate-500" : "text-slate-400"
                       )}
                     >
                       <tab.icon size={14} />
@@ -534,15 +534,19 @@ export default function ManageAgentSection() {
                 </TabsList>
               </div>
 
-              <div className="flex-1 p-8 min-w-0">
+              <div className="p-8 min-w-0">
                 {/* Identity */}
                 <TabsContent value="agent" className="m-0 outline-none space-y-8">
                   <SectionHeading dark={dark} title="Agent" description="Basic information about this agent." />
 
-                  {/* Two-column layout mirroring replyagent: left = identity fields,
-                      right = Phone / WhatsApp (with inline Enable-notifications). */}
+                  {/* Two-column layout mirroring replyagent: left = name fields,
+                      right = Phone / WhatsApp (with inline Enable-notifications).
+                      Both columns hold exactly 2 rows each so they stay balanced —
+                      Email/Role/Interface Language move to their own full-width row
+                      below instead of trailing alone in the left column, which used
+                      to leave the right column visibly empty underneath. */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 max-w-5xl">
-                    {/* Left column — identity */}
+                    {/* Left column — name */}
                     <div className="space-y-5">
                       <Field dark={dark} label="First Name" required>
                         <Input value={firstName} maxLength={100} onChange={(e) => setFirstName(e.target.value)} className={inputCls} placeholder="e.g. Jonathan" />
@@ -550,46 +554,6 @@ export default function ManageAgentSection() {
                       <Field dark={dark} label="Last Name">
                         <Input value={lastName} maxLength={100} onChange={(e) => setLastName(e.target.value)} className={inputCls} placeholder="e.g. Wick" />
                       </Field>
-                      <Field dark={dark} label="Email Address" required>
-                        <Input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="wick@hightable.com" />
-                      </Field>
-                      <Field dark={dark} label="Role">
-                        {editingOwner ? (
-                          // Workspace owner's role is locked (replyagent: is_owner → disabled "Workspace Owner").
-                          <Input value="Workspace Owner" disabled className={cn(inputCls, "opacity-70")} />
-                        ) : (
-                          <Select value={role} onValueChange={setRole}>
-                            <SelectTrigger className={inputCls}>
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                              {roles.length === 0 ? (
-                                <div className="px-3 py-2 text-[11px] font-medium opacity-60">No roles yet</div>
-                              ) : (
-                                roles.map((r) => (
-                                  <SelectItem key={r.id} value={r.id} className="text-[12px] font-bold">{r.name}</SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </Field>
-                      {/* Interface Language is only set on create — hidden when editing
-                          (replyagent: v-show="!isEditing"). */}
-                      {view !== "edit" && (
-                        <Field dark={dark} label="Interface Language">
-                          <Select value={language} onValueChange={setLanguage}>
-                            <SelectTrigger className={inputCls}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                              <SelectItem value="en-us" className="text-[12px] font-bold">English (US)</SelectItem>
-                              <SelectItem value="pt-br" className="text-[12px] font-bold">Portuguese (Brazil)</SelectItem>
-                              <SelectItem value="es" className="text-[12px] font-bold">Spanish</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                      )}
                     </div>
 
                     {/* Right column — Phone / WhatsApp (replyagent placement) */}
@@ -623,6 +587,50 @@ export default function ManageAgentSection() {
                         </Field>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Email / Role / Interface Language — one full-width row. */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5 max-w-5xl">
+                    <Field dark={dark} label="Email Address" required>
+                      <Input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="wick@hightable.com" />
+                    </Field>
+                    <Field dark={dark} label="Role">
+                      {editingOwner ? (
+                        // Workspace owner's role is locked (replyagent: is_owner → disabled "Workspace Owner").
+                        <Input value="Workspace Owner" disabled className={cn(inputCls, "opacity-70")} />
+                      ) : (
+                        <Select value={role} onValueChange={setRole}>
+                          <SelectTrigger className={inputCls}>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                            {roles.length === 0 ? (
+                              <div className="px-3 py-2 text-[11px] font-medium opacity-60">No roles yet</div>
+                            ) : (
+                              roles.map((r) => (
+                                <SelectItem key={r.id} value={r.id} className="text-[12px] font-bold">{r.name}</SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </Field>
+                    {/* Interface Language is only set on create — hidden when editing
+                        (replyagent: v-show="!isEditing"). */}
+                    {view !== "edit" && (
+                      <Field dark={dark} label="Interface Language">
+                        <Select value={language} onValueChange={setLanguage}>
+                          <SelectTrigger className={inputCls}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                            <SelectItem value="en-us" className="text-[12px] font-bold">English (US)</SelectItem>
+                            <SelectItem value="pt-br" className="text-[12px] font-bold">Portuguese (Brazil)</SelectItem>
+                            <SelectItem value="es" className="text-[12px] font-bold">Spanish</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
                   </div>
 
                   {/* Limits (replyagent user_limits) */}
@@ -664,7 +672,7 @@ export default function ManageAgentSection() {
                 </TabsContent>
 
                 {/* Security */}
-                <TabsContent value="2fa" className="m-0 outline-none space-y-6 max-w-3xl">
+                <TabsContent value="2fa" className="m-0 outline-none space-y-6">
                   <SectionHeading dark={dark} title="Two factor auth" />
 
                   <div className={cn("p-6 rounded-[1.5rem] border flex items-start gap-4", softBg, softBorder)}>
@@ -890,7 +898,7 @@ export default function ManageAgentSection() {
           </span>
         </div>
 
-          <div className={cn("px-6 py-4 border-b flex items-center gap-3", softBorder)}>
+          <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-3", softBorder)}>
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <Input

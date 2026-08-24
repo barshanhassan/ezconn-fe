@@ -26,6 +26,76 @@ import { useTranslation } from 'react-i18next';
 import { COUNTRIES } from "@/lib/countries";
 import { Country, State, City } from "country-state-city";
 
+const TAX_ID_LABELS = [
+  "Australian Business Number (AU ABN)",
+  "Australian Taxation Office Reference Number",
+  "Brazil CNPJ number",
+  "Brazil CPF number",
+  "Bulgaria Unified Identification Code",
+  "Canada BN",
+  "Canada GST/HST number",
+  "Canadian PST number (British Columbia)",
+  "Canadian PST number (Manitoba)",
+  "Canadian PST number (Saskatchewan)",
+  "Canadian QST number (Québec)",
+  "Chilean TIN",
+  "Egyptian Tax Identification Number",
+  "EU VAT number",
+  "European One Stop Shop VAT number for non-Union scheme",
+  "Georgian VAT",
+  "Hong Kong BR number",
+  "Hungary tax number (adószám)",
+  "Icelandic VAT",
+  "Indonesian NPWP number",
+  "Indian GST number",
+  "Israel VAT",
+  "Japanese Corporate Number (Hōjin Bangō)",
+  "Japanese Registered Foreign Businesses' Registration Number (Tōroku Kokugai Jigyōsha no Tōroku Bangō)",
+  "Japanese Tax Registration Number (Tōroku Bangō)",
+  "Kenya Revenue Authority Personal Identification Number",
+  "Liechtensteinian UID number",
+  "Malaysian FRP number",
+  "Malaysian ITN",
+  "Malaysian SST number",
+  "Mexican RFC number",
+  "New Zealand GST number",
+  "Norwegian VAT number",
+  "Pakistan NTN number",
+  "Philippines Tax Identification Number",
+  "Russian INN",
+  "Russian KPP",
+  "Saudi Arabia VAT",
+  "Singaporean GST",
+  "Singaporean UEN",
+  "Slovenia tax number (davčna številka)",
+  "South African VAT number",
+  "South Korean BRN",
+  "Spanish NIF number",
+  "Switzerland VAT number",
+  "Taiwanese VAT",
+  "Thai VAT",
+  "Turkish Tax Identification Number",
+  "Ukrainian VAT",
+  "United Arab Emirates TRN",
+  "United Kingdom VAT number",
+  "United States EIN",
+  "Andorran NRT number",
+  "Argentinian tax ID number",
+  "Bolivian tax ID",
+  "Chinese tax ID",
+  "Colombian NIT number",
+  "Costa Rican tax ID",
+  "Dominican RCN number",
+  "Ecuadorian RUC number",
+  "Romanian tax ID number",
+  "El Salvadorian NIT number",
+  "Serbian PIB number",
+  "Uruguayan RUC number",
+  "Venezuelan RIF number",
+  "Vietnamese tax ID number",
+];
+const TAX_ID_OTHER = "other";
+
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC' },
   { value: 'America/New_York', label: 'Eastern Time (America/New_York)' },
@@ -101,52 +171,6 @@ const TIMEZONES = [
   { value: 'Pacific/Fiji', label: 'Fiji (Pacific/Fiji)' },
 ];
 
-const TAX_IDS = [
-  { key: "other", value: "Other" },
-  { key: "au_abn", value: "Australian Business Number (AU ABN)" },
-  { key: "au_trn", value: "Australian Taxation Office Reference Number" },
-  { key: "br_cnpj", value: "Brazil CNPJ number" },
-  { key: "br_cpf", value: "Brazil CPF number" },
-  { key: "bg_uic", value: "Bulgaria Unified Identification Code" },
-  { key: "ca_bn", value: "Canada BN" },
-  { key: "ca_gst_hst", value: "Canada GST/HST number" },
-  { key: "ca_pst_bc", value: "Canadian PST number (British Columbia)" },
-  { key: "ca_pst_mb", value: "Canadian PST number (Manitoba)" },
-  { key: "ca_pst_sk", value: "Canadian PST number (Saskatchewan)" },
-  { key: "ca_qst_qc", value: "Canadian QST number (Québec)" },
-  { key: "cl_tin", value: "Chilean TIN" },
-  { key: "eg_tin", value: "Egyptian Tax Identification Number" },
-  { key: "eu_vat", value: "EU VAT number" },
-  { key: "eu_oss_vat", value: "European One Stop Shop VAT number for non-Union scheme" },
-  { key: "ge_vat", value: "Georgian VAT" },
-  { key: "hk_br", value: "Hong Kong BR number" },
-  { key: "hu_tin", value: "Hungary tax number (adószám)" },
-  { key: "in_gstin", value: "India GSTIN" },
-  { key: "id_npwp", value: "Indonesian NPWP" },
-  { key: "il_vat", value: "Israel VAT" },
-  { key: "jp_trn", value: "Japan TRN" },
-  { key: "ke_pin", value: "Kenya PIN" },
-  { key: "my_sst", value: "Malaysia SST" },
-  { key: "mx_rfc", value: "Mexico RFC" },
-  { key: "nz_gst", value: "New Zealand GST" },
-  { key: "no_vat", value: "Norway VAT" },
-  { key: "om_vat", value: "Oman VAT" },
-  { key: "ru_inn", value: "Russia INN" },
-  { key: "sa_vat", value: "Saudi Arabia VAT" },
-  { key: "rs_vat", value: "Serbia VAT" },
-  { key: "sg_gst", value: "Singapore GST" },
-  { key: "za_vat", value: "South Africa VAT" },
-  { key: "kr_brn", value: "South Korea BRN" },
-  { key: "ch_vat", value: "Switzerland VAT" },
-  { key: "tw_vat", value: "Taiwan VAT" },
-  { key: "th_vat", value: "Thailand VAT" },
-  { key: "tr_vat", value: "Turkey VAT" },
-  { key: "ua_vat", value: "Ukraine VAT" },
-  { key: "ae_trn", value: "United Arab Emirates TRN" },
-  { key: "gb_vat", value: "United Kingdom VAT" },
-  { key: "us_ein", value: "United States EIN" }
-];
-
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -206,8 +230,7 @@ const AgencyGeneralSettings = () => {
     billing_company: "",
     billing_person: "",
     tax_id: "",
-    tax_id_name: "",
-    tax_number: "",
+    vat: "",
     address: {
       street: "",
       city: "",
@@ -218,15 +241,16 @@ const AgencyGeneralSettings = () => {
   });
 
   const [billingErrors, setBillingErrors] = useState<Record<string, string>>({});
+  // Tracks the dropdown's own selection, separate from billingData.tax_id — mirrors
+  // the original app's tax_type/tax_id split: picking a preset label auto-fills
+  // tax_id and locks it read-only; picking "Other" leaves tax_id freely editable.
+  const [taxIdType, setTaxIdType] = useState("");
 
   const handleSaveBilling = () => {
     const errors: Record<string, string> = {};
     if (!billingData.billing_company?.trim()) errors.billing_company = t("agency.settings.billing.errors.company");
     if (!billingData.billing_person?.trim()) errors.billing_person = t("agency.settings.billing.errors.person");
-    if (!billingData.tax_id) errors.tax_id = t("agency.settings.billing.errors.taxType");
-    if (!billingData.tax_id_name?.trim()) errors.tax_id_name = t("agency.settings.billing.selectTaxId");
-    if (!billingData.tax_number?.trim()) errors.tax_number = t("agency.settings.billing.errors.taxNumber");
-    
+
     if (!billingData.address.country_iso2) {
       errors.country_iso2 = t("agency.settings.billing.errors.country");
     } else {
@@ -331,8 +355,7 @@ const AgencyGeneralSettings = () => {
         billing_company: a.billing_company || "",
         billing_person: a.billing_person || "",
         tax_id: a.tax_id || "",
-        tax_id_name: a.tax_id_name || "",
-        tax_number: a.tax_number || "",
+        vat: a.vat || "",
         address: {
           street: a.address?.street || "",
           city: a.address?.city || "",
@@ -341,6 +364,9 @@ const AgencyGeneralSettings = () => {
           country_iso2: a.address?.country_iso2 || "PK"
         }
       });
+      setTaxIdType(
+        !a.tax_id ? "" : TAX_ID_LABELS.includes(a.tax_id) ? a.tax_id : TAX_ID_OTHER
+      );
     }
   }, [agencyResponse]);
 
@@ -394,6 +420,7 @@ const AgencyGeneralSettings = () => {
                  <Input
                    value={generalData.name}
                    onChange={(e) => setGeneralData({ ...generalData, name: e.target.value })}
+                   placeholder="Your agency name"
                    className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
                  />
                </div>
@@ -430,6 +457,7 @@ const AgencyGeneralSettings = () => {
                      value={generalData.phone}
                      readOnly
                      onClick={handleOpenPhoneModal}
+                     placeholder="Add a phone number"
                      className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg pr-10 cursor-pointer", inputCls)}
                    />
                    <Edit2 className="absolute right-3 top-3 w-4 h-4 text-primary cursor-pointer" onClick={handleOpenPhoneModal} />
@@ -474,6 +502,7 @@ const AgencyGeneralSettings = () => {
                      setBillingData({ ...billingData, billing_company: e.target.value });
                      if (e.target.value) setBillingErrors(prev => ({ ...prev, billing_company: "" }));
                    }}
+                   placeholder="Legal company name"
                    className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                      billingErrors.billing_company && "border-red-400 focus-visible:ring-red-400",
                      inputCls)}
@@ -493,6 +522,7 @@ const AgencyGeneralSettings = () => {
                      setBillingData({ ...billingData, billing_person: e.target.value });
                      if (e.target.value) setBillingErrors(prev => ({ ...prev, billing_person: "" }));
                    }}
+                   placeholder="Full name of billing contact"
                    className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                      billingErrors.billing_person && "border-red-400 focus-visible:ring-red-400",
                      inputCls)}
@@ -507,24 +537,22 @@ const AgencyGeneralSettings = () => {
                </div>
                <div className="flex-1">
                  <Select
-                   value={billingData.tax_id}
+                   value={taxIdType}
                    onValueChange={(val) => {
-                     setBillingData({ ...billingData, tax_id: val });
-                     if (val) setBillingErrors(prev => ({ ...prev, tax_id: "" }));
+                     setTaxIdType(val);
+                     setBillingData({ ...billingData, tax_id: val === TAX_ID_OTHER ? "" : val });
                    }}
                  >
-                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                     billingErrors.tax_id && "border-red-400 focus-visible:ring-red-400",
-                     inputCls)}>
+                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}>
                      <SelectValue placeholder={t("agency.settings.billing.selectTaxId")} />
                    </SelectTrigger>
                    <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
-                     {TAX_IDS.map(taxId => (
-                       <SelectItem key={taxId.key} value={taxId.key} className="text-[13px]">{t(`agency.settings.billing.taxTypes.${taxId.key}`, taxId.value)}</SelectItem>
+                     <SelectItem value={TAX_ID_OTHER} className="text-[13px]">Other</SelectItem>
+                     {TAX_ID_LABELS.map(label => (
+                       <SelectItem key={label} value={label} className="text-[13px]">{label}</SelectItem>
                      ))}
                    </SelectContent>
                  </Select>
-                 {billingErrors.tax_id && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.tax_id}</div>}
                </div>
              </div>
 
@@ -533,34 +561,21 @@ const AgencyGeneralSettings = () => {
                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxIdName")}</span>
                </div>
                <div className="flex-1 grid grid-cols-2 gap-4">
-                 <div>
-                   <Input
-                     value={billingData.tax_id_name}
-                     onChange={(e) => {
-                       setBillingData({ ...billingData, tax_id_name: e.target.value });
-                       if (e.target.value) setBillingErrors(prev => ({ ...prev, tax_id_name: "" }));
-                     }}
-                     placeholder=""
-                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                       billingErrors.tax_id_name && "border-red-400 focus-visible:ring-red-400",
-                       inputCls)}
-                   />
-                   {billingErrors.tax_id_name && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.tax_id_name}</div>}
-                 </div>
-                 <div>
-                   <Input
-                     value={billingData.tax_number}
-                     onChange={(e) => {
-                       setBillingData({ ...billingData, tax_number: e.target.value });
-                       if (e.target.value) setBillingErrors(prev => ({ ...prev, tax_number: "" }));
-                     }}
-                     placeholder=""
-                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                       billingErrors.tax_number && "border-red-400 focus-visible:ring-red-400",
-                       inputCls)}
-                   />
-                   {billingErrors.tax_number && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.tax_number}</div>}
-                 </div>
+                 <Input
+                   value={billingData.tax_id}
+                   onChange={(e) => setBillingData({ ...billingData, tax_id: e.target.value })}
+                   readOnly={taxIdType !== TAX_ID_OTHER && taxIdType !== ""}
+                   placeholder="NTN / Tax ID"
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
+                     taxIdType !== TAX_ID_OTHER && taxIdType !== "" && "opacity-60 cursor-not-allowed",
+                     inputCls)}
+                 />
+                 <Input
+                   value={billingData.vat}
+                   onChange={(e) => setBillingData({ ...billingData, vat: e.target.value })}
+                   placeholder="VAT / STRN (optional)"
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
+                 />
                </div>
              </div>
 
@@ -572,6 +587,7 @@ const AgencyGeneralSettings = () => {
                  <Input
                    value={billingData.address.street}
                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, street: e.target.value } })}
+                   placeholder="Street address"
                    className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
                  />
                </div>
@@ -688,6 +704,7 @@ const AgencyGeneralSettings = () => {
                  <Input
                    value={billingData.address.zip}
                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, zip: e.target.value } })}
+                   placeholder="Zip / Postal code"
                    className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
                  />
                </div>
@@ -752,7 +769,7 @@ const AgencyGeneralSettings = () => {
                 </div>
                 <div className="flex-1 flex gap-2">
                   <Input
-                    placeholder="test@test.com"
+                    placeholder="name@company.com"
                     value={newRecipient}
                     onChange={(e) => setNewRecipient(e.target.value)}
                     className={cn("text-[13px] h-10 flex-1 transition-all rounded-lg shadow-none", inputCls)}

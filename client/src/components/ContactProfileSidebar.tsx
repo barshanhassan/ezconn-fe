@@ -49,6 +49,7 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import ContactProfileModal from "./ContactProfileModal";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 interface ContactProfileSidebarProps {
     // Conversation Data
@@ -150,6 +151,7 @@ export default function ContactProfileSidebar({
     profileData,
     onRefreshProfile,
 }: ContactProfileSidebarProps) {
+    const workspaceTz = useWorkspaceTimezone();
 
     // Edit basic details modal state
     const [isEditBasicDetailsOpen, setIsEditBasicDetailsOpen] = useState(false);
@@ -959,7 +961,7 @@ export default function ContactProfileSidebar({
                                                 </div>
                                                 {opp.closing_date && (
                                                     <p className="text-muted-foreground">
-                                                        Closes {new Date(opp.closing_date).toLocaleDateString()}
+                                                        Closes {formatInWorkspaceTz(opp.closing_date, "M/d/yyyy", workspaceTz)}
                                                     </p>
                                                 )}
                                             </div>
@@ -1039,7 +1041,7 @@ export default function ContactProfileSidebar({
                                                 <p className="text-sm font-medium leading-snug">{task.description}</p>
                                                 <div className="flex items-center gap-2 text-muted-foreground">
                                                     {task.datetime && (
-                                                        <span>{new Date(task.datetime).toLocaleString()}</span>
+                                                        <span>{formatInWorkspaceTz(task.datetime, "M/d/yyyy, h:mm:ss a", workspaceTz)}</span>
                                                     )}
                                                     {task.status && (
                                                         <span className={`capitalize px-1.5 py-0.5 rounded font-medium ${

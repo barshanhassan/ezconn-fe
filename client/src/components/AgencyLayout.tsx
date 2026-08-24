@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BellOff } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,6 +42,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   const [openTheme, setOpenTheme] = React.useState(false);
   const [openLang, setOpenLang] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
+  const workspaceTz = useAgencyTimezone();
   const queryClient = useQueryClient();
   const { data: notifResp, refetch: refetchNotifs } = useQuery<any>({
     queryKey: ["/api/notifications", { limit: 2 }],
@@ -88,7 +90,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
     if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
-    return date.toLocaleDateString();
+    return formatInWorkspaceTz(date, "M/d/yyyy", workspaceTz);
   };
 
   const getNotifIcon = (slug?: string): { Icon: any; color: string } => {
@@ -144,13 +146,17 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className={cn("flex h-screen overflow-hidden transition-colors duration-300", mode === "dark" ? "bg-[#0f172a]" : "bg-slate-50")}>
+    <div className={cn("flex flex-col md:flex-row h-auto md:h-[calc(100vh-1.5rem)] overflow-y-auto md:overflow-hidden gap-3 p-3 transition-colors duration-300", mode === "dark" ? "bg-[#0b1120]" : "bg-slate-50/80")}>
       <AgencyBrandingFetcher />
       {/* Sidebar */}
       <AgencySidebar />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content Area — floating rounded card, matching the sidebar's
+          treatment so both read as separate panels over the page background. */}
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 rounded-2xl border overflow-hidden shadow-[0_10px_28px_-8px_rgba(15,23,42,0.18),0_4px_10px_-2px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55),0_4px_10px_-2px_rgba(0,0,0,0.35)]",
+        mode === "dark" ? "border-slate-800" : "border-slate-200/70"
+      )}>
         {/* Top Header */}
         <header className={cn("h-14 flex items-center justify-end px-6 border-b transition-colors duration-300 shrink-0",
           mode === "dark" ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-200")}>

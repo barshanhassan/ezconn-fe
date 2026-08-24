@@ -262,7 +262,7 @@ export default function RolesSection() {
       <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
-          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+          <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => { setView("list"); resetForm(); }}
@@ -301,10 +301,10 @@ export default function RolesSection() {
             </div>
           </div>
 
-            <div className="flex">
+            <div className="flex flex-col md:flex-row">
 
               {/* Sidebar */}
-              <div className={cn("w-72 shrink-0 border-r p-6 space-y-6", border, softBg)}>
+              <div className={cn("w-full md:w-72 md:shrink-0 border-b md:border-r p-6 space-y-6", border, softBg)}>
                 <div className="space-y-2">
                   <FieldLabel dark={dark}>Role Name</FieldLabel>
                   <Input
@@ -524,7 +524,7 @@ export default function RolesSection() {
         </div>
 
         {/* Tabs + Actions */}
-        <div className={cn("px-6 border-b flex items-center justify-between", softBorder)}>
+        <div className={cn("px-6 border-b flex flex-wrap items-center justify-between gap-3", softBorder)}>
             <div className="flex gap-6">
               {[
                 { key: "active",   label: "Active",   icon: ShieldCheck, count: activeRoles.length },

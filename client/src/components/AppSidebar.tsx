@@ -32,13 +32,13 @@ import {
 } from "react-feather";
 import { LayoutGrid } from "lucide-react"; // Import for the new grid icon
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { SiWhatsapp } from "react-icons/si";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
@@ -67,6 +67,7 @@ export default function AppSidebar() {
 
   // State for Theme and Online Status
   const { mode: theme, setMode: setTheme } = useTheme();
+  const workspaceTz = useWorkspaceTimezone();
   const [status, setStatus] = useState<"available" | "unavailable">("available");
   const [user, setUser] = useState<any>(null);
 
@@ -152,7 +153,7 @@ export default function AppSidebar() {
     if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
-    return date.toLocaleDateString();
+    return formatInWorkspaceTz(date, "M/d/yyyy", workspaceTz);
   };
 
   const handleNotifClick = async (n: any) => {
@@ -308,20 +309,20 @@ export default function AppSidebar() {
   // Per-item permission gating (replyagent: each nav link has a `v-canany`).
   // An item with `permissions` is hidden unless the user has one of them; items
   // without `permissions` are always shown (gated in their own chunks later).
-  const allMenuItems: Array<{ label: string; href: string; icon: any; permissions?: string[] }> = [
+  const allMenuItems: Array<{ label: string; href: string; icon: any; permissions?: string[]; hidden?: boolean }> = [
     { label: "Insights", href: "/insights", icon: BarChart2 },
     { label: "Smart Flows", href: "/automations", icon: GitMerge },
-    { label: "Broadcasts", href: "/campaigns", icon: Send, permissions: ["workspace.broadcast.view"] },
+    { label: "Campaign", href: "/campaigns", icon: Send, permissions: ["workspace.broadcast.view"] },
     { label: "Contacts", href: "/contacts", icon: Users, permissions: ["workspace.company.view"] },
     { label: "Inbox", href: "/conversations/inbox", icon: Mail, permissions: ["workspace.inbox.access"] },
-    { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText },
-    { label: "Call Logs", href: "/conversations/call-logs", icon: Phone },
+    { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText, hidden: true },
+    { label: "Call Logs", href: "/conversations/call-logs", icon: Phone, hidden: true },
     { label: "Settings", href: "/settings", icon: Settings },
   ];
 
   // Hide nav items the current user lacks permission for (replyagent v-canany parity).
   const userPerms = (getUserInfo().permissions as string[] | undefined) ?? [];
-  const menuItems = allMenuItems.filter((item) => hasAnyPerm(userPerms, item.permissions ?? []));
+  const menuItems = allMenuItems.filter((item) => !item.hidden && hasAnyPerm(userPerms, item.permissions ?? []));
 
   return (
     <>
@@ -412,26 +413,7 @@ export default function AppSidebar() {
             >
               <DropdownMenuLabel className="px-3 py-2 text-[11px] font-bold text-gray-500">Navigation</DropdownMenuLabel>
               <div className="space-y-1">
-                {menuItems.slice(0, 8).map((item) => (
-                  <DropdownMenuItem key={item.label} asChild>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 text-[13px]",
-                        isActive(item.href)
-                          ? (theme === "dark" ? "bg-primary/10 text-white font-bold" : "bg-primary/10 text-primary font-bold")
-                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-primary"
-                      )}
-                    >
-                      <item.icon size={15} className={isActive(item.href) ? (theme === "dark" ? "text-white" : "text-primary") : "text-gray-400"} />
-                      <span>{item.label}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-              <DropdownMenuSeparator className={theme === "dark" ? "bg-slate-700 my-2" : "bg-slate-100 my-2"} />
-              <div className="space-y-1">
-                 {menuItems.slice(8).map((item) => (
+                {menuItems.map((item) => (
                   <DropdownMenuItem key={item.label} asChild>
                     <Link
                       href={item.href}

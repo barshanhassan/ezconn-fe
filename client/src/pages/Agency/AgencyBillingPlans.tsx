@@ -12,9 +12,12 @@ import {
   Zap,
   Building2,
   Lock,
+  Download,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -45,6 +48,7 @@ const AgencyBillingPlans = () => {
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const workspaceTz = useAgencyTimezone();
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
@@ -126,6 +130,33 @@ const AgencyBillingPlans = () => {
   const agencyLogoUrl: string | null = dark
     ? b?.logo_dark_small || b?.logo_light_small || b?.logo_dark || b?.logo_light || null
     : b?.logo_light_small || b?.logo_dark_small || b?.logo_light || b?.logo_dark || null;
+
+  const { data: invoicesResp, isLoading: invoicesLoading } = useQuery<any>({
+    queryKey: [`/api/organizations/${agencyId}/invoices`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/invoices`);
+      return res.json();
+    },
+    enabled: !!agencyId,
+  });
+  const invoices = invoicesResp?.invoices || [];
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const handleDownloadInvoice = async (invoiceId: string) => {
+    setDownloadingInvoiceId(invoiceId);
+    try {
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/invoices/${invoiceId}/download`);
+      const data = await res.json();
+      if (data?.url) {
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      } else {
+        toast({ title: "PDF not available", description: "This invoice's PDF couldn't be found.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Download failed", description: e?.message || "Please try again.", variant: "destructive" });
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
 
   // Real usage vs. plan allowance — Workspaces is the only agency-wide
   // resource, so it's the only one with a real dollar overage (see
@@ -363,7 +394,7 @@ const AgencyBillingPlans = () => {
                           <div className="text-center space-y-1">
                             {plan.activatedAt && (
                               <p className={cn("text-[10px] font-bold", text)}>
-                                Active since {new Date(plan.activatedAt).toLocaleDateString()}
+                                Active since {formatInWorkspaceTz(plan.activatedAt, "M/d/yyyy", workspaceTz)}
                               </p>
                             )}
                             {/* Nothing to cancel on Free — no subscription is
@@ -551,6 +582,55 @@ const AgencyBillingPlans = () => {
 
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Invoice History ── */}
+      <div className="px-8 pb-8">
+        <div className={cn("rounded-2xl border overflow-hidden shadow-sm", card, border)}>
+          <div className={cn("px-6 py-4 border-b flex items-center gap-3", border)}>
+            <div className={cn("p-2 rounded-lg", dark ? "bg-slate-800" : "bg-white border border-slate-200 shadow-sm")}>
+              <FileText className="w-4 h-4 text-primary" strokeWidth={1.8} />
+            </div>
+            <div>
+              <h3 className={cn("font-black text-[13px] uppercase tracking-widest", text)}>Invoice History</h3>
+              <p className={cn("text-[11px] font-medium mt-0.5", sub)}>Receipts for every plan payment, generated automatically</p>
+            </div>
+          </div>
+
+          {invoicesLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : invoices.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-2">
+              <FileText className="w-6 h-6 text-slate-300" />
+              <p className={cn("text-[12px] font-medium", sub)}>No invoices yet — one will appear here after your next payment.</p>
+            </div>
+          ) : (
+            <div className={cn("divide-y", dark ? "divide-slate-800" : "divide-slate-100")}>
+              {invoices.map((inv: any) => (
+                <div key={inv.id} className={cn("px-6 py-3.5 flex items-center justify-between transition-colors",
+                  dark ? "hover:bg-slate-800/30" : "hover:bg-slate-50")}>
+                  <div className="min-w-0">
+                    <p className={cn("text-[13px] font-bold truncate", text)}>{inv.invoice_number}</p>
+                    <p className={cn("text-[11px] font-medium mt-0.5", sub)}>
+                      {inv.plan_name} &middot; {formatInWorkspaceTz(inv.issued_at, "MMM d, yyyy", workspaceTz)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-5 shrink-0">
+                    <p className={cn("text-[13px] font-bold", text)}>{inv.currency} {Number(inv.amount).toFixed(2)}</p>
+                    <button
+                      onClick={() => handleDownloadInvoice(inv.id)}
+                      disabled={downloadingInvoiceId === inv.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all disabled:opacity-50">
+                      <Download size={12} /> {downloadingInvoiceId === inv.id ? "..." : "Download"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

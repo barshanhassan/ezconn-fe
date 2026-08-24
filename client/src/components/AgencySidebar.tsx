@@ -90,6 +90,12 @@ const menuGroups: MenuGroup[] = [
         permissions: ["agency.*"],
       },
       {
+        label: "Notifications",
+        icon: <Bell size={18} />,
+        href: "/org/settings/notifications",
+        permissions: ["agency.*"],
+      },
+      {
         label: "SaaS",
         icon: <Cloud size={18} />,
         href: "#",
@@ -107,7 +113,6 @@ const menuGroups: MenuGroup[] = [
 ];
 
 const bottomItems: BottomItem[] = [
-  { label: "Notifications", icon: <Bell size={18} />, href: "/org/settings/notifications", permissions: ["agency.*"] },
   {
     label: "Settings",
     icon: <Settings size={18} />,
@@ -205,16 +210,18 @@ const AgencySidebar = () => {
 
   return (
     <div className={cn(
-      "relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out z-50 shrink-0",
-      isCollapsed ? "w-[70px]" : "w-[240px]",
+      "relative h-auto md:h-full flex flex-col border rounded-2xl transition-all duration-300 ease-in-out z-50 md:shrink-0 w-full",
+      "shadow-[0_10px_28px_-8px_rgba(15,23,42,0.18),0_4px_10px_-2px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55),0_4px_10px_-2px_rgba(0,0,0,0.35)]",
+      isCollapsed ? "md:w-[70px]" : "md:w-[240px]",
       dark ? "bg-[#18181b] border-zinc-800" : "bg-[#fafaf9] border-slate-200"
     )}>
 
-      {/* Collapse toggle */}
+      {/* Collapse toggle — desktop-only; on mobile the sidebar is full-width
+          and stacked above the content, so a slim icon-only mode doesn't apply. */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className={cn(
-          "absolute -right-3 top-16 w-6 h-6 rounded-full border flex items-center justify-center z-[100] shadow-md transition-all hover:scale-110",
+          "absolute -right-3 top-16 w-6 h-6 rounded-full border items-center justify-center z-[100] shadow-md transition-all hover:scale-110 hidden md:flex",
           dark ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-300 text-slate-500"
         )}
       >
@@ -255,8 +262,12 @@ const AgencySidebar = () => {
         </div>
       </Link>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-2 px-2">
+      {/* Navigation — capped height with its own scroll on mobile (where the
+          sidebar stacks above the page content, full width) so the nav list
+          doesn't push all page content off-screen; fills naturally via flex-1
+          within the h-screen sidebar at md+ where it sits beside the content. */}
+      <nav className="flex-1 flex flex-col max-h-[50vh] md:max-h-none overflow-y-auto overflow-x-hidden py-4 px-2">
+        <div className="space-y-2">
         {visibleMenuItems.map((item) => {
           const active = isActive(item.href) || isParentActive(item);
           const open = expanded === item.label;
@@ -310,7 +321,7 @@ const AgencySidebar = () => {
 
               {/* Submenu */}
               {!isCollapsed && item.hasSubmenu && open && item.subItems && (
-                <div className="mt-0.5 ml-4 pl-4 border-l space-y-0.5 border-slate-200 dark:border-slate-700">
+                <div className="mt-0.5 ml-4 pl-4 space-y-0.5">
                   {item.subItems.map((sub) => (
                     <Link key={sub.label} href={sub.href}>
                       <div className={cn(
@@ -334,13 +345,39 @@ const AgencySidebar = () => {
             </div>
           );
         })}
+        </div>
 
-        {/* Bottom items */}
+        {/* Bottom items — pinned to the bottom of the nav with a divider,
+            separated from the main menu list above (matches the reference design). */}
+        <div className={cn("mt-auto pt-3 space-y-2 border-t", dark ? "border-slate-800" : "border-slate-200")}>
         {visibleBottomItems.map((item) => {
           const active = isActive(item.href) || (item.subItems?.some(s => isActive(s.href)) ?? false);
           const open = expanded === item.label;
           return (
             <div key={item.label}>
+              {/* Bottom section is pinned at the sidebar's bottom edge, so its
+                  submenu opens UPWARD (rendered above the trigger row) instead
+                  of downward, where it would otherwise run off-screen. */}
+              {!isCollapsed && item.hasSubmenu && open && item.subItems && (
+                <div className="mb-0.5 ml-4 pl-4 space-y-0.5">
+                  {item.subItems.map((sub) => (
+                    <Link key={sub.label} href={sub.href}>
+                      <div className={cn(
+                        "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] font-medium cursor-pointer transition-all",
+                        isActive(sub.href)
+                          ? (dark ? "text-white bg-primary/10" : "text-primary bg-primary/5")
+                          : (dark ? "text-slate-500 hover:text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50")
+                      )}>
+                        <div className="flex items-center gap-2">
+                          {sub.icon}
+                          <span>{sub.label}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               <div
                 onClick={() => {
                   if (item.hasSubmenu) {
@@ -370,7 +407,7 @@ const AgencySidebar = () => {
                       </Link>
                     )}
                     {item.hasSubmenu && (
-                      <ChevronDown size={13} className={cn("transition-transform shrink-0", open ? "rotate-180" : "", dark ? "text-slate-500" : "text-slate-400")} />
+                      <ChevronDown size={13} className={cn("transition-transform shrink-0", open ? "" : "rotate-180", dark ? "text-slate-500" : "text-slate-400")} />
                     )}
                   </>
                 )}
@@ -384,29 +421,10 @@ const AgencySidebar = () => {
                   </div>
                 )}
               </div>
-
-              {!isCollapsed && item.hasSubmenu && open && item.subItems && (
-                <div className="mt-0.5 ml-4 pl-4 border-l space-y-0.5 border-slate-200 dark:border-slate-700">
-                  {item.subItems.map((sub) => (
-                    <Link key={sub.label} href={sub.href}>
-                      <div className={cn(
-                        "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] font-medium cursor-pointer transition-all",
-                        isActive(sub.href)
-                          ? (dark ? "text-white bg-primary/10" : "text-primary bg-primary/5")
-                          : (dark ? "text-slate-500 hover:text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50")
-                      )}>
-                        <div className="flex items-center gap-2">
-                          {sub.icon}
-                          <span>{sub.label}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
             </div>
           );
         })}
+        </div>
       </nav>
 
       {/* User footer removed */}

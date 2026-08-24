@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn, formatConversationTime, formatMessageDate, formatMessageTime } from "@/lib/utils";
+import { useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -314,6 +315,7 @@ const MessageStatusTick: React.FC<{ status: MessageStatus }> = ({ status }) => {
 export default function ConversationsInbox() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const workspaceTz = useWorkspaceTimezone();
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -3268,7 +3270,7 @@ export default function ConversationsInbox() {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time)}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time, workspaceTz)}</span>
                           </div>
                           <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{conv.lastMessage}</p>
                           {/* Per-row WhatsApp number badge (M19) — only when the
@@ -3581,12 +3583,12 @@ export default function ConversationsInbox() {
                         </div>
                       );
                     }
-                    const showDateDivider = index === 0 || formatMessageDate(msg.time) !== formatMessageDate(allMessages[index - 1].time);
+                    const showDateDivider = index === 0 || formatMessageDate(msg.time, workspaceTz) !== formatMessageDate(allMessages[index - 1].time, workspaceTz);
                     return (
                       <React.Fragment key={msg.id}>
                         {showDateDivider && (
                           <div className="flex justify-center my-4">
-                            <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">{formatMessageDate(msg.time)}</span>
+                            <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">{formatMessageDate(msg.time, workspaceTz)}</span>
                           </div>
                         )}
                         <div className={`group/msg flex items-center gap-2 ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
@@ -3849,7 +3851,7 @@ export default function ConversationsInbox() {
                             )}
 
                             <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
-                              <span>{formatMessageTime(msg.time)}</span>
+                              <span>{formatMessageTime(msg.time, workspaceTz)}</span>
                               {msg.from === "agent" && msg.status && (
                                 msg.status === "failed" ? (
                                   <Tooltip>
@@ -4935,7 +4937,7 @@ export default function ConversationsInbox() {
         {/* Call UI Overlay */}
         {
           isCallActive && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
               <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 space-y-6">
                 {/* Avatar */}
                 <div className="flex justify-center">

@@ -301,7 +301,7 @@ export default function WhiteLabelSection() {
       />
       <CardContent className="p-0">
         {/* ── Header ── */}
-        <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+        <div className={cn("px-8 py-4 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
               <BadgeCheck className="w-5 h-5 text-primary" />
@@ -328,7 +328,7 @@ export default function WhiteLabelSection() {
                     key={tab.value}
                     value={tab.value}
                     className={cn(
-                      "flex items-center gap-2 px-1 py-5 rounded-none text-[12px] font-semibold transition-all shadow-none bg-transparent border-b-2 border-transparent",
+                      "flex items-center gap-2 px-1 py-4 rounded-none text-[12px] font-semibold transition-all shadow-none bg-transparent border-b-2 border-transparent",
                       "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary",
                       "hover:text-primary",
                       dark ? "text-slate-500" : "text-slate-400"
@@ -342,7 +342,7 @@ export default function WhiteLabelSection() {
             </div>
 
             {/* ── LOGO TAB ── */}
-            <TabsContent value="logo" className="p-8 outline-none space-y-6">
+            <TabsContent value="logo" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
                 title="Brand Logo"
@@ -353,7 +353,7 @@ export default function WhiteLabelSection() {
                 <LogoUpload
                   dark={dark}
                   themeLabel="Light Theme"
-                  logoSrc={logoPreview.light || "/white-label/ezconn-logo.svg"}
+                  logoSrc={logoPreview.light || "/images/agentawk-logo-horizontal-ink.svg"}
                   zoneBg={dark ? "bg-white/95" : "bg-slate-50/80"}
                   zoneBorder={dark ? "border-slate-700" : "border-slate-200"}
                   onAction={(a) => handleLogoAction(a, "light")}
@@ -361,7 +361,7 @@ export default function WhiteLabelSection() {
                 <LogoUpload
                   dark={dark}
                   themeLabel="Dark Theme"
-                  logoSrc={logoPreview.dark || "/white-label/ezconn-logo-dark.svg"}
+                  logoSrc={logoPreview.dark || "/images/agentawk-logo-horizontal-white.svg"}
                   zoneBg="bg-[#020617]"
                   zoneBorder="border-slate-800"
                   onAction={(a) => handleLogoAction(a, "dark")}
@@ -374,7 +374,7 @@ export default function WhiteLabelSection() {
             </TabsContent>
 
             {/* ── FAVICON TAB ── */}
-            <TabsContent value="favicon" className="p-8 outline-none space-y-6">
+            <TabsContent value="favicon" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
                 title="Browser Favicon"
@@ -391,7 +391,7 @@ export default function WhiteLabelSection() {
                         "w-32 h-32 border-2 border-dashed rounded-[1.5rem] flex items-center justify-center cursor-pointer transition-all hover:border-primary/40 group",
                         dark ? "bg-slate-950/50 border-slate-800" : "bg-slate-50 border-slate-200"
                       )}>
-                        <img src={logoPreview.favicon || "/white-label/favicon.png"} alt="Favicon" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
+                        <img src={logoPreview.favicon || "/images/agentawk-bot-green.svg"} alt="Favicon" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
                       </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className={cn("w-52 rounded-xl p-1.5", dark ? "bg-[#0f1829] border-slate-800" : "")}>
@@ -420,8 +420,8 @@ export default function WhiteLabelSection() {
                           <div className="w-2 h-2 rounded-full bg-green-400" />
                         </div>
                         <div className="flex-1 ml-2 bg-white rounded px-2 py-1 flex items-center gap-1.5 max-w-[200px]">
-                          <img src={logoPreview.favicon || "/white-label/favicon.png"} className="w-3 h-3 shrink-0" alt="" />
-                          <span className="text-[9px] font-bold text-slate-700 truncate">Workspace — Ezconn</span>
+                          <img src={logoPreview.favicon || "/images/agentawk-bot-green.svg"} className="w-3 h-3 shrink-0" alt="" />
+                          <span className="text-[9px] font-bold text-slate-700 truncate">Workspace — Agentawk</span>
                         </div>
                       </div>
                       <div className="h-12 bg-white" />
@@ -472,11 +472,11 @@ export default function WhiteLabelSection() {
             </TabsContent>
 
             {/* ── EMAIL TAB ── */}
-            <TabsContent value="email" className="p-8 outline-none">
+            <TabsContent value="email" className="p-6 outline-none">
               {notificationEmail ? (
                 notificationEmail.status === "VERIFIED" ? (
                   /* ── Verified ── */
-                  <div className="space-y-6 max-w-2xl">
+                  <div className="space-y-5 max-w-2xl">
                     <div className={cn("p-4 rounded-[1.25rem] border flex items-start gap-3 bg-emerald-500/10 border-emerald-500/20")}>
                       <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500 shrink-0"><BadgeCheck size={14} /></div>
                       <p className="text-[11px] font-medium leading-relaxed text-emerald-700/90 dark:text-emerald-300/90">
@@ -502,27 +502,29 @@ export default function WhiteLabelSection() {
                   </div>
                 ) : (
                   /* ── Unverified: show DNS records to add, then Verify ── */
-                  <div className="space-y-6 max-w-3xl">
+                  <div className="space-y-5 max-w-3xl">
                     <SectionHeading
                       dark={dark}
                       title="Verify your domain"
                       description={`Add these DNS records for ${notificationEmail.domain} at your DNS provider, then click Verify. Propagation can take a few minutes to hours.`}
                     />
-                    <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder)}>
-                      <div className={cn("grid grid-cols-12 px-5 py-3 text-[10px] font-semibold", dark ? "bg-slate-900/40 text-slate-400" : "bg-slate-50 text-slate-500")}>
-                        <div className="col-span-2">Type</div>
-                        <div className="col-span-5">Hostname</div>
-                        <div className="col-span-5">Value</div>
+                    <div className={cn("rounded-[1.5rem] border overflow-x-auto", softBorder)}>
+                      <div className="min-w-[520px]">
+                        <div className={cn("grid grid-cols-12 px-5 py-3 text-[10px] font-semibold", dark ? "bg-slate-900/40 text-slate-400" : "bg-slate-50 text-slate-500")}>
+                          <div className="col-span-2">Type</div>
+                          <div className="col-span-5">Hostname</div>
+                          <div className="col-span-5">Value</div>
+                        </div>
+                        {notificationEmail.rpath_value && (
+                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.rpath_selector} value={notificationEmail.rpath_value} verified={notificationEmail.rpath_verified} onCopy={copyToClipboard} />
+                        )}
+                        {notificationEmail.dkim_value && (
+                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={`${notificationEmail.dkim_selector}._domainkey`} value={notificationEmail.dkim_value} verified={notificationEmail.dkim_verified} onCopy={copyToClipboard} />
+                        )}
+                        {notificationEmail.cname_selector && (
+                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.cname_selector} value={notificationEmail.cname_value || notificationEmail.cname_expected} verified={notificationEmail.cname_verified} onCopy={copyToClipboard} />
+                        )}
                       </div>
-                      {notificationEmail.rpath_value && (
-                        <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.rpath_selector} value={notificationEmail.rpath_value} verified={notificationEmail.rpath_verified} onCopy={copyToClipboard} />
-                      )}
-                      {notificationEmail.dkim_value && (
-                        <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={`${notificationEmail.dkim_selector}._domainkey`} value={notificationEmail.dkim_value} verified={notificationEmail.dkim_verified} onCopy={copyToClipboard} />
-                      )}
-                      {notificationEmail.cname_selector && (
-                        <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.cname_selector} value={notificationEmail.cname_value || notificationEmail.cname_expected} verified={notificationEmail.cname_verified} onCopy={copyToClipboard} />
-                      )}
                     </div>
 
                     <div className="flex items-center justify-end gap-2">
@@ -545,7 +547,7 @@ export default function WhiteLabelSection() {
                 )
               ) : !showEmailForm ? (
                 /* ── Empty state ── */
-                <div className="flex flex-col items-center justify-center text-center space-y-5 min-h-[260px]">
+                <div className="flex flex-col items-center justify-center text-center space-y-5 min-h-[200px]">
                   <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center shadow-inner group overflow-hidden">
                     <Mail className="w-8 h-8 text-primary transition-transform group-hover:scale-110" />
                   </div>
@@ -561,7 +563,7 @@ export default function WhiteLabelSection() {
                 </div>
               ) : (
                 /* ── Entry form ── */
-                <div className="space-y-6 max-w-2xl">
+                <div className="space-y-5 max-w-2xl">
                   <SectionHeading
                     dark={dark}
                     title="Notification E-mail"

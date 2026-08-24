@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from "@/lib/queryClient";
 import { getUserInfo } from "@/lib/auth";
-import { format } from "date-fns";
+import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 interface AgencyVoiceWalletProps {
   workspace: any;
@@ -27,6 +27,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
   const { t } = useTranslation();
   const { mode } = useTheme();
   const isDark = mode === 'dark';
+  const workspaceTz = useAgencyTimezone();
 
   const userInfo = React.useMemo(() => {
     try { return getUserInfo(); } catch { return {} as any; }
@@ -148,7 +149,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
                     <div key={tx.id} className="px-6 py-3 flex items-center justify-between hover:bg-slate-800/10 transition-colors">
                       <div>
                         <p className="text-sm font-semibold">{tx.description === 'PURCHASE' ? 'Purchase' : 'Spent'}</p>
-                        <p className="text-xs text-gray-500">{tx.created_at ? format(new Date(tx.created_at), 'MMM d, yyyy p') : ''}</p>
+                        <p className="text-xs text-gray-500">{tx.created_at ? formatInWorkspaceTz(tx.created_at, 'MMM d, yyyy p', workspaceTz) : ''}</p>
                       </div>
                       <div className="text-right">
                         <p className={cn("text-sm font-bold", tx.type === 'credit' ? "text-emerald-500" : "text-rose-500")}>

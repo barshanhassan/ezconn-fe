@@ -339,7 +339,7 @@ export default function AIChatAssistantsSection() {
 
                     <div className="space-y-2">
                       <FieldLabel dark={dark}>Model Strategy</FieldLabel>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {([
                           { v: "fixed",   label: "Fixed",   desc: "Static predefined prompt.", icon: <RotateCcw size={16} /> },
                           { v: "dynamic", label: "Dynamic", desc: "Variable injection.",       icon: <Sparkles size={16} /> },
@@ -610,6 +610,7 @@ export default function AIChatAssistantsSection() {
               </div>
             ) : (
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
@@ -690,6 +691,7 @@ export default function AIChatAssistantsSection() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>

@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { WA_TEMPLATE_LANGUAGES } from "@/lib/waTemplateLanguages";
 import { waTemplateKeysFor } from "@/lib/waTemplateKeys";
 import TemplateMediaPicker, { type TemplateMediaSelection } from "@/components/gallery/TemplateMediaPicker";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 
 type SortDirection = "asc" | "desc" | "default";
@@ -59,6 +60,7 @@ interface FilterEntry {
 
 export default function TemplateManager() {
   const { toast } = useToast();
+  const workspaceTz = useWorkspaceTimezone();
 
   // Add style to hide scrollbar
   useEffect(() => {
@@ -849,7 +851,7 @@ export default function TemplateManager() {
         header: headerComponent?.text || "",
         footer: footerComponent?.text || "",
         buttons: buttonsComponent?.buttons || [],
-        lastEdited: t.updated_at ? new Date(t.updated_at).toLocaleDateString() : (t.created_at ? new Date(t.created_at).toLocaleDateString() : ""),
+        lastEdited: t.updated_at ? formatInWorkspaceTz(t.updated_at, "M/d/yyyy", workspaceTz) : (t.created_at ? formatInWorkspaceTz(t.created_at, "M/d/yyyy", workspaceTz) : ""),
         statusTypeColor: (t.status === "APPROVED" || t.status === "Active - HQ") ? "success" : (t.status === "PENDING" ? "warning" : "danger"),
         // The column is `reason` (written by the Meta status webhook on a
         // rejection); `rejection_reason` never existed, so this always read
@@ -887,7 +889,7 @@ export default function TemplateManager() {
         }),
       };
     });
-  }, [templatesData]);
+  }, [templatesData, workspaceTz]);
 
   const toggleTemplate = (id: number) => {
     setSelectedTemplates((prev) =>

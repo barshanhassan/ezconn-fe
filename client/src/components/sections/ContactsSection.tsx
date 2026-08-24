@@ -26,6 +26,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { parsePhoneNumberFromString, getExampleNumber, type CountryCode, AsYouType } from "libphonenumber-js";
 import examples from "libphonenumber-js/mobile/examples";
 
@@ -224,6 +225,7 @@ function getAvatarColor(name: string): string {
 export default function ContactsSection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const workspaceTz = useWorkspaceTimezone();
   const searchParams = useSearch();
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
@@ -318,13 +320,13 @@ export default function ContactsSection() {
       const raw = c.created_at ?? c.createdAt ?? c.updated_at ?? c.updatedAt;
       if (!raw) return "";
       const d = new Date(raw);
-      return Number.isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+      return Number.isNaN(d.getTime()) ? "" : formatInWorkspaceTz(d, "yyyy-MM-dd", workspaceTz);
     })(),
     lastActive: (() => {
       const raw = c.updated_at ?? c.updatedAt ?? c.created_at ?? c.createdAt;
       if (!raw) return "";
       const d = new Date(raw);
-      return Number.isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+      return Number.isNaN(d.getTime()) ? "" : formatInWorkspaceTz(d, "yyyy-MM-dd", workspaceTz);
     })(),
     updatedBy: 'System'
   }));

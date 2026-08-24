@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,6 +26,7 @@ const AgencyDashboard = () => {
   const { mode } = useTheme();
   const [, setLocation] = useLocation();
   const dark = mode === "dark";
+  const workspaceTz = useAgencyTimezone();
 
   const userInfo = React.useMemo(() => {
     try { return getUserInfo(); } catch { return {}; }
@@ -267,7 +269,7 @@ const AgencyDashboard = () => {
                         </p>
                         <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                           <Clock size={10} />
-                          {log.time ? new Date(log.time).toLocaleDateString() : "—"}
+                          {log.time ? formatInWorkspaceTz(log.time, "M/d/yyyy", workspaceTz) : "—"}
                         </p>
                       </div>
                     </div>

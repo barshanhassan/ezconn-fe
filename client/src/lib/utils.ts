@@ -1,11 +1,12 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { formatInTimeZone } from "date-fns-tz"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatConversationTime(dateStr: string) {
+export function formatConversationTime(dateStr: string, timezone: string = "UTC") {
   if (!dateStr) return "";
   const date = new Date(dateStr);
 
@@ -22,43 +23,38 @@ export function formatConversationTime(dateStr: string) {
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     return `${Math.floor(diffHours)}h ago`;
   } else {
-    // Show date DD-MM-YYYY
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    // Show date DD-MM-YYYY, in the workspace's own timezone
+    return formatInTimeZone(date, timezone || "UTC", "dd-MM-yyyy");
   }
 }
 
-export function formatMessageDate(date: Date | string) {
+export function formatMessageDate(date: Date | string, timezone: string = "UTC") {
   if (!date) return "";
   let d = new Date(date);
 
-  /* 
+  /*
    * User requested to remove invalid date handling fallback to allow bugs to be visible.
    * If parsing fails, this will result in NaN calculations downstream.
    */
 
+  const tz = timezone || "UTC";
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const check = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  // Compare calendar days in the workspace's timezone, not the browser's.
+  const todayKey = formatInTimeZone(now, tz, "yyyy-MM-dd");
+  const dKey = formatInTimeZone(d, tz, "yyyy-MM-dd");
+  if (dKey === todayKey) return "Today";
 
-  const diffTime = today.getTime() - check.getTime();
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayKey = formatInTimeZone(yesterday, tz, "yyyy-MM-dd");
+  if (dKey === yesterdayKey) return "Yesterday";
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+  return formatInTimeZone(d, tz, "dd/MM/yyyy");
 }
 
-export function formatMessageTime(dateStr: string) {
+export function formatMessageTime(dateStr: string, timezone: string = "UTC") {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return dateStr; // Fallback to original string if invalid
 
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  return formatInTimeZone(date, timezone || "UTC", "h:mm a");
 }

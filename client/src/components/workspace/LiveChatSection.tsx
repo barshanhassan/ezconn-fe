@@ -207,20 +207,26 @@ export default function LiveChatSection() {
     if (editingFolderId !== null) deleteFolderMut.mutate(editingFolderId);
   };
 
+  const applySettings = (s: any) => {
+    setAgentAction(s.value || "keep");
+    setSaveAgentDetails(s.save_to_custom_field === 1);
+    setAgentDataFormat(s.data_format === "json" ? "json" : "full_name");
+    setCustomField(s.custom_field || "AuditLog");
+    setSaveConversationJson(s.save_chat === 1);
+    setJsonCustomField(s.chat_field || "Json");
+    setIncludeSignature(s.append_username === 1);
+    setCorrectionModel(s.ai_model || "gpt-4o-mini");
+    setCorrectionPrompt(s.ai_prompt || "");
+    setPauseSmartFlow(s.automatically_pause_automation ? "automatically" : "keep");
+  };
+
   useEffect(() => {
-    if (settings) {
-      setAgentAction(settings.value || "keep");
-      setSaveAgentDetails(settings.save_to_custom_field === 1);
-      setAgentDataFormat(settings.data_format === "json" ? "json" : "full_name");
-      setCustomField(settings.custom_field || "AuditLog");
-      setSaveConversationJson(settings.save_chat === 1);
-      setJsonCustomField(settings.chat_field || "Json");
-      setIncludeSignature(settings.append_username === 1);
-      setCorrectionModel(settings.ai_model || "gpt-4o-mini");
-      setCorrectionPrompt(settings.ai_prompt || "");
-      setPauseSmartFlow(settings.automatically_pause_automation ? "automatically" : "keep");
-    }
+    if (settings) applySettings(settings);
   }, [settings]);
+
+  const handleDiscard = () => {
+    if (settings) applySettings(settings);
+  };
 
   if (isLoading) {
     return (
@@ -243,7 +249,7 @@ export default function LiveChatSection() {
     <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <CardContent className="p-0">
         {/* ── Header ── */}
-        <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+        <div className={cn("px-8 py-4 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
               <MessageSquare className="w-5 h-5 text-primary" />
@@ -270,7 +276,7 @@ export default function LiveChatSection() {
                     key={tab.value}
                     value={tab.value}
                     className={cn(
-                      "flex items-center gap-2 px-1 py-5 rounded-none text-[12px] font-semibold transition-all shadow-none bg-transparent border-b-2 border-transparent",
+                      "flex items-center gap-2 px-1 py-4 rounded-none text-[12px] font-semibold transition-all shadow-none bg-transparent border-b-2 border-transparent",
                       "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary",
                       "hover:text-primary",
                       dark ? "text-slate-500" : "text-slate-400"
@@ -284,11 +290,12 @@ export default function LiveChatSection() {
             </div>
 
             {/* ── AGENTS TAB ── */}
-            <TabsContent value="agents" className="p-8 outline-none space-y-8">
+            <TabsContent value="agents" className="p-6 outline-none space-y-6">
               <SectionHeading
                 dark={dark}
                 title="When conversation is marked DONE"
-                description="Choose how to handle the assigned agent when conversations are closed in Live Chat or Smart Flow."
+                badge="Applies to Live Chat & Smart Flow"
+                description="Choose how to handle the assigned agent when conversations are closed."
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -299,6 +306,7 @@ export default function LiveChatSection() {
                   icon={<UserCheck size={18} />}
                   title="Keep Agent"
                   description="Keep the assigned agent attached to the conversation."
+                  recommended
                 />
                 <OptionCard
                   dark={dark}
@@ -371,7 +379,7 @@ export default function LiveChatSection() {
             </TabsContent>
 
             {/* ── COMPLETION TAB ── */}
-            <TabsContent value="completion" className="p-8 outline-none space-y-8">
+            <TabsContent value="completion" className="p-6 outline-none space-y-6">
               <SectionHeading
                 dark={dark}
                 title="Conversation Archive"
@@ -427,12 +435,12 @@ export default function LiveChatSection() {
             </TabsContent>
 
             {/* ── SIGNATURE TAB ── */}
-            <TabsContent value="signature" className="p-8 outline-none space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <TabsContent value="signature" className="p-6 outline-none space-y-5">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Left: Toggle + Benefits + Warning */}
-                <div className="lg:col-span-3 space-y-6">
+                <div className="lg:col-span-3 space-y-4">
                   {/* Toggle */}
-                  <div className={cn("p-5 rounded-[1.5rem] border flex items-start gap-4", softBg, softBorder)}>
+                  <div className={cn("p-4 rounded-[1.5rem] border flex items-start gap-4", softBg, softBorder)}>
                     <Switch
                       checked={includeSignature}
                       onCheckedChange={setIncludeSignature}
@@ -449,22 +457,22 @@ export default function LiveChatSection() {
                   </div>
 
                   {/* Benefits */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {[
                       {
                         icon: <Award size={14} />,
                         title: "Professionalism",
-                        desc: "Signing messages with a name gives a polished and professional touch, showcasing the company's commitment to high-quality service.",
+                        desc: "Signing messages with a name gives a polished, professional touch.",
                       },
                       {
                         icon: <Heart size={14} />,
                         title: "Personalization",
-                        desc: "Adding the agent's name makes the conversation feel more personal and human, which helps build trust and rapport with the customer.",
+                        desc: "The conversation feels more human, building trust and rapport.",
                       },
                       {
                         icon: <ShieldCheck size={14} />,
                         title: "Accountability",
-                        desc: "Customers know who they are interacting with, ensuring a sense of responsibility for the agent to provide excellent service.",
+                        desc: "Customers know who they're interacting with at all times.",
                       },
                     ].map((b) => (
                       <div key={b.title} className="flex items-start gap-3">
@@ -473,7 +481,7 @@ export default function LiveChatSection() {
                         </div>
                         <div>
                           <p className={cn("text-[13px] font-semibold", text)}>{b.title}</p>
-                          <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>{b.desc}</p>
+                          <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>{b.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -481,7 +489,7 @@ export default function LiveChatSection() {
 
                   {/* Warning */}
                   <div className={cn(
-                    "p-4 rounded-[1.25rem] border flex items-start gap-3",
+                    "p-3 rounded-[1.25rem] border flex items-start gap-3",
                     "bg-amber-500/10 border-amber-500/20"
                   )}>
                     <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-500 shrink-0">
@@ -513,7 +521,7 @@ export default function LiveChatSection() {
             </TabsContent>
 
             {/* ── CORRECTION TAB ── */}
-            <TabsContent value="correction" className="p-8 outline-none space-y-8">
+            <TabsContent value="correction" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
                 title="AI Correction"
@@ -521,7 +529,7 @@ export default function LiveChatSection() {
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-5">
+                <div className="lg:col-span-1 space-y-4">
                   <div className="space-y-2">
                     <FieldLabel dark={dark}>AI Model</FieldLabel>
                     <Select value={correctionModel} onValueChange={setCorrectionModel}>
@@ -536,12 +544,12 @@ export default function LiveChatSection() {
                     </Select>
                   </div>
 
-                  <div className={cn("p-5 rounded-[1.25rem] border bg-primary/5 border-primary/20")}>
-                    <div className="flex items-center gap-2 mb-3">
+                  <div className={cn("p-4 rounded-[1.25rem] border bg-primary/5 border-primary/20")}>
+                    <div className="flex items-center gap-2 mb-2.5">
                       <Sparkles size={14} className="text-primary" />
                       <h5 className="text-[11px] font-semibold text-primary">Capabilities</h5>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-1.5">
                       {["Grammar Fix", "Tone Adjustment", "Translation", "Expansion"].map((f) => (
                         <li key={f} className={cn("flex items-center gap-2 text-[11px] font-bold opacity-80", text)}>
                           <CheckCircle2 size={12} className="text-primary shrink-0" /> {f}
@@ -558,7 +566,7 @@ export default function LiveChatSection() {
                     onChange={(e) => setCorrectionPrompt(e.target.value)}
                     placeholder="Rewrite my response to be more professional and clear..."
                     className={cn(
-                      "w-full min-h-[220px] rounded-xl border p-4 text-[13px] font-medium leading-relaxed resize-none transition-all",
+                      "w-full min-h-[170px] rounded-xl border p-4 text-[13px] font-medium leading-relaxed resize-none transition-all",
                       "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 focus:outline-none",
                       dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
                     )}
@@ -578,7 +586,7 @@ export default function LiveChatSection() {
             </TabsContent>
 
             {/* ── FOLDERS TAB ── */}
-            <TabsContent value="folders" className="p-8 outline-none space-y-6">
+            <TabsContent value="folders" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
                 title="Conversation Folders"
@@ -587,9 +595,9 @@ export default function LiveChatSection() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Folder list */}
-                <div className={cn("rounded-[1.5rem] border overflow-hidden", softBg, softBorder)}>
+                <div className={cn("rounded-[1.5rem] border overflow-hidden flex flex-col", softBg, softBorder)}>
                   {folders.length === 0 ? (
-                    <div className="p-8 text-center">
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
                       <Folder className="w-8 h-8 text-primary/40 mx-auto mb-3" />
                       <p className={cn("text-[11px] font-bold opacity-60", sub)}>No folders yet</p>
                     </div>
@@ -760,7 +768,7 @@ export default function LiveChatSection() {
             </TabsContent>
 
             {/* ── PAUSE TAB ── */}
-            <TabsContent value="pause" className="p-8 outline-none space-y-6">
+            <TabsContent value="pause" className="p-6 outline-none space-y-5">
               <h3 className={cn("text-[14px] font-semibold", text)}>
                 Automatically pause the Smart Flow when initiating a conversation?
               </h3>
@@ -799,12 +807,22 @@ export default function LiveChatSection() {
 
 /* ── Helpers ── */
 
-function SectionHeading({ dark, title, description }: { dark: boolean; title: string; description?: string }) {
+function SectionHeading({ dark, title, description, badge }: { dark: boolean; title: string; description?: string; badge?: string }) {
   const text = dark ? "text-white" : "text-slate-900";
   const sub  = dark ? "text-slate-500" : "text-slate-400";
   return (
     <div className="space-y-1.5">
-      <h3 className={cn("text-[14px] font-semibold", text)}>{title}</h3>
+      <div className="flex items-center gap-2.5">
+        <h3 className={cn("text-[14px] font-semibold", text)}>{title}</h3>
+        {badge && (
+          <span className={cn(
+            "text-[10px] font-semibold px-2 py-0.5 rounded-md",
+            dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"
+          )}>
+            {badge}
+          </span>
+        )}
+      </div>
       {description && (
         <p className={cn("text-[11px] font-medium leading-relaxed opacity-60 max-w-2xl", sub)}>{description}</p>
       )}
@@ -826,6 +844,7 @@ function OptionCard({
   icon,
   title,
   description,
+  recommended,
 }: {
   dark: boolean;
   active: boolean;
@@ -833,6 +852,7 @@ function OptionCard({
   icon: React.ReactNode;
   title: string;
   description: string;
+  recommended?: boolean;
 }) {
   const text = dark ? "text-white" : "text-slate-900";
   const sub  = dark ? "text-slate-500" : "text-slate-400";
@@ -860,6 +880,11 @@ function OptionCard({
         <div className="flex-1 pr-6">
           <p className={cn("text-[13px] font-black tracking-tight", text)}>{title}</p>
           <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>{description}</p>
+          {recommended && (
+            <span className="inline-block mt-2.5 text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary">
+              Recommended
+            </span>
+          )}
         </div>
       </div>
       <div
@@ -930,7 +955,7 @@ function SignaturePhonePreview({
     <div className="relative">
       {/* Phone frame */}
       <div className={cn(
-        "w-[240px] h-[480px] rounded-[2.5rem] border-[8px] shadow-2xl overflow-hidden flex flex-col",
+        "w-[190px] h-[380px] rounded-[2rem] border-[6px] shadow-2xl overflow-hidden flex flex-col",
         dark ? "border-slate-900 bg-slate-900" : "border-slate-900 bg-slate-900"
       )}>
         {/* Status bar */}

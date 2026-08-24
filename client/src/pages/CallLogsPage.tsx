@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 /**
  * Convert a date-range preset (or custom range) into ISO `date_from` /
@@ -125,6 +126,7 @@ interface CallLog {
 
 export default function CallLogsPage() {
     const queryClient = useQueryClient();
+    const workspaceTz = useWorkspaceTimezone();
 
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
@@ -888,7 +890,9 @@ export default function CallLogsPage() {
                                             {call.direction}
                                         </td>
                                         <td className="px-5 py-2 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
-                                            {call.startTime}
+                                            {call.startTime
+                                                ? formatInWorkspaceTz(call.startTime, "dd MMM yyyy, HH:mm", workspaceTz)
+                                                : "—"}
                                         </td>
                                         <td className="px-5 py-2 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
                                             {call.duration}
@@ -1059,7 +1063,7 @@ export default function CallLogsPage() {
                                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Started</label>
                                         <p className="mt-1 text-xs font-medium">
                                             {selectedCallLog.startTime
-                                                ? format(new Date(selectedCallLog.startTime), "dd MMM yyyy, HH:mm")
+                                                ? formatInWorkspaceTz(selectedCallLog.startTime, "dd MMM yyyy, HH:mm", workspaceTz)
                                                 : "—"}
                                         </p>
                                     </div>

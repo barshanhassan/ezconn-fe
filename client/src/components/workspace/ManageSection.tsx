@@ -111,6 +111,13 @@ export default function ManageSection() {
     updateMutation.mutate({ name: workspaceName, timezone, firstDayOfWeek });
   };
 
+  const handleDiscard = () => {
+    if (!workspaceData) return;
+    setWorkspaceName(workspaceData.name || "");
+    setTimezone(workspaceData.timezone || "America/Fortaleza");
+    setFirstDayOfWeek(workspaceData.first_day_week ? workspaceData.first_day_week.toLowerCase() : "sunday");
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -138,7 +145,7 @@ export default function ManageSection() {
     <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <CardContent className="p-0">
         {/* ── Header ── */}
-        <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+        <div className={cn("px-8 py-4 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
               <Settings className="w-5 h-5 text-primary" />
@@ -226,7 +233,7 @@ export default function ManageSection() {
               </SelectContent>
             </Select>
 
-            <div className={cn("mt-4 p-5 rounded-[1.25rem] border flex items-center justify-between", softBg, softBorder)}>
+            <div className={cn("mt-3 p-4 rounded-[1.25rem] border flex items-center justify-between", softBg, softBorder)}>
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-xl bg-primary/10 text-primary">
                   <Clock size={18} />
@@ -236,7 +243,10 @@ export default function ManageSection() {
                   <p className={cn("text-[18px] font-black tracking-tight mt-0.5", text)}>{getCurrentTime()}</p>
                 </div>
               </div>
-              <span className={cn("text-[11px] font-semibold opacity-40", sub)}>Live</span>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Live
+              </span>
             </div>
           </FieldRow>
 
@@ -263,8 +273,8 @@ export default function ManageSection() {
               </SelectContent>
             </Select>
 
-            <div className={cn("mt-4 p-5 rounded-[1.25rem] border", softBg, softBorder)}>
-              <p className={cn("text-[11px] font-semibold opacity-60 mb-3", sub)}>Calendar preview</p>
+            <div className={cn("mt-3 p-4 rounded-[1.25rem] border", softBg, softBorder)}>
+              <p className={cn("text-[11px] font-semibold opacity-60 mb-2", sub)}>Calendar preview</p>
               <div className="flex gap-2">
                 {(() => {
                   const WEEK = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -331,11 +341,23 @@ export default function ManageSection() {
           {/* Save Footer — owners + agents with workspace.settings.manage only
               (replyagent hides the whole footer otherwise). */}
           {canManage && (
-            <div className={cn("px-8 py-5 border-t flex justify-end items-center gap-3", border)}>
+            <div className={cn("px-8 py-4 border-t flex justify-end items-center gap-3", border)}>
               <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
                 <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
                 Changes save instantly across all sessions
               </p>
+              <button
+                onClick={handleDiscard}
+                disabled={updateMutation.isPending}
+                className={cn(
+                  "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all disabled:opacity-50",
+                  dark
+                    ? "border-slate-800 text-slate-200 hover:border-slate-700"
+                    : "border-slate-200 text-slate-700 hover:border-slate-300"
+                )}
+              >
+                Discard
+              </button>
               <button
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
@@ -376,7 +398,7 @@ function FieldRow({ dark, label, description, icon, required, optional, last, ch
     // shifts from small-caps chip to plain sentence-case text — the
     // treatment made every field feel like a
     // header, which competed with the section title.
-    <div className={cn("grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-6 px-8 py-4", !last && "border-b", border)}>
+    <div className={cn("grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-6 px-8 py-3", !last && "border-b", border)}>
       <div className="md:col-span-4 space-y-0.5">
         <div className="flex items-center gap-2">
           {icon && <div className="p-1.5 rounded-lg bg-primary/10 text-primary">{icon}</div>}

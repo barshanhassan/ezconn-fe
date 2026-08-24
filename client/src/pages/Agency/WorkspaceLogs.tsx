@@ -27,7 +27,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { format } from "date-fns";
+import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { useTranslation } from 'react-i18next';
 
 // Maps each workspace-log event to a crisp, color-coded icon for the row badge.
@@ -51,6 +51,7 @@ const LogIcon = ({ event }: { event?: string }) => {
 const WorkspaceLogs = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
+  const workspaceTz = useAgencyTimezone();
   const userInfo = getUserInfo();
   const agencyId = userInfo.modelable_id;
 
@@ -256,7 +257,7 @@ const WorkspaceLogs = () => {
                           <div className="col-span-3 flex items-center gap-3">
                             <LogIcon event={log.event} />
                             <div className={cn("text-[13px] font-medium truncate", dark ? "text-slate-300" : "text-slate-600")}>
-                              {log.created_at ? format(new Date(log.created_at), "yyyy-MM-dd hh:mm a") : "N/A"}
+                              {log.created_at ? formatInWorkspaceTz(log.created_at, "yyyy-MM-dd hh:mm a", workspaceTz) : "N/A"}
                             </div>
                           </div>
 

@@ -27,8 +27,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz } from "@/contexts/WorkspaceTimezoneContext";
 import { cn } from "@/lib/utils";
 import CreateWorkspaceForm from "./CreateWorkspaceForm";
 import WorkspaceUsageView from "./WorkspaceUsageView";
@@ -59,7 +59,7 @@ const AgencyWorkspaces = () => {
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const dark = mode === "dark";
   const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
   const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
@@ -101,10 +101,10 @@ const AgencyWorkspaces = () => {
     id: ws.id,
     name: ws.name,
     createdAt: ws.created_at
-      ? format(new Date(ws.created_at), "MMM dd, yyyy")
+      ? formatInWorkspaceTz(ws.created_at, "MMM dd, yyyy", ws.timezone || "UTC")
       : ws.updated_at
-      ? format(new Date(ws.updated_at), "MMM dd, yyyy")
-      : format(new Date(), "MMM dd, yyyy"),
+      ? formatInWorkspaceTz(ws.updated_at, "MMM dd, yyyy", ws.timezone || "UTC")
+      : formatInWorkspaceTz(new Date(), "MMM dd, yyyy", ws.timezone || "UTC"),
     _ts: ws.created_at
       ? new Date(ws.created_at).getTime()
       : ws.updated_at

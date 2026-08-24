@@ -541,8 +541,8 @@ export default function AIVoiceAssistantsSection() {
                 {formData.call_transfer_config?.length > 0 ? (
                   <div className="space-y-3">
                     {formData.call_transfer_config.map((conf: any, index: number) => (
-                      <div key={index} className={cn("flex gap-3 items-start p-4 rounded-[1.25rem] border", softBg, softBorder)}>
-                        <div className="flex-1 space-y-2">
+                      <div key={index} className={cn("flex flex-col md:flex-row gap-3 items-start p-4 rounded-[1.25rem] border", softBg, softBorder)}>
+                        <div className="flex-1 w-full space-y-2">
                           <FieldLabel dark={dark}>Description</FieldLabel>
                           <Textarea
                             placeholder="e.g. User asks to speak to a manager"
@@ -556,7 +556,7 @@ export default function AIVoiceAssistantsSection() {
                             className={textareaCls}
                           />
                         </div>
-                        <div className="w-1/3 space-y-2">
+                        <div className="w-full md:w-1/3 space-y-2">
                           <FieldLabel dark={dark}>Destination</FieldLabel>
                           <Select value={conf.number} onValueChange={(val) => {
                             const newConf = [...formData.call_transfer_config];
@@ -577,7 +577,7 @@ export default function AIVoiceAssistantsSection() {
                             const newConf = formData.call_transfer_config.filter((_: any, i: number) => i !== index);
                             setFormData({ ...formData, call_transfer_config: newConf });
                           }}
-                          className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all mt-7 shrink-0", dark ? "border-slate-800 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-500" : "border-slate-200 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-500")}
+                          className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all md:mt-7 shrink-0 self-end md:self-auto", dark ? "border-slate-800 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-500" : "border-slate-200 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-500")}
                         >
                           <Trash2 size={12} />
                         </button>
@@ -828,6 +828,7 @@ export default function AIVoiceAssistantsSection() {
               </div>
             ) : (
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
@@ -912,6 +913,7 @@ export default function AIVoiceAssistantsSection() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>

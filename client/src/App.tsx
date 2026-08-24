@@ -54,6 +54,7 @@ import AgencyWhiteLabelSettings from "@/pages/Agency/AgencyWhiteLabelSettings";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AgencyLayout from "@/components/AgencyLayout";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { WorkspaceTimezoneProvider } from "@/contexts/WorkspaceTimezoneContext";
 import { SiteProvider, useSite } from "@/contexts/SiteContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
 import { I18nextProvider } from "react-i18next";
@@ -278,6 +279,7 @@ function AppContent() {
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
         <ThemeProvider>
+        <WorkspaceTimezoneProvider>
           <GlobalBrandingFetcher />
           <TooltipProvider>
             {isAuthRoute ? (
@@ -307,6 +309,7 @@ function AppContent() {
                 the workspace branch, so agency routes never rendered any toast. */}
             <Toaster />
           </TooltipProvider>
+        </WorkspaceTimezoneProvider>
         </ThemeProvider>
       </I18nextProvider>
     </QueryClientProvider>

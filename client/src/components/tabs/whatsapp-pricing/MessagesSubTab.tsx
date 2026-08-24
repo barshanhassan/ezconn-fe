@@ -137,23 +137,25 @@ export default function MessagesSubTab() {
         ))}
       </div>
 
-      {/* Charts */}
-      {charts.map((ch, i) => (
-        <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-          <h3 className={cn("text-[13px] font-bold mb-1", text)}>{ch.title}</h3>
-          <p className={cn("text-[11px] mb-4", sub)}>Trend over time</p>
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={ch.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={grid} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
-              <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
-              {ch.lines.map(l => <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.stroke} strokeWidth={2.5} dot={false} name={l.name} activeDot={{ r: 4, fill: l.stroke, strokeWidth: 0 }} />)}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ))}
+      {/* Charts — paired 2-up, matching the Daily/Monthly Active Users layout. */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {charts.map((ch, i) => (
+          <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+            <h3 className={cn("text-[13px] font-bold mb-1", text)}>{ch.title}</h3>
+            <p className={cn("text-[11px] mb-4", sub)}>Trend over time</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={ch.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
+                {ch.lines.map(l => <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.stroke} strokeWidth={2.5} dot={false} name={l.name} activeDot={{ r: 4, fill: l.stroke, strokeWidth: 0 }} />)}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

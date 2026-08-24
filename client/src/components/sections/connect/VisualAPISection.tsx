@@ -47,6 +47,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 /**
  * Visual APIs — 1:1 mirror of replyagent's `VisualApis.vue`
@@ -95,6 +96,7 @@ export default function VisualAPISection() {
   const dark = mode === "dark";
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const workspaceTz = useWorkspaceTimezone();
 
   const [viewMode, setViewMode] = useState<"LIST" | "MANAGE" | "LOGS">("LIST");
   const [activeTriggerId, setActiveTriggerId] = useState<string | null>(null);
@@ -526,7 +528,7 @@ export default function VisualAPISection() {
                               )}
                             </td>
                             <td className={cn("px-6 py-4 text-[11px] font-bold", sub)}>
-                              {trigger.created_at ? format(new Date(trigger.created_at), "PP p") : "—"}
+                              {trigger.created_at ? formatInWorkspaceTz(trigger.created_at, "PP p", workspaceTz) : "—"}
                             </td>
                             <td className="px-6 py-4 text-right">
                               <DropdownMenu>
@@ -589,16 +591,16 @@ export default function VisualAPISection() {
             <div className="p-8 space-y-6">
               {/* Top row — name + endpoint URL on the left, Test/Live switch
                   on the right (replyagent panel_body). */}
-              <div className={cn("rounded-[1.5rem] border p-6 flex items-center gap-6", softBg, softBorder)}>
-                <div className="flex-1">
+              <div className={cn("rounded-[1.5rem] border p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6", softBg, softBorder)}>
+                <div className="flex-1 min-w-0">
                   <p className={cn("text-[14px] font-black mb-2", text)}>{managed.name}</p>
-                  <div className="flex items-center gap-2">
-                    <code className={cn("px-2.5 py-1 rounded-md text-[11px] font-bold border", softBorder, dark ? "bg-slate-900/50" : "bg-slate-50")}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <code className={cn("px-2.5 py-1 rounded-md text-[11px] font-bold border truncate min-w-0 flex-1", softBorder, dark ? "bg-slate-900/50" : "bg-slate-50")}>
                       {getWebhookUrl(managed.slug)}
                     </code>
                     <button
                       onClick={() => copyToClipboard(getWebhookUrl(managed.slug))}
-                      className={cn("w-7 h-7 rounded-md flex items-center justify-center", dark ? "hover:bg-slate-800 text-primary" : "hover:bg-slate-100 text-primary")}
+                      className={cn("w-7 h-7 rounded-md flex items-center justify-center shrink-0", dark ? "hover:bg-slate-800 text-primary" : "hover:bg-slate-100 text-primary")}
                     >
                       <Copy size={11} />
                     </button>
@@ -835,7 +837,7 @@ export default function VisualAPISection() {
                             return (
                               <tr key={log.id} className={cn("border-b transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/80")}>
                                 <td className={cn("px-6 py-4 font-mono text-[11px] font-bold", sub)}>
-                                  {log.created_at ? format(new Date(log.created_at), "PP p") : "—"}
+                                  {log.created_at ? formatInWorkspaceTz(log.created_at, "PP p", workspaceTz) : "—"}
                                 </td>
                                 <td className="px-6 py-4">
                                   {success ? (
@@ -1123,7 +1125,7 @@ function MappingRow(props: {
   } = props;
 
   return (
-    <div className="grid grid-cols-2 gap-x-4 py-3 items-center">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 py-3 items-start md:items-center">
       <div className="flex items-center gap-3">
         <div className="grow space-y-1">
           <div className="flex items-center gap-1">
@@ -1155,7 +1157,7 @@ function MappingRow(props: {
         </div>
         <ArrowRight size={14} className={sub} />
       </div>
-      <div className={cn("flex items-center gap-2 rounded-xl border px-2", softBorder, dark ? "bg-slate-950/40" : "bg-white")}>
+      <div className={cn("flex items-center gap-2 rounded-xl border px-2 overflow-x-auto", softBorder, dark ? "bg-slate-950/40" : "bg-white")}>
         <input
           type="text"
           placeholder="Prefix"

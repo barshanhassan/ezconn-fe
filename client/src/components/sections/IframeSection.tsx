@@ -418,7 +418,7 @@ export default function IframeSection() {
       <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
-          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+          <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
             <div className="flex items-center gap-4">
               <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
                 <Globe className="w-5 h-5 text-primary" />

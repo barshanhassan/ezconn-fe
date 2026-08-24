@@ -57,6 +57,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 interface SortEntry {
   column: string;
@@ -174,6 +175,7 @@ interface EngagementData {
 
 export default function CampaignManager() {
   const { toast } = useToast();
+  const workspaceTz = useWorkspaceTimezone();
   // "Allow" permissions (replyagent canManageBraodcasts / canDeleteBraodcasts) —
   // owners pass via the `workspace.*` wildcard, only restricted agents are gated.
   //  - manage → create / edit / clone / send-now / archive
@@ -2778,22 +2780,13 @@ export default function CampaignManager() {
                                     {/* CREATED AT */}
                                     <td className="py-2 px-3 text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         {campaign.createdAt
-                                            ? campaign.createdAt.toLocaleDateString(undefined, {
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                  year: "2-digit",
-                                              })
+                                            ? formatInWorkspaceTz(campaign.createdAt, "dd MMM yy", workspaceTz)
                                             : "—"}
                                     </td>
                                     {/* SCHEDULED */}
                                     <td className="py-2 px-3 text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         {campaign.scheduledAt
-                                            ? campaign.scheduledAt.toLocaleString(undefined, {
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                  hour: "2-digit",
-                                                  minute: "2-digit",
-                                              })
+                                            ? formatInWorkspaceTz(campaign.scheduledAt, "dd MMM, HH:mm", workspaceTz)
                                             : "—"}
                                     </td>
                                     {/* STATUS */}

@@ -118,6 +118,7 @@ const apiDelete = async (url: string) => {
   }
 };
 import { format } from "date-fns";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -408,6 +409,7 @@ export default function ContactProfileModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const workspaceTz = useWorkspaceTimezone();
 
   const contactId = contact?.id ? String(contact.id) : null;
 
@@ -1092,7 +1094,7 @@ export default function ContactProfileModal({
               )}
               {enriched?.created_at && (
                 <span className="text-xs">
-                  on {format(new Date(enriched.created_at), "yyyy-MM-dd HH:mm")}
+                  on {formatInWorkspaceTz(enriched.created_at, "yyyy-MM-dd HH:mm", workspaceTz)}
                 </span>
               )}
             </div>
@@ -1358,7 +1360,7 @@ export default function ContactProfileModal({
                           </p>
                           {t.datetime && (
                             <p className="text-muted-foreground">
-                              {format(new Date(t.datetime), "MMM d, HH:mm")}
+                              {formatInWorkspaceTz(t.datetime, "MMM d, HH:mm", workspaceTz)}
                             </p>
                           )}
                         </div>
@@ -1519,7 +1521,7 @@ export default function ContactProfileModal({
                         <p className="font-medium truncate">{b.title}</p>
                         {b.start && (
                           <p className="text-muted-foreground">
-                            {format(new Date(b.start), "MMM d, yyyy HH:mm")}
+                            {formatInWorkspaceTz(b.start, "MMM d, yyyy HH:mm", workspaceTz)}
                           </p>
                         )}
                       </div>
@@ -1553,7 +1555,7 @@ export default function ContactProfileModal({
                             </p>
                             <p className="text-muted-foreground">
                               {c.call_duration ? `${c.call_duration}s` : "—"}
-                              {c.created_at ? ` · ${format(new Date(c.created_at), "MMM d, HH:mm")}` : ""}
+                              {c.created_at ? ` · ${formatInWorkspaceTz(c.created_at, "MMM d, HH:mm", workspaceTz)}` : ""}
                             </p>
                           </div>
                           {c.transcription && (
@@ -1619,7 +1621,7 @@ export default function ContactProfileModal({
                         )}
                         {r.created_at && (
                           <p className="text-muted-foreground">
-                            {format(new Date(r.created_at), "MMM d, yyyy HH:mm")}
+                            {formatInWorkspaceTz(r.created_at, "MMM d, yyyy HH:mm", workspaceTz)}
                           </p>
                         )}
                       </div>
@@ -3755,6 +3757,7 @@ function MergeContactsDialog({
 }
 
 function ContactSummary({ c, className = "" }: { c: any; className?: string }) {
+  const workspaceTz = useWorkspaceTimezone();
   return (
     <div className={`space-y-1 text-xs ${className}`}>
       <div className="flex items-center gap-2">
@@ -3778,7 +3781,7 @@ function ContactSummary({ c, className = "" }: { c: any; className?: string }) {
       {c.created_at && (
         <div>
           <span className="text-muted-foreground">Subscribed:</span>{" "}
-          {format(new Date(c.created_at), "yyyy-MM-dd")}
+          {formatInWorkspaceTz(c.created_at, "yyyy-MM-dd", workspaceTz)}
         </div>
       )}
       {c.mobile_contacts?.length > 0 && (

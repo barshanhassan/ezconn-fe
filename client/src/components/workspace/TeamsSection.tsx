@@ -173,7 +173,7 @@ export default function TeamsSection() {
       <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
-          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+          <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => { resetForm(); setView("list"); }}
@@ -512,7 +512,7 @@ export default function TeamsSection() {
         </div>
 
         {/* Toolbar */}
-        <div className={cn("px-6 py-4 border-b flex items-center gap-3", softBorder)}>
+        <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-3", softBorder)}>
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <Input
@@ -546,9 +546,6 @@ export default function TeamsSection() {
                     Create your first team to start routing conversations.
                   </p>
                 </div>
-                <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
-                  <Plus size={12} /> Add Team
-                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -643,7 +640,7 @@ export default function TeamsSection() {
 
       {/* Delete Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={cn("w-full max-w-md rounded-[2rem] overflow-hidden shadow-2xl border", card, border)}>
             <div className="p-6 space-y-5">
               <div className="flex items-center gap-4">

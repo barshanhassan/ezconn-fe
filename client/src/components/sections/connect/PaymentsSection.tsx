@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatInWorkspaceTz, useWorkspaceTimezone, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 /**
  * Swich PayIn settings — save the merchant's client_id/client_secret (Section 4
@@ -27,6 +28,13 @@ interface PaymentsSectionProps {
   basePath?: string;
 }
 
+/** Shows only the first/last few characters — credentials shouldn't be fully visible on screen. */
+function maskCredential(value?: string | null): string {
+  if (!value) return "";
+  if (value.length <= 8) return "•".repeat(value.length);
+  return `${value.slice(0, 4)}${"•".repeat(8)}${value.slice(-4)}`;
+}
+
 export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSectionProps) {
   // Agency scope charges agencies on behalf of Agentawk itself, so
   // credentials are a single server-side (.env) account, not something an
@@ -34,6 +42,12 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
   const isAgencyScope = basePath.includes("/agency");
   const { mode } = useTheme();
   const dark = mode === "dark";
+  // Agency-scoped transactions span the whole agency, not one workspace — the
+  // agency-level session has no "current workspace", so use the agency's own
+  // timezone there instead of the (meaningless-when-agency-scoped) workspace one.
+  const perWorkspaceTz = useWorkspaceTimezone();
+  const perAgencyTz = useAgencyTimezone();
+  const workspaceTz = isAgencyScope ? perAgencyTz : perWorkspaceTz;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -190,7 +204,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={16} className="text-primary" />
                   <div>
-                    <p className={cn("text-[12px] font-bold", text)}>Client ID: {account.client_id}</p>
+                    <p className={cn("text-[12px] font-bold", text)}>Client ID: {maskCredential(account.client_id)}</p>
                     <p className={cn("text-[10px] opacity-60", sub)}>
                       {account.environment === "production" ? "Live" : "Sandbox"} mode
                       {account.has_pwa_credentials ? " · PWA client set" : ""}
@@ -411,7 +425,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                           </Badge>
                         </td>
                         <td className={cn("py-2 pr-4 opacity-60", sub)}>
-                          {t.created_at ? new Date(t.created_at).toLocaleString() : "—"}
+                          {t.created_at ? formatInWorkspaceTz(t.created_at, "M/d/yyyy, h:mm:ss a", workspaceTz) : "—"}
                         </td>
                         <td className="py-2 pr-4">
                           {t.status === "pending" && (

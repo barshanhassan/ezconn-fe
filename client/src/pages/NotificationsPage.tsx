@@ -4,6 +4,7 @@ import { Bell, ArrowLeft, CheckCircle, AlertTriangle, Mail, Send, MessageSquare,
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 function getIcon(slug?: string) {
     const s = (slug || "").toLowerCase();
@@ -15,7 +16,7 @@ function getIcon(slug?: string) {
     return <Bell className="text-slate-500" size={16} />;
 }
 
-function formatRelativeTime(iso: string | Date | null | undefined): string {
+function formatRelativeTime(iso: string | Date | null | undefined, workspaceTz: string): string {
     if (!iso) return "";
     const date = typeof iso === "string" ? new Date(iso) : iso;
     const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -23,12 +24,13 @@ function formatRelativeTime(iso: string | Date | null | undefined): string {
     if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
-    return date.toLocaleDateString();
+    return formatInWorkspaceTz(date, "M/d/yyyy", workspaceTz);
 }
 
 export default function NotificationsPage() {
     const [, setLocation] = useLocation();
     const queryClient = useQueryClient();
+    const workspaceTz = useWorkspaceTimezone();
 
     const { data: resp, isLoading } = useQuery<any>({
         queryKey: ["/api/notifications", { limit: 100 }],
@@ -156,7 +158,7 @@ export default function NotificationsPage() {
                                                     {displayBody}
                                                 </p>
                                             )}
-                                            <p className="text-[11px] text-slate-400 mt-1">{formatRelativeTime(n.created_at)}</p>
+                                            <p className="text-[11px] text-slate-400 mt-1">{formatRelativeTime(n.created_at, workspaceTz)}</p>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                             {!n.read && <div className="w-2 h-2 bg-blue-500 rounded-full" />}

@@ -314,7 +314,7 @@ export default function AIKnowledgeBaseSection() {
                   <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
                     {/* Toolbar */}
                     <div className={cn("flex items-center justify-between gap-3 px-5 py-3 border-b flex-wrap", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-wrap">
                         <div className="flex items-center gap-2">
                           <Checkbox
                             id="select-all"
@@ -325,13 +325,13 @@ export default function AIKnowledgeBaseSection() {
                             Select All
                           </label>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-full sm:w-auto">
                           <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <Input
                             placeholder="Search URLs..."
                             value={searchUrl}
                             onChange={(e) => setSearchUrl(e.target.value)}
-                            className={cn(inputCls, "h-9 pl-8 w-[220px] text-[12px]")}
+                            className={cn(inputCls, "h-9 pl-8 w-full sm:w-[220px] text-[12px]")}
                           />
                         </div>
                       </div>
@@ -512,6 +512,7 @@ export default function AIKnowledgeBaseSection() {
               </div>
             ) : (
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
@@ -561,6 +562,7 @@ export default function AIKnowledgeBaseSection() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>

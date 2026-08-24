@@ -28,6 +28,14 @@ import {
   Search,
   Sparkles,
   Zap,
+  MessageCircle,
+  Palette,
+  ShieldCheck,
+  Users,
+  Mic,
+  BarChart3,
+  ListChecks,
+  Layout,
 } from "lucide-react";
 import ManageSection from "@/components/workspace/ManageSection";
 import LiveChatSection from "@/components/workspace/LiveChatSection";
@@ -124,10 +132,10 @@ export default function SettingsPage() {
   //  - AI Report Builder ← manage_reports (single perm gates the whole screen)
   const canAiReports = hasAnyPerm(_connectPerms, ["workspace.ai.manage_reports"]);
   const chatGptChildren = [
-    ...(canAiAssistants ? [{ name: "AI Chat Assistants" }] : []),
-    ...(canAiVoice ? [{ name: "AI Voice Assistants" }] : []),
-    ...(canAiKnowledgeBase ? [{ name: "AI Knowledge base" }] : []),
-    ...(canAiReports ? [{ name: "AI Report Builder" }] : []),
+    ...(canAiAssistants ? [{ name: "AI Chat Assistants", icon: Sparkles }] : []),
+    ...(canAiVoice ? [{ name: "AI Voice Assistants", icon: Mic }] : []),
+    ...(canAiKnowledgeBase ? [{ name: "AI Knowledge base", icon: Book }] : []),
+    ...(canAiReports ? [{ name: "AI Report Builder", icon: BarChart3 }] : []),
   ];
 
   const connectChildren = [
@@ -137,18 +145,18 @@ export default function SettingsPage() {
   ];
 
   const workspaceChildren = [
-    { name: "Manage", path: "/settings/workspace/ManageSection" },
+    { name: "Manage", path: "/settings/workspace/ManageSection", icon: Settings },
     // Hide the Live Chat settings sub-item unless the agent may manage live chat.
     ...(canManageLiveChat
-      ? [{ name: "Live Chat", path: "/settings/workspace/live-chat" }]
+      ? [{ name: "Live Chat", path: "/settings/workspace/live-chat", icon: MessageCircle }]
       : []),
     // Hide the Theme (branding) sub-item when the agency has turned branding off for this workspace.
     ...(allowBranding
-      ? [{ name: "Theme", path: "/settings/workspace/white-label" }]
+      ? [{ name: "Theme", path: "/settings/workspace/white-label", icon: Palette }]
       : []),
-    { name: "Manage User", path: "/settings/workspace/manage-agents" },
-    { name: "Roles & Permissions", path: "/settings/workspace/roles" },
-    { name: "Teams", path: "/settings/workspace/teams" },
+    { name: "Manage User", path: "/settings/workspace/manage-agents", icon: UserCog },
+    { name: "Roles & Permissions", path: "/settings/workspace/roles", icon: ShieldCheck },
+    { name: "Teams", path: "/settings/workspace/teams", icon: Users },
   ];
 
   const sections = [
@@ -157,8 +165,6 @@ export default function SettingsPage() {
       icon: LayoutGrid,
       children: workspaceChildren,
     },
-    { name: "Media Gallery", icon: Film },
-
     // SETTINGS (existing ones)
     {
       name: "Conversation channels",
@@ -187,11 +193,11 @@ export default function SettingsPage() {
       name: "Customization",
       icon: Sliders,
       children: [
-        { name: "Custom fields" },
-        { name: "Chat Widget" },
-        { name: "Iframe" },
-        { name: "Tags" },
-        { name: "Quick Replies" },
+        { name: "Custom fields", icon: ListChecks },
+        { name: "Chat Widget", icon: Layout },
+        { name: "Iframe", icon: Code },
+        { name: "Tags", icon: Tag },
+        { name: "Quick Replies", icon: Zap },
       ],
     },
 
@@ -199,6 +205,7 @@ export default function SettingsPage() {
 
 
 
+    { name: "Media Gallery", icon: Film },
     { name: "Developer Settings", icon: Code },
     { name: "Change Password", icon: Lock },
   ];
@@ -217,11 +224,28 @@ export default function SettingsPage() {
   const workspaceNames = ["Manage","Live Chat","Theme","Manage User","Roles & Permissions","Teams"];
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
-  const [workspaceOpen, setWorkspaceOpen] = useState(workspaceNames.includes(initialActiveSection) || initialActiveSection === "Manage");
-  const [customizationOpen, setCustomizationOpen] = useState(customizationNames.includes(initialActiveSection));
-  const [channelsOpen, setChannelsOpen] = useState(channelNames.includes(initialActiveSection));
-  const [chatGptOpen, setChatGptOpen] = useState(chatGptNames.includes(initialActiveSection));
-  const [connectOpen, setConnectOpen] = useState(connectNames.includes(initialActiveSection));
+
+  // Accordion: only one sidebar group stays expanded at a time (matches
+  // AgencySidebar's `expanded` behavior) — opening a new group auto-closes
+  // whichever one was open before, instead of letting several stack up.
+  const initialExpandedGroup =
+    workspaceNames.includes(initialActiveSection) || initialActiveSection === "Manage" ? "workspace"
+    : customizationNames.includes(initialActiveSection) ? "customization"
+    : channelNames.includes(initialActiveSection) ? "channels"
+    : chatGptNames.includes(initialActiveSection) ? "chatgpt"
+    : connectNames.includes(initialActiveSection) ? "connect"
+    : null;
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(initialExpandedGroup);
+  const workspaceOpen = expandedGroup === "workspace";
+  const setWorkspaceOpen = (open: boolean) => setExpandedGroup(open ? "workspace" : null);
+  const customizationOpen = expandedGroup === "customization";
+  const setCustomizationOpen = (open: boolean) => setExpandedGroup(open ? "customization" : null);
+  const channelsOpen = expandedGroup === "channels";
+  const setChannelsOpen = (open: boolean) => setExpandedGroup(open ? "channels" : null);
+  const chatGptOpen = expandedGroup === "chatgpt";
+  const setChatGptOpen = (open: boolean) => setExpandedGroup(open ? "chatgpt" : null);
+  const connectOpen = expandedGroup === "connect";
+  const setConnectOpen = (open: boolean) => setExpandedGroup(open ? "connect" : null);
   const [profilePictureUrl, setProfilePictureUrl] = useState(""); // Default profile picture
   const [notificationsEnabled, setNotificationsEnabled] = useState(false); // User preference for notifications, off by default
   const [browserNotificationsDenied, setBrowserNotificationsDenied] = useState(Notification.permission === 'denied'); // Initialize based on actual browser permission
@@ -330,13 +354,13 @@ export default function SettingsPage() {
           all sides so the sidebar + content read as separate rounded
           cards, not an edge-to-edge sheet. Height budgets 88px for the
           floating header + 12px bottom breathing room. */}
-      <div className="h-[calc(100vh-88px)] overflow-hidden p-3" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <div className="flex h-full gap-3">
+      <div className="h-auto md:h-[calc(100vh-88px)] overflow-y-auto md:overflow-hidden p-3 bg-slate-50/80 dark:bg-[#0b1120]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div className="flex flex-col md:flex-row h-auto md:h-full gap-3">
           {/* Left Sidebar Navigation — floating rounded card, all-side
               border + shadow so the separation from the header (and the
               content panel to the right) reads clearly. */}
-          <Card className="h-full w-64 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex-shrink-0 z-10 flex flex-col overflow-hidden shadow-[0_10px_28px_-8px_rgba(15,23,42,0.18),0_4px_10px_-2px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55),0_4px_10px_-2px_rgba(0,0,0,0.35)]">
-            <CardContent className="p-0 flex flex-col flex-1 overflow-y-auto scrollbar-hide max-h-full min-h-0">
+          <Card className="w-full md:h-full md:w-64 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex-shrink-0 z-10 flex flex-col overflow-hidden shadow-[0_10px_28px_-8px_rgba(15,23,42,0.18),0_4px_10px_-2px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55),0_4px_10px_-2px_rgba(0,0,0,0.35)]">
+            <CardContent className="p-0 flex flex-col flex-1 overflow-y-auto scrollbar-hide max-h-[50vh] md:max-h-full min-h-0">
 
               {/* Search Bar */}
               <div className="p-4 border-b border-slate-200 dark:border-slate-800 relative z-10">
@@ -350,7 +374,7 @@ export default function SettingsPage() {
                     placeholder="Search settings..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg 
+                    className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-slate-200 dark:border-slate-700 rounded-[10px]
                              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
                              bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100
                              placeholder:text-slate-400 dark:placeholder:text-slate-500
@@ -364,40 +388,43 @@ export default function SettingsPage() {
 
                 {/* WORKSPACE DROPDOWN */}
                 <div className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
-                  <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                   <button
                     onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors
-                text-muted-foreground hover:bg-accent hover:text-foreground
-                dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors
+                text-slate-600 hover:bg-slate-100 hover:text-slate-900
+                dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                   >
                     <div className="flex items-center gap-2.5">
-                      <LayoutGrid size={16} />
-                      <span className="font-medium">Workspace</span>
+                      <LayoutGrid size={16} className="text-primary" />
+                      <span>Workspace</span>
                     </div>
                     <ChevronDown
                       size={16}
-                      className={`transition-transform ${workspaceOpen ? "rotate-180" : ""}`}
+                      className={`transition-transform text-slate-400 ${workspaceOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
                   {workspaceOpen && (
-                    <div className="ml-6 mt-1 space-y-1">
-                      {filteredSections[0]?.children?.map((item: any, idx: number) => (
+                    <div className="ml-1 mt-1 space-y-0.5">
+                      {filteredSections[0]?.children?.map((item: any, idx: number) => {
+                        const ItemIcon = item.icon;
+                        return (
                         <React.Fragment key={item.path}>
                           <button
                             onClick={() => goToSection(item.name)}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 
+                            className={`w-full flex items-center gap-2 text-left pl-8 pr-3 py-1.5 text-[13px] rounded-[9px] transition-all duration-200
           ${activeSection === item.name
                                 ? "bg-primary/10 text-primary font-semibold"
-                                : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                                : "text-slate-500 font-medium hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                               }`}
                           >
+                            {ItemIcon && <ItemIcon size={14} className={activeSection === item.name ? "text-primary" : "text-slate-400"} />}
                             {displayLabel(item.name)}
                           </button>
 
                         </React.Fragment>
-                      ))}
+                        );
+                      })}
                     </div>
 
                   )}
@@ -411,32 +438,31 @@ export default function SettingsPage() {
                   if (section.name === "Conversation channels") {
                     return (
                       <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setChannelsOpen(!channelsOpen)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
-                            ? "bg-primary/10 text-primary font-semibold"
-                            : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors ${activeSection === section.name
+                            ? "bg-primary/10 text-primary"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            {Icon && <Icon size={16} />}
-                            <span className="font-medium">{displayLabel(section.name)}</span>
+                            {Icon && <Icon size={16} className="text-slate-400" />}
+                            <span>{displayLabel(section.name)}</span>
                           </div>
-                          <ChevronDown size={14} className={`${channelsOpen ? "rotate-180" : ""}`} />
+                          <ChevronDown size={14} className={`text-slate-400 ${channelsOpen ? "rotate-180" : ""}`} />
                         </button>
 
                         {channelsOpen && (
-                          <div className="ml-6 mt-1 space-y-1">
+                          <div className="ml-1 mt-1 space-y-0.5">
                             {section.children?.map((child: any, childIndex: number) => {
                               const ChildIcon = child.icon;
                               return (
                                 <React.Fragment key={child.name}>
                                   <button
                                     onClick={() => goToSection(child.name)}
-                                    className={`w-full flex items-center gap-2 text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                    className={`w-full flex items-center gap-2 text-left pl-8 pr-3 py-1.5 text-[13px] rounded-[9px] transition-colors ${activeSection === child.name
                                       ? "bg-primary/10 text-primary font-semibold"
-                                      : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                                      : "text-slate-500 font-medium hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                                       }`}
                                   >
                                     {child.iconPath ? (
@@ -459,37 +485,40 @@ export default function SettingsPage() {
                   if (section.name === "Customization") {
                     return (
                       <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setCustomizationOpen(!customizationOpen)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
-                            ? "bg-primary/10 text-primary font-semibold"
-                            : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors ${activeSection === section.name
+                            ? "bg-primary/10 text-primary"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            {Icon && <Icon size={16} />}
-                            <span className="font-medium">{displayLabel(section.name)}</span>
+                            {Icon && <Icon size={16} className="text-slate-400" />}
+                            <span>{displayLabel(section.name)}</span>
                           </div>
-                          <ChevronDown size={14} className={`${customizationOpen ? "rotate-180" : ""}`} />
+                          <ChevronDown size={14} className={`text-slate-400 ${customizationOpen ? "rotate-180" : ""}`} />
                         </button>
 
                         {customizationOpen && (
-                          <div className="ml-6 mt-1 space-y-1">
-                            {section.children?.map((child: any, idx: number) => (
+                          <div className="ml-1 mt-1 space-y-0.5">
+                            {section.children?.map((child: any, idx: number) => {
+                              const ChildIcon = child.icon;
+                              return (
                               <React.Fragment key={child.name}>
                                 <button
                                   onClick={() => goToSection(child.name)}
-                                  className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                  className={`w-full flex items-center gap-2 text-left pl-8 pr-3 py-1.5 text-[13px] rounded-[9px] transition-colors ${activeSection === child.name
                                     ? "bg-primary/10 text-primary font-semibold"
-                                    : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                                    : "text-slate-500 font-medium hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                                     }`}
                                 >
+                                  {ChildIcon && <ChildIcon size={14} className={activeSection === child.name ? "text-primary" : "text-slate-400"} />}
                                   {displayLabel(child.name)}
                                 </button>
 
                               </React.Fragment>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -500,37 +529,40 @@ export default function SettingsPage() {
                     if (!section.children || section.children.length === 0) return null;
                     return (
                       <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setChatGptOpen(!chatGptOpen)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
-                            ? "bg-primary/10 text-primary font-semibold"
-                            : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors ${activeSection === section.name
+                            ? "bg-primary/10 text-primary"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            {Icon && <Icon size={16} />}
-                            <span className="font-medium">{displayLabel(section.name)}</span>
+                            {Icon && <Icon size={16} className="text-slate-400" />}
+                            <span>{displayLabel(section.name)}</span>
                           </div>
-                          <ChevronDown size={14} className={`${chatGptOpen ? "rotate-180" : ""}`} />
+                          <ChevronDown size={14} className={`text-slate-400 ${chatGptOpen ? "rotate-180" : ""}`} />
                         </button>
 
                         {chatGptOpen && (
-                          <div className="ml-6 mt-1 space-y-1">
-                            {section.children?.map((child: any, idx: number) => (
+                          <div className="ml-1 mt-1 space-y-0.5">
+                            {section.children?.map((child: any, idx: number) => {
+                              const ChildIcon = child.icon;
+                              return (
                               <React.Fragment key={child.name}>
                                 <button
                                   onClick={() => goToSection(child.name)}
-                                  className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                  className={`w-full flex items-center gap-2 text-left pl-8 pr-3 py-1.5 text-[13px] rounded-[9px] transition-colors ${activeSection === child.name
                                     ? "bg-primary/10 text-primary font-semibold"
-                                    : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                                    : "text-slate-500 font-medium hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                                     }`}
                                 >
+                                  {ChildIcon && <ChildIcon size={14} className={activeSection === child.name ? "text-primary" : "text-slate-400"} />}
                                   {displayLabel(child.name)}
                                 </button>
 
                               </React.Fragment>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -541,37 +573,40 @@ export default function SettingsPage() {
                     if (!section.children || section.children.length === 0) return null;
                     return (
                       <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setConnectOpen(!connectOpen)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
-                            ? "bg-primary/10 text-primary font-semibold"
-                            : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors ${activeSection === section.name
+                            ? "bg-primary/10 text-primary"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            {Icon && <Icon size={16} />}
-                            <span className="font-medium">{displayLabel(section.name)}</span>
+                            {Icon && <Icon size={16} className="text-slate-400" />}
+                            <span>{displayLabel(section.name)}</span>
                           </div>
-                          <ChevronDown size={14} className={`${connectOpen ? "rotate-180" : ""}`} />
+                          <ChevronDown size={14} className={`text-slate-400 ${connectOpen ? "rotate-180" : ""}`} />
                         </button>
 
                         {connectOpen && (
-                          <div className="ml-6 mt-1 space-y-1">
-                            {section.children?.map((child: any, idx: number) => (
+                          <div className="ml-1 mt-1 space-y-0.5">
+                            {section.children?.map((child: any, idx: number) => {
+                              const ChildIcon = child.icon;
+                              return (
                               <React.Fragment key={child.name}>
                                 <button
                                   onClick={() => goToSection(child.name)}
-                                  className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                  className={`w-full flex items-center gap-2 text-left pl-8 pr-3 py-1.5 text-[13px] rounded-[9px] transition-colors ${activeSection === child.name
                                     ? "bg-primary/10 text-primary font-semibold"
-                                    : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                                    : "text-slate-500 font-medium hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                                     }`}
                                 >
+                                  {ChildIcon && <ChildIcon size={14} className={activeSection === child.name ? "text-primary" : "text-slate-400"} />}
                                   {displayLabel(child.name)}
                                 </button>
 
                               </React.Fragment>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -579,19 +614,16 @@ export default function SettingsPage() {
                   }
 
                   return (
-                    <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative hover:bg-slate-50/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-                      <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
-                      <button
+                    <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
+                          <button
                         onClick={() => goToSection(section.name)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-gray-300 dark:hover:bg-primary/10 dark:hover:text-primary"
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors ${activeSection === section.name
+                          ? "bg-primary/10 text-primary"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                           }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          {Icon && <Icon size={16} />}
-                          <span className="font-medium">{displayLabel(section.name)}</span>
-                        </div>
+                        {Icon && <Icon size={16} className={activeSection === section.name ? "text-primary" : "text-slate-400"} />}
+                        <span>{displayLabel(section.name)}</span>
                       </button>
                     </div>
                   );

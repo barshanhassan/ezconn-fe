@@ -671,7 +671,7 @@ export default function ChatWidgetSection() {
                           };
 
                           return (
-                            <div key={meta.key} className="flex items-center gap-3">
+                            <div key={meta.key} className="flex flex-wrap items-center gap-3">
                               <input
                                 type="checkbox"
                                 id={`channel-${meta.key}`}

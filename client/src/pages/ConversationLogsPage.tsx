@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
 
 interface SortEntry {
@@ -121,6 +122,7 @@ function rangeToQuery(
 
 export default function ConversationLogsPage() {
     const queryClient = useQueryClient();
+    const workspaceTz = useWorkspaceTimezone();
 
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
@@ -740,7 +742,7 @@ export default function ConversationLogsPage() {
                                         </td>
                                         <td className="px-5 py-2.5 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
                                             {conv.startTime
-                                                ? format(new Date(conv.startTime), "dd MMM yyyy, HH:mm")
+                                                ? formatInWorkspaceTz(conv.startTime, "dd MMM yyyy, HH:mm", workspaceTz)
                                                 : "—"}
                                         </td>
                                         <td className="px-5 py-2.5 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
@@ -952,7 +954,7 @@ export default function ConversationLogsPage() {
                                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Started</label>
                                         <p className="mt-1 text-xs font-medium">
                                             {selectedConversation.startTime
-                                                ? format(new Date(selectedConversation.startTime), "dd MMM yyyy, HH:mm")
+                                                ? formatInWorkspaceTz(selectedConversation.startTime, "dd MMM yyyy, HH:mm", workspaceTz)
                                                 : "—"}
                                         </p>
                                     </div>
@@ -1005,7 +1007,7 @@ export default function ConversationLogsPage() {
                                                         </p>
                                                         <p className={cn("text-[9px] mt-1", outgoing ? "opacity-70" : "opacity-50")}>
                                                             {m.created_at
-                                                                ? format(new Date(m.created_at), "dd MMM HH:mm")
+                                                                ? formatInWorkspaceTz(m.created_at, "dd MMM HH:mm", workspaceTz)
                                                                 : ""}
                                                         </p>
                                                     </div>
