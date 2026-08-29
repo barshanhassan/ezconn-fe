@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UserCog, Users } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ export default function InstagramPageUsersDialog({ open, account, onClose }: Pro
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const text = dark ? "text-white" : "text-slate-900";
   const sub = dark ? "text-slate-500" : "text-slate-400";
@@ -62,10 +64,10 @@ export default function InstagramPageUsersDialog({ open, account, onClose }: Pro
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/instagram/pages", String(account?.id), "users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Saved", description: "Page users updated." });
+      toast({ title: t("instagram_page_users_dialog.saved"), description: t("instagram_page_users_dialog.page_users_updated") });
       onClose();
     },
-    onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
+    onError: () => toast({ title: t("instagram_page_users_dialog.error"), description: t("instagram_page_users_dialog.failed_to_save"), variant: "destructive" }),
   });
 
   function toggleUser(id: string) {
@@ -87,9 +89,9 @@ export default function InstagramPageUsersDialog({ open, account, onClose }: Pro
               <UserCog size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={cn("text-[14px] font-semibold", text)}>Page Access Control</div>
+              <div className={cn("text-[14px] font-semibold", text)}>{t("instagram_page_users_dialog.title")}</div>
               <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                Select which workspace agents can manage and respond from{" "}
+                {t("instagram_page_users_dialog.description_prefix")}{" "}
                 <span className="font-mono">@{account.username ?? account.name}</span>.
               </p>
             </div>
@@ -98,7 +100,7 @@ export default function InstagramPageUsersDialog({ open, account, onClose }: Pro
           {members.length === 0 ? (
             <div className={cn("rounded-xl border py-10 flex flex-col items-center justify-center text-center gap-3", dark ? "border-slate-800" : "border-slate-100")}>
               <Users size={24} className="opacity-30" />
-              <p className={cn("text-[11px] opacity-50 font-medium", sub)}>No workspace members found.</p>
+              <p className={cn("text-[11px] opacity-50 font-medium", sub)}>{t("instagram_page_users_dialog.no_members_found")}</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
@@ -142,14 +144,14 @@ export default function InstagramPageUsersDialog({ open, account, onClose }: Pro
               disabled={saveMutation.isPending}
               className={cn("h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
             >
-              Close
+              {t("instagram_page_users_dialog.close")}
             </button>
             <button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending || members.length === 0}
               className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {saveMutation.isPending ? "Saving…" : "Save"}
+              {saveMutation.isPending ? t("instagram_page_users_dialog.saving") : t("instagram_page_users_dialog.save")}
             </button>
           </div>
         </div>

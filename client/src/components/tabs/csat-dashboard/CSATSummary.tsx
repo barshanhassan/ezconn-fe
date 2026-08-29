@@ -1,19 +1,27 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Star, Activity, BarChart3, Trophy } from "lucide-react";
 
-export default function CSATSummary() {
-  // CSAT collection mechanism (rate-this-conversation prompt + responses
-  // table) is not yet wired in EZCONN. Backend returns honest zeros with
-  // `feature_status: 'not_configured'`; once a csat_responses table and
-  // automation hook exist, the same endpoint will return real values.
+interface CSATSummaryProps {
+  teamIds?: string[];
+  agentIds?: string[];
+}
+
+export default function CSATSummary({ teamIds = [], agentIds = [] }: CSATSummaryProps) {
+  const { t } = useTranslation();
+  const params = new URLSearchParams();
+  if (teamIds.length) params.set("teamIds", teamIds.join(","));
+  if (agentIds.length) params.set("agentIds", agentIds.join(","));
+  const qs = params.toString();
+
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/csat-summary"],
+    queryKey: ["/api/statistics/csat-summary", qs],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/csat-summary");
+      const res = await apiRequest("GET", `/api/statistics/csat-summary${qs ? `?${qs}` : ""}`);
       return res.json();
     },
     refetchInterval: 300_000,
@@ -41,9 +49,9 @@ export default function CSATSummary() {
   const distMap              = data?.distribution ?? { great: 0, average: 0, poor: 0 };
 
   const distributionData = [
-    { name: "Great",   percentage: distMap.great ?? 0, color: "bg-emerald-500", icon: "😊" },
-    { name: "Average", percentage: distMap.average ?? 0, color: "bg-orange-500",  icon: "😐" },
-    { name: "Poor",    percentage: distMap.poor ?? 0, color: "bg-rose-500",    icon: "😞" },
+    { name: t("csat_dashboard.rating_great"),   percentage: distMap.great ?? 0, color: "bg-emerald-500", icon: "😊" },
+    { name: t("csat_dashboard.rating_average"), percentage: distMap.average ?? 0, color: "bg-orange-500",  icon: "😐" },
+    { name: t("csat_dashboard.rating_poor"),    percentage: distMap.poor ?? 0, color: "bg-rose-500",    icon: "😞" },
   ];
 
   const agentRankings: Array<{ name: string; count: number; label: string; positive: boolean }> = data?.agentRankings ?? [];
@@ -76,17 +84,17 @@ export default function CSATSummary() {
             <div className={cn("p-2 rounded-xl", dark ? "bg-primary/15" : "bg-primary/10")}>
               <Star size={14} className="text-primary" />
             </div>
-            <h3 className={cn("text-[12px] font-bold", sub)}>Satisfaction Score</h3>
+            <h3 className={cn("text-[12px] font-bold", sub)}>{t("csat_dashboard.satisfaction_score")}</h3>
           </div>
           <div className={cn("text-4xl font-black tabular-nums mb-3", text)}>{satisfactionScore}%</div>
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span className={cn("text-[11px]", sub)}>Total responses</span>
+              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.total_responses")}</span>
               <span className={cn("text-[11px] font-bold", text)}>{totalResponses}</span>
             </div>
             <div className="flex justify-between">
-              <span className={cn("text-[11px]", sub)}>Based on</span>
-              <span className={cn("text-[11px] font-bold", text)}>{basedOnConversations.toLocaleString()} conv.</span>
+              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.based_on")}</span>
+              <span className={cn("text-[11px] font-bold", text)}>{t("csat_dashboard.conv_count", { count: basedOnConversations.toLocaleString() })}</span>
             </div>
           </div>
         </div>
@@ -97,16 +105,16 @@ export default function CSATSummary() {
             <div className={cn("p-2 rounded-xl", dark ? "bg-emerald-500/15" : "bg-emerald-50")}>
               <Activity size={14} className="text-emerald-500" />
             </div>
-            <h3 className={cn("text-[12px] font-bold", sub)}>Response Rate</h3>
+            <h3 className={cn("text-[12px] font-bold", sub)}>{t("csat_dashboard.response_rate")}</h3>
           </div>
           <div className={cn("text-4xl font-black tabular-nums mb-3 text-emerald-500")}>{feedbackRate}%</div>
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span className={cn("text-[11px]", sub)}>Responded</span>
+              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.responded")}</span>
               <span className={cn("text-[11px] font-bold", text)}>{responded}</span>
             </div>
             <div className="flex justify-between">
-              <span className={cn("text-[11px]", sub)}>Total conversations</span>
+              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.total_conversations")}</span>
               <span className={cn("text-[11px] font-bold", text)}>{totalConversations.toLocaleString()}</span>
             </div>
           </div>
@@ -118,7 +126,7 @@ export default function CSATSummary() {
             <div className={cn("p-2 rounded-xl", dark ? "bg-violet-500/15" : "bg-violet-50")}>
               <BarChart3 size={14} className="text-violet-500" />
             </div>
-            <h3 className={cn("text-[12px] font-bold", sub)}>Distribution</h3>
+            <h3 className={cn("text-[12px] font-bold", sub)}>{t("csat_dashboard.distribution")}</h3>
           </div>
           <div className="space-y-3">
             {distributionData.map((item) => (
@@ -141,7 +149,7 @@ export default function CSATSummary() {
             <div className={cn("p-2 rounded-xl", dark ? "bg-orange-500/15" : "bg-orange-50")}>
               <Trophy size={14} className="text-orange-500" />
             </div>
-            <h3 className={cn("text-[12px] font-bold", sub)}>Agent Rankings</h3>
+            <h3 className={cn("text-[12px] font-bold", sub)}>{t("csat_dashboard.agent_rankings")}</h3>
           </div>
           <div className="space-y-4">
             {agentRankings.map((agent, idx) => (
@@ -161,8 +169,8 @@ export default function CSATSummary() {
 
       {/* CSAT Distribution Chart */}
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-        <h3 className={cn("text-[13px] font-bold mb-1", text)}>CSAT Distribution</h3>
-        <p className={cn("text-[11px] mb-6", sub)}>Rating trends over time</p>
+        <h3 className={cn("text-[13px] font-bold mb-1", text)}>{t("csat_dashboard.chart_title")}</h3>
+        <p className={cn("text-[11px] mb-6", sub)}>{t("csat_dashboard.chart_subtitle")}</p>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={csatDistributionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
@@ -170,9 +178,9 @@ export default function CSATSummary() {
             <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
             <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
-            <Line type="monotone" dataKey="great"   stroke="#22c55e" strokeWidth={2.5} dot={false} name="Great"   activeDot={{ r: 4, fill: "#22c55e", strokeWidth: 0 }} />
-            <Line type="monotone" dataKey="average" stroke="#f97316" strokeWidth={2.5} dot={false} name="Average" activeDot={{ r: 4, fill: "#f97316", strokeWidth: 0 }} />
-            <Line type="monotone" dataKey="poor"    stroke="#ef4444" strokeWidth={2.5} dot={false} name="Poor"    activeDot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
+            <Line type="monotone" dataKey="great"   stroke="#22c55e" strokeWidth={2.5} dot={false} name={t("csat_dashboard.rating_great")}   activeDot={{ r: 4, fill: "#22c55e", strokeWidth: 0 }} />
+            <Line type="monotone" dataKey="average" stroke="#f97316" strokeWidth={2.5} dot={false} name={t("csat_dashboard.rating_average")} activeDot={{ r: 4, fill: "#f97316", strokeWidth: 0 }} />
+            <Line type="monotone" dataKey="poor"    stroke="#ef4444" strokeWidth={2.5} dot={false} name={t("csat_dashboard.rating_poor")}    activeDot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>

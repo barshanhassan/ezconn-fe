@@ -24,9 +24,13 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 type SubItem = {
   label: string;
+  // Translation key for display — `label` stays the stable English id used
+  // for React keys and `expanded === item.label` state matching.
+  labelKey: string;
   icon: React.ReactElement;
   href: string;
   status?: string;
@@ -34,6 +38,7 @@ type SubItem = {
 
 type MenuItem = {
   label: string;
+  labelKey: string;
   icon: React.ReactElement;
   href: string;
   hasSubmenu?: boolean;
@@ -46,6 +51,7 @@ type MenuItem = {
 
 type BottomItem = {
   label: string;
+  labelKey: string;
   icon: React.ReactElement;
   href: string;
   hasSubmenu?: boolean;
@@ -63,10 +69,10 @@ const menuGroups: MenuGroup[] = [
   {
     section: "MAIN MENU",
     items: [
-      { label: "Dashboard", icon: <LayoutDashboard size={18} />, href: "/org" },
-      { label: "Workspaces", icon: <Network size={18} />, href: "/org/workspaces", permissions: ["agency.workspace.*"] },
-      { label: "Users", icon: <Users size={18} />, href: "/org/team", permissions: ["agency.users.*"] },
-      { label: "Roles", icon: <ShieldCheck size={18} />, href: "/org/roles", permissions: ["agency.acl.*"] },
+      { label: "Dashboard", labelKey: "agency_sidebar.dashboard", icon: <LayoutDashboard size={18} />, href: "/org" },
+      { label: "Workspaces", labelKey: "agency_sidebar.workspaces", icon: <Network size={18} />, href: "/org/workspaces", permissions: ["agency.workspace.*"] },
+      { label: "Users", labelKey: "agency_sidebar.users", icon: <Users size={18} />, href: "/org/team", permissions: ["agency.users.*"] },
+      { label: "Roles", labelKey: "agency_sidebar.roles", icon: <ShieldCheck size={18} />, href: "/org/roles", permissions: ["agency.acl.*"] },
     ],
   },
   {
@@ -74,40 +80,44 @@ const menuGroups: MenuGroup[] = [
     items: [
       {
         label: "Audit Trail",
+        labelKey: "agency_sidebar.audit_trail",
         icon: <ScrollText size={18} />,
         href: "#",
         hasSubmenu: true,
         permissions: ["agency.*"],
         subItems: [
-          { label: "Organization Logs", icon: <Briefcase size={15} />, href: "/org/audit-logs/org" },
-          { label: "Workspace Logs", icon: <Network size={15} />, href: "/org/audit-logs/workspace" },
+          { label: "Organization Logs", labelKey: "agency_sidebar.organization_logs", icon: <Briefcase size={15} />, href: "/org/audit-logs/org" },
+          { label: "Workspace Logs", labelKey: "agency_sidebar.workspace_logs", icon: <Network size={15} />, href: "/org/audit-logs/workspace" },
         ],
       },
       {
         label: "Billing",
+        labelKey: "agency_sidebar.billing",
         icon: <CreditCard size={18} />,
         href: "/org/billing/plans",
         permissions: ["agency.*"],
       },
       {
         label: "Notifications",
+        labelKey: "agency_sidebar.notifications",
         icon: <Bell size={18} />,
         href: "/org/settings/notifications",
         permissions: ["agency.*"],
       },
       {
         label: "SaaS",
+        labelKey: "agency_sidebar.saas",
         icon: <Cloud size={18} />,
         href: "#",
         hasSubmenu: true,
         permissions: ["agency.*"],
         hidden: true,
         subItems: [
-          { label: "Plans", icon: <Briefcase size={15} />, href: "/org/saas/plans", status: "Soon" },
-          { label: "API", icon: <Plug size={15} />, href: "/org/saas/api" },
+          { label: "Plans", labelKey: "agency_sidebar.plans", icon: <Briefcase size={15} />, href: "/org/saas/plans", status: "Soon" },
+          { label: "API", labelKey: "agency_sidebar.api", icon: <Plug size={15} />, href: "/org/saas/api" },
         ],
       },
-      { label: "Legal", icon: <Gavel size={18} />, href: "/org/legal", permissions: ["agency.legal.*"], hidden: true },
+      { label: "Legal", labelKey: "agency_sidebar.legal", icon: <Gavel size={18} />, href: "/org/legal", permissions: ["agency.legal.*"], hidden: true },
     ],
   },
 ];
@@ -115,17 +125,18 @@ const menuGroups: MenuGroup[] = [
 const bottomItems: BottomItem[] = [
   {
     label: "Settings",
+    labelKey: "agency_sidebar.settings",
     icon: <Settings size={18} />,
     href: "#",
     hasSubmenu: true,
     permissions: ["agency.settings.*"],
     subItems: [
-      { label: "General", icon: <Settings size={15} />, href: "/org/settings/general" },
-      { label: "API", icon: <Plug size={15} />, href: "/org/saas/api" },
+      { label: "General", labelKey: "agency_sidebar.general", icon: <Settings size={15} />, href: "/org/settings/general" },
+      { label: "API", labelKey: "agency_sidebar.api", icon: <Plug size={15} />, href: "/org/saas/api" },
     ],
   },
-  { label: "White Label", icon: <Monitor size={18} />, href: "/org/settings/white-label", permissions: ["agency.*"], hidden: true },
-  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/org/help", permissions: ["agency.*"], hidden: true },
+  { label: "White Label", labelKey: "agency_sidebar.white_label", icon: <Monitor size={18} />, href: "/org/settings/white-label", permissions: ["agency.*"], hidden: true },
+  { label: "Help & Support", labelKey: "agency_sidebar.help_support", icon: <HelpCircle size={18} />, href: "/org/help", permissions: ["agency.*"], hidden: true },
 ];
 
 // Default (no white-label logo uploaded) mark — same icon used on the auth pages.
@@ -142,6 +153,7 @@ const AgencySidebar = () => {
   const [expanded, setExpanded] = React.useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { mode } = useTheme();
+  const { t } = useTranslation();
 
   const user = React.useMemo(() => {
     try { return getUserInfo(); } catch { return {}; }
@@ -232,7 +244,7 @@ const AgencySidebar = () => {
           Clicking it returns to the Agency Dashboard, like any standard site logo. */}
       <Link href="/org">
         <div className={cn(
-          "flex items-center gap-3 px-4 py-5 border-b shrink-0",
+          "flex items-center gap-3 px-4 py-5 border-b shrink-0 cursor-pointer",
           dark ? "border-slate-800" : "border-slate-100"
         )}>
           {isAgencyLoading ? (
@@ -252,11 +264,11 @@ const AgencySidebar = () => {
             <BotMark className="w-8 h-8 shrink-0" />
           )}
           {!isCollapsed && (
-            <div className="overflow-hidden">
+            <div className="overflow-hidden cursor-pointer">
               <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>
                 AGEN<span className="text-[#25d366]">TAWK</span>
               </p>
-              <p className="text-[11px] text-slate-400 truncate">Organization Manager</p>
+              <p className="text-[11px] text-slate-400 truncate">{t("agency_sidebar.org_manager")}</p>
             </div>
           )}
         </div>
@@ -296,10 +308,10 @@ const AgencySidebar = () => {
                 {!isCollapsed && (
                   <>
                     {item.hasSubmenu ? (
-                      <span className="flex-1 text-[13px] font-medium">{item.label}</span>
+                      <span className="flex-1 text-[13px] font-medium">{t(item.labelKey)}</span>
                     ) : (
                       <Link href={item.href} className="flex-1 text-[13px] font-medium">
-                        {item.label}
+                        {t(item.labelKey)}
                       </Link>
                     )}
                     {item.hasSubmenu && (
@@ -314,7 +326,7 @@ const AgencySidebar = () => {
                     "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
                     dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
                   )}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </div>
                 )}
               </div>
@@ -332,10 +344,10 @@ const AgencySidebar = () => {
                       )}>
                         <div className="flex items-center gap-2">
                           {sub.icon}
-                          <span>{sub.label}</span>
+                          <span>{t(sub.labelKey)}</span>
                         </div>
                         {sub.status && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">{sub.status}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">{sub.status === "Soon" ? t("agency_sidebar.soon") : sub.status}</span>
                         )}
                       </div>
                     </Link>
@@ -370,7 +382,7 @@ const AgencySidebar = () => {
                       )}>
                         <div className="flex items-center gap-2">
                           {sub.icon}
-                          <span>{sub.label}</span>
+                          <span>{t(sub.labelKey)}</span>
                         </div>
                       </div>
                     </Link>
@@ -400,10 +412,10 @@ const AgencySidebar = () => {
                 {!isCollapsed && (
                   <>
                     {item.hasSubmenu ? (
-                      <span className="flex-1 text-[13px] font-medium">{item.label}</span>
+                      <span className="flex-1 text-[13px] font-medium">{t(item.labelKey)}</span>
                     ) : (
                       <Link href={item.href} className="flex-1 text-[13px] font-medium">
-                        {item.label}
+                        {t(item.labelKey)}
                       </Link>
                     )}
                     {item.hasSubmenu && (
@@ -417,7 +429,7 @@ const AgencySidebar = () => {
                     "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
                     dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
                   )}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </div>
                 )}
               </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Users, User, UserPlus, Settings, Phone, ShieldCheck,
   Info, MessageSquare, Users2, Smartphone,
@@ -33,6 +34,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { phoneError } from "@/lib/phone";
+import { SUPPORTED_LANGUAGES } from "@/lib/supportedLanguages";
 import { PhoneInputWithFlag } from "@/components/PhoneInputWithFlag";
 
 interface Agent {
@@ -43,6 +45,8 @@ interface Agent {
   role: string;
   original: any;
 }
+
+const INTERFACE_LANGUAGES = SUPPORTED_LANGUAGES;
 
 const AVATAR_COLORS = [
   { bg: "bg-violet-500/15",  text: "text-violet-600 dark:text-violet-400" },
@@ -71,6 +75,7 @@ function MemberAvatar({ name, size = "sm" }: { name: string; size?: "sm" | "md" 
 }
 
 export default function ManageAgentSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -144,7 +149,7 @@ export default function ManageAgentSection() {
   // Only ACTIVE roles are assignable (replyagent: roles.filter(r => r.status === 'ACTIVE')).
   const roles: { id: string; name: string }[] = (rolesApiData?.roles || rolesApiData || [])
     .filter((r: any) => (r.status ? r.status === "ACTIVE" : !r.isArchived))
-    .map((r: any) => ({ id: String(r.id), name: r.name || "Role" }));
+    .map((r: any) => ({ id: String(r.id), name: r.name || t("manage_agents_section.fallback_role") }));
 
   // Real data for the agent access-scope tabs (replyagent user_accesses)
   const { data: systemFieldsApi } = useQuery<any>({
@@ -184,7 +189,7 @@ export default function ManageAgentSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
-      toast({ title: "Saved", description: "Agent created successfully." });
+      toast({ title: t("manage_agents_section.toast_saved_title"), description: t("manage_agents_section.toast_agent_created_desc") });
       resetForm();
       setView("list");
     },
@@ -193,9 +198,9 @@ export default function ManageAgentSection() {
       const msg: string = err?.message ?? "";
       const isLimit = /reached the limit/i.test(msg);
       toast({
-        title: isLimit ? "Agent limit reached" : "Error",
+        title: isLimit ? t("manage_agents_section.toast_agent_limit_title") : t("manage_agents_section.toast_error_title"),
         description: isLimit
-          ? "This workspace has hit its maximum number of agents. Increase the limit in the organization edit screen or remove an existing agent first."
+          ? t("manage_agents_section.toast_agent_limit_desc")
           : msg,
         variant: "destructive",
       });
@@ -209,11 +214,11 @@ export default function ManageAgentSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
-      toast({ title: "Saved", description: "Agent updated successfully." });
+      toast({ title: t("manage_agents_section.toast_saved_title"), description: t("manage_agents_section.toast_agent_updated_desc") });
       resetForm();
       setView("list");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: t("manage_agents_section.toast_error_title"), description: err.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -223,7 +228,7 @@ export default function ManageAgentSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
-      toast({ title: "Deleted", description: "Agent removed." });
+      toast({ title: t("manage_agents_section.toast_deleted_title"), description: t("manage_agents_section.toast_agent_removed_desc") });
     },
   });
 
@@ -237,7 +242,7 @@ export default function ManageAgentSection() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [language, setLanguage] = useState("en-us");
+  const [language, setLanguage] = useState("en");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   // Default country = US (replyagent parity — country_id 204 = United States).
@@ -256,9 +261,9 @@ export default function ManageAgentSection() {
   const setLimit = (k: string, v: any) => setLimits((p) => ({ ...p, [k]: v }));
 
   // Real {id,label} lists for the scope tabs (ids saved into user_accesses)
-  const systemFieldsList = (systemFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.name || f.slug || "Field" }));
-  const customFieldsList = (customFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.label || f.name || f.system_name || "Field" }));
-  const tagsList = (tagsApiData?.tags || []).map((t: any) => ({ id: String(t.id), label: t.name || "Tag", color: t.bg_color || "#f3f4f6" }));
+  const systemFieldsList = (systemFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.name || f.slug || t("manage_agents_section.fallback_field") }));
+  const customFieldsList = (customFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.label || f.name || f.system_name || t("manage_agents_section.fallback_field") }));
+  const tagsList = (tagsApiData?.tags || []).map((tag: any) => ({ id: String(tag.id), label: tag.name || t("manage_agents_section.fallback_tag"), color: tag.bg_color || "#f3f4f6" }));
   const agentsList = agents.map((a) => ({ id: a.id, label: a.name || a.email }));
 
   // Flatten the real /all-channels payload into one selectable list. Each entry id is
@@ -304,7 +309,7 @@ export default function ManageAgentSection() {
     setLastName("");
     setEmail("");
     setRole("");
-    setLanguage("en-us");
+    setLanguage("en");
     setPhoneNumber("");
     setWhatsappNumber("");
     setPhoneCountry("US");
@@ -341,7 +346,7 @@ export default function ManageAgentSection() {
     setEmail(agent.email);
     // real role id from the member (no more fragile name-matching)
     setRole(o.role_id ? String(o.role_id) : "");
-    setLanguage(o.locale || "en-us");
+    setLanguage(o.locale || "en");
     setTwoFA(!!o.tfa_required);
     setMobileAccess(o.mobile_access == 1 || o.mobile_access === true);
     setPhoneNumber(o.phone || "");
@@ -387,8 +392,8 @@ export default function ManageAgentSection() {
   const handleSave = () => {
     if (!firstName.trim() || !email.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in First Name and Email.",
+        title: t("manage_agents_section.toast_validation_error_title"),
+        description: t("manage_agents_section.toast_fill_required_desc"),
         variant: "destructive",
       });
       return;
@@ -396,8 +401,8 @@ export default function ManageAgentSection() {
     // Email must be a valid address (replyagent Vuelidate `email`).
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       toast({
-        title: "Validation Error",
-        description: "Please enter a valid email address.",
+        title: t("manage_agents_section.toast_validation_error_title"),
+        description: t("manage_agents_section.toast_invalid_email_desc"),
         variant: "destructive",
       });
       return;
@@ -406,7 +411,7 @@ export default function ManageAgentSection() {
     const pErr = phoneError(phoneNumber, phoneCountry);
     const wErr = phoneError(whatsappNumber, whatsappCountry);
     if (pErr || wErr) {
-      toast({ title: "Validation Error", description: pErr || wErr, variant: "destructive" });
+      toast({ title: t("manage_agents_section.toast_validation_error_title"), description: pErr || wErr, variant: "destructive" });
       return;
     }
     const payload: any = {
@@ -456,7 +461,7 @@ export default function ManageAgentSection() {
     return `${h}:${m}`;
   });
 
-  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   /* ── ADD / EDIT VIEW ─────────────────────────────────────────── */
   if (view === "add" || view === "edit") {
@@ -477,16 +482,16 @@ export default function ManageAgentSection() {
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                  {view === "add" ? "Add Agent" : "Edit Agent"}
+                  {view === "add" ? t("manage_agents_section.header_add_title") : t("manage_agents_section.header_edit_title")}
                 </h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                  Add or edit agent details
+                  {t("manage_agents_section.header_subtitle")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => { setView("list"); resetForm(); }} className={outlineBtn}>
-                Discard
+                {t("manage_agents_section.discard")}
               </button>
               <button
                 onClick={handleSave}
@@ -498,7 +503,7 @@ export default function ManageAgentSection() {
                 ) : (
                   <ShieldCheck className="w-3.5 h-3.5" />
                 )}
-                Save
+                {t("manage_agents_section.save")}
               </button>
             </div>
           </div>
@@ -508,14 +513,14 @@ export default function ManageAgentSection() {
               <div className={cn("px-8 border-b flex justify-start overflow-x-auto", border)}>
                 <TabsList className="h-auto p-0 gap-6 bg-transparent border-none flex justify-start rounded-none">
                   {[
-                    { value: "agent", label: "Agent", icon: User },
-                    { value: "2fa", label: "2FA", icon: ShieldCheck },
-                    { value: "login", label: "Login Policy", icon: Lock },
-                    { value: "system", label: "System Fields", icon: LayoutGrid },
-                    { value: "custom", label: "Custom Fields", icon: Settings },
-                    { value: "tags", label: "Tags", icon: MessageSquare },
-                    { value: "chat-agents", label: "Chat Agents", icon: Users2 },
-                    { value: "chat-channels", label: "Chat Channels", icon: Globe },
+                    { value: "agent", label: t("manage_agents_section.tab_agent"), icon: User },
+                    { value: "2fa", label: t("manage_agents_section.tab_2fa"), icon: ShieldCheck },
+                    { value: "login", label: t("manage_agents_section.tab_login_policy"), icon: Lock },
+                    { value: "system", label: t("manage_agents_section.tab_system_fields"), icon: LayoutGrid },
+                    { value: "custom", label: t("manage_agents_section.tab_custom_fields"), icon: Settings },
+                    { value: "tags", label: t("manage_agents_section.tab_tags"), icon: MessageSquare },
+                    { value: "chat-agents", label: t("manage_agents_section.tab_chat_agents"), icon: Users2 },
+                    { value: "chat-channels", label: t("manage_agents_section.tab_chat_channels"), icon: Globe },
                   ].map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -537,7 +542,7 @@ export default function ManageAgentSection() {
               <div className="p-8 min-w-0">
                 {/* Identity */}
                 <TabsContent value="agent" className="m-0 outline-none space-y-8">
-                  <SectionHeading dark={dark} title="Agent" description="Basic information about this agent." />
+                  <SectionHeading dark={dark} title={t("manage_agents_section.agent_section_title")} description={t("manage_agents_section.agent_section_desc")} />
 
                   {/* Two-column layout mirroring replyagent: left = name fields,
                       right = Phone / WhatsApp (with inline Enable-notifications).
@@ -548,19 +553,19 @@ export default function ManageAgentSection() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 max-w-5xl">
                     {/* Left column — name */}
                     <div className="space-y-5">
-                      <Field dark={dark} label="First Name" required>
-                        <Input value={firstName} maxLength={100} onChange={(e) => setFirstName(e.target.value)} className={inputCls} placeholder="e.g. Jonathan" />
+                      <Field dark={dark} label={t("manage_agents_section.first_name_label")} required>
+                        <Input value={firstName} maxLength={100} onChange={(e) => setFirstName(e.target.value)} className={inputCls} placeholder={t("manage_agents_section.first_name_placeholder")} />
                       </Field>
-                      <Field dark={dark} label="Last Name">
-                        <Input value={lastName} maxLength={100} onChange={(e) => setLastName(e.target.value)} className={inputCls} placeholder="e.g. Wick" />
+                      <Field dark={dark} label={t("manage_agents_section.last_name_label")}>
+                        <Input value={lastName} maxLength={100} onChange={(e) => setLastName(e.target.value)} className={inputCls} placeholder={t("manage_agents_section.last_name_placeholder")} />
                       </Field>
                     </div>
 
                     {/* Right column — Phone / WhatsApp (replyagent placement) */}
                     <div className="space-y-5">
                       {[
-                        { label: "Phone Number", value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications, notifyDisabled: false, notifyTip: "Receive SMS notifications for new conversations on this number." },
-                        { label: "WhatsApp Number", value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications, notifyDisabled: !whatsappNumber.trim(), notifyTip: "Receive WhatsApp notifications for new conversations on this number." },
+                        { label: t("manage_agents_section.phone_number_label"), value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications, notifyDisabled: false, notifyTip: t("manage_agents_section.phone_notify_tip") },
+                        { label: t("manage_agents_section.whatsapp_number_label"), value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications, notifyDisabled: !whatsappNumber.trim(), notifyTip: t("manage_agents_section.whatsapp_notify_tip") },
                       ].map((row) => (
                         <Field key={row.label} dark={dark} label={row.label}>
                           <div className="flex items-center gap-3">
@@ -580,7 +585,7 @@ export default function ManageAgentSection() {
                             <div className="flex items-center gap-2 shrink-0">
                               <Switch checked={row.notify} disabled={row.notifyDisabled} onCheckedChange={row.notifySetter} className="data-[state=checked]:bg-primary disabled:opacity-40" />
                               <span className={cn("text-[11px] font-bold flex items-center gap-1 cursor-help whitespace-nowrap", sub)} title={row.notifyTip}>
-                                Enable notifications <Info size={11} />
+                                {t("manage_agents_section.enable_notifications")} <Info size={11} />
                               </span>
                             </div>
                           </div>
@@ -591,21 +596,21 @@ export default function ManageAgentSection() {
 
                   {/* Email / Role / Interface Language — one full-width row. */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5 max-w-5xl">
-                    <Field dark={dark} label="Email Address" required>
-                      <Input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="wick@hightable.com" />
+                    <Field dark={dark} label={t("manage_agents_section.email_label")} required>
+                      <Input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder={t("manage_agents_section.email_placeholder")} />
                     </Field>
-                    <Field dark={dark} label="Role">
+                    <Field dark={dark} label={t("manage_agents_section.role_label")}>
                       {editingOwner ? (
                         // Workspace owner's role is locked (replyagent: is_owner → disabled "Workspace Owner").
-                        <Input value="Workspace Owner" disabled className={cn(inputCls, "opacity-70")} />
+                        <Input value={t("manage_agents_section.workspace_owner")} disabled className={cn(inputCls, "opacity-70")} />
                       ) : (
                         <Select value={role} onValueChange={setRole}>
                           <SelectTrigger className={inputCls}>
-                            <SelectValue placeholder="Select role" />
+                            <SelectValue placeholder={t("manage_agents_section.role_placeholder")} />
                           </SelectTrigger>
                           <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                             {roles.length === 0 ? (
-                              <div className="px-3 py-2 text-[11px] font-medium opacity-60">No roles yet</div>
+                              <div className="px-3 py-2 text-[11px] font-medium opacity-60">{t("manage_agents_section.no_roles_yet")}</div>
                             ) : (
                               roles.map((r) => (
                                 <SelectItem key={r.id} value={r.id} className="text-[12px] font-bold">{r.name}</SelectItem>
@@ -618,15 +623,20 @@ export default function ManageAgentSection() {
                     {/* Interface Language is only set on create — hidden when editing
                         (replyagent: v-show="!isEditing"). */}
                     {view !== "edit" && (
-                      <Field dark={dark} label="Interface Language">
+                      <Field dark={dark} label={t("manage_agents_section.interface_language_label")}>
                         <Select value={language} onValueChange={setLanguage}>
                           <SelectTrigger className={inputCls}>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                            <SelectItem value="en-us" className="text-[12px] font-bold">English (US)</SelectItem>
-                            <SelectItem value="pt-br" className="text-[12px] font-bold">Portuguese (Brazil)</SelectItem>
-                            <SelectItem value="es" className="text-[12px] font-bold">Spanish</SelectItem>
+                          <SelectContent className={cn("rounded-xl border shadow-2xl max-h-72", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                            {INTERFACE_LANGUAGES.map((l) => (
+                              <SelectItem key={l.code} value={l.code} className="text-[12px] font-bold">
+                                <div className="flex items-center gap-2">
+                                  <img src={`https://flagcdn.com/w20/${l.flag}.png`} width="16" alt="" className="rounded-sm" />
+                                  <span>{l.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </Field>
@@ -635,13 +645,13 @@ export default function ManageAgentSection() {
 
                   {/* Limits (replyagent user_limits) */}
                   <div className="pt-6 border-t space-y-4 max-w-4xl" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
-                    <h4 className={cn("text-[12px] font-semibold", text)}>Limits</h4>
+                    <h4 className={cn("text-[12px] font-semibold", text)}>{t("manage_agents_section.limits_heading")}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
-                        { label: "Open conversations", enableKey: "enable_conversation", valueKey: "conversation_limit", tip: "Set a Maximum Limit of Open Conversations for this Agent." },
-                        { label: "Open opportunities", enableKey: "enable_opportunities", valueKey: "opportunities_limit", tip: "Set a Maximum Limit of Open Opportunities for this Agent." },
-                        { label: "Open tasks", enableKey: "enable_tasks", valueKey: "tasks_limit", tip: "Set a Maximum Limit of Open Tasks for this Agent." },
-                        { label: "Incoming calls (Per day)", enableKey: "enable_call_limit", valueKey: "calls_limit", tip: "Set a daily maximum limit for the number of incoming calls that can be assigned to this agent." },
+                        { label: t("manage_agents_section.limit_open_conversations"), enableKey: "enable_conversation", valueKey: "conversation_limit", tip: t("manage_agents_section.limit_open_conversations_tip") },
+                        { label: t("manage_agents_section.limit_open_opportunities"), enableKey: "enable_opportunities", valueKey: "opportunities_limit", tip: t("manage_agents_section.limit_open_opportunities_tip") },
+                        { label: t("manage_agents_section.limit_open_tasks"), enableKey: "enable_tasks", valueKey: "tasks_limit", tip: t("manage_agents_section.limit_open_tasks_tip") },
+                        { label: t("manage_agents_section.limit_incoming_calls"), enableKey: "enable_call_limit", valueKey: "calls_limit", tip: t("manage_agents_section.limit_incoming_calls_tip") },
                       ].map((row) => {
                         const enabled = (limits as any)[row.enableKey] as boolean;
                         return (
@@ -673,7 +683,7 @@ export default function ManageAgentSection() {
 
                 {/* Security */}
                 <TabsContent value="2fa" className="m-0 outline-none space-y-6">
-                  <SectionHeading dark={dark} title="Two factor auth" />
+                  <SectionHeading dark={dark} title={t("manage_agents_section.twofa_section_title")} />
 
                   <div className={cn("p-6 rounded-[1.5rem] border flex items-start gap-4", softBg, softBorder)}>
                     <div className={cn("w-14 h-14 rounded-xl border flex items-center justify-center shrink-0", dark ? "border-slate-700 bg-slate-950/50" : "border-slate-200 bg-white")}>
@@ -682,17 +692,17 @@ export default function ManageAgentSection() {
                     <div className="space-y-3 flex-1">
                       <div className="flex items-start gap-4">
                         <div className="flex-1">
-                          <p className={cn("text-[13px] font-black tracking-tight", text)}>Require 2-Factor Authentication</p>
+                          <p className={cn("text-[13px] font-black tracking-tight", text)}>{t("manage_agents_section.twofa_require_title")}</p>
                           <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                            This will force the agent to enable 2-Factor Authentication on their next login.
+                            {t("manage_agents_section.twofa_require_desc")}
                           </p>
                         </div>
                         <Switch checked={twoFA} onCheckedChange={setTwoFA} className="data-[state=checked]:bg-primary mt-0.5" />
                       </div>
                       <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
-                        We recommend using{" "}
+                        {t("manage_agents_section.twofa_recommend_prefix")}{" "}
                         <a href="https://authy.com" target="_blank" rel="noreferrer" className="text-primary font-bold underline">Authy</a>{" "}
-                        as your two-factor authentication app.
+                        {t("manage_agents_section.twofa_recommend_suffix")}
                       </p>
                     </div>
                   </div>
@@ -701,16 +711,16 @@ export default function ManageAgentSection() {
                 {/* Login Policy */}
                 <TabsContent value="login" className="m-0 outline-none space-y-6">
                   <div className="flex items-center justify-between gap-4">
-                    <SectionHeading dark={dark} title="Login Policy" description="Specify the allowed login hours for this agent in the Workspace." />
+                    <SectionHeading dark={dark} title={t("manage_agents_section.login_policy_title")} description={t("manage_agents_section.login_policy_desc")} />
                     <div className={cn("px-3 py-1.5 rounded-lg border text-[11px] font-semibold shrink-0", dark ? "bg-slate-950/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-600")}>
-                      <Globe className="inline w-3 h-3 mr-1" /> Timezone: {workspaceTimezone}
+                      <Globe className="inline w-3 h-3 mr-1" /> {t("manage_agents_section.timezone_label")} {workspaceTimezone}
                     </div>
                   </div>
 
                   {/* Owner's login policy is locked (replyagent: owner_login_policy_disabled). */}
                   {editingOwner && (
                     <p className="text-[12px] font-bold text-rose-500">
-                      The workspace owner's login policy cannot be restricted.
+                      {t("manage_agents_section.owner_login_locked")}
                     </p>
                   )}
 
@@ -718,20 +728,19 @@ export default function ManageAgentSection() {
                     <Table>
                       <TableHeader>
                         <TableRow className={cn("border-b hover:bg-transparent", softBorder)}>
-                          <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Day</TableHead>
-                          <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Login allowed from</TableHead>
-                          <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Logout at</TableHead>
+                          <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("manage_agents_section.day_header")}</TableHead>
+                          <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("manage_agents_section.login_from_header")}</TableHead>
+                          <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("manage_agents_section.logout_at_header")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {DAYS.map((day) => {
-                          const k = day.toLowerCase();
+                        {DAYS.map((k) => {
                           const loginVal = loginPolicy[`${k}_login`] || "";
                           // Logout only selectable once a login time is set, and only for later times (replyagent parity)
-                          const logoutOptions = loginVal ? TIME_OPTIONS.filter((t) => t > loginVal) : [];
+                          const logoutOptions = loginVal ? TIME_OPTIONS.filter((time) => time > loginVal) : [];
                           return (
-                          <TableRow key={day} className={cn("border-b last:border-0 hover:bg-transparent", softBorder)}>
-                            <TableCell className={cn("py-3 px-6 text-[12px] font-black", text)}>{day}</TableCell>
+                          <TableRow key={k} className={cn("border-b last:border-0 hover:bg-transparent", softBorder)}>
+                            <TableCell className={cn("py-3 px-6 text-[12px] font-black", text)}>{t(`manage_agents_section.day_${k}`)}</TableCell>
                             <TableCell className="py-3 px-6">
                               <Select
                                 value={loginVal}
@@ -744,20 +753,20 @@ export default function ManageAgentSection() {
                                 }}
                               >
                                 <SelectTrigger className={cn(inputCls, "h-9", editingOwner && "opacity-50")}>
-                                  <SelectValue placeholder="Select Time" />
+                                  <SelectValue placeholder={t("manage_agents_section.select_time_placeholder")} />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[300px] rounded-xl">
-                                  {TIME_OPTIONS.map((t) => <SelectItem key={t} value={t} className="text-[12px] font-bold">{t}</SelectItem>)}
+                                  {TIME_OPTIONS.map((time) => <SelectItem key={time} value={time} className="text-[12px] font-bold">{time}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </TableCell>
                             <TableCell className="py-3 px-6">
                               <Select value={loginPolicy[`${k}_logout`] || ""} onValueChange={(v) => setPolicyField(`${k}_logout`, v)} disabled={!loginVal || editingOwner}>
                                 <SelectTrigger className={cn(inputCls, "h-9", (!loginVal || editingOwner) && "opacity-50")}>
-                                  <SelectValue placeholder="Select Time" />
+                                  <SelectValue placeholder={t("manage_agents_section.select_time_placeholder")} />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[300px] rounded-xl">
-                                  {logoutOptions.map((t) => <SelectItem key={t} value={t} className="text-[12px] font-bold">{t}</SelectItem>)}
+                                  {logoutOptions.map((time) => <SelectItem key={time} value={time} className="text-[12px] font-bold">{time}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </TableCell>
@@ -774,8 +783,8 @@ export default function ManageAgentSection() {
                         <Globe size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={cn("text-[13px] font-semibold", text)}>Limit access by IP address</p>
-                        {limitIp && <Input value={loginPolicy.ip || ""} disabled={editingOwner} onChange={(e) => setPolicyField("ip", e.target.value)} placeholder="Type IP Address..." className={cn(inputCls, "h-9 mt-2 max-w-xs")} />}
+                        <p className={cn("text-[13px] font-semibold", text)}>{t("manage_agents_section.limit_ip_title")}</p>
+                        {limitIp && <Input value={loginPolicy.ip || ""} disabled={editingOwner} onChange={(e) => setPolicyField("ip", e.target.value)} placeholder={t("manage_agents_section.ip_placeholder")} className={cn(inputCls, "h-9 mt-2 max-w-xs")} />}
                       </div>
                     </div>
                     <Switch checked={limitIp} disabled={editingOwner} onCheckedChange={setLimitIp} className="data-[state=checked]:bg-primary disabled:opacity-40" />
@@ -784,11 +793,11 @@ export default function ManageAgentSection() {
 
                 {/* List selection tabs */}
                 {[
-                  { key: "system",        title: "System Fields",  desc: "Select the system fields this agent is allowed to manage in Live Chat and Customers' Profiles", list: systemFieldsList, selected: selectedSystemFields,  setter: setSelectedSystemFields },
-                  { key: "custom",        title: "Custom Fields",  desc: "Select the custom fields this agent is allowed to manage in Live Chat and Customers' Profiles", list: customFieldsList, selected: selectedCustomFields,  setter: setSelectedCustomFields },
-                  { key: "tags",          title: "Tags",           desc: "Select the tags this agent is allowed to manage in Live Chat and Customers' Profiles",          list: tagsList,         selected: selectedTags,         setter: setSelectedTags },
-                  { key: "chat-agents",   title: "Chat Agents",    desc: "Select the Agents whose conversations this agent can view in Live Chat",                       list: agentsList,       selected: selectedChatAgents,    setter: setSelectedChatAgents },
-                  { key: "chat-channels", title: "Chat Channels",  desc: "Select the channels this agent can access in Live Chat",                                       list: channelList,      selected: selectedChatChannels, setter: setSelectedChatChannels },
+                  { key: "system",        title: t("manage_agents_section.scope_system_title"),        desc: t("manage_agents_section.scope_system_desc"),        list: systemFieldsList, selected: selectedSystemFields,  setter: setSelectedSystemFields },
+                  { key: "custom",        title: t("manage_agents_section.scope_custom_title"),        desc: t("manage_agents_section.scope_custom_desc"),        list: customFieldsList, selected: selectedCustomFields,  setter: setSelectedCustomFields },
+                  { key: "tags",          title: t("manage_agents_section.scope_tags_title"),          desc: t("manage_agents_section.scope_tags_desc"),          list: tagsList,         selected: selectedTags,         setter: setSelectedTags },
+                  { key: "chat-agents",   title: t("manage_agents_section.scope_chat_agents_title"),   desc: t("manage_agents_section.scope_chat_agents_desc"),   list: agentsList,       selected: selectedChatAgents,    setter: setSelectedChatAgents },
+                  { key: "chat-channels", title: t("manage_agents_section.scope_chat_channels_title"), desc: t("manage_agents_section.scope_chat_channels_desc"), list: channelList,      selected: selectedChatChannels, setter: setSelectedChatChannels },
                 ].map((cfg) => (
                   <TabsContent key={cfg.key} value={cfg.key} className="m-0 outline-none space-y-5">
                     <div className="flex items-start justify-between gap-4">
@@ -802,7 +811,7 @@ export default function ManageAgentSection() {
                       <div className="flex items-start gap-3 p-4 rounded-[1.25rem] border bg-blue-500/5 border-blue-500/20">
                         <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
                         <p className="text-[11px] font-medium leading-relaxed text-blue-600 dark:text-blue-400">
-                          After adding a new channel, make sure to grant access to it for each Agent if you want them to view and handle conversations from that channel. Otherwise, agents won't be able to see or interact with those conversations.
+                          {t("manage_agents_section.channel_access_info")}
                         </p>
                       </div>
                     )}
@@ -821,11 +830,11 @@ export default function ManageAgentSection() {
                             }
                           }}
                         />
-                        <span className={cn("text-[11px] font-semibold", sub)}>Select All</span>
+                        <span className={cn("text-[11px] font-semibold", sub)}>{t("manage_agents_section.select_all")}</span>
                       </div>
                       <div>
                         {cfg.list.length === 0 && (
-                          <div className="px-5 py-4 text-[11px] font-medium opacity-60">No items</div>
+                          <div className="px-5 py-4 text-[11px] font-medium opacity-60">{t("manage_agents_section.no_items")}</div>
                         )}
                         {cfg.list.map((item: any) => {
                           // An agent always keeps access to their own conversations — self row is locked on (replyagent parity)
@@ -859,7 +868,7 @@ export default function ManageAgentSection() {
                                 ) : (
                                   <span className={cn("text-[12px] font-bold", text)}>{item.label}</span>
                                 )}
-                                {isSelf && <span className={cn("text-[10px] font-semibold", sub)}>You</span>}
+                                {isSelf && <span className={cn("text-[10px] font-semibold", sub)}>{t("manage_agents_section.you_badge")}</span>}
                               </div>
                               {checked && <Check size={14} className="text-primary" />}
                             </div>
@@ -887,14 +896,14 @@ export default function ManageAgentSection() {
               <Users className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Manage agents</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("manage_agents_section.list_header_title")}</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                Add or edit agent details
+                {t("manage_agents_section.list_header_subtitle")}
               </p>
             </div>
           </div>
           <span className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[11px] font-semibold flex items-center gap-1.5">
-            <Shield size={11} /> {agents.length} Agents
+            <Shield size={11} /> {t("manage_agents_section.agents_count", { count: agents.length })}
           </span>
         </div>
 
@@ -902,14 +911,14 @@ export default function ManageAgentSection() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <Input
-                placeholder="Search agents..."
+                placeholder={t("manage_agents_section.search_placeholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={cn(inputCls, "pl-9 h-10")}
               />
             </div>
             <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
-              <Plus size={12} /> Add Agent
+              <Plus size={12} /> {t("manage_agents_section.add_agent_button")}
             </button>
           </div>
 
@@ -922,16 +931,16 @@ export default function ManageAgentSection() {
               <div className="w-14 h-14 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-primary" />
               </div>
-              <p className={cn("text-[12px] font-medium opacity-60", sub)}>No agents found</p>
+              <p className={cn("text-[12px] font-medium opacity-60", sub)}>{t("manage_agents_section.empty_state")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow className={cn("border-b hover:bg-transparent", softBorder)}>
-                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold text-left", sub)}>Agent</TableHead>
-                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Status</TableHead>
-                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Role</TableHead>
-                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold text-right", sub)}>Actions</TableHead>
+                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold text-left", sub)}>{t("manage_agents_section.table_agent_header")}</TableHead>
+                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("manage_agents_section.table_status_header")}</TableHead>
+                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("manage_agents_section.table_role_header")}</TableHead>
+                  <TableHead className={cn("py-4 px-6 text-[11px] font-semibold text-right", sub)}>{t("manage_agents_section.table_actions_header")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

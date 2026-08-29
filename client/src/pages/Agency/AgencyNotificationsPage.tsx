@@ -4,6 +4,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTimezoneContext";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 function getIcon(slug?: string) {
     const s = (slug || "").toLowerCase();
@@ -15,20 +17,21 @@ function getIcon(slug?: string) {
     return <Bell className="text-slate-500" size={16} />;
 }
 
-function formatRelativeTime(iso: string | Date | null | undefined, workspaceTz: string): string {
+function formatRelativeTime(iso: string | Date | null | undefined, workspaceTz: string, t: TFunction): string {
     if (!iso) return "";
     const date = typeof iso === "string" ? new Date(iso) : iso;
     const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diffSec < 60) return "just now";
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+    if (diffSec < 60) return t("agency_notifications_page.just_now");
+    if (diffSec < 3600) return t("agency_notifications_page.minutes_ago", { count: Math.floor(diffSec / 60) });
+    if (diffSec < 86400) return t("agency_notifications_page.hours_ago", { count: Math.floor(diffSec / 3600) });
+    if (diffSec < 604800) return t("agency_notifications_page.days_ago", { count: Math.floor(diffSec / 86400) });
     return formatInWorkspaceTz(date, "M/d/yyyy", workspaceTz);
 }
 
 export default function AgencyNotificationsPage() {
     const queryClient = useQueryClient();
     const workspaceTz = useAgencyTimezone();
+    const { t } = useTranslation();
 
     const { data: resp, isLoading } = useQuery<any>({
         queryKey: ["/api/notifications", { limit: 100 }],
@@ -87,9 +90,9 @@ export default function AgencyNotificationsPage() {
                             <ArrowLeft size={18} />
                         </button>
                         <div>
-                            <h1 className="text-base font-bold text-slate-900 dark:text-white leading-none">Notifications</h1>
+                            <h1 className="text-base font-bold text-slate-900 dark:text-white leading-none">{t("agency_notifications_page.title")}</h1>
                             {unread > 0 && (
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{unread} unread</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t("agency_notifications_page.unread_count", { count: unread })}</p>
                             )}
                         </div>
                     </div>
@@ -100,14 +103,14 @@ export default function AgencyNotificationsPage() {
                                 disabled={markAllMutation.isPending}
                                 className="text-xs font-semibold text-primary hover:underline disabled:opacity-50 transition-opacity"
                             >
-                                {markAllMutation.isPending ? "Marking..." : "Mark all as read"}
+                                {markAllMutation.isPending ? t("agency_notifications_page.marking") : t("agency_notifications_page.mark_all_read")}
                             </button>
                             <button
                                 onClick={() => deleteAllMutation.mutate()}
                                 disabled={deleteAllMutation.isPending}
                                 className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-50 transition-opacity"
                             >
-                                {deleteAllMutation.isPending ? "Deleting..." : "Delete all"}
+                                {deleteAllMutation.isPending ? t("agency_notifications_page.deleting") : t("agency_notifications_page.delete_all")}
                             </button>
                         </div>
                     )}
@@ -117,20 +120,20 @@ export default function AgencyNotificationsPage() {
                 <div>
                     <ScrollArea className="h-[calc(100vh-130px)]">
                         {isLoading ? (
-                            <div className="p-10 text-center text-sm text-slate-400">Loading...</div>
+                            <div className="p-10 text-center text-sm text-slate-400">{t("agency_notifications_page.loading")}</div>
                         ) : notifications.length === 0 ? (
                             <div className="p-16 text-center space-y-2">
                                 <Bell className="mx-auto opacity-20 text-slate-400" size={36} />
-                                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">You're all caught up</p>
-                                <p className="text-xs text-slate-400">No notifications yet</p>
+                                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{t("agency_notifications_page.caught_up")}</p>
+                                <p className="text-xs text-slate-400">{t("agency_notifications_page.no_notifications")}</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {notifications.map((n: any) => {
                                     const contactName = n.data?.contact_name;
                                     const title = contactName
-                                        ? `Message from ${contactName}`
-                                        : n.data?.title || n.data?.message || n.slug || "New Notification";
+                                        ? t("agency_notifications_page.message_from", { name: contactName })
+                                        : n.data?.title || n.data?.message || n.slug || t("agency_notifications_page.new_notification");
                                     const body = n.data?.message || n.data?.body || n.data?.description || "";
                                     const displayBody = contactName && n.data?.message ? n.data.message : (contactName ? "" : body);
 
@@ -155,7 +158,7 @@ export default function AgencyNotificationsPage() {
                                                         {displayBody}
                                                     </p>
                                                 )}
-                                                <p className="text-[11px] text-slate-400 mt-1">{formatRelativeTime(n.created_at, workspaceTz)}</p>
+                                                <p className="text-[11px] text-slate-400 mt-1">{formatRelativeTime(n.created_at, workspaceTz, t)}</p>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {!n.read && <div className="w-2 h-2 bg-blue-500 rounded-full" />}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   Plus,
@@ -27,6 +28,7 @@ export default function WebchatSection() {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [view, setView] = useState<"list" | "manage">("list");
   const queryClient = useQueryClient();
 
@@ -64,7 +66,7 @@ export default function WebchatSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Deleted", description: "Webchat widget removed." });
+      toast({ title: t("webchat_section.deleted"), description: t("webchat_section.widget_removed") });
     },
   });
 
@@ -72,13 +74,13 @@ export default function WebchatSection() {
   const [instanceToDelete, setInstanceToDelete] = useState<any>(null);
 
   const handleConnect = () => {
-    toast({ title: "Creating...", description: "Starting widget configuration." });
+    toast({ title: t("webchat_section.creating"), description: t("webchat_section.starting_widget_configuration") });
   };
 
   const copyEmbed = (id: string) => {
     const snippet = `<script src="https://agentawk.com/widget.js" data-id="${id}"></script>`;
     navigator.clipboard.writeText(snippet);
-    toast({ title: "Copied", description: "Embed code copied to clipboard." });
+    toast({ title: t("webchat_section.copied"), description: t("webchat_section.embed_copied") });
   };
 
   if (isLoading) {
@@ -100,11 +102,11 @@ export default function WebchatSection() {
                 <img src="/images/automations/webchat.svg" alt="Webchat" className="w-5 h-5" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Webchat</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("webchat_section.title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
                   {view === "list"
-                    ? "Create a Webchat interface for your website."
-                    : "Create a Webchat interface that allows visitors to communicate with your business in real-time directly from a website."}
+                    ? t("webchat_section.header_description_list")
+                    : t("webchat_section.header_description_manage")}
                 </p>
               </div>
             </div>
@@ -113,10 +115,10 @@ export default function WebchatSection() {
               {view === "manage" && (
                 <>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add New
+                    <Plus size={12} /> {t("webchat_section.add_new")}
                   </button>
                   <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Back
+                    <ChevronLeft size={12} /> {t("webchat_section.back")}
                   </button>
                 </>
               )}
@@ -132,7 +134,7 @@ export default function WebchatSection() {
                     <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                       <img src="/images/automations/webchat.svg" alt="Webchat" className="w-5 h-5" />
                     </div>
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Webchat</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("webchat_section.title")}</h3>
                   </div>
                   <a
                     href="https://agentawk.com/docs/webchat"
@@ -145,11 +147,11 @@ export default function WebchatSection() {
                 </div>
 
                 <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
-                  Create a Webchat interface that allows visitors to communicate with your business in real-time.
+                  {t("webchat_section.card_description")}
                 </p>
 
                 <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
-                  Manage
+                  {t("webchat_section.manage")}
                 </button>
               </div>
             </div>
@@ -164,13 +166,13 @@ export default function WebchatSection() {
                     <img src="/images/automations/webchat.svg" alt="Webchat" className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No webchat instances found</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("webchat_section.no_instances_found")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Create a webchat widget to get started.
+                      {t("webchat_section.no_instances_description")}
                     </p>
                   </div>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Create Now
+                    <Plus size={12} /> {t("webchat_section.create_now")}
                   </button>
                 </div>
               ) : (
@@ -184,13 +186,13 @@ export default function WebchatSection() {
                             <MessageCircle className="w-5 h-5 text-purple-500" />
                           </div>
                           <div className="min-w-0">
-                            <p className={cn("text-[13px] font-black truncate", text)}>{instance.name || "Webchat Widget"}</p>
+                            <p className={cn("text-[13px] font-black truncate", text)}>{instance.name || t("webchat_section.default_widget_name")}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <Badge variant="outline" className="h-5 px-2 rounded-md border-purple-500/20 bg-purple-500/5 text-purple-600 dark:text-purple-400 text-[10px] font-semibold">
-                                ID: {instance.id}
+                                {t("webchat_section.id_label")}: {instance.id}
                               </Badge>
                               <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("webchat_section.active")}
                               </span>
                             </div>
                           </div>
@@ -201,10 +203,10 @@ export default function WebchatSection() {
                             onClick={() => copyEmbed(instance.id)}
                             className={outlineBtn}
                           >
-                            <Copy size={12} /> Copy Embed
+                            <Copy size={12} /> {t("webchat_section.copy_embed")}
                           </button>
                           <button
-                            onClick={() => toast({ title: "Edit", description: "Widget configuration." })}
+                            onClick={() => toast({ title: t("webchat_section.edit"), description: t("webchat_section.widget_configuration") })}
                             className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}
                           >
                             <Edit2 size={14} />
@@ -235,19 +237,19 @@ export default function WebchatSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Webchat Widget?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("webchat_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{instanceToDelete?.name || "This widget"}</span> will be permanently removed.
+                  <span className="text-rose-500 font-black">{instanceToDelete?.name || t("webchat_section.this_widget")}</span> {t("webchat_section.delete_dialog_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("webchat_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => { deleteMutation.mutate(instanceToDelete.id); setShowDeleteConfirm(false); }}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("webchat_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

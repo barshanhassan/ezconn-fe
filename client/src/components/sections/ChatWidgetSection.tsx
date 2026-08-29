@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -48,6 +49,7 @@ export default function ChatWidgetSection() {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // `actions` is the wire shape expected by the backend (and persisted on
   // `widget_actions`). The frontend channel buttons toggle entries in this
@@ -66,7 +68,7 @@ export default function ChatWidgetSection() {
     headerColor: "#1e40af",
     bodyColor: "#ffffff",
     position: "bottom-right",
-    footerText: "Powered by Ezconn",
+    footerText: t("chat_widget_section.footer_text_placeholder"),
     fontFamily: "Verdana",
   };
 
@@ -129,36 +131,36 @@ export default function ChatWidgetSection() {
     () => ({
       whatsapp: (data?.whatsapp?.channels ?? []).map((c: any) => ({
         id: String(c.id),
-        label: c.name ?? c.waba_id ?? `WABA #${c.id}`,
+        label: c.name ?? c.waba_id ?? t("chat_widget_section.fallback_waba", { id: c.id }),
         model_type: "WHATSAPP_NUMBER",
       })),
       telegram: (data?.telegram?.bots ?? []).map((c: any) => ({
         id: String(c.id),
-        label: c.username ? `@${c.username}` : c.name ?? `Bot #${c.id}`,
+        label: c.username ? `@${c.username}` : c.name ?? t("chat_widget_section.fallback_bot", { id: c.id }),
         model_type: "TELEGRAM_BOT",
       })),
       messenger: (data?.messenger?.pages ?? []).map((c: any) => ({
         id: String(c.id),
-        label: c.name ?? `Page #${c.id}`,
+        label: c.name ?? t("chat_widget_section.fallback_page", { id: c.id }),
         model_type: "FACEBOOK_PAGE",
       })),
       instagram: (data?.instagram?.pages ?? []).map((c: any) => ({
         id: String(c.id),
-        label: c.name ?? `IG #${c.id}`,
+        label: c.name ?? t("chat_widget_section.fallback_ig", { id: c.id }),
         model_type: "INSTAGRAM_PAGE",
       })),
       zapi: (data?.zapi?.channels ?? []).map((c: any) => ({
         id: String(c.id),
-        label: c.phone ?? c.name ?? `Z-API #${c.id}`,
+        label: c.phone ?? c.name ?? t("chat_widget_section.fallback_zapi", { id: c.id }),
         model_type: "ZAPI_INSTANCE",
       })),
       twilio: (data?.twilio_numbers ?? []).map((c: any) => ({
         id: String(c.id),
-        label: c.phone_number ?? c.friendly_name ?? `Twilio #${c.id}`,
+        label: c.phone_number ?? c.friendly_name ?? t("chat_widget_section.fallback_twilio", { id: c.id }),
         model_type: "TWILIO_NUMBER",
       })),
     }),
-    [data],
+    [data, t],
   );
 
   const saveMutation = useMutation({
@@ -168,12 +170,12 @@ export default function ChatWidgetSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/widgets"] });
-      toast({ title: "Success", description: "Widget saved successfully" });
+      toast({ title: t("chat_widget_section.toast_success_title"), description: t("chat_widget_section.toast_widget_saved") });
       setIsCreateModalOpen(false);
       setEditingId(null);
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("chat_widget_section.toast_error_title"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -183,11 +185,11 @@ export default function ChatWidgetSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/widgets"] });
-      toast({ title: "Success", description: "Widget deleted successfully" });
+      toast({ title: t("chat_widget_section.toast_success_title"), description: t("chat_widget_section.toast_widget_deleted") });
       setWidgetToDelete(null);
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("chat_widget_section.toast_error_title"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -209,36 +211,36 @@ export default function ChatWidgetSection() {
   const channelMetas: ChannelMeta[] = [
     {
       key: "email",
-      label: "Email",
+      label: t("chat_widget_section.channel_email"),
       LucideIcon: Mail,
       inputType: "email",
-      placeholder: "Enter email address",
-      tooltip: "Visitors will email this address.",
+      placeholder: t("chat_widget_section.email_placeholder"),
+      tooltip: t("chat_widget_section.tooltip_email"),
     },
     {
       key: "sms",
-      label: "SMS",
+      label: t("chat_widget_section.channel_sms"),
       svg: "/images/automations/sms.svg",
       optionsKey: "twilio",
       needsNumberType: true,
-      placeholder: "Enter phone number",
-      tooltip: "Visitors will text this number.",
+      placeholder: t("chat_widget_section.phone_placeholder"),
+      tooltip: t("chat_widget_section.tooltip_sms"),
     },
     {
       key: "call",
-      label: "Call",
+      label: t("chat_widget_section.channel_call"),
       LucideIcon: Phone,
       optionsKey: "twilio",
       needsNumberType: true,
-      placeholder: "Enter phone number",
-      tooltip: "Visitors will call this number.",
+      placeholder: t("chat_widget_section.phone_placeholder"),
+      tooltip: t("chat_widget_section.tooltip_call"),
     },
     {
       key: "whatsapp",
       label: "WhatsApp",
       svg: "/images/automations/whatsapp.svg",
       optionsKey: "whatsapp",
-      tooltip: "Visitors will start a WhatsApp chat with the selected number.",
+      tooltip: t("chat_widget_section.tooltip_whatsapp"),
     },
     {
       // Replyagent places Z-API immediately after WhatsApp (both green
@@ -247,28 +249,28 @@ export default function ChatWidgetSection() {
       label: "Z-API",
       svg: "/images/automations/whatsapp.svg",
       optionsKey: "zapi",
-      tooltip: "Routes through a Z-API instance.",
+      tooltip: t("chat_widget_section.tooltip_zapi"),
     },
     {
       key: "telegram",
       label: "Telegram",
       svg: "/images/automations/telegram.svg",
       optionsKey: "telegram",
-      tooltip: "Visitors will open Telegram and message the selected bot.",
+      tooltip: t("chat_widget_section.tooltip_telegram"),
     },
     {
       key: "messenger",
       label: "Messenger",
       svg: "/images/automations/messenger.svg",
       optionsKey: "messenger",
-      tooltip: "Visitors will open Messenger and message the page.",
+      tooltip: t("chat_widget_section.tooltip_messenger"),
     },
     {
       key: "instagram",
       label: "Instagram",
       svg: "/images/automations/instagram.svg",
       optionsKey: "instagram",
-      tooltip: "Visitors will open Instagram and DM the account.",
+      tooltip: t("chat_widget_section.tooltip_instagram"),
     },
   ];
 
@@ -285,7 +287,7 @@ export default function ChatWidgetSection() {
 
   const handleCreateWidget = () => {
     if (!formData.name.trim() || !formData.title.trim()) {
-      toast({ title: "Name and title are required", variant: "destructive" });
+      toast({ title: t("chat_widget_section.toast_name_title_required"), variant: "destructive" });
       return;
     }
     saveMutation.mutate({
@@ -331,7 +333,7 @@ export default function ChatWidgetSection() {
       headerColor: widget.header_bg || "#1e40af",
       bodyColor: widget.body_bg || "#ffffff",
       position: widget.position || "bottom-right",
-      footerText: widget.subtitle || "Powered by Ezconn",
+      footerText: widget.subtitle || t("chat_widget_section.footer_text_placeholder"),
       fontFamily: widget.font_family || "Verdana",
     });
     setEditingId(widget.id);
@@ -462,10 +464,14 @@ export default function ChatWidgetSection() {
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                  {isCreateModalOpen ? (editingId ? "Edit widget" : "Create widget") : "Chat widget"}
+                  {isCreateModalOpen
+                    ? editingId
+                      ? t("chat_widget_section.header_edit_title")
+                      : t("chat_widget_section.header_create_title")
+                    : t("chat_widget_section.header_list_title")}
                 </h1>
                 <p className={cn("text-[11px] font-medium mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Embed a chat widget on your website.
+                  {t("chat_widget_section.header_subtitle")}
                 </p>
               </div>
             </div>
@@ -473,11 +479,11 @@ export default function ChatWidgetSection() {
             <div className="flex items-center gap-2 shrink-0">
               {!isCreateModalOpen ? (
                 <button onClick={openCreate} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add New
+                  <Plus size={12} /> {t("chat_widget_section.add_new")}
                 </button>
               ) : (
                 <button onClick={closeForm} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("chat_widget_section.back")}
                 </button>
               )}
             </div>
@@ -491,10 +497,10 @@ export default function ChatWidgetSection() {
                   <table className="w-full">
                     <thead>
                       <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Name</th>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Title</th>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Channels</th>
-                        <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("chat_widget_section.table_name")}</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("chat_widget_section.table_title")}</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("chat_widget_section.table_channels")}</th>
+                        <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("chat_widget_section.table_actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -512,9 +518,9 @@ export default function ChatWidgetSection() {
                                 <MessageCircle className="w-7 h-7 text-primary" />
                               </div>
                               <div className="space-y-1">
-                                <h3 className={cn("text-[13px] font-black", text)}>No widgets yet</h3>
+                                <h3 className={cn("text-[13px] font-black", text)}>{t("chat_widget_section.empty_title")}</h3>
                                 <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                                  Create your first chat widget to embed on your website.
+                                  {t("chat_widget_section.empty_description")}
                                 </p>
                               </div>
                             </div>
@@ -535,20 +541,20 @@ export default function ChatWidgetSection() {
                               </div>
                             </td>
                             <td className={cn("px-6 py-4 text-[12px] font-bold", sub)}>{widget.title}</td>
-                            <td className={cn("px-6 py-4 text-[11px] font-bold italic", sub)}>Live settings</td>
+                            <td className={cn("px-6 py-4 text-[11px] font-bold italic", sub)}>{t("chat_widget_section.live_settings")}</td>
                             <td className="px-6 py-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => handleEditWidget(widget)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
-                                  title="Edit"
+                                  title={t("chat_widget_section.edit_action")}
                                 >
                                   <Edit2 size={13} />
                                 </button>
                                 <button
                                   onClick={() => setWidgetToDelete(widget)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
-                                  title="Delete"
+                                  title={t("chat_widget_section.delete_action")}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -561,7 +567,7 @@ export default function ChatWidgetSection() {
                   </table>
                 </div>
                 <div className={cn("px-6 py-3 border-t text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                  Showing {widgets.length} of {widgets.length} chat widgets
+                  {t("chat_widget_section.showing_count", { count: widgets.length, total: widgets.length })}
                 </div>
               </div>
             </div>
@@ -579,42 +585,43 @@ export default function ChatWidgetSection() {
                         header color", "Widget title font family", "Widget
                         body color", "Widget position on your website". */}
                     <div className="space-y-2">
-                      <label className={labelCls}>Widget name</label>
+                      <label className={labelCls}>{t("chat_widget_section.widget_name_label")}</label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value.slice(0, 250) })}
                         className={inputCls}
-                        placeholder="Name this widget"
+                        placeholder={t("chat_widget_section.widget_name_placeholder")}
                         maxLength={250}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className={labelCls}>Widget title</label>
+                      <label className={labelCls}>{t("chat_widget_section.widget_title_label")}</label>
                       <input
                         type="text"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value.slice(0, 250) })}
                         className={inputCls}
-                        placeholder="Hi there, choose your preferred channel to contact us."
+                        placeholder={t("chat_widget_section.widget_title_placeholder")}
                         maxLength={250}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <label className={labelCls}>Widget header color</label>
+                        <label className={labelCls}>{t("chat_widget_section.widget_header_color_label")}</label>
                         <ColorInput value={formData.headerColor} onChange={(v) => setFormData({ ...formData, headerColor: v })} />
                       </div>
                       <div className="space-y-2">
-                        <label className={labelCls}>Widget title font family</label>
+                        <label className={labelCls}>{t("chat_widget_section.widget_font_family_label")}</label>
                         <select
                           value={formData.fontFamily}
                           onChange={(e) => setFormData({ ...formData, fontFamily: e.target.value })}
                           className={selectCls}
                         >
-                          {/* Replyagent's font set — keep order for parity */}
+                          {/* Replyagent's font set — keep order for parity.
+                              Font names are proper nouns, not translated. */}
                           <option value="arial">Arial</option>
                           <option value="cursive">Brush Script MT</option>
                           <option value="georgia">Georgia</option>
@@ -626,21 +633,21 @@ export default function ChatWidgetSection() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <label className={labelCls}>Widget body color</label>
+                        <label className={labelCls}>{t("chat_widget_section.widget_body_color_label")}</label>
                         <ColorInput value={formData.bodyColor} onChange={(v) => setFormData({ ...formData, bodyColor: v })} />
                       </div>
                       <div className="space-y-2">
-                        <label className={labelCls}>Widget position on your website</label>
+                        <label className={labelCls}>{t("chat_widget_section.widget_position_label")}</label>
                         <select
                           value={formData.position}
                           onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                           className={selectCls}
                         >
                           {/* Order mirrors replyagent: Right bottom first */}
-                          <option value="bottom-right">Right bottom</option>
-                          <option value="bottom-left">Left bottom</option>
-                          <option value="top-right">Top right</option>
-                          <option value="top-left">Top left</option>
+                          <option value="bottom-right">{t("chat_widget_section.position_bottom_right")}</option>
+                          <option value="bottom-left">{t("chat_widget_section.position_bottom_left")}</option>
+                          <option value="top-right">{t("chat_widget_section.position_top_right")}</option>
+                          <option value="top-left">{t("chat_widget_section.position_top_left")}</option>
                         </select>
                       </div>
                     </div>
@@ -649,7 +656,7 @@ export default function ChatWidgetSection() {
                   {/* Channels — replyagent-style row: checkbox + brand SVG +
                       per-channel control + info tooltip. */}
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-4", softBg, softBorder)}>
-                    <label className={labelCls}>Select the channels to add to the widget</label>
+                    <label className={labelCls}>{t("chat_widget_section.channels_select_label")}</label>
                     <div className="space-y-3">
                       <TooltipProvider delayDuration={150}>
                         {channelMetas.map((meta) => {
@@ -733,8 +740,8 @@ export default function ChatWidgetSection() {
                                     }}
                                     className={cn(selectCls, "w-44")}
                                   >
-                                    <option value="CUSTOM_NUMBER">Custom number</option>
-                                    <option value="TWILIO_NUMBER">Twilio number</option>
+                                    <option value="CUSTOM_NUMBER">{t("chat_widget_section.number_type_custom")}</option>
+                                    <option value="TWILIO_NUMBER">{t("chat_widget_section.number_type_twilio")}</option>
                                   </select>
                                   {numberType === "CUSTOM_NUMBER" ? (
                                     <input
@@ -768,10 +775,10 @@ export default function ChatWidgetSection() {
                                       className={cn(selectCls, "flex-1 disabled:opacity-50")}
                                     >
                                       {opts.length === 0 ? (
-                                        <option value="">No Twilio numbers connected</option>
+                                        <option value="">{t("chat_widget_section.no_twilio_numbers")}</option>
                                       ) : (
                                         <>
-                                          <option value="">Select Twilio number…</option>
+                                          <option value="">{t("chat_widget_section.select_twilio_number")}</option>
                                           {opts.map((o: { id: string; label: string; model_type: string }) => (
                                             <option key={o.id} value={o.id}>{o.label}</option>
                                           ))}
@@ -790,7 +797,7 @@ export default function ChatWidgetSection() {
                                   onChange={(e) => { ensureChannelOn(); updateChannelResource(meta.key, e.target.value); }}
                                   className={selectCls + " flex-1"}
                                 >
-                                  <option value="">Select an action.</option>
+                                  <option value="">{t("chat_widget_section.select_action")}</option>
                                   {opts.map((o: { id: string; label: string; model_type: string }) => (
                                     <option key={o.id} value={o.id}>{o.label}</option>
                                   ))}
@@ -815,13 +822,13 @@ export default function ChatWidgetSection() {
                   </div>
 
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-2", softBg, softBorder)}>
-                    <label className={labelCls}>Footer Text</label>
+                    <label className={labelCls}>{t("chat_widget_section.footer_text_label")}</label>
                     <input
                       type="text"
                       value={formData.footerText}
                       onChange={(e) => setFormData({ ...formData, footerText: e.target.value })}
                       className={inputCls}
-                      placeholder="Powered by Ezconn"
+                      placeholder={t("chat_widget_section.footer_text_placeholder")}
                     />
                   </div>
                 </div>
@@ -829,7 +836,7 @@ export default function ChatWidgetSection() {
                 {/* Preview + Code */}
                 <div className="space-y-6">
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-3", softBg, softBorder)}>
-                    <label className={labelCls}>Widget Preview</label>
+                    <label className={labelCls}>{t("chat_widget_section.preview_label")}</label>
                     <div
                       className="rounded-[1.25rem] overflow-hidden shadow-lg border"
                       style={{ backgroundColor: formData.bodyColor, borderColor: dark ? "#1e293b" : "#e2e8f0" }}
@@ -839,7 +846,7 @@ export default function ChatWidgetSection() {
                         className="p-4 text-white min-h-[5rem] flex items-center justify-center"
                       >
                         <p className="text-[13px] font-bold text-center" style={{ fontFamily: formData.fontFamily }}>
-                          {formData.title || "Hi there, choose your preferred channel to contact us."}
+                          {formData.title || t("chat_widget_section.widget_title_placeholder")}
                         </p>
                       </div>
                       <div className="p-6 flex justify-center">
@@ -856,7 +863,7 @@ export default function ChatWidgetSection() {
                   </div>
 
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-3", softBg, softBorder)}>
-                    <label className={labelCls}>Code snipped to be installed on your website</label>
+                    <label className={labelCls}>{t("chat_widget_section.code_snippet_label")}</label>
                     {/* Replyagent shows an empty disabled textarea until the
                         widget is saved (it needs the slug to be useful). We
                         mirror that — placeholder hint + disabled state. */}
@@ -866,7 +873,7 @@ export default function ChatWidgetSection() {
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(widgetCode);
-                            toast({ title: "Copied", description: "Embed code copied to clipboard." });
+                            toast({ title: t("chat_widget_section.copied_title"), description: t("chat_widget_section.copied_description") });
                           }}
                           className={cn("absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center transition-colors", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
                         >
@@ -876,7 +883,7 @@ export default function ChatWidgetSection() {
                     ) : (
                       <div className={cn("rounded-xl border p-4 h-44 flex items-center justify-center text-center", softBorder, sub)}>
                         <p className="text-[11px] font-medium opacity-60">
-                          Save the widget to generate the embed snippet.
+                          {t("chat_widget_section.save_to_generate_snippet")}
                         </p>
                       </div>
                     )}
@@ -887,7 +894,7 @@ export default function ChatWidgetSection() {
               {/* Footer Actions */}
               <div className={cn("flex justify-end gap-2 pt-6 mt-6 border-t", softBorder)}>
                 <button onClick={closeForm} className={outlineBtn}>
-                  Cancel
+                  {t("chat_widget_section.cancel")}
                 </button>
                 <button
                   onClick={handleCreateWidget}
@@ -895,7 +902,7 @@ export default function ChatWidgetSection() {
                   className={primaryBtn}
                 >
                   {saveMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                  Save
+                  {t("chat_widget_section.save")}
                 </button>
               </div>
             </div>
@@ -912,19 +919,19 @@ export default function ChatWidgetSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Widget?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("chat_widget_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{widgetToDelete?.name || "This widget"}</span> will be permanently removed.
+                  <span className="text-rose-500 font-black">{widgetToDelete?.name || t("chat_widget_section.delete_dialog_fallback_name")}</span> {t("chat_widget_section.delete_dialog_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("chat_widget_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => deleteMutation.mutate(widgetToDelete.id)}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("chat_widget_section.delete_action")}
               </AlertDialogAction>
             </div>
           </div>

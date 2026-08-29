@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 import { DateRangeProvider } from "@/contexts/DateRangeContext";
@@ -25,16 +26,17 @@ import {
 } from "lucide-react";
 
 function InsightsDashboardContent() {
+  const { t } = useTranslation();
   const { activeTab, setActiveTab } = useTab();
   const [localActiveTab, setLocalActiveTab] = useState(activeTab);
 
   const tabs = [
-    { id: "overview",          label: "Overview",    ctx: "overview",        icon: <Gauge         size={15} strokeWidth={2.25} className="shrink-0" /> },
-    { id: "agent-performance", label: "Performance", ctx: "agentPerformance", icon: <Activity     size={15} strokeWidth={2.25} className="shrink-0" /> },
-    { id: "whatsapp-pricing",  label: "WhatsApp",    ctx: "whatsapp",        icon: <MessageCircle size={15} strokeWidth={2.25} className="shrink-0" /> },
-    { id: "bot-dashboard",     label: "Bot",         ctx: "botDashboard",    icon: <Bot          size={15} strokeWidth={2.25} className="shrink-0" /> },
-    { id: "voice-of-customer", label: "Voice",       ctx: "voiceOfCustomer", icon: <AudioLines   size={15} strokeWidth={2.25} className="shrink-0" /> },
-    { id: "csat-dashboard",    label: "CSAT",        ctx: "csatDashboard",   icon: <Smile        size={15} strokeWidth={2.25} className="shrink-0" /> },
+    { id: "overview",          label: t("insights_dashboard.overview"),    ctx: "overview",        icon: <Gauge         size={15} strokeWidth={2.25} className="shrink-0" /> },
+    { id: "agent-performance", label: t("insights_dashboard.performance"), ctx: "agentPerformance", icon: <Activity     size={15} strokeWidth={2.25} className="shrink-0" /> },
+    { id: "whatsapp-pricing",  label: t("insights_dashboard.whatsapp"),    ctx: "whatsapp",        icon: <MessageCircle size={15} strokeWidth={2.25} className="shrink-0" /> },
+    { id: "bot-dashboard",     label: t("insights_dashboard.bot"),         ctx: "botDashboard",    icon: <Bot          size={15} strokeWidth={2.25} className="shrink-0" /> },
+    { id: "voice-of-customer", label: t("insights_dashboard.voice"),       ctx: "voiceOfCustomer", icon: <AudioLines   size={15} strokeWidth={2.25} className="shrink-0" /> },
+    { id: "csat-dashboard",    label: t("insights_dashboard.csat"),        ctx: "csatDashboard",   icon: <Smile        size={15} strokeWidth={2.25} className="shrink-0" /> },
   ];
 
   return (
@@ -59,10 +61,10 @@ function InsightsDashboardContent() {
           </div>
           <div className="space-y-0.5">
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              Insights <span className="text-primary font-bold opacity-90">Dashboard</span>
+              {t("insights_dashboard.insights")} <span className="text-primary font-bold opacity-90">{t("insights_dashboard.dashboard")}</span>
             </h1>
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 opacity-80">
-              Track performance, analyze trends, and optimize operations
+              {t("insights_dashboard.subtitle")}
             </p>
           </div>
         </div>

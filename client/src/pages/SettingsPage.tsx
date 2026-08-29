@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -40,7 +41,6 @@ import {
 import ManageSection from "@/components/workspace/ManageSection";
 import LiveChatSection from "@/components/workspace/LiveChatSection";
 import ProfileSection from "@/components/sections/ProfileSection";
-import PreferencesSection from "@/components/sections/PreferencesSection";
 
 import AIChatAssistantsSection from "@/components/sections/ai/AIChatAssistantsSection";
 import AIVoiceAssistantsSection from "@/components/sections/ai/AIVoiceAssistantsSection";
@@ -78,7 +78,38 @@ import SmsCallsSection from "@/components/sections/channels/SmsCallsSection";
 import WebchatSection from "@/components/sections/channels/WebchatSection";
 
 
+// Sidebar label → translation key. Internal `name` strings stay in English
+// (they double as activeSection state keys / URL tab params); this map only
+// controls what's shown. Brand/channel names (WhatsApp, Instagram, Messenger,
+// Telegram, SMS & Calls, Webchat, ChatGPT, API, Visual API, Iframe) are
+// intentionally omitted so they render verbatim.
+const SIDEBAR_LABEL_KEYS: Record<string, string> = {
+  "Workspace": "settings_page.sidebar.workspace",
+  "Manage": "settings_page.sidebar.manage",
+  "Live Chat": "settings_page.sidebar.live_chat",
+  "Theme": "settings_page.sidebar.theme",
+  "Manage User": "settings_page.sidebar.manage_user",
+  "Roles & Permissions": "settings_page.sidebar.roles_permissions",
+  "Teams": "settings_page.sidebar.teams",
+  "Conversation channels": "settings_page.sidebar.conversation_channels",
+  "AI Chat Assistants": "settings_page.sidebar.ai_chat_assistants",
+  "AI Voice Assistants": "settings_page.sidebar.ai_voice_assistants",
+  "AI Knowledge base": "settings_page.sidebar.ai_knowledge_base",
+  "AI Report Builder": "settings_page.sidebar.ai_report_builder",
+  "Connect": "settings_page.sidebar.connect",
+  "Integrations": "settings_page.sidebar.integrations",
+  "Customization": "settings_page.sidebar.customization",
+  "Custom fields": "settings_page.sidebar.custom_fields",
+  "Chat Widget": "settings_page.sidebar.chat_widget",
+  "Tags": "settings_page.sidebar.tags",
+  "Quick Replies": "settings_page.sidebar.quick_replies",
+  "Media Gallery": "settings_page.sidebar.media_gallery",
+  "Developer Settings": "settings_page.sidebar.developer_settings",
+  "Change Password": "settings_page.sidebar.change_password",
+};
+
 export default function SettingsPage() {
+  const { t } = useTranslation();
   // Workspace settings drive feature gating (White Label, etc). Fetched once and
   // the result is reused below to filter the sidebar children — mirrors how the
   // agency edit form persists these flags.
@@ -215,7 +246,16 @@ export default function SettingsPage() {
 
   // Calculate initial activeSection directly from URL
   const initialTabParam = new URLSearchParams(window.location.search).get("tab");
-  const initialActiveSection = (initialTabParam && (sections.some(s => s.name === initialTabParam) || sections.some(s => s.children?.some((c: any) => c.name === initialTabParam)))) ? initialTabParam : "Manage";
+  // "My Profile" is reachable only via the top-right profile dropdown's
+  // "Profile" link (/settings?tab=My Profile) — it's deliberately not a
+  // sidebar item, so it must be allow-listed here separately or the tab
+  // validation below silently falls back to "Manage".
+  const EXTRA_VALID_TABS = ["My Profile"];
+  const isValidTab = (tab: string) =>
+    EXTRA_VALID_TABS.includes(tab) ||
+    sections.some(s => s.name === tab) ||
+    sections.some(s => s.children?.some((c: any) => c.name === tab));
+  const initialActiveSection = (initialTabParam && isValidTab(initialTabParam)) ? initialTabParam : "Manage";
 
   const channelNames = ["WhatsApp","Instagram","Messenger","Telegram","SMS & Calls","Webchat"];
   const chatGptNames = ["AI Chat Assistants","AI Voice Assistants","AI Knowledge base","AI Report Builder"];
@@ -246,19 +286,6 @@ export default function SettingsPage() {
   const setChatGptOpen = (open: boolean) => setExpandedGroup(open ? "chatgpt" : null);
   const connectOpen = expandedGroup === "connect";
   const setConnectOpen = (open: boolean) => setExpandedGroup(open ? "connect" : null);
-  const [profilePictureUrl, setProfilePictureUrl] = useState(""); // Default profile picture
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false); // User preference for notifications, off by default
-  const [browserNotificationsDenied, setBrowserNotificationsDenied] = useState(Notification.permission === 'denied'); // Initialize based on actual browser permission
-  const [preferences, setPreferences] = useState({
-    timezone: "(GMT+05:00) Islamabad, Karachi, Tashkent",
-    twoFactorAuth: false,
-    autoHide: false,
-    disableCSAT: false,
-    manualHandoff: false,
-    enableTranscript: false,
-    emailTranscript: false,
-    transcriptEmails: "",
-  });
   const [, navigate] = useLocation(); // Get navigate function from wouter
   const search = useSearch(); // Get the query string from wouter
   const [searchQuery, setSearchQuery] = useState("");
@@ -272,34 +299,10 @@ export default function SettingsPage() {
     const params = new URLSearchParams(search);
     const tabParam = params.get("tab");
 
-    if (tabParam) {
-      const found = sections.some(s => s.name === tabParam) || sections.some(s => s.children?.some((c: any) => c.name === tabParam));
-      if (found) setActiveSection(tabParam);
+    if (tabParam && isValidTab(tabParam)) {
+      setActiveSection(tabParam);
     }
   }, [search]); // Depend on search and sections
-
-  const handleTestNotification = () => {
-    if (!("Notification" in window)) {
-      alert("This browser does not support desktop notification");
-    } else if (Notification.permission === "granted") {
-      new Notification("Test Notification", {
-        body: "This is a test desktop notification from your app!",
-        icon: "/favicon.ico", // You might want to use a proper icon path
-      });
-    } else if (Notification.permission !== "denied") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          new Notification("Test Notification", {
-            body: "This is a test desktop notification from your app!",
-            icon: "/favicon.ico",
-          });
-          setBrowserNotificationsDenied(false); // Update state if permission is granted
-        } else if (permission === "denied") {
-          setBrowserNotificationsDenied(true); // Update state if permission is denied
-        }
-      });
-    }
-  };
 
   // Sentence-case a sidebar label for display: keep the first word's
   // leading letter capitalised, force everything else lowercase, and
@@ -307,6 +310,8 @@ export default function SettingsPage() {
   // "ChatGPT", …). Internal state keys stay in their original casing so
   // activeSection matchers keep working — this is display only.
   const displayLabel = (raw: string): string => {
+    const translationKey = SIDEBAR_LABEL_KEYS[raw];
+    if (translationKey) return t(translationKey);
     const preserve = new Set([
       "AI", "URL", "ID", "API", "CSV", "SMS",
       "WhatsApp", "Instagram", "Messenger", "Telegram", "Webchat",
@@ -371,7 +376,7 @@ export default function SettingsPage() {
                   />
                   <input
                     type="text"
-                    placeholder="Search settings..."
+                    placeholder={t("settings_page.search_placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-slate-200 dark:border-slate-700 rounded-[10px]
@@ -396,7 +401,7 @@ export default function SettingsPage() {
                   >
                     <div className="flex items-center gap-2.5">
                       <LayoutGrid size={16} className="text-primary" />
-                      <span>Workspace</span>
+                      <span>{t("settings_page.sidebar.workspace")}</span>
                     </div>
                     <ChevronDown
                       size={16}
@@ -659,21 +664,7 @@ export default function SettingsPage() {
 
 
               {activeSection === "My Profile" && (
-                <ProfileSection
-                  profilePictureUrl={profilePictureUrl}
-                  setProfilePictureUrl={setProfilePictureUrl}
-                  notificationsEnabled={notificationsEnabled}
-                  setNotificationsEnabled={setNotificationsEnabled}
-                  browserNotificationsDenied={browserNotificationsDenied}
-                  handleTestNotification={handleTestNotification}
-                />
-              )}
-
-              {activeSection === "Preferences" && (
-                <PreferencesSection
-                  preferences={preferences}
-                  setPreferences={setPreferences}
-                />
+                <ProfileSection />
               )}
 
 

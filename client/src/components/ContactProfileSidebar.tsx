@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -151,6 +152,7 @@ export default function ContactProfileSidebar({
     profileData,
     onRefreshProfile,
 }: ContactProfileSidebarProps) {
+    const { t } = useTranslation();
     const workspaceTz = useWorkspaceTimezone();
 
     // Edit basic details modal state
@@ -474,7 +476,7 @@ export default function ContactProfileSidebar({
                                 onClick={() => { if ((profileData as any)?.contact?.id) setIsDetailsModalOpen(true); }}
                                 data-testid="button-open-profile"
                             >
-                                <ExternalLink size={13} /> Profile
+                                <ExternalLink size={13} /> {t("contact_profile_sidebar.profile_button")}
                             </Button>
                         )}
                     </div>
@@ -484,12 +486,12 @@ export default function ContactProfileSidebar({
                             active icon coloured. */}
                         <div className="flex items-center justify-around w-full border-b pb-2">
                             {[
-                                { id: "details", icon: User, label: "Details" },
-                                { id: "media", icon: ImageIcon, label: "Media" },
-                                { id: "custom-fields", icon: NotebookPen, label: "Custom Fields" },
-                                { id: "opportunities", icon: BarChart3, label: "Opportunities" },
-                                { id: "tags", icon: Tag, label: "Assigned Tags" },
-                                { id: "tasks", icon: ClipboardList, label: "Create Task" },
+                                { id: "details", icon: User, label: t("contact_profile_sidebar.tabs.details") },
+                                { id: "media", icon: ImageIcon, label: t("contact_profile_sidebar.tabs.media") },
+                                { id: "custom-fields", icon: NotebookPen, label: t("contact_profile_sidebar.tabs.custom_fields") },
+                                { id: "opportunities", icon: BarChart3, label: t("contact_profile_sidebar.tabs.opportunities") },
+                                { id: "tags", icon: Tag, label: t("contact_profile_sidebar.tabs.tags") },
+                                { id: "tasks", icon: ClipboardList, label: t("contact_profile_sidebar.tabs.tasks") },
                             ].map((tab) => (
                                 <TooltipProvider key={tab.id}>
                                     <Tooltip>
@@ -519,22 +521,22 @@ export default function ContactProfileSidebar({
                                     on the right, then agent avatar + name + picker. */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="text-sm font-semibold">Assigned to</label>
+                                        <label className="text-sm font-semibold">{t("contact_profile_sidebar.details.assigned_to")}</label>
                                         {canAssignConversations && (!assignedAgent || assignedAgent !== "self") && (
                                             <button
                                                 onClick={() => onAssignAgent("self")}
                                                 className="text-xs text-primary flex items-center gap-1 hover:underline"
                                                 data-testid="button-assign-self"
                                             >
-                                                <Zap size={12} /> Assign to myself
+                                                <Zap size={12} /> {t("contact_profile_sidebar.details.assign_to_myself")}
                                             </button>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {(() => {
                                             const assignedName = !assignedAgent
-                                                ? "Unassigned"
-                                                : (assignedAgent === "self" ? "You" : (agentOptions.find((a: any) => a.id === assignedAgent)?.name || assignedAgent));
+                                                ? t("contact_profile_sidebar.details.unassigned")
+                                                : (assignedAgent === "self" ? t("contact_profile_sidebar.details.you") : (agentOptions.find((a: any) => a.id === assignedAgent)?.name || assignedAgent));
                                             return (
                                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                                     {assignedAgent && (
@@ -568,7 +570,7 @@ export default function ContactProfileSidebar({
                                     hardcoded "0123-123" was placeholder and is
                                     replaced by `profileData.support_number`. */}
                                 <div>
-                                    <h4 className="font-semibold text-sm mb-3">Support Number</h4>
+                                    <h4 className="font-semibold text-sm mb-3">{t("contact_profile_sidebar.details.support_number")}</h4>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Headset size={16} />
                                         <span>{profileData?.support_number ?? "—"}</span>
@@ -582,9 +584,9 @@ export default function ContactProfileSidebar({
                                 {profileData?.channel?.name && (
                                   <>
                                     <div>
-                                        <h4 className="font-semibold text-sm mb-3">Chatting with channel</h4>
+                                        <h4 className="font-semibold text-sm mb-3">{t("contact_profile_sidebar.details.chatting_with_channel")}</h4>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <span className="capitalize">{profileData.channel.type ?? "channel"}</span>
+                                            <span className="capitalize">{profileData.channel.type ?? t("contact_profile_sidebar.details.channel_fallback")}</span>
                                             <span>·</span>
                                             <span>{profileData.channel.name}</span>
                                             {profileData.channel.number && (
@@ -601,7 +603,7 @@ export default function ContactProfileSidebar({
                                     automation instead of the static placeholder. */}
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <h4 className="font-semibold text-sm">In Smart Flow</h4>
+                                        <h4 className="font-semibold text-sm">{t("contact_profile_sidebar.details.in_smart_flow")}</h4>
                                         <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={() => onRefreshProfile?.()}>
                                             <RefreshCw size={14} />
                                         </Button>
@@ -612,7 +614,7 @@ export default function ContactProfileSidebar({
                                         if (contactAutos.length === 0 && inputAutos.length === 0) {
                                             return (
                                                 <p className="text-sm text-muted-foreground">
-                                                    This contact is not currently part of any Smart Flow.
+                                                    {t("contact_profile_sidebar.details.not_in_smart_flow")}
                                                 </p>
                                             );
                                         }
@@ -626,7 +628,7 @@ export default function ContactProfileSidebar({
                                                             onClick={() => removeAutomationMutation.mutate({ action: "automation_queue", action_table_id: String(a.id) })}
                                                             data-testid={`remove-automation-${a.id}`}
                                                         >
-                                                            Remove
+                                                            {t("contact_profile_sidebar.details.remove")}
                                                         </button>
                                                     </div>
                                                 ))}
@@ -640,7 +642,7 @@ export default function ContactProfileSidebar({
                                                             onClick={() => removeAutomationMutation.mutate({ action: "chat_inputs", action_table_id: String(a.id) })}
                                                             data-testid={`remove-input-${a.id}`}
                                                         >
-                                                            Remove
+                                                            {t("contact_profile_sidebar.details.remove")}
                                                         </button>
                                                     </div>
                                                 ))}
@@ -653,7 +655,7 @@ export default function ContactProfileSidebar({
 
                                 {/* Pause Automated Messages */}
                                 <div>
-                                    <h4 className="font-semibold text-sm mb-3">Pause Automated Messages</h4>
+                                    <h4 className="font-semibold text-sm mb-3">{t("contact_profile_sidebar.details.pause_automated_messages")}</h4>
                                     {!isFlowPaused ? (
                                         <Button
                                             variant="outline"
@@ -661,7 +663,7 @@ export default function ContactProfileSidebar({
                                             onClick={handleStartPause}
                                         >
                                             <PauseCircle size={16} />
-                                            Pause Smart Flow
+                                            {t("contact_profile_sidebar.details.pause_smart_flow")}
                                         </Button>
                                     ) : (
                                         <div className="flex flex-col items-center gap-4 py-2">
@@ -709,7 +711,7 @@ export default function ContactProfileSidebar({
                                                     onClick={handleStopPause}
                                                 >
                                                     <StopCircle size={16} />
-                                                    Stop
+                                                    {t("contact_profile_sidebar.details.stop")}
                                                 </Button>
                                                 <Button
                                                     variant="outline"
@@ -717,7 +719,7 @@ export default function ContactProfileSidebar({
                                                     onClick={handleAdd15Minutes}
                                                 >
                                                     <Plus size={16} />
-                                                    15 Minutes
+                                                    {t("contact_profile_sidebar.details.add_15_minutes")}
                                                 </Button>
                                             </div>
                                         </div>
@@ -778,7 +780,7 @@ export default function ContactProfileSidebar({
                                         return (
                                             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                                 <ImageIcon size={32} className="mb-2 opacity-50" />
-                                                <p className="text-sm">No media messages were found.</p>
+                                                <p className="text-sm">{t("contact_profile_sidebar.media.no_media_found")}</p>
                                             </div>
                                         );
                                     }
@@ -824,7 +826,7 @@ export default function ContactProfileSidebar({
                                                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
                                                                 <div className="ml-1 w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-current border-b-[5px] border-b-transparent"></div>
                                                             </div>
-                                                            <span className="text-xs text-center font-medium truncate w-full">Audio</span>
+                                                            <span className="text-xs text-center font-medium truncate w-full">{t("contact_profile_sidebar.media.audio")}</span>
                                                             <span className="text-[10px] text-muted-foreground">{item.duration || "0:05"}</span>
                                                         </div>
                                                     )}
@@ -839,7 +841,7 @@ export default function ContactProfileSidebar({
                                                     )}
 
                                                     <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/60 to-transparent text-white text-[10px] opacity-0 group-hover:opacity-100 transition-opacity truncate px-2">
-                                                        {item.time} • {item.from === 'agent' ? 'You' : 'User'}
+                                                        {item.time} • {item.from === 'agent' ? t("contact_profile_sidebar.details.you") : t("contact_profile_sidebar.media.user")}
                                                     </div>
                                                 </div>
                                             ))}
@@ -866,7 +868,7 @@ export default function ContactProfileSidebar({
                                                         onBlur={(e) => onSaveCustomFieldValue?.(field.id, e.target.value)}
                                                         className="w-full text-sm border rounded-md px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
                                                     >
-                                                        <option value="">— Select —</option>
+                                                        <option value="">{t("contact_profile_sidebar.custom_fields.select_placeholder")}</option>
                                                         {field.properties.map((p) => (
                                                             <option key={p.value} value={p.value}>{p.name}</option>
                                                         ))}
@@ -875,7 +877,7 @@ export default function ContactProfileSidebar({
                                                     <input
                                                         type={field.content_type === 'NUMBER' ? 'number' : field.content_type === 'EMAIL' ? 'email' : 'text'}
                                                         defaultValue={field.value ?? ''}
-                                                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                                                        placeholder={t("contact_profile_sidebar.custom_fields.enter_field_placeholder", { field: field.label.toLowerCase() })}
                                                         onBlur={(e) => onSaveCustomFieldValue?.(field.id, e.target.value)}
                                                         className="w-full text-sm border rounded-md px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
                                                     />
@@ -886,15 +888,15 @@ export default function ContactProfileSidebar({
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
                                         <NotebookPen size={28} className="mb-2 opacity-40" />
-                                        <p className="text-sm">No custom fields defined.</p>
-                                        <p className="text-xs mt-1 opacity-70">Go to Settings → Custom Fields to create fields.</p>
+                                        <p className="text-sm">{t("contact_profile_sidebar.custom_fields.no_fields_defined")}</p>
+                                        <p className="text-xs mt-1 opacity-70">{t("contact_profile_sidebar.custom_fields.go_to_settings")}</p>
                                     </div>
                                 )}
 
                                 {/* Manual attributes (key-value chips) */}
                                 {customAttributes && Object.keys(customAttributes).length > 0 && (
                                     <div className="pt-2 border-t">
-                                        <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Manual Attributes</p>
+                                        <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t("contact_profile_sidebar.custom_fields.manual_attributes")}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {Object.entries(customAttributes).map(([key, value]) => (
                                                 <div
@@ -918,7 +920,7 @@ export default function ContactProfileSidebar({
                                     </div>
                                 )}
                                 <Button variant="outline" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="w-full btn-outline-primary">
-                                    <Plus size={14} className="mr-2" /> Add Custom Attribute
+                                    <Plus size={14} className="mr-2" /> {t("contact_profile_sidebar.custom_fields.add_attribute_button")}
                                 </Button>
                             </div>
                         )}
@@ -927,12 +929,12 @@ export default function ContactProfileSidebar({
                         {activeTab === "opportunities" && (
                             <div className="space-y-3">
                                 <Button variant="outline" size="sm" className="w-full btn-outline-primary" onClick={() => setIsAddOpportunityModalOpen(true)}>
-                                    <Plus size={14} className="mr-2" /> Add Opportunity
+                                    <Plus size={14} className="mr-2" /> {t("contact_profile_sidebar.opportunities.add")}
                                 </Button>
                                 {(profileData?.opportunities ?? []).length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                         <BarChart3 size={32} className="mb-2 opacity-50" />
-                                        <p className="text-sm">No opportunities found.</p>
+                                        <p className="text-sm">{t("contact_profile_sidebar.opportunities.none_found")}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -942,7 +944,7 @@ export default function ContactProfileSidebar({
                                                 <div className="flex items-center gap-2 text-muted-foreground">
                                                     <span className="font-medium text-foreground">{opp.currency} {Number(opp.value).toLocaleString()}</span>
                                                     <span>·</span>
-                                                    <span>{opp.probability}% probability</span>
+                                                    <span>{t("contact_profile_sidebar.opportunities.probability", { value: opp.probability })}</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {opp.pipeline && (
@@ -961,7 +963,7 @@ export default function ContactProfileSidebar({
                                                 </div>
                                                 {opp.closing_date && (
                                                     <p className="text-muted-foreground">
-                                                        Closes {formatInWorkspaceTz(opp.closing_date, "M/d/yyyy", workspaceTz)}
+                                                        {t("contact_profile_sidebar.opportunities.closes", { date: formatInWorkspaceTz(opp.closing_date, "M/d/yyyy", workspaceTz) })}
                                                     </p>
                                                 )}
                                             </div>
@@ -979,18 +981,18 @@ export default function ContactProfileSidebar({
                                     options={tagOptions}
                                     selected={tags || []}
                                     onChange={onUpdateTags}
-                                    placeholder="Select tags"
+                                    placeholder={t("contact_profile_sidebar.tags.select_tags")}
                                     width="100%"
                                     triggerContent={
                                         <span className="flex items-center justify-between w-full">
                                             <span className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
                                                 {(tags || []).length === 0 ? (
-                                                    <span className="text-slate-500 text-[12px]">Select tags</span>
+                                                    <span className="text-slate-500 text-[12px]">{t("contact_profile_sidebar.tags.select_tags")}</span>
                                                 ) : (
                                                     (tags || []).map((id) => {
-                                                        const t = tagOptions.find((o) => o.id === id);
-                                                        return t ? (
-                                                            <span key={id} className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs truncate max-w-[120px]">{t.name}</span>
+                                                        const tagObj = tagOptions.find((o) => o.id === id);
+                                                        return tagObj ? (
+                                                            <span key={id} className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs truncate max-w-[120px]">{tagObj.name}</span>
                                                         ) : null;
                                                     })
                                                 )}
@@ -1002,7 +1004,7 @@ export default function ContactProfileSidebar({
                                 {tags && tags.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                         {tags.map((tagId) => {
-                                            const tag = tagOptions.find(t => t.id === tagId);
+                                            const tag = tagOptions.find(opt => opt.id === tagId);
                                             return (
                                                 <div
                                                     key={tagId}
@@ -1010,7 +1012,7 @@ export default function ContactProfileSidebar({
                                                 >
                                                     <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
                                                     <button
-                                                        onClick={() => onUpdateTags(tags.filter(t => t !== tagId))}
+                                                        onClick={() => onUpdateTags(tags.filter(existing => existing !== tagId))}
                                                         className="hover:text-blue-900 flex-shrink-0"
                                                     >
                                                         <X size={12} />
@@ -1027,12 +1029,12 @@ export default function ContactProfileSidebar({
                         {activeTab === "tasks" && (
                             <div className="space-y-3">
                                 <Button variant="outline" size="sm" className="w-full btn-outline-primary" onClick={() => setIsAddTaskModalOpen(true)}>
-                                    <Plus size={14} className="mr-2" /> Add Task
+                                    <Plus size={14} className="mr-2" /> {t("contact_profile_sidebar.tasks.add")}
                                 </Button>
                                 {contactTasks.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                                         <ClipboardList size={32} className="mb-2 opacity-50" />
-                                        <p className="text-sm">No tasks found.</p>
+                                        <p className="text-sm">{t("contact_profile_sidebar.tasks.none_found")}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -1245,18 +1247,18 @@ export default function ContactProfileSidebar({
             < Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen} >
                 <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
                     <DialogHeader className="px-1 mb-2">
-                        <DialogTitle>Edit Basic Details</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.edit_basic_details.title")}</DialogTitle>
                     </DialogHeader>
 
                     <div className="px-1 space-y-4 overflow-y-auto flex-1">
                         {/* Name */}
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Name</label>
+                            <label className="text-sm font-medium mb-2 block">{t("contact_profile_sidebar.edit_basic_details.name")}</label>
                             <div className="flex gap-2 items-center">
                                 <Input
                                     value={editedBasicDetails.displayName || ""}
                                     onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, displayName: e.target.value })}
-                                    placeholder="Enter name"
+                                    placeholder={t("contact_profile_sidebar.edit_basic_details.enter_name")}
                                 />
                                 <button
                                     onClick={() => handleClearField("displayName")}
@@ -1269,12 +1271,12 @@ export default function ContactProfileSidebar({
 
                         {/* Number */}
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Number</label>
+                            <label className="text-sm font-medium mb-2 block">{t("contact_profile_sidebar.edit_basic_details.number")}</label>
                             <div className="flex gap-2">
                                 <Input
                                     value={editedBasicDetails.number}
                                     disabled
-                                    placeholder="Enter number"
+                                    placeholder={t("contact_profile_sidebar.edit_basic_details.enter_number")}
                                     className="bg-muted text-muted-foreground cursor-not-allowed mr-6"
                                 />
                             </div>
@@ -1282,12 +1284,12 @@ export default function ContactProfileSidebar({
 
                         {/* Email */}
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Email</label>
+                            <label className="text-sm font-medium mb-2 block">{t("contact_profile_sidebar.edit_basic_details.email")}</label>
                             <div className="flex gap-2 items-center">
                                 <Input
                                     value={editedBasicDetails.email}
                                     onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, email: e.target.value })}
-                                    placeholder="Enter email"
+                                    placeholder={t("contact_profile_sidebar.edit_basic_details.enter_email")}
                                 />
                                 <button
                                     onClick={() => handleClearField("email")}
@@ -1300,15 +1302,15 @@ export default function ContactProfileSidebar({
 
                         {/* Gender */}
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Gender</label>
+                            <label className="text-sm font-medium mb-2 block">{t("contact_profile_sidebar.edit_basic_details.gender")}</label>
                             <div className="flex gap-2 items-center">
                                 <Select value={editedBasicDetails.gender} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, gender: value })}>
                                     <SelectTrigger className="flex-1">
-                                        <SelectValue placeholder="Select gender" />
+                                        <SelectValue placeholder={t("contact_profile_sidebar.edit_basic_details.select_gender")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Male">Male</SelectItem>
-                                        <SelectItem value="Female">Female</SelectItem>
+                                        <SelectItem value="Male">{t("contact_profile_sidebar.edit_basic_details.male")}</SelectItem>
+                                        <SelectItem value="Female">{t("contact_profile_sidebar.edit_basic_details.female")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <button
@@ -1322,15 +1324,15 @@ export default function ContactProfileSidebar({
 
                         {/* WhatsApp Opt-out */}
                         <div>
-                            <label className="text-sm font-medium mb-2 block">WhatsApp Opt-out</label>
+                            <label className="text-sm font-medium mb-2 block">{t("contact_profile_sidebar.edit_basic_details.whatsapp_opt_out")}</label>
                             <div className="flex gap-2 items-center">
                                 <Select value={editedBasicDetails.whatsappOptOut} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, whatsappOptOut: value })}>
                                     <SelectTrigger className="flex-1">
-                                        <SelectValue placeholder="Select option" />
+                                        <SelectValue placeholder={t("contact_profile_sidebar.edit_basic_details.select_option")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Yes">Yes</SelectItem>
-                                        <SelectItem value="No">No</SelectItem>
+                                        <SelectItem value="Yes">{t("contact_profile_sidebar.edit_basic_details.yes")}</SelectItem>
+                                        <SelectItem value="No">{t("contact_profile_sidebar.edit_basic_details.no")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <button
@@ -1344,12 +1346,12 @@ export default function ContactProfileSidebar({
 
                         {/* Address */}
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Address</label>
+                            <label className="text-sm font-medium mb-2 block">{t("contact_profile_sidebar.edit_basic_details.address")}</label>
                             <div className="flex gap-2 items-center">
                                 <Input
                                     value={editedBasicDetails.address}
                                     onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, address: e.target.value })}
-                                    placeholder="Enter address"
+                                    placeholder={t("contact_profile_sidebar.edit_basic_details.enter_address")}
                                 />
                                 <button
                                     onClick={() => handleClearField("address")}
@@ -1361,7 +1363,7 @@ export default function ContactProfileSidebar({
                         </div>
                     </div>
                     <div className="flex justify-end pt-2 px-1">
-                        <Button onClick={handleSaveBasicDetails}>Save Changes</Button>
+                        <Button onClick={handleSaveBasicDetails}>{t("contact_profile_sidebar.edit_basic_details.save_changes")}</Button>
                     </div>
                 </DialogContent>
             </Dialog >
@@ -1370,7 +1372,7 @@ export default function ContactProfileSidebar({
             < Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Update Involved Teams</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.teams_modal.title")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="flex flex-col gap-3">
@@ -1397,7 +1399,7 @@ export default function ContactProfileSidebar({
                         </div>
                     </div>
                     <div className="flex justify-end">
-                        <Button onClick={handleSaveTeams}>Save Changes</Button>
+                        <Button onClick={handleSaveTeams}>{t("contact_profile_sidebar.edit_basic_details.save_changes")}</Button>
                     </div>
                 </DialogContent>
             </Dialog >
@@ -1406,7 +1408,7 @@ export default function ContactProfileSidebar({
             < Dialog open={isAddTagsModalOpen} onOpenChange={setIsAddTagsModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Update Tags</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.tags_modal.title")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="flex flex-col gap-3">
@@ -1433,7 +1435,7 @@ export default function ContactProfileSidebar({
                         </div>
                     </div>
                     <div className="flex justify-end">
-                        <Button onClick={handleSaveTags}>Save Changes</Button>
+                        <Button onClick={handleSaveTags}>{t("contact_profile_sidebar.edit_basic_details.save_changes")}</Button>
                     </div>
                 </DialogContent>
             </Dialog >
@@ -1442,21 +1444,21 @@ export default function ContactProfileSidebar({
             < Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Add Custom Attribute</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.attribute_modal.title")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Attribute Name</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.attribute_modal.name_label")}</label>
                             <Input
-                                placeholder="e.g. Plan Type"
+                                placeholder={t("contact_profile_sidebar.attribute_modal.name_placeholder")}
                                 value={newAttributeKey}
                                 onChange={(e) => setNewAttributeKey(e.target.value)}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Value</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.attribute_modal.value_label")}</label>
                             <Input
-                                placeholder="e.g. Premium"
+                                placeholder={t("contact_profile_sidebar.attribute_modal.value_placeholder")}
                                 value={newAttributeValue}
                                 onChange={(e) => setNewAttributeValue(e.target.value)}
                             />
@@ -1464,7 +1466,7 @@ export default function ContactProfileSidebar({
                     </div>
                     <div className="flex justify-end">
                         <Button onClick={handleAddAttribute} disabled={!newAttributeKey.trim() || !newAttributeValue.trim()}>
-                            Add Attribute
+                            {t("contact_profile_sidebar.attribute_modal.add_button")}
                         </Button>
                     </div>
                 </DialogContent>
@@ -1474,22 +1476,22 @@ export default function ContactProfileSidebar({
             < Dialog open={isAddNoteModalOpen} onOpenChange={setIsAddNoteModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Set Current Note</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.note_modal.title")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Note Content</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.note_modal.content_label")}</label>
                             <Input
-                                placeholder="Enter note here..."
+                                placeholder={t("contact_profile_sidebar.note_modal.content_placeholder")}
                                 value={newNote}
                                 onChange={(e) => setNewNote(e.target.value)}
                             />
-                            <p className="text-xs text-muted-foreground">Setting a new note will update the most recent one or start a new one.</p>
+                            <p className="text-xs text-muted-foreground">{t("contact_profile_sidebar.note_modal.helper_text")}</p>
                         </div>
                     </div>
                     <div className="flex justify-end">
                         <Button onClick={handleAddNote}>
-                            Save Note
+                            {t("contact_profile_sidebar.note_modal.save_button")}
                         </Button>
                     </div>
                 </DialogContent>
@@ -1499,29 +1501,29 @@ export default function ContactProfileSidebar({
             <Dialog open={isAddOpportunityModalOpen} onOpenChange={setIsAddOpportunityModalOpen}>
                 <DialogContent className="bg-white dark:bg-background">
                     <DialogHeader>
-                        <DialogTitle>Add Opportunity</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.opportunities.add")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                         <div>
-                            <label className="text-sm font-medium">Pipeline</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.pipeline")}</label>
                             <Select value={newOpportunity.pipeline} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, pipeline: value, stage: "" })}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select pipeline" />
+                                    <SelectValue placeholder={t("contact_profile_sidebar.opportunity_modal.select_pipeline")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {pipelines.map((p: any) => (
                                         <SelectItem key={String(p.id)} value={String(p.id)}>{p.name}</SelectItem>
                                     ))}
-                                    {pipelines.length === 0 && <SelectItem value="" disabled>No pipelines found</SelectItem>}
+                                    {pipelines.length === 0 && <SelectItem value="" disabled>{t("contact_profile_sidebar.opportunity_modal.no_pipelines_found")}</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </div>
                         {newOpportunity.pipeline && (
                             <div>
-                                <label className="text-sm font-medium">Stage</label>
+                                <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.stage")}</label>
                                 <Select value={newOpportunity.stage} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, stage: value })}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select stage" />
+                                        <SelectValue placeholder={t("contact_profile_sidebar.opportunity_modal.select_stage")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {selectedPipelineSteps.map((s: any) => (
@@ -1532,19 +1534,19 @@ export default function ContactProfileSidebar({
                             </div>
                         )}
                         <div>
-                            <label className="text-sm font-medium">Opportunity Title</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.title_label")}</label>
                             <Input
-                                placeholder="Enter opportunity title..."
+                                placeholder={t("contact_profile_sidebar.opportunity_modal.title_placeholder")}
                                 value={newOpportunity.title}
                                 onChange={(e) => setNewOpportunity({ ...newOpportunity, title: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Opportunity value</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.value_label")}</label>
                             <div className="flex gap-2">
                                 <Input
                                     type="number"
-                                    placeholder="Enter value..."
+                                    placeholder={t("contact_profile_sidebar.opportunity_modal.value_placeholder")}
                                     value={newOpportunity.value}
                                     onChange={(e) => setNewOpportunity({ ...newOpportunity, value: e.target.value })}
                                     className="flex-1"
@@ -1563,7 +1565,7 @@ export default function ContactProfileSidebar({
                             </div>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Closing date</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.closing_date")}</label>
                             <Input
                                 type="date"
                                 value={newOpportunity.closingDate}
@@ -1571,7 +1573,7 @@ export default function ContactProfileSidebar({
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Confidence</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.confidence")}</label>
                             <div className="flex items-center gap-2">
                                 <Input
                                     type="range"
@@ -1586,14 +1588,14 @@ export default function ContactProfileSidebar({
                             </div>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Agent</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.agent")}</label>
                             <Select
                                 value={newOpportunity.agent}
                                 onValueChange={(value) => setNewOpportunity({ ...newOpportunity, agent: value })}
                                 disabled={!newOpportunity.pipeline}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={newOpportunity.pipeline ? "Select agent" : "Select pipeline first"}>
+                                    <SelectValue placeholder={newOpportunity.pipeline ? t("contact_profile_sidebar.opportunity_modal.select_agent") : t("contact_profile_sidebar.opportunity_modal.select_pipeline_first")}>
                                         {newOpportunity.agent && (() => {
                                             const agent = agentOptions.find(a => a.id === newOpportunity.agent);
                                             const getAgentColor = (id: string) => {
@@ -1640,28 +1642,28 @@ export default function ContactProfileSidebar({
                             </Select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Contact</label>
-                            <div className="text-xs text-muted-foreground mb-1">WhatsApp number</div>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.contact")}</label>
+                            <div className="text-xs text-muted-foreground mb-1">{t("contact_profile_sidebar.opportunity_modal.whatsapp_number")}</div>
                             <Input
-                                placeholder="Select contact"
+                                placeholder={t("contact_profile_sidebar.opportunity_modal.select_contact")}
                                 value={newOpportunity.contact}
                                 onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Assigned tags</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.assigned_tags")}</label>
                             <CustomDropdown
                                 options={tagOptions}
                                 selected={newOpportunity.tags}
                                 onChange={(tags) => setNewOpportunity({ ...newOpportunity, tags })}
-                                placeholder="Select tags"
+                                placeholder={t("contact_profile_sidebar.tags.select_tags")}
                                 width="100%"
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Note</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.opportunity_modal.note")}</label>
                             <Textarea
-                                placeholder="Enter note..."
+                                placeholder={t("contact_profile_sidebar.opportunity_modal.enter_note")}
                                 value={newOpportunity.note}
                                 onChange={(e) => setNewOpportunity({ ...newOpportunity, note: e.target.value })}
                                 rows={3}
@@ -1673,13 +1675,13 @@ export default function ContactProfileSidebar({
                             setIsAddOpportunityModalOpen(false);
                             setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
                         }} disabled={createOpportunityMutation.isPending}>
-                            Cancel
+                            {t("contact_profile_sidebar.opportunity_modal.cancel")}
                         </Button>
                         <Button
                             onClick={handleSaveOpportunity}
                             disabled={!newOpportunity.title || !newOpportunity.pipeline || !newOpportunity.stage || createOpportunityMutation.isPending}
                         >
-                            {createOpportunityMutation.isPending ? "Saving..." : "Save Opportunity"}
+                            {createOpportunityMutation.isPending ? t("contact_profile_sidebar.opportunity_modal.saving") : t("contact_profile_sidebar.opportunity_modal.save")}
                         </Button>
                     </div>
                 </DialogContent>
@@ -1689,13 +1691,13 @@ export default function ContactProfileSidebar({
             <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
                 <DialogContent className="bg-white dark:bg-background">
                     <DialogHeader>
-                        <DialogTitle>Add Task</DialogTitle>
+                        <DialogTitle>{t("contact_profile_sidebar.tasks.add")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium">Note</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.task_modal.note")}</label>
                             <Textarea
-                                placeholder="Enter note..."
+                                placeholder={t("contact_profile_sidebar.task_modal.enter_note")}
                                 value={newTask.note}
                                 onChange={(e) => setNewTask({ ...newTask, note: e.target.value })}
                                 rows={3}
@@ -1703,7 +1705,7 @@ export default function ContactProfileSidebar({
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-medium">Select date</label>
+                                <label className="text-sm font-medium">{t("contact_profile_sidebar.task_modal.select_date")}</label>
                                 <Input
                                     type="date"
                                     value={newTask.date}
@@ -1711,7 +1713,7 @@ export default function ContactProfileSidebar({
                                 />
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Select time</label>
+                                <label className="text-sm font-medium">{t("contact_profile_sidebar.task_modal.select_time")}</label>
                                 <Input
                                     type="time"
                                     value={newTask.time}
@@ -1720,10 +1722,10 @@ export default function ContactProfileSidebar({
                             </div>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Agent</label>
+                            <label className="text-sm font-medium">{t("contact_profile_sidebar.task_modal.agent")}</label>
                             <Select value={newTask.agent} onValueChange={(value) => setNewTask({ ...newTask, agent: value })}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select agent">
+                                    <SelectValue placeholder={t("contact_profile_sidebar.task_modal.select_agent")}>
                                         {newTask.agent && (() => {
                                             const agent = agentOptions.find(a => a.id === newTask.agent);
                                             const getAgentColor = (id: string) => {
@@ -1775,13 +1777,13 @@ export default function ContactProfileSidebar({
                             setIsAddTaskModalOpen(false);
                             setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
                         }}>
-                            Cancel
+                            {t("contact_profile_sidebar.task_modal.cancel")}
                         </Button>
                         <Button
                             onClick={handleSaveTask}
                             disabled={!newTask.note || !newTask.date || !newTask.time || !contactId || createTaskMutation.isPending}
                         >
-                            {createTaskMutation.isPending ? "Saving..." : "Save Task"}
+                            {createTaskMutation.isPending ? t("contact_profile_sidebar.task_modal.saving") : t("contact_profile_sidebar.task_modal.save")}
                         </Button>
                     </div>
                 </DialogContent>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Sparkles,
   HelpCircle,
@@ -39,6 +40,7 @@ interface ThemeItem {
 }
 
 export default function AIThemesSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -77,18 +79,18 @@ export default function AIThemesSection() {
     {
       id: "1",
       name: "Baserow.io",
-      description: "Use Baserow.io to store and manage products linked to each theme efficiently",
+      description: t("ai_themes_section.theme_baserow_description"),
       icon: "baserow",
       badges: [
-        { text: "Beta", variant: "beta" },
-        { text: "New", variant: "new" },
+        { text: t("ai_themes_section.badge_beta"), variant: "beta" },
+        { text: t("ai_themes_section.badge_new"), variant: "new" },
       ],
       available: true,
     },
     {
       id: "2",
-      name: "Databases",
-      description: "More integrations coming soon...",
+      name: t("ai_themes_section.theme_databases_name"),
+      description: t("ai_themes_section.theme_databases_description"),
       icon: "question",
       badges: [],
       available: false,
@@ -167,7 +169,7 @@ export default function AIThemesSection() {
       setThemeItems([...themeItems, newItem]);
       setFormData({ name: "", subtitle: "", smartFlow: "", channel: "", payload: "", spreadsheet: "" });
       setIsCreateFormOpen(false);
-      toast({ title: "Created", description: "Theme item published." });
+      toast({ title: t("ai_themes_section.toast_created_title"), description: t("ai_themes_section.toast_theme_published_description") });
     }
   };
 
@@ -179,7 +181,7 @@ export default function AIThemesSection() {
   const handleDeleteItem = () => {
     if (itemToDelete) {
       setThemeItems(themeItems.filter((i) => i.id !== itemToDelete.id));
-      toast({ title: "Deleted", description: "Theme item removed." });
+      toast({ title: t("ai_themes_section.toast_deleted_title"), description: t("ai_themes_section.toast_theme_removed_description") });
     }
     setShowDeleteConfirm(false);
     setItemToDelete(null);
@@ -194,12 +196,12 @@ export default function AIThemesSection() {
   }
 
   // ── Header subtitle/buttons per view ─────────────────────────
-  const headerTitle = selectedTheme ? selectedTheme.name : "AI Themes";
+  const headerTitle = selectedTheme ? selectedTheme.name : t("ai_themes_section.title");
   const headerSub = isCreateFormOpen
-    ? "Create an AI theme to attach products to it"
+    ? t("ai_themes_section.header_sub_create")
     : selectedTheme
       ? selectedTheme.description
-      : "Organize and manage your AI Themes";
+      : t("ai_themes_section.header_sub_default");
 
   return (
     <>
@@ -221,16 +223,16 @@ export default function AIThemesSection() {
               {selectedTheme && !isCreateFormOpen && (
                 <>
                   <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add New
+                    <Plus size={12} /> {t("ai_themes_section.add_new")}
                   </button>
                   <button onClick={() => setSelectedTheme(null)} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Back
+                    <ChevronLeft size={12} /> {t("ai_themes_section.back")}
                   </button>
                 </>
               )}
               {selectedTheme && isCreateFormOpen && (
                 <button onClick={handleCancel} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("ai_themes_section.back")}
                 </button>
               )}
             </div>
@@ -289,7 +291,7 @@ export default function AIThemesSection() {
                       </div>
                       {theme.available ? (
                         <button onClick={() => setSelectedTheme(theme)} className={primaryOutlineBtn}>
-                          Select
+                          {t("ai_themes_section.select")}
                         </button>
                       ) : (
                         <button
@@ -299,7 +301,7 @@ export default function AIThemesSection() {
                             dark ? "border-slate-800 text-slate-500" : "border-slate-200 text-slate-400"
                           )}
                         >
-                          Soon
+                          {t("ai_themes_section.soon")}
                         </button>
                       )}
                     </div>
@@ -318,13 +320,13 @@ export default function AIThemesSection() {
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No items found</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_themes_section.empty_title")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Add your first item to this theme.
+                      {t("ai_themes_section.empty_description")}
                     </p>
                   </div>
                   <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Create Now
+                    <Plus size={12} /> {t("ai_themes_section.create_now")}
                   </button>
                 </div>
               ) : (
@@ -335,10 +337,10 @@ export default function AIThemesSection() {
                         <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
                           <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>
                             <div className="flex items-center gap-2">
-                              <FileText size={12} /> Name
+                              <FileText size={12} /> {t("ai_themes_section.column_name")}
                             </div>
                           </th>
-                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("ai_themes_section.column_actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -358,16 +360,16 @@ export default function AIThemesSection() {
                             <td className="px-6 py-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
-                                  onClick={() => toast({ title: "Edit", description: "Edit theme item." })}
+                                  onClick={() => toast({ title: t("ai_themes_section.toast_edit_title"), description: t("ai_themes_section.toast_edit_description") })}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
-                                  title="Edit"
+                                  title={t("ai_themes_section.toast_edit_title")}
                                 >
                                   <Edit2 size={13} />
                                 </button>
                                 <button
                                   onClick={() => { setItemToDelete(item); setShowDeleteConfirm(true); }}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
-                                  title="Delete"
+                                  title={t("ai_themes_section.delete")}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -380,7 +382,7 @@ export default function AIThemesSection() {
                   </div>
 
                   <div className={cn("px-6 py-3 border-t text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                    Showing {themeItems.length} of {themeItems.length} items
+                    {t("ai_themes_section.showing_count", { count: themeItems.length, total: themeItems.length })}
                   </div>
                 </div>
               )}
@@ -394,31 +396,31 @@ export default function AIThemesSection() {
                 <div className="max-w-3xl space-y-6">
                   {/* Name */}
                   <div className="space-y-2">
-                    <label className={cn("block text-[11px] font-semibold", sub)}>Name</label>
+                    <label className={cn("block text-[11px] font-semibold", sub)}>{t("ai_themes_section.field_name")}</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className={inputCls}
-                      placeholder="Enter theme name"
+                      placeholder={t("ai_themes_section.placeholder_theme_name")}
                     />
                   </div>
 
                   {/* Subtitle */}
                   <div className="space-y-2">
-                    <label className={cn("block text-[11px] font-semibold", sub)}>Subtitle</label>
+                    <label className={cn("block text-[11px] font-semibold", sub)}>{t("ai_themes_section.field_subtitle")}</label>
                     <input
                       type="text"
                       value={formData.subtitle}
                       onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                       className={inputCls}
-                      placeholder="Enter subtitle"
+                      placeholder={t("ai_themes_section.placeholder_subtitle")}
                     />
                   </div>
 
                   {/* TRIGGER SECTION */}
                   <div className="pt-2 space-y-4">
-                    <h3 className="text-[12px] font-semibold text-primary">Trigger Section</h3>
+                    <h3 className="text-[12px] font-semibold text-primary">{t("ai_themes_section.trigger_section")}</h3>
 
                     <div className="space-y-2">
                       <label className={cn("block text-[11px] font-semibold", sub)}>Smart Flow</label>
@@ -427,51 +429,51 @@ export default function AIThemesSection() {
                         onChange={(e) => setFormData({ ...formData, smartFlow: e.target.value })}
                         className={selectCls}
                       >
-                        <option value="">Select Smart Flow</option>
-                        <option value="flow1">Flow 1</option>
-                        <option value="flow2">Flow 2</option>
+                        <option value="">{t("ai_themes_section.select_smart_flow")}</option>
+                        <option value="flow1">{t("ai_themes_section.flow_1")}</option>
+                        <option value="flow2">{t("ai_themes_section.flow_2")}</option>
                       </select>
                     </div>
 
                     <div className="space-y-2">
-                      <label className={cn("block text-[11px] font-semibold", sub)}>Channel</label>
+                      <label className={cn("block text-[11px] font-semibold", sub)}>{t("ai_themes_section.field_channel")}</label>
                       <select
                         value={formData.channel}
                         onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
                         className={selectCls}
                       >
-                        <option value="">Select Channel</option>
+                        <option value="">{t("ai_themes_section.select_channel")}</option>
                         <option value="whatsapp">WhatsApp</option>
                         <option value="instagram">Instagram</option>
                       </select>
                     </div>
 
                     <div className="space-y-2">
-                      <label className={cn("block text-[11px] font-semibold", sub)}>Payload</label>
+                      <label className={cn("block text-[11px] font-semibold", sub)}>{t("ai_themes_section.field_payload")}</label>
                       <input
                         type="text"
                         value={formData.payload}
                         onChange={(e) => setFormData({ ...formData, payload: e.target.value })}
                         className={inputCls}
-                        placeholder="Enter payload"
+                        placeholder={t("ai_themes_section.placeholder_payload")}
                       />
                     </div>
                   </div>
 
                   {/* BASEROW.IO SECTION */}
                   <div className="pt-2 space-y-4">
-                    <h3 className="text-[12px] font-semibold text-primary">Baserow.io Section</h3>
+                    <h3 className="text-[12px] font-semibold text-primary">{t("ai_themes_section.baserow_section")}</h3>
 
                     <div className="space-y-2">
-                      <label className={cn("block text-[11px] font-semibold", sub)}>Select a Spreadsheet</label>
+                      <label className={cn("block text-[11px] font-semibold", sub)}>{t("ai_themes_section.field_select_spreadsheet")}</label>
                       <select
                         value={formData.spreadsheet}
                         onChange={(e) => setFormData({ ...formData, spreadsheet: e.target.value })}
                         className={selectCls}
                       >
-                        <option value="">Select Spreadsheet</option>
-                        <option value="sheet1">Spreadsheet 1</option>
-                        <option value="sheet2">Spreadsheet 2</option>
+                        <option value="">{t("ai_themes_section.select_spreadsheet")}</option>
+                        <option value="sheet1">{t("ai_themes_section.spreadsheet_1")}</option>
+                        <option value="sheet2">{t("ai_themes_section.spreadsheet_2")}</option>
                       </select>
                     </div>
                   </div>
@@ -480,14 +482,14 @@ export default function AIThemesSection() {
                 {/* Footer Actions */}
                 <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
                   <button onClick={handleCancel} className={outlineBtn}>
-                    Cancel
+                    {t("ai_themes_section.cancel")}
                   </button>
                   <button
                     onClick={handlePublish}
                     disabled={!formData.name.trim()}
                     className={primaryBtn}
                   >
-                    <Sparkles size={12} /> Publish
+                    <Sparkles size={12} /> {t("ai_themes_section.publish")}
                   </button>
                 </div>
               </div>
@@ -505,19 +507,19 @@ export default function AIThemesSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Item?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_themes_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{itemToDelete?.name || "This item"}</span> will be permanently removed.
+                  <span className="text-rose-500 font-black">{itemToDelete?.name || t("ai_themes_section.this_item")}</span> {t("ai_themes_section.delete_dialog_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_themes_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteItem}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("ai_themes_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

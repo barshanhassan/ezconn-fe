@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
@@ -88,6 +89,7 @@ type ViewMode = "list" | "coex_manage" | "api_manage" | "qr_manage";
  * parses Meta's hash response and dispatches the right backend call).
  */
 export default function WhatsAppSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -184,9 +186,9 @@ export default function WhatsAppSection() {
   const approvedTemplatesByAccount: Record<string, number> = useMemo(() => {
     const list: any[] = Array.isArray(templatesData) ? templatesData : [];
     const counts: Record<string, number> = {};
-    for (const t of list) {
-      if (String(t.status).toUpperCase() !== "APPROVED") continue;
-      const key = String(t.wa_account_id);
+    for (const tpl of list) {
+      if (String(tpl.status).toUpperCase() !== "APPROVED") continue;
+      const key = String(tpl.wa_account_id);
       counts[key] = (counts[key] ?? 0) + 1;
     }
     return counts;
@@ -324,9 +326,8 @@ export default function WhatsAppSection() {
 
     if (!appId || !configId) {
       toast({
-        title: "Embedded Signup not configured",
-        description:
-          "VITE_META_APP_ID and VITE_META_ES_CONFIG_ID must be set in the frontend .env to launch Meta Embedded Signup.",
+        title: t("whatsapp_section.toast.embedded_not_configured_title"),
+        description: t("whatsapp_section.toast.embedded_not_configured_desc"),
         variant: "destructive",
       });
       return;
@@ -346,11 +347,11 @@ export default function WhatsAppSection() {
 
   const validateManualForm = () => {
     const errs: Record<string, string> = {};
-    if (!manualForm.waba_id.trim()) errs.waba_id = "WABA ID is required";
-    if (!manualForm.name.trim()) errs.name = "Account name is required";
-    if (!manualForm.access_token.trim()) errs.access_token = "Access token is required";
-    if (!manualForm.phone_number_id.trim()) errs.phone_number_id = "Phone Number ID is required";
-    if (!manualForm.display_phone_number.trim()) errs.display_phone_number = "Display phone number is required";
+    if (!manualForm.waba_id.trim()) errs.waba_id = t("whatsapp_section.validation.waba_id_required");
+    if (!manualForm.name.trim()) errs.name = t("whatsapp_section.validation.name_required");
+    if (!manualForm.access_token.trim()) errs.access_token = t("whatsapp_section.validation.access_token_required");
+    if (!manualForm.phone_number_id.trim()) errs.phone_number_id = t("whatsapp_section.validation.phone_number_id_required");
+    if (!manualForm.display_phone_number.trim()) errs.display_phone_number = t("whatsapp_section.validation.display_phone_number_required");
     setManualErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -369,8 +370,8 @@ export default function WhatsAppSection() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "Account saved",
-        description: data?.message ?? "WhatsApp account is registering.",
+        title: t("whatsapp_section.toast.account_saved_title"),
+        description: data?.message ?? t("whatsapp_section.toast.account_saved_desc_fallback"),
       });
       setShowManualConnectDialog(false);
       setManualForm(emptyManualForm);
@@ -409,8 +410,8 @@ export default function WhatsAppSection() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: data?.success ? "Account refreshed" : "Verify failed",
-        description: data?.success ? "Latest status pulled from Meta." : data?.message ?? "",
+        title: data?.success ? t("whatsapp_section.toast.account_refreshed_title") : t("whatsapp_section.toast.verify_failed_title"),
+        description: data?.success ? t("whatsapp_section.toast.account_refreshed_desc") : data?.message ?? "",
         variant: data?.success ? undefined : "destructive",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
@@ -426,7 +427,7 @@ export default function WhatsAppSection() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: data?.success ? "Webhook re-subscribed" : "Re-subscribe failed",
+        title: data?.success ? t("whatsapp_section.toast.webhook_resubscribed_title") : t("whatsapp_section.toast.resubscribe_failed_title"),
         description: data?.message ?? "",
         variant: data?.success ? undefined : "destructive",
       });
@@ -469,25 +470,22 @@ export default function WhatsAppSection() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                    {view === "list" && "WhatsApp"}
-                    {view === "coex_manage" && 'WhatsApp Business App "Coex"'}
-                    {view === "api_manage" && "WhatsApp Business API"}
-                    {view === "qr_manage" && "WhatsApp QR Code"}
+                    {view === "list" && t("whatsapp_section.header.title_list")}
+                    {view === "coex_manage" && t("whatsapp_section.header.title_coex")}
+                    {view === "api_manage" && t("whatsapp_section.header.title_api")}
+                    {view === "qr_manage" && t("whatsapp_section.header.title_qr")}
                   </h1>
                   {view === "coex_manage" && (
                     <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                      Coexistence
+                      {t("whatsapp_section.header.badge_coexistence")}
                     </Badge>
                   )}
                 </div>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  {view === "list" && "Connect your WhatsApp accounts to the platform."}
-                  {view === "coex_manage" &&
-                    'Link your existing WhatsApp Business number and manage conversations on both your phone and our platform simultaneously.'}
-                  {view === "api_manage" &&
-                    "The official WhatsApp Business API for medium and large businesses to communicate with customers at scale."}
-                  {view === "qr_manage" &&
-                    "Connect your WhatsApp number in seconds by scanning a QR code — no technical setup needed."}
+                  {view === "list" && t("whatsapp_section.header.desc_list")}
+                  {view === "coex_manage" && t("whatsapp_section.header.desc_coex")}
+                  {view === "api_manage" && t("whatsapp_section.header.desc_api")}
+                  {view === "qr_manage" && t("whatsapp_section.header.desc_qr")}
                 </p>
               </div>
             </div>
@@ -497,7 +495,7 @@ export default function WhatsAppSection() {
                   onClick={() => setShowManualConnectDialog(true)}
                   className={outlineBtn}
                 >
-                  <Plus size={12} /> Connect manually
+                  <Plus size={12} /> {t("whatsapp_section.header.connect_manually")}
                 </button>
               )}
               {/* "Add new" launches Embedded Signup straight from the header —
@@ -511,12 +509,12 @@ export default function WhatsAppSection() {
                   onClick={() => openEmbeddedSignup("api")}
                   className="h-11 px-5 rounded-xl bg-primary text-white text-[11px] font-semibold flex items-center gap-2 hover:bg-primary/90 transition-all"
                 >
-                  <Plus size={12} /> Add new
+                  <Plus size={12} /> {t("whatsapp_section.header.add_new")}
                 </button>
               )}
               {view !== "list" && (
                 <button onClick={() => setView("list")} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("whatsapp_section.header.back")}
                 </button>
               )}
             </div>
@@ -532,24 +530,23 @@ export default function WhatsAppSection() {
                     <Smartphone size={20} />
                   </div>
                   <Badge variant="outline" className="h-6 px-2.5 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                    Popular
+                    {t("whatsapp_section.cards.popular")}
                   </Badge>
                 </div>
 
                 <div className="space-y-2 mb-5 flex-1">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Business App "Coex"</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("whatsapp_section.cards.coex.title")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
-                    Link your existing WhatsApp Business number and manage conversations on both your phone and our
-                    platform simultaneously.
+                    {t("whatsapp_section.cards.coex.desc")}
                   </p>
 
                   {/* Feature checklist — 4 items */}
                   <ul className="space-y-1.5 pt-3 mt-3 border-t border-current/10">
                     {[
-                      "Use your existing phone number",
-                      "Real-time sync with mobile app",
-                      "No API setup required",
-                      "Official WhatsApp API",
+                      t("whatsapp_section.cards.coex.feature_1"),
+                      t("whatsapp_section.cards.coex.feature_2"),
+                      t("whatsapp_section.cards.coex.feature_3"),
+                      t("whatsapp_section.cards.coex.feature_4"),
                     ].map((feat) => (
                       <li key={feat} className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
                         <Check size={13} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -561,13 +558,13 @@ export default function WhatsAppSection() {
                   {/* Prerequisites box — orange warning */}
                   <div className="mt-4 rounded-lg p-3 text-[11px] leading-relaxed bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/50 text-amber-800 dark:text-amber-300">
                     <div className="font-semibold text-[10px] mb-1.5 flex items-center gap-1.5">
-                      <AlertCircle size={11} /> Prerequisites
+                      <AlertCircle size={11} /> {t("whatsapp_section.cards.prerequisites_label")}
                     </div>
                     <ul className="space-y-1">
-                      <li>• WhatsApp Business App already connected</li>
-                      <li>• Latest version of the mobile app</li>
-                      <li>• Country not on Meta's restricted list</li>
-                      <li>• Facebook Business Manager Account</li>
+                      <li>• {t("whatsapp_section.cards.coex.prereq_1")}</li>
+                      <li>• {t("whatsapp_section.cards.coex.prereq_2")}</li>
+                      <li>• {t("whatsapp_section.cards.coex.prereq_3")}</li>
+                      <li>• {t("whatsapp_section.cards.coex.prereq_4")}</li>
                     </ul>
                   </div>
                 </div>
@@ -577,18 +574,18 @@ export default function WhatsAppSection() {
                     onClick={() => setView("coex_manage")}
                     className="w-full h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
                   >
-                    Manage
+                    {t("whatsapp_section.cards.manage")}
                   </button>
                   {/* Difficulty indicator */}
                   <div className={cn("flex items-center gap-1.5 text-[10px] font-bold opacity-60", sub)}>
-                    <span>Setup difficulty:</span>
+                    <span>{t("whatsapp_section.cards.setup_difficulty")}</span>
                     {[1, 2, 3].map((n) => (
                       <span
                         key={n}
                         className={cn("w-2 h-2 rounded-full", n <= 2 ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600")}
                       />
                     ))}
-                    <span>Moderate</span>
+                    <span>{t("whatsapp_section.cards.difficulty_moderate")}</span>
                   </div>
                 </div>
               </div>
@@ -613,18 +610,17 @@ export default function WhatsAppSection() {
                 </div>
 
                 <div className="space-y-2 mb-5 flex-1">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Business API</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("whatsapp_section.cards.api.title")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
-                    The official WhatsApp Business API for medium and large businesses to communicate with customers
-                    at scale.
+                    {t("whatsapp_section.cards.api.desc")}
                   </p>
 
                   <ul className="space-y-1.5 pt-3 mt-3 border-t border-current/10">
                     {[
-                      "High-volume messaging",
-                      "Message templates & automation",
-                      "Verified business profile",
-                      "Official WhatsApp API",
+                      t("whatsapp_section.cards.api.feature_1"),
+                      t("whatsapp_section.cards.api.feature_2"),
+                      t("whatsapp_section.cards.api.feature_3"),
+                      t("whatsapp_section.cards.api.feature_4"),
                     ].map((feat) => (
                       <li key={feat} className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
                         <Check size={13} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -635,10 +631,10 @@ export default function WhatsAppSection() {
 
                   <div className="mt-4 rounded-lg p-3 text-[11px] leading-relaxed bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/50 text-amber-800 dark:text-amber-300">
                     <div className="font-semibold text-[10px] mb-1.5 flex items-center gap-1.5">
-                      <AlertCircle size={11} /> Prerequisites
+                      <AlertCircle size={11} /> {t("whatsapp_section.cards.prerequisites_label")}
                     </div>
                     <ul className="space-y-1">
-                      <li>• Facebook Business Manager Account</li>
+                      <li>• {t("whatsapp_section.cards.api.prereq_1")}</li>
                     </ul>
                   </div>
                 </div>
@@ -648,17 +644,17 @@ export default function WhatsAppSection() {
                     onClick={() => setView("api_manage")}
                     className="w-full h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
                   >
-                    Manage
+                    {t("whatsapp_section.cards.manage")}
                   </button>
                   <div className={cn("flex items-center gap-1.5 text-[10px] font-bold opacity-60", sub)}>
-                    <span>Setup difficulty:</span>
+                    <span>{t("whatsapp_section.cards.setup_difficulty")}</span>
                     {[1, 2, 3].map((n) => (
                       <span
                         key={n}
                         className={cn("w-2 h-2 rounded-full", n <= 2 ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600")}
                       />
                     ))}
-                    <span>Moderate</span>
+                    <span>{t("whatsapp_section.cards.difficulty_moderate")}</span>
                   </div>
                 </div>
               </div>
@@ -671,26 +667,25 @@ export default function WhatsAppSection() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Badge variant="outline" className="h-6 px-2.5 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                      Popular
+                      {t("whatsapp_section.cards.popular")}
                     </Badge>
                     <Badge variant="outline" className="h-6 px-2.5 rounded-md border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[10px] font-semibold">
-                      Quickest
+                      {t("whatsapp_section.cards.quickest")}
                     </Badge>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-5 flex-1">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>QR Code</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("whatsapp_section.cards.qr.title")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
-                    Our native QR Code integration makes it easy and intuitive to connect your WhatsApp number in
-                    seconds.
+                    {t("whatsapp_section.cards.qr.desc")}
                   </p>
 
                   <ul className="space-y-1.5 pt-3 mt-3 border-t border-current/10">
                     {[
-                      "Connect in under 60 seconds",
-                      "Scan QR code from your phone",
-                      "No technical knowledge needed",
+                      t("whatsapp_section.cards.qr.feature_1"),
+                      t("whatsapp_section.cards.qr.feature_2"),
+                      t("whatsapp_section.cards.qr.feature_3"),
                     ].map((feat) => (
                       <li key={feat} className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
                         <Check size={13} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -705,17 +700,17 @@ export default function WhatsAppSection() {
                     onClick={() => setView("qr_manage")}
                     className="w-full h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
                   >
-                    Manage
+                    {t("whatsapp_section.cards.manage")}
                   </button>
                   <div className={cn("flex items-center gap-1.5 text-[10px] font-bold opacity-60", sub)}>
-                    <span>Setup difficulty:</span>
+                    <span>{t("whatsapp_section.cards.setup_difficulty")}</span>
                     {[1, 2, 3].map((n) => (
                       <span
                         key={n}
                         className={cn("w-2 h-2 rounded-full", n <= 1 ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600")}
                       />
                     ))}
-                    <span>Easy</span>
+                    <span>{t("whatsapp_section.cards.difficulty_easy")}</span>
                   </div>
                 </div>
               </div>
@@ -808,9 +803,9 @@ export default function WhatsAppSection() {
                 <Phone size={16} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Connect WhatsApp Manually</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("whatsapp_section.manual.title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                  Paste credentials from Meta dashboard. Account will register as PENDING and turn ACTIVE once verified.
+                  {t("whatsapp_section.manual.desc")}
                 </p>
               </div>
             </div>
@@ -818,10 +813,10 @@ export default function WhatsAppSection() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  Account Name <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.manual.account_name_label")} <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. EZAUQ Sales"
+                  placeholder={t("whatsapp_section.manual.account_name_placeholder")}
                   value={manualForm.name}
                   onChange={(e) => setManualForm({ ...manualForm, name: e.target.value })}
                   className={inputCls}
@@ -832,34 +827,34 @@ export default function WhatsAppSection() {
 
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  WABA ID <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.manual.waba_id_label")} <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. 681754671655525"
+                  placeholder={t("whatsapp_section.manual.waba_id_placeholder")}
                   value={manualForm.waba_id}
                   onChange={(e) => setManualForm({ ...manualForm, waba_id: e.target.value })}
                   className={inputCls}
                   disabled={manualOnboardMutation.isPending}
                 />
                 <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
-                  From Meta dashboard → WhatsApp → API Setup → WhatsApp Business Account ID
+                  {t("whatsapp_section.manual.waba_id_hint")}
                 </p>
                 {manualErrors.waba_id && <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.waba_id}</p>}
               </div>
 
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  Phone Number ID <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.manual.phone_number_id_label")} <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. 769635746243474"
+                  placeholder={t("whatsapp_section.manual.phone_number_id_placeholder")}
                   value={manualForm.phone_number_id}
                   onChange={(e) => setManualForm({ ...manualForm, phone_number_id: e.target.value })}
                   className={inputCls}
                   disabled={manualOnboardMutation.isPending}
                 />
                 <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
-                  From Meta dashboard → API Setup → Phone number ID (digits only, not the +1 555 number)
+                  {t("whatsapp_section.manual.phone_number_id_hint")}
                 </p>
                 {manualErrors.phone_number_id && (
                   <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.phone_number_id}</p>
@@ -868,10 +863,10 @@ export default function WhatsAppSection() {
 
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  Display Phone Number <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.manual.display_phone_label")} <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. 15551414305 or +1 555 141 4305"
+                  placeholder={t("whatsapp_section.manual.display_phone_placeholder")}
                   value={manualForm.display_phone_number}
                   onChange={(e) => setManualForm({ ...manualForm, display_phone_number: e.target.value })}
                   className={inputCls}
@@ -884,10 +879,10 @@ export default function WhatsAppSection() {
 
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  Verified Name <span className="opacity-60 normal-case font-bold">(optional)</span>
+                  {t("whatsapp_section.manual.verified_name_label")} <span className="opacity-60 normal-case font-bold">{t("whatsapp_section.manual.optional")}</span>
                 </label>
                 <Input
-                  placeholder="e.g. EZAUQ Pvt Ltd"
+                  placeholder={t("whatsapp_section.manual.verified_name_placeholder")}
                   value={manualForm.verified_name}
                   onChange={(e) => setManualForm({ ...manualForm, verified_name: e.target.value })}
                   className={inputCls}
@@ -897,17 +892,17 @@ export default function WhatsAppSection() {
 
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  Access Token <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.manual.access_token_label")} <span className="text-rose-500">*</span>
                 </label>
                 <Textarea
-                  placeholder="EAA... (paste from Meta dashboard → API Setup → Access Token)"
+                  placeholder={t("whatsapp_section.manual.access_token_placeholder")}
                   value={manualForm.access_token}
                   onChange={(e) => setManualForm({ ...manualForm, access_token: e.target.value })}
                   className={cn(inputCls, "h-24 py-3 font-mono text-[11px] resize-none")}
                   disabled={manualOnboardMutation.isPending}
                 />
                 <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
-                  Temporary tokens expire after 24 hours. For long-term use, generate a permanent System User token from Business Manager.
+                  {t("whatsapp_section.manual.access_token_hint")}
                 </p>
                 {manualErrors.access_token && (
                   <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.access_token}</p>
@@ -921,7 +916,7 @@ export default function WhatsAppSection() {
                 disabled={manualOnboardMutation.isPending}
                 className={cn(outlineBtn, "disabled:opacity-50 disabled:cursor-not-allowed")}
               >
-                Cancel
+                {t("whatsapp_section.manual.cancel")}
               </button>
               <button
                 onClick={submitManualOnboard}
@@ -931,11 +926,11 @@ export default function WhatsAppSection() {
                 {manualOnboardMutation.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                    Registering...
+                    {t("whatsapp_section.manual.registering")}
                   </>
                 ) : (
                   <>
-                    <Plus size={12} /> Connect Account
+                    <Plus size={12} /> {t("whatsapp_section.manual.connect_account")}
                   </>
                 )}
               </button>
@@ -1016,6 +1011,7 @@ function AccountCard(props: {
   coex: boolean;
   approvedTemplateCount: number;
 }) {
+  const { t } = useTranslation();
   const { account, dark, text, sub, card, border, softBg, softBorder, outlineBtn } = props;
 
   const accountBadgeTone = account.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : account.status === "PENDING" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
@@ -1062,7 +1058,7 @@ function AccountCard(props: {
               <p className={cn("text-[13px] font-black truncate", text)}>{account.name}</p>
               {props.coex && (
                 <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                  Coex
+                  {t("whatsapp_section.account.badge_coex")}
                 </Badge>
               )}
               <Badge variant="outline" className={cn("h-5 px-2 rounded-md text-[10px] font-semibold", accountBadgeTone)}>
@@ -1076,7 +1072,7 @@ function AccountCard(props: {
                         <BadgeCheck size={14} />
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>Business Verified by Meta</TooltipContent>
+                    <TooltipContent>{t("whatsapp_section.account.verified_tooltip")}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1086,10 +1082,10 @@ function AccountCard(props: {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge variant="outline" className={cn("h-5 px-2 rounded-md text-[10px] font-semibold", reviewTone)}>
-                        Review: {reviewStatus}
+                        {t("whatsapp_section.account.review_label", { status: reviewStatus })}
                       </Badge>
                     </TooltipTrigger>
-                    <TooltipContent>Meta account review status</TooltipContent>
+                    <TooltipContent>{t("whatsapp_section.account.review_tooltip")}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1101,18 +1097,18 @@ function AccountCard(props: {
               )}
             </div>
             <div className="flex items-center gap-2 mt-1 text-[10px] font-bold opacity-70 flex-wrap">
-              <span className={sub}>Business Manager</span>
+              <span className={sub}>{t("whatsapp_section.account.business_manager")}</span>
               <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md border", dark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-600")}>
-                BM · {account.waba_id}
+                {t("whatsapp_section.account.bm_label", { id: account.waba_id })}
               </span>
               <span className={sub}>
-                {numbers.length} number{numbers.length === 1 ? "" : "s"}
+                {t("whatsapp_section.account.numbers_count", { count: numbers.length })}
               </span>
               {account.currency && <span className={sub}>• {account.currency}</span>}
               {/* Gap 9 — on-behalf-of business (partner-managed accounts) */}
               {onBehalfOf && (
                 <span className={cn("inline-flex items-center gap-1", sub)}>
-                  • <Building2 size={10} /> On behalf of: {onBehalfOf}
+                  • <Building2 size={10} /> {t("whatsapp_section.account.on_behalf_of", { name: onBehalfOf })}
                 </span>
               )}
             </div>
@@ -1125,7 +1121,7 @@ function AccountCard(props: {
               number can open a conversation, so the emphasis is deliberate. */}
           {!props.coex && (
             <NeutralButton onClick={props.onOpenTemplates} className={outlineBtn}>
-              <CopyIcon size={12} /> Manage Templates
+              <CopyIcon size={12} /> {t("whatsapp_section.account.manage_templates")}
             </NeutralButton>
           )}
           {/* Pricing — the two platforms are billed against different published
@@ -1140,7 +1136,7 @@ function AccountCard(props: {
             rel="noopener noreferrer"
             className={outlineBtn}
           >
-            <Gauge size={12} /> Pricing <ExternalLink size={12} />
+            <Gauge size={12} /> {t("whatsapp_section.account.pricing")} <ExternalLink size={12} />
           </a>
           <a
             href="https://business.facebook.com/settings/whatsapp-business-accounts/"
@@ -1148,7 +1144,7 @@ function AccountCard(props: {
             rel="noopener noreferrer"
             className="h-11 px-5 rounded-xl bg-primary text-white text-[11px] font-semibold flex items-center gap-2 hover:bg-primary/90 transition-all"
           >
-            <ExternalLink size={12} /> {props.coex ? "Access BM" : "Manage"}
+            <ExternalLink size={12} /> {props.coex ? t("whatsapp_section.account.access_bm") : t("whatsapp_section.account.manage")}
           </a>
 
           {/* Secondary actions collapsed into a ⋮ menu (mirrors replyagent header) */}
@@ -1160,20 +1156,20 @@ function AccountCard(props: {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[210px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
               <DropdownMenuItem onClick={props.onOpenTemplates} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                <CopyIcon size={12} /> Templates
+                <CopyIcon size={12} /> {t("whatsapp_section.account.menu_templates")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={props.onSetupCapi} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                <Sparkles size={12} /> {account.capi ? "Conversions API ✓" : "Setup Conversions API"}
+                <Sparkles size={12} /> {account.capi ? t("whatsapp_section.account.menu_capi_configured") : t("whatsapp_section.account.menu_setup_capi")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={props.onVerifyAccount} disabled={props.isVerifying} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                <RefreshCcw size={12} className={props.isVerifying ? "animate-spin" : ""} /> Verify
+                <RefreshCcw size={12} className={props.isVerifying ? "animate-spin" : ""} /> {t("whatsapp_section.account.menu_verify")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={props.onResubscribe} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                <Repeat size={12} /> Re-subscribe
+                <Repeat size={12} /> {t("whatsapp_section.account.menu_resubscribe")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={props.onDeleteAccount} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
-                <Trash2 size={12} /> Delete account
+                <Trash2 size={12} /> {t("whatsapp_section.account.menu_delete_account")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1186,18 +1182,18 @@ function AccountCard(props: {
           <ShieldAlert size={15} className="text-rose-500 mt-0.5 shrink-0" />
           <div className="min-w-0">
             <p className="text-[12px] font-semibold text-rose-600 dark:text-rose-400">
-              Action needed
+              {t("whatsapp_section.health.action_needed")}
             </p>
             <p className={cn("text-[11px] font-medium opacity-80 mt-0.5", sub)}>
-              Meta reported an error on this account (code{" "}
-              <span className="font-mono font-bold">{String(healthError)}</span>). Use “Verify” to refresh, or open{" "}
+              {t("whatsapp_section.health.desc_prefix")}{" "}
+              <span className="font-mono font-bold">{String(healthError)}</span>{t("whatsapp_section.health.desc_middle")}{" "}
               <a
                 href="https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline text-rose-600 dark:text-rose-400"
               >
-                Meta’s error reference
+                {t("whatsapp_section.health.desc_link")}
               </a>
               .
             </p>
@@ -1207,7 +1203,7 @@ function AccountCard(props: {
 
       {/* Phone Numbers */}
       <div className="p-5">
-        <h4 className={cn("text-[11px] font-semibold ml-1 mb-3", sub)}>Phone numbers</h4>
+        <h4 className={cn("text-[11px] font-semibold ml-1 mb-3", sub)}>{t("whatsapp_section.phone.section_title")}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(account.phone_numbers ?? []).map((number: any) => (
             <PhoneNumberCard
@@ -1251,9 +1247,9 @@ function AccountCard(props: {
             <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")}>
               <Plus size={18} />
             </div>
-            <span className={cn("text-[12px] font-bold", text)}>Add phone number</span>
+            <span className={cn("text-[12px] font-bold", text)}>{t("whatsapp_section.phone.add_title")}</span>
             <span className={cn("text-[10px] font-medium opacity-60 max-w-[200px]", sub)}>
-              Verify another number in this Business Manager.
+              {t("whatsapp_section.phone.add_desc")}
             </span>
           </div>
         </div>
@@ -1312,6 +1308,7 @@ function PhoneNumberCard(props: {
   onTemplates: () => void;
   onSetupCapi: () => void;
 }) {
+  const { t } = useTranslation();
   const { number, dark, text, sub, card, border, approvedTemplateCount, isCoex } = props;
   const { toast } = useToast();
 
@@ -1322,7 +1319,13 @@ function PhoneNumberCard(props: {
 
   // Connection state (left dot) — mirrors replyagent's "• Connected" label.
   const connectedTone = isActive ? "bg-emerald-500" : isPending ? "bg-amber-500" : "bg-rose-500";
-  const connectedLabel = isActive ? "Connected" : isPending ? "Pending" : isDisconnected ? "Disconnected" : "Blocked";
+  const connectedLabel = isActive
+    ? t("whatsapp_section.phone.connected")
+    : isPending
+      ? t("whatsapp_section.phone.pending")
+      : isDisconnected
+        ? t("whatsapp_section.phone.disconnected")
+        : t("whatsapp_section.phone.blocked");
 
   // ── Blocked-number detail, mirroring replyagent's status cell ──
   // A LOCKED/FAILED number is unusable until someone acts, and *what* to do
@@ -1333,17 +1336,24 @@ function PhoneNumberCard(props: {
   const errorCode: string | null = number.error_code ? String(number.error_code) : null;
   const isPaymentFailure = errorCode === "PAYMENT_FAILED";
   const blockedTooltip = isPaymentFailure
-    ? "Payment failed. Add or update a payment method on the WhatsApp Account in Meta Business Manager."
+    ? t("whatsapp_section.phone.payment_failed_tooltip")
     : errorCode
-      ? `Error code: ${errorCode}. Open Meta's error reference to learn more about this error.`
+      ? t("whatsapp_section.phone.error_code_tooltip", { code: errorCode })
       : isCoex
-        ? "We couldn't connect the number. Remove it from WhatsApp Manager and from the WhatsApp Business App, then try reconnecting. If the issue continues, contact Support."
-        : "We couldn't connect the number. Remove it from WhatsApp Manager and try reconnecting. If the issue continues, contact Support.";
-  const blockedLabel = isPaymentFailure ? "Blocked" : errorCode ? "Blocked" : "Error";
+        ? t("whatsapp_section.phone.coex_error_tooltip")
+        : t("whatsapp_section.phone.api_error_tooltip");
+  const blockedLabel = isPaymentFailure ? t("whatsapp_section.phone.blocked") : errorCode ? t("whatsapp_section.phone.blocked") : t("whatsapp_section.phone.error");
 
   // Meta quality_rating: GREEN = high, YELLOW = medium, RED = low.
   const quality = String(number.quality_rating ?? "").toUpperCase();
-  const qualityLabel = quality === "GREEN" ? "High quality" : quality === "YELLOW" ? "Medium quality" : quality === "RED" ? "Low quality" : null;
+  const qualityLabel =
+    quality === "GREEN"
+      ? t("whatsapp_section.phone.quality_high")
+      : quality === "YELLOW"
+        ? t("whatsapp_section.phone.quality_medium")
+        : quality === "RED"
+          ? t("whatsapp_section.phone.quality_low")
+          : null;
   const qualityTone = quality === "GREEN" ? "bg-emerald-500" : quality === "YELLOW" ? "bg-amber-500" : quality === "RED" ? "bg-rose-500" : "bg-slate-400";
 
   const hasAutoReply = !!number.auto_reply_automation_id;
@@ -1357,7 +1367,7 @@ function PhoneNumberCard(props: {
   const copyNumber = () => {
     try {
       navigator.clipboard?.writeText(number.display_phone_number ?? "");
-      toast({ title: "Copied", description: number.display_phone_number });
+      toast({ title: t("whatsapp_section.phone.copied_title"), description: number.display_phone_number });
     } catch {
       /* clipboard unavailable — ignore */
     }
@@ -1380,7 +1390,7 @@ function PhoneNumberCard(props: {
                     <TooltipTrigger asChild>
                       <span className="text-emerald-500 shrink-0"><BadgeCheck size={11} /></span>
                     </TooltipTrigger>
-                    <TooltipContent>Display name approved by Meta</TooltipContent>
+                    <TooltipContent>{t("whatsapp_section.phone.name_approved_tooltip")}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -1430,25 +1440,25 @@ function PhoneNumberCard(props: {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[190px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
             <DropdownMenuItem onClick={props.onDefaultReply} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-              <ReplyAll size={12} /> Default reply
+              <ReplyAll size={12} /> {t("whatsapp_section.phone.menu_default_reply")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={props.onTemplates} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-              <CopyIcon size={12} /> Manage templates
+              <CopyIcon size={12} /> {t("whatsapp_section.phone.menu_manage_templates")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={props.onReconnect} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-              <RotateCw size={12} /> Refresh status
+              <RotateCw size={12} /> {t("whatsapp_section.phone.menu_refresh_status")}
             </DropdownMenuItem>
             {/* Register / 2-step PIN is Business-API only — replyagent has no
                 register flow on Coexistence numbers (they're already registered
                 via the WhatsApp Business app), so hide it for the Coex variant. */}
             {!isCoex && (
               <DropdownMenuItem onClick={props.onRegister} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                <KeyRound size={12} /> Register / 2-step PIN
+                <KeyRound size={12} /> {t("whatsapp_section.phone.menu_register_pin")}
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={props.onDelete} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
-              <Trash2 size={12} /> Delete phone number
+              <Trash2 size={12} /> {t("whatsapp_section.phone.menu_delete_number")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1456,7 +1466,7 @@ function PhoneNumberCard(props: {
 
       {/* Phone number + copy */}
       <div className="px-3 pb-2 -mt-1">
-        <p className={cn("text-[9px] font-bold uppercase tracking-wide opacity-50", sub)}>Phone number</p>
+        <p className={cn("text-[9px] font-bold uppercase tracking-wide opacity-50", sub)}>{t("whatsapp_section.phone.number_label")}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <p className={cn("text-[13px] font-black", text)}>{number.display_phone_number}</p>
           <NeutralButton onClick={copyNumber} className={cn("w-6 h-6 rounded-md flex items-center justify-center cursor-pointer transition-colors", dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500")}>
@@ -1470,12 +1480,12 @@ function PhoneNumberCard(props: {
         <div className="flex items-center gap-2 min-w-0">
           <ReplyAll size={15} className="text-emerald-500 shrink-0" />
           <div className="min-w-0">
-            <p className={cn("text-[12px] font-bold", text)}>Auto Reply</p>
-            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{hasAutoReply ? "Configured" : "Not configured"}</p>
+            <p className={cn("text-[12px] font-bold", text)}>{t("whatsapp_section.phone.auto_reply")}</p>
+            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{hasAutoReply ? t("whatsapp_section.phone.configured") : t("whatsapp_section.phone.not_configured")}</p>
           </div>
         </div>
         <NeutralButton onClick={props.onDefaultReply} className={manageBtn}>
-          Set up <ChevronRight size={12} />
+          {t("whatsapp_section.phone.set_up")} <ChevronRight size={12} />
         </NeutralButton>
       </div>
 
@@ -1484,8 +1494,8 @@ function PhoneNumberCard(props: {
         <div className="flex items-center gap-2 min-w-0">
           <Bot size={15} className={cn("shrink-0", number.allow_in_feeder ? "text-emerald-500" : "opacity-50")} />
           <div className="min-w-0">
-            <p className={cn("text-[12px] font-bold", text)}>AI item</p>
-            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{number.allow_in_feeder ? "Enabled" : "Disabled"}</p>
+            <p className={cn("text-[12px] font-bold", text)}>{t("whatsapp_section.phone.ai_item")}</p>
+            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{number.allow_in_feeder ? t("whatsapp_section.phone.enabled") : t("whatsapp_section.phone.disabled")}</p>
           </div>
         </div>
         <Switch checked={!!number.allow_in_feeder} onCheckedChange={() => props.onToggleFeeder()} className="data-[state=checked]:bg-emerald-500 shrink-0" />
@@ -1496,12 +1506,12 @@ function PhoneNumberCard(props: {
         <div className="flex items-center gap-2 min-w-0">
           <CopyIcon size={15} className="text-primary shrink-0" />
           <div className="min-w-0">
-            <p className={cn("text-[11px] font-bold uppercase tracking-wide", text)}>WhatsApp Templates</p>
-            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{approvedTemplateCount} approved</p>
+            <p className={cn("text-[11px] font-bold uppercase tracking-wide", text)}>{t("whatsapp_section.phone.templates_title")}</p>
+            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{t("whatsapp_section.phone.approved_count", { count: approvedTemplateCount })}</p>
           </div>
         </div>
         <NeutralButton onClick={props.onTemplates} className={manageBtn}>
-          Manage <ChevronRight size={12} />
+          {t("whatsapp_section.phone.manage_btn")} <ChevronRight size={12} />
         </NeutralButton>
       </div>
 
@@ -1509,10 +1519,10 @@ function PhoneNumberCard(props: {
       <div className={cn("px-3 py-2 border-t flex items-center justify-between gap-3", shadedRow)}>
         <div className="flex items-center gap-2 min-w-0">
           <Sparkles size={15} className="text-primary shrink-0" />
-          <p className={cn("text-[11px] font-bold uppercase tracking-wide truncate", text)}>Conversions API</p>
+          <p className={cn("text-[11px] font-bold uppercase tracking-wide truncate", text)}>{t("whatsapp_section.phone.conversions_api")}</p>
         </div>
         <NeutralButton onClick={props.onSetupCapi} className={manageBtn}>
-          Manage <ChevronRight size={12} />
+          {t("whatsapp_section.phone.manage_btn")} <ChevronRight size={12} />
         </NeutralButton>
       </div>
     </div>
@@ -1532,6 +1542,7 @@ function CapiSetupDialog({
   existing: any;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -1562,18 +1573,18 @@ function CapiSetupDialog({
     },
     onSuccess: (data: any) => {
       if (data?.success) {
-        toast({ title: "CAPI configured" });
+        toast({ title: t("whatsapp_section.capi.toast_configured") });
         queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
         queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/capi", account?.id] });
         onClose();
       } else if (data?.error_code === "capi_exists") {
         toast({
-          title: "CAPI already configured",
-          description: "Delete the existing dataset before creating a new one.",
+          title: t("whatsapp_section.capi.toast_already_configured"),
+          description: t("whatsapp_section.capi.toast_delete_existing_first"),
           variant: "destructive",
         });
       } else {
-        toast({ title: "Could not configure CAPI", description: data?.message ?? "", variant: "destructive" });
+        toast({ title: t("whatsapp_section.capi.toast_could_not_configure"), description: data?.message ?? "", variant: "destructive" });
       }
     },
   });
@@ -1587,14 +1598,14 @@ function CapiSetupDialog({
     },
     onSuccess: (data: any) => {
       if (data?.success) {
-        toast({ title: "CAPI configured", description: "Dataset provisioned from Meta." });
+        toast({ title: t("whatsapp_section.capi.toast_configured"), description: t("whatsapp_section.capi.toast_provisioned_desc") });
         queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
         queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/capi", account?.id] });
         onClose();
       } else if (data?.error_code === "capi_exists") {
-        toast({ title: "CAPI already configured", description: "Delete the existing dataset before creating a new one.", variant: "destructive" });
+        toast({ title: t("whatsapp_section.capi.toast_already_configured"), description: t("whatsapp_section.capi.toast_delete_existing_first"), variant: "destructive" });
       } else {
-        toast({ title: "Could not provision CAPI", description: data?.message ?? "", variant: "destructive" });
+        toast({ title: t("whatsapp_section.capi.toast_could_not_provision"), description: data?.message ?? "", variant: "destructive" });
       }
     },
   });
@@ -1605,7 +1616,7 @@ function CapiSetupDialog({
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "CAPI removed" });
+      toast({ title: t("whatsapp_section.capi.toast_removed") });
       queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
       queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/capi", account?.id] });
       onClose();
@@ -1623,10 +1634,9 @@ function CapiSetupDialog({
               <Sparkles size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={cn("text-[14px] font-semibold", dark ? "text-white" : "text-slate-900")}>Conversions API</div>
+              <div className={cn("text-[14px] font-semibold", dark ? "text-white" : "text-slate-900")}>{t("whatsapp_section.capi.title")}</div>
               <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>
-                Forward WhatsApp events to Meta's Conversions API to attribute ad spend and improve audience
-                optimization. Find your dataset ID + token in Meta Events Manager.
+                {t("whatsapp_section.capi.desc")}
               </p>
             </div>
           </div>
@@ -1636,7 +1646,7 @@ function CapiSetupDialog({
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className={cn("text-[12px] font-semibold opacity-60", dark ? "text-slate-400" : "text-slate-600")}>
-                    Dataset ID
+                    {t("whatsapp_section.capi.dataset_id_label")}
                   </div>
                   <div className={cn("text-[13px] font-bold font-mono truncate", dark ? "text-white" : "text-slate-900")}>{existing.dataset_id}</div>
                   <div className={cn("text-[11px] opacity-60 mt-1", dark ? "text-slate-400" : "text-slate-600")}>{existing.name}</div>
@@ -1646,7 +1656,7 @@ function CapiSetupDialog({
                   disabled={deleteMutation.isPending}
                   className="h-9 px-4 rounded-lg border text-[11px] font-semibold border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
                 >
-                  Remove
+                  {t("whatsapp_section.capi.remove")}
                 </button>
               </div>
             </div>
@@ -1658,36 +1668,36 @@ function CapiSetupDialog({
                 disabled={provisionMutation.isPending}
                 className="w-full h-11 rounded-xl text-[12px] font-semibold transition-all flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
               >
-                <Sparkles size={14} /> {provisionMutation.isPending ? "Provisioning…" : "Auto-provision from Meta"}
+                <Sparkles size={14} /> {provisionMutation.isPending ? t("whatsapp_section.capi.provisioning") : t("whatsapp_section.capi.auto_provision")}
               </button>
               <div className="flex items-center gap-3">
                 <div className={cn("flex-1 h-px", dark ? "bg-slate-800" : "bg-slate-200")} />
-                <span className={cn("text-[10px] font-semibold uppercase tracking-wider opacity-50", dark ? "text-slate-400" : "text-slate-500")}>or enter manually</span>
+                <span className={cn("text-[10px] font-semibold uppercase tracking-wider opacity-50", dark ? "text-slate-400" : "text-slate-500")}>{t("whatsapp_section.capi.or_manual")}</span>
                 <div className={cn("flex-1 h-px", dark ? "bg-slate-800" : "bg-slate-200")} />
               </div>
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>
-                  Dataset ID <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.capi.dataset_id_label")} <span className="text-rose-500">*</span>
                 </label>
                 <Input
                   value={datasetId}
                   onChange={(e) => setDatasetId(e.target.value)}
-                  placeholder="e.g. 749358745689745"
+                  placeholder={t("whatsapp_section.capi.dataset_placeholder")}
                   className={cn("h-11 rounded-xl text-[13px] font-bold", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}
                 />
               </div>
               <div className="space-y-2">
-                <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>Name</label>
+                <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>{t("whatsapp_section.capi.name_label")}</label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Friendly name shown in the UI"
+                  placeholder={t("whatsapp_section.capi.name_placeholder")}
                   className={cn("h-11 rounded-xl text-[13px] font-bold", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}
                 />
               </div>
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>
-                  Access Token <span className="text-rose-500">*</span>
+                  {t("whatsapp_section.capi.access_token_label")} <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Textarea
@@ -1713,7 +1723,7 @@ function CapiSetupDialog({
               onClick={onClose}
               className={cn("h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
             >
-              Close
+              {t("whatsapp_section.capi.close")}
             </button>
             {!existing && (
               <button
@@ -1721,7 +1731,7 @@ function CapiSetupDialog({
                 disabled={!datasetId.trim() || !token.trim() || saveMutation.isPending}
                 className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saveMutation.isPending ? "Saving…" : "Save"}
+                {saveMutation.isPending ? t("whatsapp_section.capi.saving") : t("whatsapp_section.capi.save")}
               </button>
             )}
           </div>
@@ -1742,6 +1752,7 @@ function RegisterPinDialog({
   number: any;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -1769,10 +1780,10 @@ function RegisterPinDialog({
     onSuccess: (data: any) => {
       if (data?.success) {
         setIssuedPin(data?.pin ?? null);
-        toast({ title: "Number registered", description: "Two-step PIN set and number activated." });
+        toast({ title: t("whatsapp_section.register.toast_registered_title"), description: t("whatsapp_section.register.toast_registered_desc") });
         queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
       } else {
-        toast({ title: "Registration failed", description: data?.message ?? "", variant: "destructive" });
+        toast({ title: t("whatsapp_section.register.toast_failed_title"), description: data?.message ?? "", variant: "destructive" });
       }
     },
   });
@@ -1791,31 +1802,30 @@ function RegisterPinDialog({
             </div>
             <div className="flex-1 min-w-0">
               <div className={cn("text-[14px] font-semibold", dark ? "text-white" : "text-slate-900")}>
-                Register / 2-step PIN
+                {t("whatsapp_section.register.title")}
               </div>
               <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>
-                Registers <span className="font-bold">{number.display_phone_number}</span> on the WhatsApp Cloud API with a 6-digit
-                two-step verification PIN, then activates it. Keep the PIN safe — Meta may prompt for it later.
+                {t("whatsapp_section.register.desc_prefix")} <span className="font-bold">{number.display_phone_number}</span> {t("whatsapp_section.register.desc_suffix")}
               </p>
             </div>
           </div>
 
           {issuedPin ? (
             <div className={cn("p-4 rounded-xl border text-center", dark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50 border-slate-200")}>
-              <div className={cn("text-[11px] font-semibold opacity-60", dark ? "text-slate-400" : "text-slate-600")}>Your 2-step PIN</div>
+              <div className={cn("text-[11px] font-semibold opacity-60", dark ? "text-slate-400" : "text-slate-600")}>{t("whatsapp_section.register.pin_label")}</div>
               <div className={cn("text-[28px] font-black tracking-[0.3em] font-mono mt-1", dark ? "text-white" : "text-slate-900")}>{issuedPin}</div>
-              <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-2">Save this PIN now — it won't be shown again.</p>
+              <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-2">{t("whatsapp_section.register.save_now")}</p>
             </div>
           ) : (
             <div className="space-y-3">
               <label className={cn("flex items-center gap-2 cursor-pointer text-[11px] font-bold", dark ? "text-slate-300" : "text-slate-700")}>
                 <input type="checkbox" checked={autoGenerate} onChange={(e) => setAutoGenerate(e.target.checked)} className="accent-emerald-500" />
-                Auto-generate a secure PIN
+                {t("whatsapp_section.register.auto_generate")}
               </label>
               {!autoGenerate && (
                 <div className="space-y-2">
                   <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>
-                    6-digit PIN <span className="text-rose-500">*</span>
+                    {t("whatsapp_section.register.pin_digit_label")} <span className="text-rose-500">*</span>
                   </label>
                   <Input
                     value={pin}
@@ -1834,7 +1844,7 @@ function RegisterPinDialog({
               onClick={onClose}
               className={cn("h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
             >
-              {issuedPin ? "Done" : "Cancel"}
+              {issuedPin ? t("whatsapp_section.register.done") : t("whatsapp_section.register.cancel")}
             </button>
             {!issuedPin && (
               <button
@@ -1842,7 +1852,7 @@ function RegisterPinDialog({
                 disabled={!pinValid || registerMutation.isPending}
                 className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {registerMutation.isPending ? "Registering…" : "Register"}
+                {registerMutation.isPending ? t("whatsapp_section.register.registering") : t("whatsapp_section.register.register_btn")}
               </button>
             )}
           </div>
@@ -1869,22 +1879,23 @@ function EmptyIntegrationState({
   softBorder: string;
   onConnect: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
       <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
         <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="w-8 h-8" />
       </div>
       <div className="space-y-1.5 max-w-sm">
-        <h3 className={cn("text-[14px] font-black tracking-tight", text)}>WhatsApp is not connected yet</h3>
+        <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("whatsapp_section.empty.title")}</h3>
         <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-          Connect your WhatsApp Business account now to get started.
+          {t("whatsapp_section.empty.desc")}
         </p>
       </div>
       <button
         onClick={onConnect}
         className="h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
       >
-        Connect now
+        {t("whatsapp_section.empty.connect_now")}
       </button>
     </div>
   );

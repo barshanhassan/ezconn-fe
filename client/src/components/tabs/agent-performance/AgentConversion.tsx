@@ -4,10 +4,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { TrendingUp, Phone, Activity } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const abbreviateNumber = (num: number) => num >= 1000 ? (num / 1000).toFixed(1) + "K" : num.toString();
 
 export default function AgentConversion() {
+  const { t } = useTranslation();
   // Real conversion analytics — KPIs, volume trend, call engagement trend,
   // and top tags. Backend reads inbox + twilio_call_logs + tag_links.
   const { data } = useQuery<any>({
@@ -34,16 +36,16 @@ export default function AgentConversion() {
   const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
   const BARS_CONV = [
-    { key: "queued", name: "Queued", fill: "#f87171" },
-    { key: "active", name: "Active", fill: "#fb923c" },
-    { key: "pending", name: "Pending", fill: "#c084fc" },
-    { key: "resolved", name: "Resolved", fill: "#60a5fa" },
+    { key: "queued", name: t("agent_conversion.labels.queued"), fill: "#f87171" },
+    { key: "active", name: t("agent_conversion.labels.active"), fill: "#fb923c" },
+    { key: "pending", name: t("agent_conversion.labels.pending"), fill: "#c084fc" },
+    { key: "resolved", name: t("agent_conversion.labels.resolved"), fill: "#60a5fa" },
   ];
   const BARS_CALL = [
-    { key: "inbound", name: "Inbound Calls", fill: "#f87171" },
-    { key: "outbound", name: "Outbound Calls", fill: "#fb923c" },
-    { key: "messagesReceived", name: "Messages Received", fill: "#c084fc" },
-    { key: "messagesSent", name: "Messages Sent", fill: "#60a5fa" },
+    { key: "inbound", name: t("agent_conversion.labels.inbound_calls"), fill: "#f87171" },
+    { key: "outbound", name: t("agent_conversion.labels.outbound_calls"), fill: "#fb923c" },
+    { key: "messagesReceived", name: t("agent_conversion.labels.messages_received"), fill: "#c084fc" },
+    { key: "messagesSent", name: t("agent_conversion.labels.messages_sent"), fill: "#60a5fa" },
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -64,28 +66,28 @@ export default function AgentConversion() {
 
   const kpiCards = [
     {
-      title: "Conversion Status", icon: <Activity size={14} className="text-primary" />,
+      title: t("agent_conversion.conversion_status"), icon: <Activity size={14} className="text-primary" />,
       rows: [
-        { l: "Queued", v: String(k.conversionStatus?.queued ?? 0), c: "text-rose-400" },
-        { l: "Active", v: String(k.conversionStatus?.active ?? 0), c: "text-orange-400" },
-        { l: "Pending", v: String(k.conversionStatus?.pending ?? 0), c: "text-yellow-400" },
-        { l: "Exited", v: String(k.conversionStatus?.exited ?? 0), c: "text-slate-400" },
+        { l: t("agent_conversion.labels.queued"), v: String(k.conversionStatus?.queued ?? 0), c: "text-rose-400" },
+        { l: t("agent_conversion.labels.active"), v: String(k.conversionStatus?.active ?? 0), c: "text-orange-400" },
+        { l: t("agent_conversion.labels.pending"), v: String(k.conversionStatus?.pending ?? 0), c: "text-yellow-400" },
+        { l: t("agent_conversion.labels.exited"), v: String(k.conversionStatus?.exited ?? 0), c: "text-slate-400" },
       ],
     },
     {
-      title: "Performance", icon: <TrendingUp size={14} className="text-primary" />,
+      title: t("agent_conversion.performance"), icon: <TrendingUp size={14} className="text-primary" />,
       rows: [
-        { l: "Avg response time", v: k.performance?.avgResponseTime ?? "—" },
-        { l: "Resolution rate", v: k.performance?.resolutionRate ?? "—" },
-        { l: "Customer satisfaction", v: k.performance?.customerSatisfaction ?? "—" },
+        { l: t("agent_conversion.labels.avg_response_time"), v: k.performance?.avgResponseTime ?? "—" },
+        { l: t("agent_conversion.labels.resolution_rate"), v: k.performance?.resolutionRate ?? "—" },
+        { l: t("agent_conversion.labels.customer_satisfaction"), v: k.performance?.customerSatisfaction ?? "—" },
       ],
     },
     {
-      title: "Call Statistics", icon: <Phone size={14} className="text-primary" />,
+      title: t("agent_conversion.call_statistics"), icon: <Phone size={14} className="text-primary" />,
       rows: [
-        { l: "Total calls", v: String(k.callStatistics?.totalCalls ?? 0), c: "text-primary" },
-        { l: "Inbound calls", v: String(k.callStatistics?.inboundCalls ?? 0), c: "text-blue-400" },
-        { l: "Outbound calls", v: String(k.callStatistics?.outboundCalls ?? 0), c: "text-violet-400" },
+        { l: t("agent_conversion.labels.total_calls"), v: String(k.callStatistics?.totalCalls ?? 0), c: "text-primary" },
+        { l: t("agent_conversion.labels.inbound_calls"), v: String(k.callStatistics?.inboundCalls ?? 0), c: "text-blue-400" },
+        { l: t("agent_conversion.labels.outbound_calls"), v: String(k.callStatistics?.outboundCalls ?? 0), c: "text-violet-400" },
       ],
     },
   ];
@@ -114,8 +116,8 @@ export default function AgentConversion() {
 
       {/* Conversion Volume Trend */}
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-        <h3 className={cn("text-[13px] font-bold mb-1", text)}>Conversion Volume Trend</h3>
-        <p className={cn("text-[11px] mb-4", sub)}>Daily conversion breakdown by status</p>
+        <h3 className={cn("text-[13px] font-bold mb-1", text)}>{t("agent_conversion.conversion_volume_trend")}</h3>
+        <p className={cn("text-[11px] mb-4", sub)}>{t("agent_conversion.conversion_volume_trend_desc")}</p>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={conversionVolumeTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} />
@@ -131,8 +133,8 @@ export default function AgentConversion() {
       {/* Call Engagement + Tags */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div className={cn("lg:col-span-3 rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-          <h3 className={cn("text-[13px] font-bold mb-1", text)}>Call Engagement Trend</h3>
-          <p className={cn("text-[11px] mb-4", sub)}>Calls and messages over time</p>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>{t("agent_conversion.call_engagement_trend")}</h3>
+          <p className={cn("text-[11px] mb-4", sub)}>{t("agent_conversion.call_engagement_trend_desc")}</p>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={callEngagementTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={grid} />
@@ -147,7 +149,7 @@ export default function AgentConversion() {
 
         {/* Tags */}
         <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-          <h3 className={cn("text-[13px] font-bold mb-4", text)}>Tags</h3>
+          <h3 className={cn("text-[13px] font-bold mb-4", text)}>{t("agent_conversion.tags")}</h3>
           <div className="flex flex-col gap-2.5">
             {tagsData.map((tag, i) => (
               <div key={i} className={cn("flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-semibold", tag.cls)}>

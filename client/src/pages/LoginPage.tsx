@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Input } from '../components/ui/input';
 import { Eye, EyeOff, ArrowRight, Search, Send, Lock } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -47,6 +48,7 @@ const BotMark: React.FC<{ className?: string; fill?: string }> = ({ className, f
 );
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -81,7 +83,7 @@ const LoginPage: React.FC = () => {
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("user_info", JSON.stringify(data.user));
 
-      setSuccessMessage('Login successful');
+      setSuccessMessage(t('login_page.login_successful'));
 
       // Trigger the "curtain opening" animation: the two panels slide apart,
       // then we navigate once the animation has played.
@@ -101,7 +103,7 @@ const LoginPage: React.FC = () => {
       console.error('Login error:', error);
       const msg = String(error?.message ?? '');
       const isInvalidCreds = msg.includes('401') || /invalid credentials/i.test(msg) || /unauthorized/i.test(msg);
-      setErrorMessage(isInvalidCreds ? 'Incorrect Password' : (msg || 'Failed to connect to the server.'));
+      setErrorMessage(isInvalidCreds ? t('login_page.incorrect_password') : (msg || t('login_page.failed_to_connect')));
       setIsLoading(false);
     }
   };
@@ -128,19 +130,19 @@ const LoginPage: React.FC = () => {
           >
             <div className="w-full max-w-md mx-auto">
               <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
-                Welcome back
+                {t('login_page.welcome_back')}
               </div>
               <h2 className="mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 32, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-                Your customers are waiting
+                {t('login_page.headline')}
               </h2>
               <p className="mb-8" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
-                One place for WhatsApp, Messenger &amp; Instagram, answered by AI.
+                {t('login_page.subheadline')}
               </p>
 
               <form onSubmit={handleLogin} className="flex flex-col gap-8">
                 <label className="block relative">
                   <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
-                    <span style={{ color: '#f2545b' }}>* </span>Work email
+                    <span style={{ color: '#f2545b' }}>* </span>{t('login_page.work_email')}
                   </span>
                   <Input
                     id="email"
@@ -155,7 +157,7 @@ const LoginPage: React.FC = () => {
 
                 <label className="block relative">
                   <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
-                    <span style={{ color: '#f2545b' }}>* </span>Password
+                    <span style={{ color: '#f2545b' }}>* </span>{t('login_page.password')}
                   </span>
                   <div className="relative">
                     <Input
@@ -186,10 +188,10 @@ const LoginPage: React.FC = () => {
                 <div className="flex items-center justify-between -mt-4">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input type="checkbox" className="w-[15px] h-[15px] rounded-[4px] border-[#cfd6e0] text-[#25d366] focus:ring-[#25d366]" />
-                    <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 500, fontSize: 13, color: '#6b7482' }}>Remember me</span>
+                    <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 500, fontSize: 13, color: '#6b7482' }}>{t('login_page.remember_me')}</span>
                   </label>
                   <a href="/forgot-password" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 13, color: '#1eb955' }}>
-                    Forgot password?
+                    {t('login_page.forgot_password')}
                   </a>
                 </div>
 
@@ -207,22 +209,22 @@ const LoginPage: React.FC = () => {
                   onMouseEnter={(e) => (e.currentTarget.style.background = '#1ea34e')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#22B257')}
                 >
-                  {isLoading ? 'Logging in…' : (
+                  {isLoading ? t('login_page.logging_in') : (
                     <>
-                      Log in <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} />
+                      {t('login_page.log_in')} <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} />
                     </>
                   )}
                 </button>
               </form>
 
               <p className="text-center mt-6" style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, color: '#6b7482' }}>
-                New to agentawk?{' '}
+                {t('login_page.new_to_agentawk')}{' '}
                 <button
                   type="button"
                   onClick={() => navigate('/signup')}
                   style={{ color: '#1eb955', fontWeight: 600 }}
                 >
-                  Create an account
+                  {t('login_page.create_account')}
                 </button>
               </p>
 
@@ -237,7 +239,7 @@ const LoginPage: React.FC = () => {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#25d366" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
-                    Verified Tech Partner
+                    {t('login_page.verified_tech_partner')}
                   </span>
                 </div>
               </div>

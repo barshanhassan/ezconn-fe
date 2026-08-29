@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { IntegrationsContext } from './ActionEditor';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -66,30 +67,32 @@ const Checkbox: React.FC<{ value: any; onChange: (v: boolean) => void; label: st
 // ─── Channel message editors ────────────────────────────────────────
 
 const QuickReplyFollowup: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation();
   const qr = value?.quickReply ?? {};
   const set = (k: string, v: any) => onChange({ ...(value ?? {}), quickReply: { ...qr, [k]: v } });
+  const unitOptions = ['seconds', 'minutes', 'hours', 'days'].map((u) => ({ value: u, label: t(`step_properties_editor.units.${u}`) }));
   return (
     <div className="bg-gray-50 border border-gray-200 rounded p-3 space-y-2">
-      <div className="text-[11px] font-bold uppercase text-gray-500">Quick reply follow-up</div>
-      <Checkbox value={qr.followUp} onChange={(v) => set('followUp', v)} label="Send follow-up if no reply" />
+      <div className="text-[11px] font-bold uppercase text-gray-500">{t('step_properties_editor.quick_reply_followup')}</div>
+      <Checkbox value={qr.followUp} onChange={(v) => set('followUp', v)} label={t('step_properties_editor.send_followup_if_no_reply')} />
       {qr.followUp && (
         <div className="grid grid-cols-2 gap-2">
-          <div><Label>After</Label><NumberInput value={qr.followUpUnit ?? 5} onChange={(v) => set('followUpUnit', v)} min={1} /></div>
+          <div><Label>{t('step_properties_editor.after')}</Label><NumberInput value={qr.followUpUnit ?? 5} onChange={(v) => set('followUpUnit', v)} min={1} /></div>
           <div>
-            <Label>Unit</Label>
+            <Label>{t('step_properties_editor.unit')}</Label>
             <Select
               value={qr.followUpInterval ?? 'minutes'}
               onChange={(v) => set('followUpInterval', v)}
-              options={['seconds', 'minutes', 'hours', 'days'].map((u) => ({ value: u, label: u }))}
+              options={unitOptions}
             />
           </div>
         </div>
       )}
-      <Checkbox value={qr.retry} onChange={(v) => set('retry', v)} label="Retry on missing button selection" />
+      <Checkbox value={qr.retry} onChange={(v) => set('retry', v)} label={t('step_properties_editor.retry_on_missing_selection')} />
       {qr.retry && (
         <>
-          <div><Label>Retry attempts</Label><NumberInput value={qr.retryAttempts ?? 2} onChange={(v) => set('retryAttempts', v)} min={1} /></div>
-          <div><Label>Retry message</Label><TextInput value={qr.retryMessage ?? 'Please, tap one of the options below 👇'} onChange={(v) => set('retryMessage', v)} /></div>
+          <div><Label>{t('step_properties_editor.retry_attempts')}</Label><NumberInput value={qr.retryAttempts ?? 2} onChange={(v) => set('retryAttempts', v)} min={1} /></div>
+          <div><Label>{t('step_properties_editor.retry_message')}</Label><TextInput value={qr.retryMessage ?? t('step_properties_editor.default_retry_message')} onChange={(v) => set('retryMessage', v)} /></div>
         </>
       )}
     </div>
@@ -112,17 +115,18 @@ const WhatsAppTemplatePicker: React.FC<{ value: any; onChange: (v: any) => void 
     <Select
       value={value?.template?.name ?? ''}
       onChange={(v) => onChange({ ...(value ?? {}), template: { ...(value?.template ?? {}), name: v } })}
-      options={list.map((t: any) => ({ value: t.name ?? t.id, label: t.name ?? `#${t.id}` }))}
+      options={list.map((tpl: any) => ({ value: tpl.name ?? tpl.id, label: tpl.name ?? `#${tpl.id}` }))}
     />
   );
 };
 
 const WhatsAppEditor: React.FC<Props> = ({ value, onChange, integrations }) => {
+  const { t } = useTranslation();
   const mode = value?.step_mode ?? 'in_24';
   return (
     <div className="space-y-3">
       <div>
-        <Label>WhatsApp account</Label>
+        <Label>{t('step_properties_editor.whatsapp_account')}</Label>
         <Select
           value={value?.wa_account_id ?? ''}
           onChange={(v) => onChange({ ...(value ?? {}), wa_account_id: v })}
@@ -130,26 +134,26 @@ const WhatsAppEditor: React.FC<Props> = ({ value, onChange, integrations }) => {
         />
       </div>
       <div>
-        <Label>Send mode</Label>
+        <Label>{t('step_properties_editor.send_mode')}</Label>
         <Select
           value={mode}
           onChange={(v) => onChange({ ...(value ?? {}), step_mode: v })}
           options={[
-            { value: 'in_24', label: 'Within 24h window' },
-            { value: 'template', label: 'Template (anytime)' },
-            { value: 'custom', label: 'Custom (24h window required)' },
+            { value: 'in_24', label: t('step_properties_editor.mode_in_24') },
+            { value: 'template', label: t('step_properties_editor.mode_template') },
+            { value: 'custom', label: t('step_properties_editor.mode_custom') },
           ]}
         />
       </div>
       {mode === 'template' && (
         <div>
-          <Label>Template</Label>
+          <Label>{t('step_properties_editor.template')}</Label>
           <WhatsAppTemplatePicker value={value} onChange={onChange} />
         </div>
       )}
       {mode !== 'template' && (
         <div>
-          <Label>Message body</Label>
+          <Label>{t('step_properties_editor.message_body')}</Label>
           <TextArea value={value?.text} onChange={(v) => onChange({ ...(value ?? {}), text: v })} />
         </div>
       )}
@@ -167,11 +171,12 @@ const WhatsAppEditor: React.FC<Props> = ({ value, onChange, integrations }) => {
  * Telegram + Twilio just default to `custom` (no window constraint).
  */
 const SimpleChannelEditor: React.FC<Props & { accountKey: string; accountLabel: string; accountList: any[]; supportsTemplate?: boolean; supportsWindow?: boolean }> = ({ stepType, value, onChange, accountKey, accountLabel, accountList, supportsTemplate, supportsWindow }) => {
+  const { t } = useTranslation();
   const mode = value?.step_mode ?? (supportsWindow ? 'in_24' : 'custom');
   const modeOptions: Array<{ value: string; label: string }> = [];
-  if (supportsWindow) modeOptions.push({ value: 'in_24', label: 'Within 24h window' });
-  if (supportsTemplate) modeOptions.push({ value: 'template', label: 'Template (anytime)' });
-  modeOptions.push({ value: 'custom', label: 'Custom (24h window required)' });
+  if (supportsWindow) modeOptions.push({ value: 'in_24', label: t('step_properties_editor.mode_in_24') });
+  if (supportsTemplate) modeOptions.push({ value: 'template', label: t('step_properties_editor.mode_template') });
+  modeOptions.push({ value: 'custom', label: t('step_properties_editor.mode_custom') });
 
   return (
     <div className="space-y-3">
@@ -185,12 +190,12 @@ const SimpleChannelEditor: React.FC<Props & { accountKey: string; accountLabel: 
       </div>
       {(supportsWindow || supportsTemplate) && modeOptions.length > 1 && (
         <div>
-          <Label>Send mode</Label>
+          <Label>{t('step_properties_editor.send_mode')}</Label>
           <Select value={mode} onChange={(v) => onChange({ ...(value ?? {}), step_mode: v })} options={modeOptions} />
         </div>
       )}
       <div>
-        <Label>{mode === 'template' ? 'Template ID' : 'Message body'}</Label>
+        <Label>{mode === 'template' ? t('step_properties_editor.template_id') : t('step_properties_editor.message_body')}</Label>
         {mode === 'template' ? (
           <TextInput value={value?.template?.name ?? value?.template_id ?? ''} onChange={(v) => onChange({ ...(value ?? {}), template: { ...(value?.template ?? {}), name: v } })} placeholder="template_slug" />
         ) : (
@@ -204,86 +209,96 @@ const SimpleChannelEditor: React.FC<Props & { accountKey: string; accountLabel: 
 
 // ─── Control flow editors ───────────────────────────────────────────
 
-const DelayEditor: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => (
-  <div className="space-y-3">
-    <div>
-      <Label>Wait amount</Label>
-      <NumberInput value={value?.waitAmount} onChange={(v) => onChange({ ...(value ?? {}), waitAmount: v })} min={1} />
+const DelayEditor: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation();
+  const unitOptions = ['seconds', 'minutes', 'hours', 'days', 'weeks'].map((u) => ({ value: u, label: t(`step_properties_editor.units.${u}`) }));
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label>{t('step_properties_editor.wait_amount')}</Label>
+        <NumberInput value={value?.waitAmount} onChange={(v) => onChange({ ...(value ?? {}), waitAmount: v })} min={1} />
+      </div>
+      <div>
+        <Label>{t('step_properties_editor.unit')}</Label>
+        <Select
+          value={value?.waitUnit ?? 'minutes'}
+          onChange={(v) => onChange({ ...(value ?? {}), waitUnit: v })}
+          options={unitOptions}
+        />
+      </div>
     </div>
-    <div>
-      <Label>Unit</Label>
-      <Select
-        value={value?.waitUnit ?? 'minutes'}
-        onChange={(v) => onChange({ ...(value ?? {}), waitUnit: v })}
-        options={['seconds', 'minutes', 'hours', 'days', 'weeks'].map((u) => ({ value: u, label: u }))}
-      />
-    </div>
-  </div>
-);
+  );
+};
 
-const SmartLoopEditor: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => (
-  <div className="space-y-3">
-    <div>
-      <Label>Max iterations</Label>
-      <NumberInput value={value?.max_iterations} onChange={(v) => onChange({ ...(value ?? {}), max_iterations: v })} min={1} />
+const SmartLoopEditor: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation();
+  const unitOptions = ['seconds', 'minutes', 'hours', 'days', 'weeks'].map((u) => ({ value: u, label: t(`step_properties_editor.units.${u}`) }));
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label>{t('step_properties_editor.max_iterations')}</Label>
+        <NumberInput value={value?.max_iterations} onChange={(v) => onChange({ ...(value ?? {}), max_iterations: v })} min={1} />
+      </div>
+      <div>
+        <Label>{t('step_properties_editor.loop_delay_amount')}</Label>
+        <NumberInput value={value?.waitAmount} onChange={(v) => onChange({ ...(value ?? {}), waitAmount: v })} min={1} />
+      </div>
+      <div>
+        <Label>{t('step_properties_editor.loop_delay_unit')}</Label>
+        <Select
+          value={value?.waitUnit ?? 'minutes'}
+          onChange={(v) => onChange({ ...(value ?? {}), waitUnit: v })}
+          options={unitOptions}
+        />
+      </div>
     </div>
-    <div>
-      <Label>Loop delay amount</Label>
-      <NumberInput value={value?.waitAmount} onChange={(v) => onChange({ ...(value ?? {}), waitAmount: v })} min={1} />
-    </div>
-    <div>
-      <Label>Loop delay unit</Label>
-      <Select
-        value={value?.waitUnit ?? 'minutes'}
-        onChange={(v) => onChange({ ...(value ?? {}), waitUnit: v })}
-        options={['seconds', 'minutes', 'hours', 'days', 'weeks'].map((u) => ({ value: u, label: u }))}
-      />
-    </div>
-  </div>
-);
+  );
+};
 
-const RandomizerEditor: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => (
-  <div className="space-y-3">
-    <p className="text-xs text-gray-600">
-      Randomizer splits contacts evenly across all outgoing branches based on
-      a deterministic per-contact pick (so the same contact always lands in
-      the same branch).
-    </p>
-    <div>
-      <Label>Optional branch weights (comma-separated)</Label>
-      <TextInput
-        value={Array.isArray(value?.weights) ? value.weights.join(',') : ''}
-        onChange={(v) => onChange({ ...(value ?? {}), weights: v.split(',').map((x) => Number(x.trim())).filter((n) => !Number.isNaN(n)) })}
-        placeholder="50, 50"
-      />
+const RandomizerEditor: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-gray-600">
+        {t('step_properties_editor.randomizer_description')}
+      </p>
+      <div>
+        <Label>{t('step_properties_editor.branch_weights')}</Label>
+        <TextInput
+          value={Array.isArray(value?.weights) ? value.weights.join(',') : ''}
+          onChange={(v) => onChange({ ...(value ?? {}), weights: v.split(',').map((x) => Number(x.trim())).filter((n) => !Number.isNaN(n)) })}
+          placeholder="50, 50"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Dispatcher ────────────────────────────────────────────────────
 
 export const StepPropertiesEditor: React.FC<Props> = ({ stepType, value, onChange, integrations }) => {
+  const { t } = useTranslation();
   switch (stepType) {
     case 'delay':       return <DelayEditor value={value} onChange={onChange} />;
     case 'smart_loop':  return <SmartLoopEditor value={value} onChange={onChange} />;
     case 'randomizer':
     case 'splitter':    return <RandomizerEditor value={value} onChange={onChange} />;
     case 'whatsapp':    return <WhatsAppEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} />;
-    case 'telegram':    return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="telegram_bot_id" accountLabel="Telegram bot" accountList={integrations.bots ?? []} />;
-    case 'messenger':   return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="messenger_account_id" accountLabel="FB page" accountList={integrations.messenger_apps ?? []} supportsWindow supportsTemplate />;
-    case 'instagram':   return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="instagram_account_id" accountLabel="IG page" accountList={integrations.instagram_apps ?? []} supportsWindow />;
-    case 'webchat':     return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="wc_instance_id" accountLabel="Webchat instance" accountList={integrations.webchat_instances ?? []} />;
-    case 'twilio_sms':  return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="twilio_account_id" accountLabel="Twilio account" accountList={integrations.twilio_accounts ?? []} />;
-    case 'twilio_call': return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="twilio_account_id" accountLabel="Twilio account" accountList={integrations.twilio_accounts ?? []} />;
-    case 'zapi':        return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="zapi_instance_id" accountLabel="Z-API instance" accountList={integrations.zapi_instances ?? []} />;
-    case 'evolution':   return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="evolution_instance_id" accountLabel="Evolution instance" accountList={integrations.evolution_instances ?? []} />;
+    case 'telegram':    return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="telegram_bot_id" accountLabel={t('step_properties_editor.telegram_bot')} accountList={integrations.bots ?? []} />;
+    case 'messenger':   return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="messenger_account_id" accountLabel={t('step_properties_editor.fb_page')} accountList={integrations.messenger_apps ?? []} supportsWindow supportsTemplate />;
+    case 'instagram':   return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="instagram_account_id" accountLabel={t('step_properties_editor.ig_page')} accountList={integrations.instagram_apps ?? []} supportsWindow />;
+    case 'webchat':     return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="wc_instance_id" accountLabel={t('step_properties_editor.webchat_instance')} accountList={integrations.webchat_instances ?? []} />;
+    case 'twilio_sms':  return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="twilio_account_id" accountLabel={t('step_properties_editor.twilio_account')} accountList={integrations.twilio_accounts ?? []} />;
+    case 'twilio_call': return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="twilio_account_id" accountLabel={t('step_properties_editor.twilio_account')} accountList={integrations.twilio_accounts ?? []} />;
+    case 'zapi':        return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="zapi_instance_id" accountLabel={t('step_properties_editor.zapi_instance')} accountList={integrations.zapi_instances ?? []} />;
+    case 'evolution':   return <SimpleChannelEditor stepType={stepType} value={value} onChange={onChange} integrations={integrations} accountKey="evolution_instance_id" accountLabel={t('step_properties_editor.evolution_instance')} accountList={integrations.evolution_instances ?? []} />;
     case 'email':       return (
       <div className="space-y-3">
-        <div><Label>Subject</Label><TextInput value={value?.subject} onChange={(v) => onChange({ ...(value ?? {}), subject: v })} /></div>
-        <div><Label>Body</Label><TextArea value={value?.text} onChange={(v) => onChange({ ...(value ?? {}), text: v })} /></div>
+        <div><Label>{t('step_properties_editor.subject')}</Label><TextInput value={value?.subject} onChange={(v) => onChange({ ...(value ?? {}), subject: v })} /></div>
+        <div><Label>{t('step_properties_editor.body')}</Label><TextArea value={value?.text} onChange={(v) => onChange({ ...(value ?? {}), text: v })} /></div>
       </div>
     );
     default:
-      return <div className="p-3 text-xs text-gray-500">No editor for step type <code>{stepType}</code>.</div>;
+      return <div className="p-3 text-xs text-gray-500">{t('step_properties_editor.no_editor_for_step_type')} <code>{stepType}</code>.</div>;
   }
 };

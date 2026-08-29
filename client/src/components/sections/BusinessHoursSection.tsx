@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -59,6 +60,7 @@ const DEFAULT_STATE: BusinessHoursState = {
 };
 
 const BusinessHoursSection: React.FC = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -102,10 +104,10 @@ const BusinessHoursSection: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/business-hours"] });
-      toast({ title: "Success", description: "Business hours updated successfully" });
+      toast({ title: t("business_hours_section.toast_success_title"), description: t("business_hours_section.toast_success_description") });
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("business_hours_section.toast_error_title"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -195,9 +197,9 @@ const BusinessHoursSection: React.FC = () => {
               <Clock className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Business hours</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("business_hours_section.title")}</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60 max-w-2xl", sub)}>
-                Set the working hours of your company.
+                {t("business_hours_section.subtitle")}
               </p>
             </div>
           </div>
@@ -207,7 +209,7 @@ const BusinessHoursSection: React.FC = () => {
             className={primaryBtn}
           >
             {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
-            Save
+            {t("business_hours_section.save")}
           </button>
         </div>
 
@@ -216,9 +218,9 @@ const BusinessHoursSection: React.FC = () => {
           {/* 24/7 toggle */}
           <div className={cn("flex items-center justify-between p-5 rounded-[1.5rem] border", softBg, softBorder)}>
             <div>
-              <p className={cn("text-[13px] font-black", text)}>Enable 24/7 Availability</p>
+              <p className={cn("text-[13px] font-black", text)}>{t("business_hours_section.enable_24_7")}</p>
               <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                Stay available for all days, all hours.
+                {t("business_hours_section.enable_24_7_desc")}
               </p>
             </div>
             <Switch
@@ -232,22 +234,22 @@ const BusinessHoursSection: React.FC = () => {
             <>
               {/* Mode selector */}
               <div className="space-y-3">
-                <label className={labelCls}>Schedule Type</label>
+                <label className={labelCls}>{t("business_hours_section.schedule_type")}</label>
                 <div className="grid grid-cols-2 gap-3 max-w-md">
-                  <RadioRow value="allDays" current={currentMode} onSelect={() => setState((p) => ({ ...p, allDaysSelected: true }))} label="All Days" />
-                  <RadioRow value="perDay" current={currentMode} onSelect={() => setState((p) => ({ ...p, allDaysSelected: false }))} label="Per Day" />
+                  <RadioRow value="allDays" current={currentMode} onSelect={() => setState((p) => ({ ...p, allDaysSelected: true }))} label={t("business_hours_section.all_days")} />
+                  <RadioRow value="perDay" current={currentMode} onSelect={() => setState((p) => ({ ...p, allDaysSelected: false }))} label={t("business_hours_section.per_day")} />
                 </div>
               </div>
 
               {state.allDaysSelected ? (
                 <div className={cn("rounded-[1.5rem] border p-6 space-y-5 max-w-md", softBg, softBorder)}>
-                  <p className={cn("text-[12px] font-semibold text-primary")}>All Days</p>
+                  <p className={cn("text-[12px] font-semibold text-primary")}>{t("business_hours_section.all_days")}</p>
                   <div className="space-y-2">
-                    <label className={labelCls}>Start Time</label>
+                    <label className={labelCls}>{t("business_hours_section.start_time")}</label>
                     <TimePicker hours={state.allDays} onChange={handleAllDaysHoursChange} prefix="start" />
                   </div>
                   <div className="space-y-2">
-                    <label className={labelCls}>End Time</label>
+                    <label className={labelCls}>{t("business_hours_section.end_time")}</label>
                     <TimePicker hours={state.allDays} onChange={handleAllDaysHoursChange} prefix="end" />
                   </div>
                 </div>
@@ -273,15 +275,15 @@ const BusinessHoursSection: React.FC = () => {
                             className="rounded accent-[hsl(var(--primary))] w-4 h-4"
                           />
                           <label htmlFor={`cb-${day}`} className={cn("text-[13px] font-semibold cursor-pointer", text)}>
-                            {day}
+                            {t(`business_hours_section.days.${day}`)}
                           </label>
                         </div>
                         <div className="space-y-2">
-                          <label className={labelCls}>Start Time</label>
+                          <label className={labelCls}>{t("business_hours_section.start_time")}</label>
                           <TimePicker hours={hours} onChange={(part, val) => handlePerDayHoursChange(day, part, val)} prefix="start" disabled={!hours.enabled} />
                         </div>
                         <div className="space-y-2">
-                          <label className={labelCls}>End Time</label>
+                          <label className={labelCls}>{t("business_hours_section.end_time")}</label>
                           <TimePicker hours={hours} onChange={(part, val) => handlePerDayHoursChange(day, part, val)} prefix="end" disabled={!hours.enabled} />
                         </div>
                       </div>

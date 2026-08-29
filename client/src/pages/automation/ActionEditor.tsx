@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ACTION_SCHEMAS,
   ActionFieldSchema,
@@ -126,6 +127,7 @@ const Select: React.FC<{
 );
 
 const JsonInput: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation();
   const [raw, setRaw] = React.useState<string>(() =>
     value == null ? '' : typeof value === 'string' ? value : JSON.stringify(value, null, 2),
   );
@@ -152,7 +154,7 @@ const JsonInput: React.FC<{ value: any; onChange: (v: any) => void }> = ({ value
           }
         }}
       />
-      {err && <p className="text-[10px] text-red-500 mt-1">{err}</p>}
+      {err && <p className="text-[10px] text-red-500 mt-1">{t('action_editor.invalid_json')}</p>}
     </div>
   );
 };
@@ -337,11 +339,12 @@ export interface ActionEditorProps {
 }
 
 export const ActionEditor: React.FC<ActionEditorProps> = ({ actionSlug, value, onChange, integrations }) => {
+  const { t } = useTranslation();
   const schema: ActionSchema | undefined = ACTION_SCHEMAS[actionSlug];
   if (!schema) {
     return (
       <div className="p-4 text-sm text-gray-500">
-        No editor defined for action <code className="font-mono">{actionSlug}</code>.
+        {t('action_editor.no_editor_defined')} <code className="font-mono">{actionSlug}</code>.
       </div>
     );
   }
@@ -408,33 +411,34 @@ export interface ConditionEditorProps {
 }
 
 export const ConditionEditor: React.FC<ConditionEditorProps> = ({ value, onChange, integrations }) => {
+  const { t } = useTranslation();
   const type = value?.type ?? 'text';
-  const typeSchema = CONDITION_TYPES.find((t) => t.key === type) ?? CONDITION_TYPES[0];
+  const typeSchema = CONDITION_TYPES.find((c) => c.key === type) ?? CONDITION_TYPES[0];
   return (
     <div className="p-4 space-y-3">
       <div className="border-b border-gray-100 pb-2 mb-2">
-        <div className="text-xs uppercase font-bold text-gray-400">Condition</div>
-        <div className="text-sm font-semibold text-gray-800">Branch on a contact value</div>
+        <div className="text-xs uppercase font-bold text-gray-400">{t('action_editor.condition')}</div>
+        <div className="text-sm font-semibold text-gray-800">{t('action_editor.branch_on_contact_value')}</div>
       </div>
       <div>
-        <Label>Condition type</Label>
+        <Label>{t('action_editor.condition_type')}</Label>
         <Select
           value={type}
           onChange={(v) => onChange({ ...(value ?? {}), type: v })}
-          options={CONDITION_TYPES.map((t) => ({ value: t.key, label: t.label }))}
+          options={CONDITION_TYPES.map((c) => ({ value: c.key, label: c.label }))}
         />
       </div>
       <div>
-        <Label>Field</Label>
+        <Label>{t('action_editor.field')}</Label>
         {type === 'custom-field' || type === 'text' ? (
           <Select
             value={value?.field ?? ''}
             onChange={(v) => onChange({ ...(value ?? {}), field: v })}
             options={[
-              ...SYSTEM_FIELDS.map((s) => ({ value: s, label: `system: ${s}` })),
+              ...SYSTEM_FIELDS.map((s) => ({ value: s, label: `${t('action_editor.system_prefix')} ${s}` })),
               ...(integrations.custom_fields ?? []).map((f) => ({
                 value: f.slug ?? `#${f.id}`,
-                label: `custom: ${f.label ?? f.slug}`,
+                label: `${t('action_editor.custom_prefix')} ${f.label ?? f.slug}`,
               })),
             ]}
           />
@@ -442,12 +446,12 @@ export const ConditionEditor: React.FC<ConditionEditorProps> = ({ value, onChang
           <TextInput
             value={value?.field}
             onChange={(v) => onChange({ ...(value ?? {}), field: v })}
-            placeholder="e.g. first_name"
+            placeholder={t('action_editor.field_placeholder')}
           />
         )}
       </div>
       <div>
-        <Label>Operator</Label>
+        <Label>{t('action_editor.operator')}</Label>
         <Select
           value={value?.operator}
           onChange={(v) => onChange({ ...(value ?? {}), operator: v })}
@@ -456,11 +460,11 @@ export const ConditionEditor: React.FC<ConditionEditorProps> = ({ value, onChang
       </div>
       {!['is_true', 'is_false', 'is_empty', 'is_not_empty'].includes(value?.operator ?? '') && (
         <div>
-          <Label>Value</Label>
+          <Label>{t('action_editor.value')}</Label>
           <TextInput
             value={value?.value}
             onChange={(v) => onChange({ ...(value ?? {}), value: v })}
-            placeholder="comparison value"
+            placeholder={t('action_editor.value_placeholder')}
           />
         </div>
       )}

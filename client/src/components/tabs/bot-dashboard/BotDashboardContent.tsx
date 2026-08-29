@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import TimeHeatmap from "@/components/TimeHeatmap";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // Top Filter Dropdown Component
 interface TopFilterDropdownProps {
@@ -79,6 +80,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({ topFilter, setTop
 };
 
 export default function BotDashboardContent() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const [topFilter, setTopFilter] = useState("Top 10");
@@ -112,12 +114,12 @@ export default function BotDashboardContent() {
   };
 
   const kpiCards = [
-    { title: "Bot Triggered", value: kpiData.botTriggered, unit: "Sessions", icon: <Bot size={14} />, color: "text-primary" },
-    { title: "Responded by Bot", value: kpiData.respondedByBot, unit: "Messages", icon: <MessageSquare size={14} />, color: "text-emerald-500" },
-    { title: "Received by Bot", value: kpiData.receivedByBot, unit: "Messages", icon: <Send size={14} />, color: "text-blue-500" },
-    { title: "Total Messages", value: kpiData.totalMessages, unit: "All messages", icon: <BarChart3 size={14} />, color: "text-violet-500" },
-    { title: "Escalated to Human", value: kpiData.escalatedToHuman, unit: "Escalations", icon: <Users size={14} />, color: "text-rose-500" },
-    { title: "Avg Session Duration", value: kpiData.avgSessionDuration, unit: "Per session", icon: <Clock size={14} />, color: "text-orange-500" },
+    { title: t("bot_dashboard_content.kpi_bot_triggered"), value: kpiData.botTriggered, unit: t("bot_dashboard_content.unit_sessions"), icon: <Bot size={14} />, color: "text-primary" },
+    { title: t("bot_dashboard_content.kpi_responded_by_bot"), value: kpiData.respondedByBot, unit: t("bot_dashboard_content.unit_messages"), icon: <MessageSquare size={14} />, color: "text-emerald-500" },
+    { title: t("bot_dashboard_content.kpi_received_by_bot"), value: kpiData.receivedByBot, unit: t("bot_dashboard_content.unit_messages"), icon: <Send size={14} />, color: "text-blue-500" },
+    { title: t("bot_dashboard_content.kpi_total_messages"), value: kpiData.totalMessages, unit: t("bot_dashboard_content.unit_all_messages"), icon: <BarChart3 size={14} />, color: "text-violet-500" },
+    { title: t("bot_dashboard_content.kpi_escalated_to_human"), value: kpiData.escalatedToHuman, unit: t("bot_dashboard_content.unit_escalations"), icon: <Users size={14} />, color: "text-rose-500" },
+    { title: t("bot_dashboard_content.kpi_avg_session_duration"), value: kpiData.avgSessionDuration, unit: t("bot_dashboard_content.unit_per_session"), icon: <Clock size={14} />, color: "text-orange-500" },
   ];
 
   // Chart series sourced from the backend bot-analytics endpoint.
@@ -163,8 +165,8 @@ export default function BotDashboardContent() {
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className={cn("text-[13px] font-bold", text)}>Popularity of Interactions</h3>
-            <p className={cn("text-[11px]", sub)}>Most frequent bot conversation topics</p>
+            <h3 className={cn("text-[13px] font-bold", text)}>{t("bot_dashboard_content.popularity_title")}</h3>
+            <p className={cn("text-[11px]", sub)}>{t("bot_dashboard_content.popularity_subtitle")}</p>
           </div>
           <TopFilterDropdown topFilter={topFilter} setTopFilter={setTopFilter} />
         </div>
@@ -174,7 +176,7 @@ export default function BotDashboardContent() {
             <XAxis dataKey="name" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} angle={-45} textAnchor="end" height={60} />
             <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
-            <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Interactions" />
+            <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("bot_dashboard_content.legend_interactions")} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -182,8 +184,8 @@ export default function BotDashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Bot vs Human Performance */}
         <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-          <h3 className={cn("text-[13px] font-bold mb-1", text)}>Bot vs Human Performance</h3>
-          <p className={cn("text-[11px] mb-6", sub)}>Escalation rate comparison</p>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>{t("bot_dashboard_content.bot_vs_human_title")}</h3>
+          <p className={cn("text-[11px] mb-6", sub)}>{t("bot_dashboard_content.bot_vs_human_subtitle")}</p>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={botVsHumanData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={grid} />
@@ -191,16 +193,16 @@ export default function BotDashboardContent() {
               <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
               <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
-              <Line type="monotone" dataKey="triggered" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={false} name="Triggered" activeDot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }} />
-              <Line type="monotone" dataKey="escalated" stroke="#ef4444" strokeWidth={2.5} dot={false} name="Escalated to Human" activeDot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
+              <Line type="monotone" dataKey="triggered" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={false} name={t("bot_dashboard_content.legend_triggered")} activeDot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }} />
+              <Line type="monotone" dataKey="escalated" stroke="#ef4444" strokeWidth={2.5} dot={false} name={t("bot_dashboard_content.legend_escalated_to_human")} activeDot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Busiest Period */}
         <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
-          <h3 className={cn("text-[13px] font-bold mb-1", text)}>Busiest Period</h3>
-          <p className={cn("text-[11px] mb-6", sub)}>Bot activity heatmap by time and day</p>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>{t("bot_dashboard_content.busiest_period_title")}</h3>
+          <p className={cn("text-[11px] mb-6", sub)}>{t("bot_dashboard_content.busiest_period_subtitle")}</p>
           <div className="h-[300px] overflow-hidden">
              <TimeHeatmap
                 data={busiestPeriodData}
@@ -208,7 +210,7 @@ export default function BotDashboardContent() {
                 rowsPerTimeSlot={2}
                 cellHeight={12}
                 startDay={4}
-                valueLabel="Messages"
+                valueLabel={t("bot_dashboard_content.heatmap_value_label")}
               />
           </div>
         </div>

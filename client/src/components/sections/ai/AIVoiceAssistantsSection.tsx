@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -79,6 +80,7 @@ const gptModels = [
 ];
 
 export default function AIVoiceAssistantsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -147,10 +149,10 @@ export default function AIVoiceAssistantsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/voice-assistants"] });
-      toast({ title: "Deleted", description: "Voice Assistant removed successfully." });
+      toast({ title: t("ai_voice_assistants_section.toast_deleted_title"), description: t("ai_voice_assistants_section.toast_deleted_desc") });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to delete voice assistant.", variant: "destructive" });
+      toast({ title: t("ai_voice_assistants_section.toast_error_title"), description: t("ai_voice_assistants_section.toast_delete_error_desc"), variant: "destructive" });
     },
   });
 
@@ -209,7 +211,7 @@ export default function AIVoiceAssistantsSection() {
   };
 
   const handleStatusToggle = () => {
-    toast({ title: "Info", description: "Status toggle for Voice Assistants will be implemented soon." });
+    toast({ title: t("ai_voice_assistants_section.toast_info_title"), description: t("ai_voice_assistants_section.toast_status_toggle_desc") });
   };
 
   const confirmDelete = () => {
@@ -222,7 +224,7 @@ export default function AIVoiceAssistantsSection() {
 
   const handlePublish = () => {
     if (formData?.name?.trim()) {
-      toast({ title: "Info", description: "Saving Voice Assistant..." });
+      toast({ title: t("ai_voice_assistants_section.toast_info_title"), description: t("ai_voice_assistants_section.toast_saving_desc") });
       setViewMode("list");
     }
   };
@@ -245,22 +247,22 @@ export default function AIVoiceAssistantsSection() {
                 <Mic className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Select Assistant Type</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("ai_voice_assistants_section.select_type_title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                  Choose how this agent will interact.
+                  {t("ai_voice_assistants_section.select_type_subtitle")}
                 </p>
               </div>
             </div>
             <button onClick={() => setViewMode("list")} className={outlineBtn}>
-              <ChevronLeft size={12} /> Back
+              <ChevronLeft size={12} /> {t("ai_voice_assistants_section.back")}
             </button>
           </div>
 
           <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-5">
             {([
-              { type: "incoming", icon: PhoneIncoming,  title: "Incoming Call", desc: "Handles incoming calls to your phone number." },
-              { type: "outgoing", icon: PhoneOutgoing,  title: "Outgoing Call", desc: "Makes outgoing calls to leads or customers." },
-              { type: "widget",   icon: AppWindow,      title: "Web Widget",    desc: "Embeds a voice assistant on your website." },
+              { type: "incoming", icon: PhoneIncoming,  title: t("ai_voice_assistants_section.type_incoming_title"), desc: t("ai_voice_assistants_section.type_incoming_desc") },
+              { type: "outgoing", icon: PhoneOutgoing,  title: t("ai_voice_assistants_section.type_outgoing_title"), desc: t("ai_voice_assistants_section.type_outgoing_desc") },
+              { type: "widget",   icon: AppWindow,      title: t("ai_voice_assistants_section.type_widget_title"),  desc: t("ai_voice_assistants_section.type_widget_desc") },
             ] as const).map((item) => (
               <div
                 key={item.type}
@@ -272,7 +274,7 @@ export default function AIVoiceAssistantsSection() {
                 <h4 className={cn("text-[14px] font-semibold", text)}>{item.title}</h4>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-1.5 mb-5 leading-relaxed flex-1", sub)}>{item.desc}</p>
                 <button onClick={() => handleSetType(item.type)} className={cn(primaryOutlineBtn, "w-full")}>
-                  Select
+                  {t("ai_voice_assistants_section.select_button")}
                 </button>
               </div>
             ))}
@@ -302,17 +304,17 @@ export default function AIVoiceAssistantsSection() {
                 </div>
                 <div>
                   <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                    {formData.id ? "Edit Voice Assistant" : "New Voice Assistant"}
+                    {formData.id ? t("ai_voice_assistants_section.edit_title") : t("ai_voice_assistants_section.new_title")}
                   </h1>
                   <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 capitalize", sub)}>
-                    {formData.type} Assistant
+                    {t("ai_voice_assistants_section.type_assistant_suffix", { type: formData.type })}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setViewMode("list")} className={outlineBtn}>Cancel</button>
+                <button onClick={() => setViewMode("list")} className={outlineBtn}>{t("ai_voice_assistants_section.cancel")}</button>
                 <button onClick={handlePublish} className={primaryBtn}>
-                  <Sparkles size={12} /> Publish
+                  <Sparkles size={12} /> {t("ai_voice_assistants_section.publish")}
                 </button>
               </div>
             </div>
@@ -321,14 +323,14 @@ export default function AIVoiceAssistantsSection() {
               <div className={cn("px-8 border-b flex justify-start overflow-x-auto", softBorder)}>
                 <TabsList className="h-auto p-0 gap-8 bg-transparent border-none flex justify-start rounded-none">
                   {[
-                    { value: "personality",    label: "Personality",    icon: User,            show: true },
-                    { value: "configurations", label: "Configurations", icon: Settings,        show: true },
-                    { value: "transfer",       label: "Call Transfer",  icon: PhoneForwarded,  show: formData.type !== "widget" },
-                    { value: "functions",      label: "Functions",      icon: Wand2,           show: true },
-                    { value: "summary",        label: "Summary",        icon: ListChecks,      show: formData.type !== "widget" },
-                    { value: "design",         label: "Design",         icon: Palette,         show: formData.type === "widget" },
-                    { value: "embed",          label: "Install",        icon: Code,            show: formData.type === "widget" },
-                  ].filter((t) => t.show).map((tab) => (
+                    { value: "personality",    label: t("ai_voice_assistants_section.tab_personality"),    icon: User,            show: true },
+                    { value: "configurations", label: t("ai_voice_assistants_section.tab_configurations"), icon: Settings,        show: true },
+                    { value: "transfer",       label: t("ai_voice_assistants_section.tab_transfer"),       icon: PhoneForwarded,  show: formData.type !== "widget" },
+                    { value: "functions",      label: t("ai_voice_assistants_section.tab_functions"),      icon: Wand2,           show: true },
+                    { value: "summary",        label: t("ai_voice_assistants_section.tab_summary"),        icon: ListChecks,      show: formData.type !== "widget" },
+                    { value: "design",         label: t("ai_voice_assistants_section.tab_design"),         icon: Palette,         show: formData.type === "widget" },
+                    { value: "embed",          label: t("ai_voice_assistants_section.tab_install"),        icon: Code,            show: formData.type === "widget" },
+                  ].filter((tabItem) => tabItem.show).map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
@@ -351,21 +353,21 @@ export default function AIVoiceAssistantsSection() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-5">
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Assistant Name</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.field_assistant_name")}</FieldLabel>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         maxLength={250}
                         className={inputCls}
                       />
-                      <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{formData.name.length}/250</p>
+                      <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{t("ai_voice_assistants_section.char_counter", { count: formData.name.length, max: 250 })}</p>
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Select Model</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.select_model_label")}</FieldLabel>
                       <Select value={formData.model} onValueChange={(val) => setFormData({ ...formData, model: val })}>
                         <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="Select model" />
+                          <SelectValue placeholder={t("ai_voice_assistants_section.select_model_placeholder")} />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                           {gptModels.map((m) => <SelectItem key={m.value} value={m.value} className="text-[12px] font-bold">{m.name}</SelectItem>)}
@@ -374,11 +376,11 @@ export default function AIVoiceAssistantsSection() {
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Select Voice</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.select_voice_label")}</FieldLabel>
                       <div className="flex gap-2">
                         <Select value={formData.voice} onValueChange={(val) => setFormData({ ...formData, voice: val })}>
                           <SelectTrigger className={cn(inputCls, "flex-1")}>
-                            <SelectValue placeholder="Select voice" />
+                            <SelectValue placeholder={t("ai_voice_assistants_section.select_voice_placeholder")} />
                           </SelectTrigger>
                           <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                             {mockVoices.map((v) => <SelectItem key={v.id} value={v.id} className="text-[12px] font-bold">{v.name}</SelectItem>)}
@@ -396,39 +398,39 @@ export default function AIVoiceAssistantsSection() {
 
                     <SliderRow
                       dark={dark}
-                      label="Temperature"
+                      label={t("ai_voice_assistants_section.temperature_label")}
                       value={formData.temperature}
                       min={0} max={1} step={0.1}
                       onChange={(v) => setFormData({ ...formData, temperature: v })}
-                      leftLabel="Precise"
-                      rightLabel="Creative"
+                      leftLabel={t("ai_voice_assistants_section.precise_label")}
+                      rightLabel={t("ai_voice_assistants_section.creative_label")}
                     />
                   </div>
 
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <FieldLabel dark={dark}>
-                        {formData.type === "outgoing" ? "Outgoing Call Greeting" : "Incoming Call Greeting"}
+                        {formData.type === "outgoing" ? t("ai_voice_assistants_section.greeting_label_outgoing") : t("ai_voice_assistants_section.greeting_label_incoming")}
                       </FieldLabel>
                       <Textarea
                         rows={4}
                         value={formData.greeting}
                         onChange={(e) => setFormData({ ...formData, greeting: e.target.value })}
                         maxLength={2500}
-                        placeholder="Hello, how can I help you today?"
+                        placeholder={t("ai_voice_assistants_section.greeting_placeholder")}
                         className={textareaCls}
                       />
-                      <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{formData.greeting?.length || 0}/2500</p>
+                      <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{t("ai_voice_assistants_section.char_counter", { count: formData.greeting?.length || 0, max: 2500 })}</p>
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Instructions</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.field_instructions")}</FieldLabel>
                       <Textarea
                         rows={8}
                         value={formData.instructions}
                         onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                         maxLength={250000}
-                        placeholder="You are a helpful assistant..."
+                        placeholder={t("ai_voice_assistants_section.instructions_placeholder")}
                         className={textareaCls}
                       />
                     </div>
@@ -441,10 +443,10 @@ export default function AIVoiceAssistantsSection() {
                 {formData.type !== "widget" && (
                   <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b", softBorder)}>
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Select Phone Number</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.select_phone_label")}</FieldLabel>
                       <Select value={formData.twilio_number_id} onValueChange={(val) => setFormData({ ...formData, twilio_number_id: val })}>
                         <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="Select number" />
+                          <SelectValue placeholder={t("ai_voice_assistants_section.select_phone_placeholder")} />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                           {mockPhones.map((p) => <SelectItem key={p.id} value={p.id.toString()} className="text-[12px] font-bold">{p.number}</SelectItem>)}
@@ -453,14 +455,14 @@ export default function AIVoiceAssistantsSection() {
                     </div>
                     <div className={cn("p-4 rounded-[1.25rem] border flex items-center gap-3", softBg, softBorder)}>
                       <Switch checked={formData.record_calls} onCheckedChange={(val) => setFormData({ ...formData, record_calls: val })} className="data-[state=checked]:bg-primary" />
-                      <span className={cn("text-[12px] font-black tracking-tight", text)}>Record Calls</span>
+                      <span className={cn("text-[12px] font-black tracking-tight", text)}>{t("ai_voice_assistants_section.record_calls_label")}</span>
                     </div>
                   </div>
                 )}
 
                 <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b", softBorder)}>
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Call Duration Limit (seconds)</FieldLabel>
+                    <FieldLabel dark={dark}>{t("ai_voice_assistants_section.call_duration_label")}</FieldLabel>
                     <Input
                       type="number"
                       value={formData.call_limit}
@@ -472,7 +474,7 @@ export default function AIVoiceAssistantsSection() {
 
                 <div className={cn("pb-6 border-b", softBorder)}>
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Call Ending Message</FieldLabel>
+                    <FieldLabel dark={dark}>{t("ai_voice_assistants_section.call_ending_message_label")}</FieldLabel>
                     <Textarea
                       rows={3}
                       value={formData.call_ending_message}
@@ -484,14 +486,14 @@ export default function AIVoiceAssistantsSection() {
 
                 <div className={cn("pb-6 border-b", softBorder)}>
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Select Knowledge Bases</FieldLabel>
+                    <FieldLabel dark={dark}>{t("ai_voice_assistants_section.select_kb_label")}</FieldLabel>
                     <Select>
                       <SelectTrigger className={inputCls}>
-                        <SelectValue placeholder="Select knowledge bases" />
+                        <SelectValue placeholder={t("ai_voice_assistants_section.select_kb_placeholder")} />
                       </SelectTrigger>
                       <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                        <SelectItem value="kb1" className="text-[12px] font-bold">Marketing Docs</SelectItem>
-                        <SelectItem value="kb2" className="text-[12px] font-bold">Support FAQs</SelectItem>
+                        <SelectItem value="kb1" className="text-[12px] font-bold">{t("ai_voice_assistants_section.kb_marketing")}</SelectItem>
+                        <SelectItem value="kb2" className="text-[12px] font-bold">{t("ai_voice_assistants_section.kb_support")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -499,12 +501,12 @@ export default function AIVoiceAssistantsSection() {
 
                 <SliderRow
                   dark={dark}
-                  label="Confidence Threshold"
+                  label={t("ai_voice_assistants_section.confidence_label")}
                   value={formData.confidence}
                   min={0} max={1} step={0.1}
                   onChange={(v) => setFormData({ ...formData, confidence: v })}
-                  leftLabel="Low"
-                  rightLabel="High"
+                  leftLabel={t("ai_voice_assistants_section.low_label")}
+                  rightLabel={t("ai_voice_assistants_section.high_label")}
                 />
               </TabsContent>
 
@@ -512,9 +514,9 @@ export default function AIVoiceAssistantsSection() {
               <TabsContent value="transfer" className="p-8 outline-none space-y-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h4 className={cn("text-[13px] font-semibold", text)}>Call Transfer Rules</h4>
+                    <h4 className={cn("text-[13px] font-semibold", text)}>{t("ai_voice_assistants_section.transfer_rules_title")}</h4>
                     <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                      Define when to transfer calls to a human agent.
+                      {t("ai_voice_assistants_section.transfer_rules_subtitle")}
                     </p>
                   </div>
                   <button
@@ -524,16 +526,16 @@ export default function AIVoiceAssistantsSection() {
                     })}
                     className={primaryOutlineBtn}
                   >
-                    <Plus size={12} /> Add Rule
+                    <Plus size={12} /> {t("ai_voice_assistants_section.add_rule")}
                   </button>
                 </div>
 
                 <div className="p-4 rounded-[1.25rem] bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
                   <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[12px] font-semibold text-amber-600 dark:text-amber-400">Attention Needed</p>
+                    <p className="text-[12px] font-semibold text-amber-600 dark:text-amber-400">{t("ai_voice_assistants_section.attention_needed")}</p>
                     <p className="text-[11px] font-medium text-amber-700/80 dark:text-amber-300/80 mt-1 leading-relaxed">
-                      Ensure your Twilio account is configured to handle SIP transfers if required.
+                      {t("ai_voice_assistants_section.attention_desc")}
                     </p>
                   </div>
                 </div>
@@ -543,9 +545,9 @@ export default function AIVoiceAssistantsSection() {
                     {formData.call_transfer_config.map((conf: any, index: number) => (
                       <div key={index} className={cn("flex flex-col md:flex-row gap-3 items-start p-4 rounded-[1.25rem] border", softBg, softBorder)}>
                         <div className="flex-1 w-full space-y-2">
-                          <FieldLabel dark={dark}>Description</FieldLabel>
+                          <FieldLabel dark={dark}>{t("ai_voice_assistants_section.description_label")}</FieldLabel>
                           <Textarea
-                            placeholder="e.g. User asks to speak to a manager"
+                            placeholder={t("ai_voice_assistants_section.description_placeholder")}
                             rows={2}
                             value={conf.description}
                             onChange={(e) => {
@@ -557,14 +559,14 @@ export default function AIVoiceAssistantsSection() {
                           />
                         </div>
                         <div className="w-full md:w-1/3 space-y-2">
-                          <FieldLabel dark={dark}>Destination</FieldLabel>
+                          <FieldLabel dark={dark}>{t("ai_voice_assistants_section.destination_label")}</FieldLabel>
                           <Select value={conf.number} onValueChange={(val) => {
                             const newConf = [...formData.call_transfer_config];
                             newConf[index].number = val;
                             setFormData({ ...formData, call_transfer_config: newConf });
                           }}>
                             <SelectTrigger className={inputCls}>
-                              <SelectValue placeholder="Select agent" />
+                              <SelectValue placeholder={t("ai_voice_assistants_section.select_agent_placeholder")} />
                             </SelectTrigger>
                             <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                               <SelectItem value="+15550001111" className="text-[12px] font-bold">Agent Smith (+15550001111)</SelectItem>
@@ -587,7 +589,7 @@ export default function AIVoiceAssistantsSection() {
                 ) : (
                   <div className={cn("py-12 text-center rounded-[1.5rem] border-2 border-dashed", softBorder, softBg)}>
                     <PhoneForwarded size={24} className="mx-auto text-primary/40 mb-3" />
-                    <p className={cn("text-[11px] font-bold opacity-60", sub)}>No transfer rules configured.</p>
+                    <p className={cn("text-[11px] font-bold opacity-60", sub)}>{t("ai_voice_assistants_section.no_transfer_rules")}</p>
                   </div>
                 )}
               </TabsContent>
@@ -599,13 +601,13 @@ export default function AIVoiceAssistantsSection() {
                     <Wand2 size={22} />
                   </div>
                   <div className="space-y-1 max-w-md">
-                    <h3 className={cn("text-[14px] font-semibold", text)}>Function Calling</h3>
+                    <h3 className={cn("text-[14px] font-semibold", text)}>{t("ai_voice_assistants_section.function_calling_title")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Define custom functions that the AI can call to interact with your business logic or external APIs.
+                      {t("ai_voice_assistants_section.function_calling_desc")}
                     </p>
                   </div>
-                  <button onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add Function
+                  <button onClick={() => toast({ title: t("ai_voice_assistants_section.toast_functions_title"), description: t("ai_voice_assistants_section.toast_functions_desc") })} className={primaryOutlineBtn}>
+                    <Plus size={12} /> {t("ai_voice_assistants_section.add_function")}
                   </button>
                 </div>
               </TabsContent>
@@ -615,9 +617,9 @@ export default function AIVoiceAssistantsSection() {
                 <div className={cn("p-5 rounded-[1.25rem] border flex items-center gap-4", softBg, softBorder)}>
                   <Switch checked={formData.generate_summary} onCheckedChange={(val) => setFormData({ ...formData, generate_summary: val })} className="data-[state=checked]:bg-primary" />
                   <div className="flex-1">
-                    <p className={cn("text-[13px] font-black tracking-tight", text)}>Generate Call Summary</p>
+                    <p className={cn("text-[13px] font-black tracking-tight", text)}>{t("ai_voice_assistants_section.generate_summary_label")}</p>
                     <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                      Automatically generate a summary after the call ends.
+                      {t("ai_voice_assistants_section.generate_summary_desc")}
                     </p>
                   </div>
                 </div>
@@ -625,10 +627,10 @@ export default function AIVoiceAssistantsSection() {
                 {formData.generate_summary && (
                   <div className={cn("p-5 rounded-[1.25rem] border space-y-5", softBg, softBorder)}>
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Summary Model</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.summary_model_label")}</FieldLabel>
                       <Select value={formData.summary_model} onValueChange={(val) => setFormData({ ...formData, summary_model: val })}>
                         <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="Select model" />
+                          <SelectValue placeholder={t("ai_voice_assistants_section.select_model_placeholder")} />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                           <SelectItem value="gpt-3.5-turbo" className="text-[12px] font-bold">GPT-3.5 Turbo</SelectItem>
@@ -637,10 +639,10 @@ export default function AIVoiceAssistantsSection() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Summary Prompt / Instructions</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.summary_prompt_label")}</FieldLabel>
                       <Textarea
                         rows={6}
-                        placeholder="Summarize the call focusing on action items..."
+                        placeholder={t("ai_voice_assistants_section.summary_prompt_placeholder")}
                         value={formData.summary_prompt}
                         onChange={(e) => setFormData({ ...formData, summary_prompt: e.target.value })}
                         className={textareaCls}
@@ -654,27 +656,27 @@ export default function AIVoiceAssistantsSection() {
               <TabsContent value="design" className="p-8 outline-none">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-5">
-                    <h4 className={cn("text-[13px] font-semibold pb-2 border-b", text, softBorder)}>Widget Appearance</h4>
+                    <h4 className={cn("text-[13px] font-semibold pb-2 border-b", text, softBorder)}>{t("ai_voice_assistants_section.widget_appearance_title")}</h4>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Title</FieldLabel>
-                      <Input value={formData.design.title} onChange={(e) => setFormData({ ...formData, design: { ...formData.design, title: e.target.value } })} placeholder="AI Assistant" className={inputCls} />
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.title_label")}</FieldLabel>
+                      <Input value={formData.design.title} onChange={(e) => setFormData({ ...formData, design: { ...formData.design, title: e.target.value } })} placeholder={t("ai_voice_assistants_section.title_placeholder")} className={inputCls} />
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Subtitle</FieldLabel>
-                      <Input value={formData.design.subtitle} onChange={(e) => setFormData({ ...formData, design: { ...formData.design, subtitle: e.target.value } })} placeholder="How can I help you?" className={inputCls} />
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.subtitle_label")}</FieldLabel>
+                      <Input value={formData.design.subtitle} onChange={(e) => setFormData({ ...formData, design: { ...formData.design, subtitle: e.target.value } })} placeholder={t("ai_voice_assistants_section.subtitle_placeholder")} className={inputCls} />
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Background Type</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_voice_assistants_section.bg_type_label")}</FieldLabel>
                       <div className="flex gap-2 flex-wrap">
-                        {(["color", "image", "video", "transparent"] as const).map((t) => {
-                          const active = formData.design.bg_type === t;
+                        {(["color", "image", "video", "transparent"] as const).map((bgType) => {
+                          const active = formData.design.bg_type === bgType;
                           return (
                             <button
-                              key={t}
-                              onClick={() => setFormData({ ...formData, design: { ...formData.design, bg_type: t } })}
+                              key={bgType}
+                              onClick={() => setFormData({ ...formData, design: { ...formData.design, bg_type: bgType } })}
                               className={cn(
                                 "h-9 px-4 rounded-lg text-[11px] font-semibold border transition-all capitalize",
                                 active
@@ -682,7 +684,7 @@ export default function AIVoiceAssistantsSection() {
                                   : dark ? "border-slate-800 text-slate-400 hover:border-primary/40" : "border-slate-200 text-slate-500 hover:border-primary/40"
                               )}
                             >
-                              {t}
+                              {t(`ai_voice_assistants_section.bg_type_${bgType}`)}
                             </button>
                           );
                         })}
@@ -691,7 +693,7 @@ export default function AIVoiceAssistantsSection() {
 
                     {formData.design.bg_type === "color" && (
                       <div className="space-y-2">
-                        <FieldLabel dark={dark}>Background Color</FieldLabel>
+                        <FieldLabel dark={dark}>{t("ai_voice_assistants_section.bg_color_label")}</FieldLabel>
                         <div className={cn("flex items-center gap-3 px-3 h-11 rounded-xl border", dark ? "bg-slate-950/50 border-slate-800" : "bg-white border-slate-200")}>
                           <div className="w-7 h-7 rounded-lg border shrink-0" style={{ backgroundColor: formData.design.bg_color, borderColor: "rgba(0,0,0,0.1)" }} />
                           <Input value={formData.design.bg_color} onChange={(e) => setFormData({ ...formData, design: { ...formData.design, bg_color: e.target.value } })} className={cn("flex-1 h-full border-0 rounded-none focus-visible:ring-0 text-[12px] font-black", text)} />
@@ -708,15 +710,15 @@ export default function AIVoiceAssistantsSection() {
                         style={{ backgroundColor: formData.design.bg_type === "color" ? formData.design.bg_color : "#2563eb" }}
                       >
                         <div>
-                          <h3 className="font-black text-[13px]">{formData.design.title || "AI Assistant"}</h3>
-                          <p className="text-[11px] opacity-90 mt-0.5">{formData.design.subtitle || "How can I help you?"}</p>
+                          <h3 className="font-black text-[13px]">{formData.design.title || t("ai_voice_assistants_section.title_placeholder")}</h3>
+                          <p className="text-[11px] opacity-90 mt-0.5">{formData.design.subtitle || t("ai_voice_assistants_section.subtitle_placeholder")}</p>
                         </div>
                       </div>
                       <div className={cn("flex-1 flex flex-col items-center justify-center", softBg)}>
                         <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 animate-pulse">
                           <div className="w-2.5 h-2.5 bg-primary rounded-full" />
                         </div>
-                        <p className={cn("text-[11px] font-medium opacity-60", sub)}>Listening...</p>
+                        <p className={cn("text-[11px] font-medium opacity-60", sub)}>{t("ai_voice_assistants_section.listening_label")}</p>
                       </div>
                       <div className="p-4 border-t flex justify-center" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
                         <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
@@ -731,7 +733,7 @@ export default function AIVoiceAssistantsSection() {
               {/* ── EMBED ── */}
               <TabsContent value="embed" className="p-8 outline-none space-y-5">
                 <div className={cn("p-5 rounded-[1.25rem] border", softBg, softBorder)}>
-                  <h4 className={cn("text-[13px] font-semibold mb-3", text)}>Embed Code</h4>
+                  <h4 className={cn("text-[13px] font-semibold mb-3", text)}>{t("ai_voice_assistants_section.embed_code_title")}</h4>
                   <pre className={cn("text-[11px] font-mono p-4 rounded-xl whitespace-pre-wrap mb-4 overflow-x-auto", dark ? "bg-slate-950 text-slate-200 border border-slate-800" : "bg-slate-900 text-slate-100")}>
 {`<script>
   window.voiceWidgetSettings = {
@@ -742,10 +744,10 @@ export default function AIVoiceAssistantsSection() {
 <script src="https://cdn.example.com/voice-widget.js" async></script>`}
                   </pre>
                   <button
-                    onClick={() => toast({ title: "Copied", description: "Embed code copied to clipboard." })}
+                    onClick={() => toast({ title: t("ai_voice_assistants_section.toast_copied_title"), description: t("ai_voice_assistants_section.toast_copied_desc") })}
                     className={primaryOutlineBtn}
                   >
-                    <Copy size={12} /> Copy Code
+                    <Copy size={12} /> {t("ai_voice_assistants_section.copy_code")}
                   </button>
                 </div>
               </TabsContent>
@@ -753,9 +755,9 @@ export default function AIVoiceAssistantsSection() {
 
             {/* Footer */}
             <div className={cn("px-6 py-4 border-t flex justify-end gap-2", border, softBg)}>
-              <button onClick={() => setViewMode("list")} className={outlineBtn}>Cancel</button>
+              <button onClick={() => setViewMode("list")} className={outlineBtn}>{t("ai_voice_assistants_section.cancel")}</button>
               <button onClick={handlePublish} className={primaryBtn}>
-                <Sparkles size={12} /> Publish
+                <Sparkles size={12} /> {t("ai_voice_assistants_section.publish")}
               </button>
             </div>
           </CardContent>
@@ -789,21 +791,21 @@ export default function AIVoiceAssistantsSection() {
                 <Mic className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>AI voice assistants</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("ai_voice_assistants_section.page_title")}</h1>
                 <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                  Manage your voice assistants.
+                  {t("ai_voice_assistants_section.page_subtitle")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className={cn("flex items-center gap-2 px-3 h-10 rounded-xl border text-[11px] font-semibold", dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600")}>
-                <span className="opacity-60">Credits:</span>
+                <span className="opacity-60">{t("ai_voice_assistants_section.credits_label")}</span>
                 <span className={text}>{availableCredits}</span>
-                <span className="opacity-60">mins/secs</span>
+                <span className="opacity-60">{t("ai_voice_assistants_section.credits_unit")}</span>
               </div>
               {canVoiceManage && (
                 <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add Assistant
+                  <Plus size={12} /> {t("ai_voice_assistants_section.add_assistant")}
                 </button>
               )}
             </div>
@@ -817,14 +819,11 @@ export default function AIVoiceAssistantsSection() {
                   <Mic className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-1.5 max-w-sm">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Create your first AI Voice Assistant</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_voice_assistants_section.empty_title")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                    Get started by creating a new voice assistant.
+                    {t("ai_voice_assistants_section.empty_description")}
                   </p>
                 </div>
-                <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add Assistant
-                </button>
               </div>
             ) : (
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
@@ -832,12 +831,12 @@ export default function AIVoiceAssistantsSection() {
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Name</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Model</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Phone</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Type</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Status</th>
-                      <th className={cn("py-4 px-6 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_voice_assistants_section.col_name")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_voice_assistants_section.col_model")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_voice_assistants_section.col_phone")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_voice_assistants_section.col_type")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_voice_assistants_section.col_status")}</th>
+                      <th className={cn("py-4 px-6 text-right text-[11px] font-semibold", sub)}>{t("ai_voice_assistants_section.col_actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -877,7 +876,7 @@ export default function AIVoiceAssistantsSection() {
                               </button>
                             )}
                             <button
-                              onClick={() => toast({ title: "Logs", description: `Opening logs for ${agent.name}` })}
+                              onClick={() => toast({ title: t("ai_voice_assistants_section.toast_logs_title"), description: t("ai_voice_assistants_section.toast_logs_desc", { name: agent.name }) })}
                               className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-primary/10 hover:text-primary text-slate-400" : "hover:bg-primary/10 hover:text-primary text-slate-500")}
                             >
                               <FileText size={12} />
@@ -891,10 +890,10 @@ export default function AIVoiceAssistantsSection() {
                               <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[160px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
                                 {canManageFeeder && (
                                   <DropdownMenuItem
-                                    onClick={() => toast({ title: "AI Feeder", description: `Opening AI Feeder for ${agent.name}` })}
+                                    onClick={() => toast({ title: t("ai_voice_assistants_section.toast_feeder_title"), description: t("ai_voice_assistants_section.toast_feeder_desc", { name: agent.name }) })}
                                     className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
                                   >
-                                    <Plug size={12} /> AI Feeder
+                                    <Plug size={12} /> {t("ai_voice_assistants_section.ai_feeder")}
                                   </DropdownMenuItem>
                                 )}
                                 {canVoiceDelete && (
@@ -902,7 +901,7 @@ export default function AIVoiceAssistantsSection() {
                                     onClick={() => { setAgentToDelete(agent); setShowDeleteConfirm(true); }}
                                     className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                                   >
-                                    <Trash2 size={12} /> Delete
+                                    <Trash2 size={12} /> {t("ai_voice_assistants_section.delete")}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1009,6 +1008,7 @@ function DeleteDialog({
   outlineBtn: string;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
@@ -1018,19 +1018,19 @@ function DeleteDialog({
               <AlertCircle size={18} />
             </div>
             <div>
-              <h2 className={cn("text-[14px] font-semibold", text)}>Delete Voice Assistant?</h2>
+              <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_voice_assistants_section.delete_dialog_title")}</h2>
               <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                <span className="text-rose-500 font-black">"{agent?.name}"</span> will be permanently removed and the associated phone number will be disconnected.
+                <span className="text-rose-500 font-black">"{agent?.name}"</span> {t("ai_voice_assistants_section.delete_dialog_desc")}
               </p>
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_voice_assistants_section.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onConfirm}
               className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
             >
-              <Trash2 size={12} /> Delete
+              <Trash2 size={12} /> {t("ai_voice_assistants_section.delete")}
             </AlertDialogAction>
           </div>
         </div>

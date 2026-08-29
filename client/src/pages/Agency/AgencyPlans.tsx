@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { Sparkles } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const AgencyPlans = () => {
   const { mode } = useTheme();
   const dark = mode === "dark";
+  const { t } = useTranslation();
 
   // Force hide all scrollbars for this page
   useEffect(() => {
@@ -58,15 +60,15 @@ const AgencyPlans = () => {
         
         {/* Text Content */}
         <h1 className={cn("text-4xl font-black mb-4 z-10 tracking-tight", text)}>
-          Coming Soon...
+          {t("agency_plans_page.title")}
         </h1>
-        
+
         <div className="space-y-4 px-4 z-10">
           <p className={cn("font-bold text-[16px] leading-relaxed", dark ? "text-slate-300" : "text-slate-700")}>
-            We're crafting something amazing for your SaaS plans.
+            {t("agency_plans_page.subtitle")}
           </p>
           <p className={cn("text-[13px] font-medium leading-relaxed opacity-80", sub)}>
-            Stay tuned, this feature is currently under active development and will be available soon with premium features.
+            {t("agency_plans_page.desc")}
           </p>
         </div>
 

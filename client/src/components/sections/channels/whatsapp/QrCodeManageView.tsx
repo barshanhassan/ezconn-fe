@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -118,6 +119,7 @@ export default function QrCodeManageView({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
   // ─── Local view state ───────────────────────────────────────────
   const [mode, setMode] = useState<"list" | "new">("list");
@@ -196,12 +198,12 @@ export default function QrCodeManageView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-      toast({ title: "Instance created", description: "QR Code instance ready to connect." });
+      toast({ title: t("qr_code_manage_view.toast_instance_created_title"), description: t("qr_code_manage_view.toast_instance_created_description") });
       resetCreateForm();
       setMode("list");
     },
     onError: (e: any) => {
-      toast({ title: "Error", description: extractMsg(e) ?? "Could not create instance.", variant: "destructive" });
+      toast({ title: t("qr_code_manage_view.toast_error_title"), description: extractMsg(e) ?? t("qr_code_manage_view.toast_create_error_description"), variant: "destructive" });
     },
   });
 
@@ -214,13 +216,13 @@ export default function QrCodeManageView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-      toast({ title: "Renamed", description: "Instance name updated." });
+      toast({ title: t("qr_code_manage_view.toast_renamed_title"), description: t("qr_code_manage_view.toast_renamed_description") });
       setRenameInstance(null);
       setRenameValue("");
       setRenameError(null);
     },
     onError: (e: any) => {
-      toast({ title: "Error", description: extractMsg(e) ?? "Could not rename.", variant: "destructive" });
+      toast({ title: t("qr_code_manage_view.toast_error_title"), description: extractMsg(e) ?? t("qr_code_manage_view.toast_rename_error_description"), variant: "destructive" });
     },
   });
 
@@ -238,11 +240,11 @@ export default function QrCodeManageView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-      toast({ title: "Saved", description: "Auto-reply updated." });
+      toast({ title: t("qr_code_manage_view.toast_saved_title"), description: t("qr_code_manage_view.toast_auto_reply_updated_description") });
       setDrInstance(null);
     },
     onError: (e: any) => {
-      toast({ title: "Error", description: extractMsg(e) ?? "Could not update auto-reply.", variant: "destructive" });
+      toast({ title: t("qr_code_manage_view.toast_error_title"), description: extractMsg(e) ?? t("qr_code_manage_view.toast_auto_reply_error_description"), variant: "destructive" });
     },
   });
 
@@ -253,12 +255,12 @@ export default function QrCodeManageView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-      toast({ title: "Deleted", description: "Instance removed." });
+      toast({ title: t("qr_code_manage_view.toast_deleted_title"), description: t("qr_code_manage_view.toast_deleted_description") });
       setDeleteInstance(null);
       setDeleteMedia(false);
     },
     onError: (e: any) => {
-      toast({ title: "Error", description: extractMsg(e) ?? "Could not delete.", variant: "destructive" });
+      toast({ title: t("qr_code_manage_view.toast_error_title"), description: extractMsg(e) ?? t("qr_code_manage_view.toast_delete_error_description"), variant: "destructive" });
     },
   });
 
@@ -269,11 +271,11 @@ export default function QrCodeManageView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-      toast({ title: "Disconnected", description: "Instance disconnected." });
+      toast({ title: t("qr_code_manage_view.toast_disconnected_title"), description: t("qr_code_manage_view.toast_disconnected_description") });
       setDisconnectInstance(null);
     },
     onError: (e: any) => {
-      toast({ title: "Error", description: extractMsg(e) ?? "Could not disconnect.", variant: "destructive" });
+      toast({ title: t("qr_code_manage_view.toast_error_title"), description: extractMsg(e) ?? t("qr_code_manage_view.toast_disconnect_error_description"), variant: "destructive" });
     },
   });
 
@@ -303,7 +305,7 @@ export default function QrCodeManageView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-      toast({ title: "Queue cleared" });
+      toast({ title: t("qr_code_manage_view.toast_queue_cleared_title") });
       setClearQueueInstance(null);
     },
   });
@@ -398,7 +400,7 @@ export default function QrCodeManageView({
         setQrInstance(null);
         setQrImage(null);
         queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
-        toast({ title: "Connected", description: `${instance.name} is now live.` });
+        toast({ title: t("qr_code_manage_view.toast_connected_title"), description: t("qr_code_manage_view.toast_connected_description", { name: instance.name }) });
         return;
       }
       if (json?.qr) {
@@ -407,8 +409,8 @@ export default function QrCodeManageView({
       }
     } catch (e: any) {
       toast({
-        title: "Connection failed",
-        description: extractMsg(e) ?? "Could not get QR code.",
+        title: t("qr_code_manage_view.toast_connection_failed_title"),
+        description: extractMsg(e) ?? t("qr_code_manage_view.toast_connection_failed_description"),
         variant: "destructive",
       });
     } finally {
@@ -420,11 +422,11 @@ export default function QrCodeManageView({
     setNameError(null);
     setTermsError(null);
     if (!newName.trim()) {
-      setNameError("Instance name is required");
+      setNameError(t("qr_code_manage_view.instance_name_required_error"));
       return;
     }
     if (!newTerms) {
-      setTermsError("Please accept the Z-API terms");
+      setTermsError(t("qr_code_manage_view.terms_required_error"));
       return;
     }
     // Name only — the backend provisions the Z-API instance on demand
@@ -440,7 +442,7 @@ export default function QrCodeManageView({
 
   function copyCode(code: string) {
     navigator.clipboard.writeText(code);
-    toast({ title: "Copied" });
+    toast({ title: t("qr_code_manage_view.toast_copied_title") });
   }
 
   // ─── Render helpers ─────────────────────────────────────────────
@@ -451,21 +453,21 @@ export default function QrCodeManageView({
     if (s === "CONNECTED") {
       return (
         <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-          Connected
+          {t("qr_code_manage_view.status_connected")}
         </Badge>
       );
     }
     if (s === "PENDING" || s === "DISCONNECTED") {
       return (
         <Badge variant="outline" className="h-5 px-2 rounded-md border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-[10px] font-semibold">
-          Disconnected
+          {t("qr_code_manage_view.status_disconnected")}
         </Badge>
       );
     }
     if (s === "FAILED") {
       return (
         <Badge variant="outline" className="h-5 px-2 rounded-md border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-400 text-[10px] font-semibold">
-          Failed
+          {t("qr_code_manage_view.status_failed")}
         </Badge>
       );
     }
@@ -482,13 +484,13 @@ export default function QrCodeManageView({
     if (p === "uazapi") {
       return (
         <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-          New
+          {t("qr_code_manage_view.provider_new")}
         </Badge>
       );
     }
     return (
       <Badge variant="outline" className="h-5 px-2 rounded-md border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-[10px] font-semibold">
-        Legacy
+        {t("qr_code_manage_view.provider_legacy")}
       </Badge>
     );
   }
@@ -501,10 +503,10 @@ export default function QrCodeManageView({
         <div className="flex items-center justify-between">
           <div>
             <h2 className={cn("text-[16px] font-semibold", text)}>
-              Z-API instances
+              {t("qr_code_manage_view.heading")}
             </h2>
             <p className={cn("text-[11px] font-bold opacity-60 mt-0.5", sub)}>
-              Scan a QR code from WhatsApp to bring a number online.
+              {t("qr_code_manage_view.subtitle")}
             </p>
           </div>
           <button
@@ -514,7 +516,7 @@ export default function QrCodeManageView({
             }}
             className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
           >
-            <Plus size={12} /> Create instance
+            <Plus size={12} /> {t("qr_code_manage_view.create_instance_button")}
           </button>
         </div>
       )}
@@ -524,9 +526,9 @@ export default function QrCodeManageView({
         <div className={cn("rounded-2xl border p-4 flex items-center gap-4", "border-rose-500/30 bg-rose-500/5")}>
           <CircleAlert size={20} className="text-rose-500 shrink-0" />
           <div className="grow">
-            <p className="text-[13px] font-black text-rose-700 dark:text-rose-300">Action required: migrate legacy Z-API instances</p>
+            <p className="text-[13px] font-black text-rose-700 dark:text-rose-300">{t("qr_code_manage_view.migration_banner_title")}</p>
             <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 mt-0.5">
-              Z-API legacy provider is being retired. Migrate to the UAZAPI provider before the deadline below.
+              {t("qr_code_manage_view.migration_banner_description")}
             </p>
           </div>
           <div className="text-right whitespace-nowrap">
@@ -534,11 +536,11 @@ export default function QrCodeManageView({
               {(["days", "hours", "minutes", "seconds"] as const).map((u) => (
                 <span key={u} className="px-2 py-1 rounded bg-rose-100 dark:bg-rose-900/40 text-[11px]">
                   {String((countdown as any)[u]).padStart(2, "0")}
-                  {u === "days" ? "d" : u === "hours" ? "h" : u === "minutes" ? "m" : "s"}
+                  {u === "days" ? t("qr_code_manage_view.countdown_days_suffix") : u === "hours" ? t("qr_code_manage_view.countdown_hours_suffix") : u === "minutes" ? t("qr_code_manage_view.countdown_minutes_suffix") : t("qr_code_manage_view.countdown_seconds_suffix")}
                 </span>
               ))}
             </div>
-            <p className="text-[10px] text-rose-500/70 mt-1">Deadline 31 Mar 2026 23:00 UTC</p>
+            <p className="text-[10px] text-rose-500/70 mt-1">{t("qr_code_manage_view.migration_deadline_label", { date: "31 Mar 2026 23:00 UTC" })}</p>
           </div>
         </div>
       )}
@@ -551,9 +553,9 @@ export default function QrCodeManageView({
               <QrCode className="w-8 h-8 text-primary" />
             </div>
             <div className="space-y-1.5 max-w-sm">
-              <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No instances yet</h3>
+              <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("qr_code_manage_view.empty_state_title")}</h3>
               <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                Create your first Z-API instance to start connecting WhatsApp numbers via QR.
+                {t("qr_code_manage_view.empty_state_description")}
               </p>
             </div>
             <button
@@ -563,7 +565,7 @@ export default function QrCodeManageView({
               }}
               className="h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
             >
-              <Plus size={12} /> Create instance
+              <Plus size={12} /> {t("qr_code_manage_view.create_instance_button")}
             </button>
           </div>
         ) : (
@@ -627,12 +629,12 @@ export default function QrCodeManageView({
                               className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-amber-600 focus:text-amber-600 focus:bg-amber-500/10"
                               onClick={() =>
                                 toast({
-                                  title: "Migration not available",
-                                  description: "Migrate-to-UAZAPI endpoint must be enabled in this environment.",
+                                  title: t("qr_code_manage_view.migration_unavailable_title"),
+                                  description: t("qr_code_manage_view.migration_unavailable_description"),
                                 })
                               }
                             >
-                              <ArrowRightLeft size={13} /> Migrate to UAZAPI
+                              <ArrowRightLeft size={13} /> {t("qr_code_manage_view.migrate_to_uazapi")}
                             </DropdownMenuItem>
                           )}
                           {s === "CONNECTED" && (
@@ -640,7 +642,7 @@ export default function QrCodeManageView({
                               className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                               onClick={() => openDefaultReply(instance)}
                             >
-                              <ReplyAll size={13} /> Auto-reply
+                              <ReplyAll size={13} /> {t("qr_code_manage_view.auto_reply_menu_item")}
                             </DropdownMenuItem>
                           )}
                           {(s === "PENDING" || s === "DISCONNECTED") && (
@@ -651,7 +653,7 @@ export default function QrCodeManageView({
                                 setQrImage(null);
                               }}
                             >
-                              <Plug size={13} /> Connect
+                              <Plug size={13} /> {t("qr_code_manage_view.connect_menu_item")}
                             </DropdownMenuItem>
                           )}
                           {s === "CONNECTED" && (
@@ -659,7 +661,7 @@ export default function QrCodeManageView({
                               className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                               onClick={() => setDisconnectInstance(instance)}
                             >
-                              <PlugZap size={13} /> Disconnect
+                              <PlugZap size={13} /> {t("qr_code_manage_view.disconnect_menu_item")}
                             </DropdownMenuItem>
                           )}
                           {["PENDING", "CONNECTED", "DISCONNECTED"].includes(s) && (
@@ -671,7 +673,7 @@ export default function QrCodeManageView({
                                 setRenameError(null);
                               }}
                             >
-                              <Pencil size={13} /> Rename
+                              <Pencil size={13} /> {t("qr_code_manage_view.rename_menu_item")}
                             </DropdownMenuItem>
                           )}
                           {s !== "DELETING" && s !== "DELETED" && (
@@ -682,7 +684,7 @@ export default function QrCodeManageView({
                                 setDeleteMedia(false);
                               }}
                             >
-                              <Trash2 size={13} /> Delete
+                              <Trash2 size={13} /> {t("qr_code_manage_view.delete_menu_item")}
                             </DropdownMenuItem>
                           )}
                           {s === "DISCONNECTED" && (
@@ -690,7 +692,7 @@ export default function QrCodeManageView({
                               className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
                               onClick={() => setClearQueueInstance(instance)}
                             >
-                              <Layers size={13} /> Clear Queue
+                              <Layers size={13} /> {t("qr_code_manage_view.clear_queue_menu_item")}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator className="my-1" />
@@ -701,7 +703,7 @@ export default function QrCodeManageView({
                               feederMutation.mutate(instance.id);
                             }}
                           >
-                            <ToggleLeft size={13} /> Enable AI Feeder
+                            <ToggleLeft size={13} /> {t("qr_code_manage_view.enable_ai_feeder")}
                             <Switch
                               checked={!!instance.allow_in_feeder}
                               onCheckedChange={() => feederMutation.mutate(instance.id)}
@@ -715,7 +717,7 @@ export default function QrCodeManageView({
                     {/* Code field (read-only + copy) */}
                     {instance.code && (
                       <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                        <span className={cn("text-[11px] font-semibold", sub)}>Code</span>
+                        <span className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.code_label")}</span>
                         <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>{instance.code}</code>
                         <button
                           onClick={() => copyCode(instance.code!)}
@@ -729,14 +731,14 @@ export default function QrCodeManageView({
                     {/* Phone number */}
                     {instance.phone_number && (
                       <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                        <span className={cn("text-[11px] font-semibold", sub)}>Phone</span>
+                        <span className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.phone_label")}</span>
                         <span className={cn("text-[12px] font-bold", text)}>{instance.phone_number}</span>
                       </div>
                     )}
 
                     {/* Queue count */}
                     <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                      <span className={cn("text-[11px] font-semibold", sub)}>Queue</span>
+                      <span className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.queue_label")}</span>
                       {queueCountMutation.isPending && queueCountMutation.variables === instance.id ? (
                         <Loader2 size={14} className="animate-spin text-primary" />
                       ) : typeof instance.count !== "undefined" ? (
@@ -746,7 +748,7 @@ export default function QrCodeManageView({
                           onClick={() => queueCountMutation.mutate(instance.id)}
                           className={cn(outlineBtn, "h-8 px-3")}
                         >
-                          <RefreshCw size={11} /> Get count
+                          <RefreshCw size={11} /> {t("qr_code_manage_view.get_count_button")}
                         </button>
                       )}
                     </div>
@@ -763,8 +765,8 @@ export default function QrCodeManageView({
         <div className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className={cn("text-[15px] font-semibold", text)}>Create instance</h3>
-              <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>Enter a friendly name and Z-API credentials.</p>
+              <h3 className={cn("text-[15px] font-semibold", text)}>{t("qr_code_manage_view.create_form_title")}</h3>
+              <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>{t("qr_code_manage_view.create_form_subtitle")}</p>
             </div>
             <button
               onClick={() => {
@@ -773,19 +775,19 @@ export default function QrCodeManageView({
               }}
               className={outlineBtn}
             >
-              <X size={12} /> Cancel
+              <X size={12} /> {t("qr_code_manage_view.cancel_button")}
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className={cn("text-[11px] font-semibold", sub)}>Instance name</label>
+              <label className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.instance_name_label")}</label>
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value.slice(0, 50))}
                 onKeyDown={charactersOnly}
                 maxLength={50}
-                placeholder="Sales WhatsApp"
+                placeholder={t("qr_code_manage_view.instance_name_placeholder")}
                 className={inputCls}
               />
               {nameError && <p className="text-rose-500 text-[11px] font-bold">{nameError}</p>}
@@ -803,8 +805,8 @@ export default function QrCodeManageView({
               className="mt-1 accent-[hsl(var(--primary))]"
             />
             <span className={cn("text-[12px] font-medium", text)}>
-              I accept the Z-API <a href="https://z-api.io/terms" target="_blank" rel="noopener" className="text-primary underline">terms of service</a>
-              and understand that Z-API is a third-party provider not affiliated with WhatsApp.
+              {t("qr_code_manage_view.terms_prefix")} <a href="https://z-api.io/terms" target="_blank" rel="noopener" className="text-primary underline">{t("qr_code_manage_view.terms_link")}</a>
+              {" "}{t("qr_code_manage_view.terms_suffix")}
             </span>
           </label>
           {termsError && <p className="text-rose-500 text-[11px] font-bold">{termsError}</p>}
@@ -817,7 +819,7 @@ export default function QrCodeManageView({
               }}
               className={outlineBtn}
             >
-              Cancel
+              {t("qr_code_manage_view.cancel_button")}
             </button>
             <button
               onClick={handleCreate}
@@ -826,11 +828,11 @@ export default function QrCodeManageView({
             >
               {createMutation.isPending ? (
                 <>
-                  <Loader2 size={12} className="animate-spin" /> Creating
+                  <Loader2 size={12} className="animate-spin" /> {t("qr_code_manage_view.creating_button")}
                 </>
               ) : (
                 <>
-                  <Plus size={12} /> Create
+                  <Plus size={12} /> {t("qr_code_manage_view.create_button")}
                 </>
               )}
             </button>
@@ -849,10 +851,10 @@ export default function QrCodeManageView({
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    Scan to connect
+                    {t("qr_code_manage_view.qr_modal_title")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Open WhatsApp on your phone → Linked devices → Link a device.
+                    {t("qr_code_manage_view.qr_modal_description")}
                   </DialogDescription>
                 </div>
               </div>
@@ -864,13 +866,13 @@ export default function QrCodeManageView({
               ) : qrImage ? (
                 <img src={qrImage} alt="QR" className="w-56 h-56 object-contain" />
               ) : (
-                <p className={cn("text-[12px] font-medium", sub)}>Waiting for QR…</p>
+                <p className={cn("text-[12px] font-medium", sub)}>{t("qr_code_manage_view.qr_waiting")}</p>
               )}
             </div>
 
             <div className={cn("flex items-start gap-3 p-3 rounded-xl border text-[11px] font-medium", "border-sky-500/30 bg-sky-500/5 text-sky-700 dark:text-sky-300")}>
               <CircleAlert size={14} className="shrink-0 mt-0.5" />
-              <span>The QR refreshes automatically every 20 seconds. Keep this window open until the scan completes.</span>
+              <span>{t("qr_code_manage_view.qr_refresh_notice")}</span>
             </div>
 
             <div className="flex justify-end gap-2">
@@ -879,13 +881,13 @@ export default function QrCodeManageView({
                 className={outlineBtn}
                 disabled={qrLoading}
               >
-                <RefreshCw size={12} className={cn(qrLoading && "animate-spin")} /> Refresh
+                <RefreshCw size={12} className={cn(qrLoading && "animate-spin")} /> {t("qr_code_manage_view.refresh_button")}
               </button>
               <button
                 onClick={() => { setQrInstance(null); setQrImage(null); }}
                 className="h-11 px-6 rounded-xl bg-primary text-white text-[11px] font-semibold"
               >
-                Close
+                {t("qr_code_manage_view.close_button")}
               </button>
             </div>
           </div>
@@ -903,10 +905,10 @@ export default function QrCodeManageView({
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    Default Auto-reply
+                    {t("qr_code_manage_view.default_reply_title")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Choose which automation triggers when a visitor messages this instance.
+                    {t("qr_code_manage_view.default_reply_description")}
                   </DialogDescription>
                 </div>
               </div>
@@ -914,36 +916,36 @@ export default function QrCodeManageView({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2 space-y-2">
-                <label className={cn("text-[11px] font-semibold", sub)}>Select automation</label>
+                <label className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.select_automation_label")}</label>
                 <select
                   value={drAutomationId ?? ""}
                   onChange={(e) => setDrAutomationId(e.target.value || null)}
                   className={inputCls}
                 >
-                  <option value="">— No automation —</option>
+                  <option value="">{t("qr_code_manage_view.no_automation_option")}</option>
                   {automations.map((a: any) => (
-                    <option key={a.id} value={String(a.id)}>{a.name ?? `Automation #${a.id}`}</option>
+                    <option key={a.id} value={String(a.id)}>{a.name ?? t("qr_code_manage_view.automation_fallback_name", { id: a.id })}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className={cn("text-[11px] font-semibold", sub)}>Trigger</label>
+                <label className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.trigger_label")}</label>
                 <select
                   value={drInterval}
                   onChange={(e) => setDrInterval(e.target.value)}
                   className={inputCls}
                 >
-                  <option value="0">Once per contact</option>
-                  <option value="24">Once per 24h</option>
-                  <option value="247">Always</option>
+                  <option value="0">{t("qr_code_manage_view.trigger_once_per_contact")}</option>
+                  <option value="24">{t("qr_code_manage_view.trigger_once_per_24h")}</option>
+                  <option value="247">{t("qr_code_manage_view.trigger_always")}</option>
                 </select>
               </div>
             </div>
 
             <p className={cn("text-[11px] font-medium leading-relaxed", sub)}>
-              {drInterval === "0" && "The automation runs ONCE for every contact — even if they message again later."}
-              {drInterval === "24" && "The automation runs ONCE per 24-hour window per contact."}
-              {drInterval === "247" && "The automation runs on EVERY incoming message from any contact."}
+              {drInterval === "0" && t("qr_code_manage_view.trigger_desc_once")}
+              {drInterval === "24" && t("qr_code_manage_view.trigger_desc_24h")}
+              {drInterval === "247" && t("qr_code_manage_view.trigger_desc_always")}
             </p>
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
@@ -957,7 +959,7 @@ export default function QrCodeManageView({
                     }}
                     className="h-11 px-6 rounded-xl border border-primary/30 text-primary hover:bg-primary/5 text-[11px] font-semibold flex items-center gap-2"
                   >
-                    <ExternalLink size={12} /> View Automation
+                    <ExternalLink size={12} /> {t("qr_code_manage_view.view_automation_button")}
                   </button>
                   <button
                     onClick={() =>
@@ -970,12 +972,12 @@ export default function QrCodeManageView({
                     }
                     className="h-11 px-6 rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/5 text-[11px] font-semibold flex items-center gap-2"
                   >
-                    <Trash2 size={12} /> Remove
+                    <Trash2 size={12} /> {t("qr_code_manage_view.remove_button")}
                   </button>
                 </>
               )}
               <button onClick={() => setDrInstance(null)} className={outlineBtn}>
-                Cancel
+                {t("qr_code_manage_view.cancel_button")}
               </button>
               <button
                 onClick={() =>
@@ -991,11 +993,11 @@ export default function QrCodeManageView({
               >
                 {autoReplyMutation.isPending ? (
                   <>
-                    <Loader2 size={12} className="animate-spin" /> Saving
+                    <Loader2 size={12} className="animate-spin" /> {t("qr_code_manage_view.saving_button")}
                   </>
                 ) : (
                   <>
-                    <Check size={12} /> Save
+                    <Check size={12} /> {t("qr_code_manage_view.save_button")}
                   </>
                 )}
               </button>
@@ -1014,9 +1016,9 @@ export default function QrCodeManageView({
                   <Pencil size={18} />
                 </div>
                 <div className="text-left">
-                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>Rename instance</DialogTitle>
+                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>{t("qr_code_manage_view.rename_modal_title")}</DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Letters only, max 50 characters.
+                    {t("qr_code_manage_view.rename_modal_description")}
                   </DialogDescription>
                 </div>
               </div>
@@ -1037,12 +1039,12 @@ export default function QrCodeManageView({
             </div>
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
               <button onClick={() => setRenameInstance(null)} className={outlineBtn}>
-                Cancel
+                {t("qr_code_manage_view.cancel_button")}
               </button>
               <button
                 onClick={() => {
                   if (!renameValue.trim()) {
-                    setRenameError("Name is required");
+                    setRenameError(t("qr_code_manage_view.rename_required_error"));
                     return;
                   }
                   renameMutation.mutate({ id: renameInstance!.id, name: renameValue.trim() });
@@ -1050,7 +1052,7 @@ export default function QrCodeManageView({
                 disabled={renameMutation.isPending}
                 className="h-11 px-7 rounded-xl bg-primary text-white text-[11px] font-semibold flex items-center gap-2 shadow-lg shadow-primary/20"
               >
-                {renameMutation.isPending ? "Saving" : "Save"}
+                {renameMutation.isPending ? t("qr_code_manage_view.saving_button") : t("qr_code_manage_view.save_button")}
               </button>
             </div>
           </div>
@@ -1066,9 +1068,9 @@ export default function QrCodeManageView({
                 <CircleAlert size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete instance?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("qr_code_manage_view.delete_modal_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{deleteInstance?.name}</span> will be removed and its chats will stop syncing.
+                  <span className="text-rose-500 font-black">{deleteInstance?.name}</span> {t("qr_code_manage_view.delete_modal_description")}
                 </p>
               </div>
             </div>
@@ -1080,16 +1082,16 @@ export default function QrCodeManageView({
                 className="mt-1 accent-[hsl(var(--primary))]"
               />
               <span className={cn("text-[12px] font-medium", text)}>
-                Also delete all media files attached to this instance from storage.
+                {t("qr_code_manage_view.delete_media_checkbox_label")}
               </span>
             </label>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("qr_code_manage_view.cancel_button")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => deleteInstance && deleteMutation.mutate(deleteInstance.id)}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold flex items-center gap-2 shadow-lg shadow-rose-500/20"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("qr_code_manage_view.delete_menu_item")}
               </AlertDialogAction>
             </div>
           </div>
@@ -1105,21 +1107,21 @@ export default function QrCodeManageView({
                 <PlugZap size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Disconnect instance?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("qr_code_manage_view.disconnect_modal_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                  The number will stop receiving WhatsApp messages until you scan the QR again.
+                  {t("qr_code_manage_view.disconnect_modal_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("qr_code_manage_view.cancel_button")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() =>
                   disconnectInstance && disconnectMutation.mutate(disconnectInstance.id)
                 }
                 className="h-11 px-7 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold flex items-center gap-2"
               >
-                Disconnect
+                {t("qr_code_manage_view.disconnect_menu_item")}
               </AlertDialogAction>
             </div>
           </div>
@@ -1135,21 +1137,21 @@ export default function QrCodeManageView({
                 <Layers size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Clear queued items?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("qr_code_manage_view.clear_queue_modal_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                  All pending outgoing messages waiting in this instance's queue will be deleted permanently.
+                  {t("qr_code_manage_view.clear_queue_modal_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>No</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("qr_code_manage_view.no_button")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() =>
                   clearQueueInstance && clearQueueMutation.mutate(clearQueueInstance.id)
                 }
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold flex items-center gap-2"
               >
-                Yes, clear
+                {t("qr_code_manage_view.yes_clear_button")}
               </AlertDialogAction>
             </div>
           </div>

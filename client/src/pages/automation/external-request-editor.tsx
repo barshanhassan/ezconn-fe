@@ -19,6 +19,7 @@
  *   }
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,9 +55,17 @@ export function ExternalRequestEditor({
   value: any;
   onChange: (next: any) => void;
 }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<TabKey>('headers');
   const [testing, setTesting] = useState(false);
   const { toast } = useToast();
+
+  const TAB_LABELS: Record<TabKey, string> = {
+    headers: t('external_request_editor.tabs.headers'),
+    body: t('external_request_editor.tabs.body'),
+    response: t('external_request_editor.tabs.response'),
+    mapping: t('external_request_editor.tabs.mapping'),
+  };
 
   const v = value ?? {};
   const headers: KV[] = Array.isArray(v.headers) ? v.headers : [];
@@ -69,7 +78,7 @@ export function ExternalRequestEditor({
 
   const runTest = async () => {
     if (!v.url) {
-      toast({ title: 'URL required', variant: 'destructive' });
+      toast({ title: t('external_request_editor.url_required'), variant: 'destructive' });
       return;
     }
     setTesting(true);
@@ -99,10 +108,10 @@ export function ExternalRequestEditor({
         },
       });
       setTab('response');
-      toast({ title: `Response ${json.status ?? res.status}` });
+      toast({ title: t('external_request_editor.response_status', { status: json.status ?? res.status }) });
     } catch (err: any) {
       toast({
-        title: 'Test failed',
+        title: t('external_request_editor.test_failed'),
         description: err?.message,
         variant: 'destructive',
       });
@@ -133,7 +142,7 @@ export function ExternalRequestEditor({
         <Input
           value={v.url ?? ''}
           onChange={(e) => set({ url: e.target.value })}
-          placeholder="https://api.example.com/endpoint"
+          placeholder={t('external_request_editor.url_placeholder')}
           className="flex-1"
         />
         <Button
@@ -148,30 +157,30 @@ export function ExternalRequestEditor({
           ) : (
             <Play className="h-3.5 w-3.5" />
           )}
-          <span className="ml-1">Test</span>
+          <span className="ml-1">{t('external_request_editor.test_button')}</span>
         </Button>
       </div>
 
       {/* Tabs strip */}
       <div className="flex border-b">
-        {(['headers', 'body', 'response', 'mapping'] as TabKey[]).map((t) => (
+        {(['headers', 'body', 'response', 'mapping'] as TabKey[]).map((tabKey) => (
           <button
-            key={t}
+            key={tabKey}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tabKey)}
             className={`px-3 py-2 text-xs capitalize border-b-2 ${
-              tab === t
+              tab === tabKey
                 ? 'border-emerald-500 text-emerald-700 font-medium'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t}
-            {t === 'response' && lastResponse && (
+            {TAB_LABELS[tabKey]}
+            {tabKey === 'response' && lastResponse && (
               <Badge variant="outline" className="ml-1 h-4 text-[9px]">
                 {lastResponse.status}
               </Badge>
             )}
-            {t === 'mapping' && mappings.length > 0 && (
+            {tabKey === 'mapping' && mappings.length > 0 && (
               <Badge variant="outline" className="ml-1 h-4 text-[9px]">
                 {mappings.length}
               </Badge>
@@ -192,17 +201,17 @@ export function ExternalRequestEditor({
       {tab === 'body' && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Label className="text-xs">Body type</Label>
+            <Label className="text-xs">{t('external_request_editor.body_type_label')}</Label>
             <Select
               value={bodyType}
-              onValueChange={(t: 'json' | 'form') => set({ body_type: t })}
+              onValueChange={(nextType: 'json' | 'form') => set({ body_type: nextType })}
             >
               <SelectTrigger className="w-32 h-7">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="json">JSON</SelectItem>
-                <SelectItem value="form">Form (key/value)</SelectItem>
+                <SelectItem value="json">{t('external_request_editor.body_type_json')}</SelectItem>
+                <SelectItem value="form">{t('external_request_editor.body_type_form')}</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex-1" />
@@ -247,7 +256,7 @@ export function ExternalRequestEditor({
                       : 'border-destructive text-destructive'
                   }
                 >
-                  Status: {lastResponse.status}
+                  {t('external_request_editor.status_label', { status: lastResponse.status })}
                 </Badge>
               </div>
               <pre className="bg-muted/40 rounded p-2 text-[10px] overflow-auto max-h-64 font-mono whitespace-pre-wrap">
@@ -256,14 +265,16 @@ export function ExternalRequestEditor({
                   : JSON.stringify(lastResponse.body, null, 2)}
               </pre>
               <p className="text-[10px] text-muted-foreground">
-                Click <span className="font-medium">Mapping</span> to wire JSON
-                paths from this response into custom fields.
+                {t('external_request_editor.mapping_hint_prefix')}{' '}
+                <span className="font-medium">{t('external_request_editor.tabs.mapping')}</span>{' '}
+                {t('external_request_editor.mapping_hint_suffix')}
               </p>
             </>
           ) : (
             <p className="text-xs text-muted-foreground text-center py-6">
-              Run the request once with the <span className="font-medium">Test</span>{' '}
-              button to see the response here.
+              {t('external_request_editor.empty_response_prefix')}{' '}
+              <span className="font-medium">{t('external_request_editor.test_button')}</span>{' '}
+              {t('external_request_editor.empty_response_suffix')}
             </p>
           )}
         </div>
@@ -292,6 +303,7 @@ function KvBuilder({
   keyPlaceholder?: string;
   valuePlaceholder?: string;
 }) {
+  const { t } = useTranslation();
   const update = (i: number, partial: Partial<KV>) =>
     onChange(rows.map((r, idx) => (idx === i ? { ...r, ...partial } : r)));
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
@@ -331,7 +343,7 @@ function KvBuilder({
         onClick={add}
         className="h-7 text-xs"
       >
-        <Plus className="h-3 w-3 mr-1" /> Add row
+        <Plus className="h-3 w-3 mr-1" /> {t('external_request_editor.add_row')}
       </Button>
     </div>
   );
@@ -344,6 +356,7 @@ function MappingBuilder({
   rows: Mapping[];
   onChange: (next: Mapping[]) => void;
 }) {
+  const { t } = useTranslation();
   const update = (i: number, partial: Partial<Mapping>) =>
     onChange(rows.map((r, idx) => (idx === i ? { ...r, ...partial } : r)));
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
@@ -352,8 +365,9 @@ function MappingBuilder({
   return (
     <div className="space-y-1">
       <p className="text-[10px] text-muted-foreground">
-        JSON path (e.g.{' '}
-        <code className="font-mono">data.user.email</code>) → custom field
+        {t('external_request_editor.json_path_hint_prefix')}{' '}
+        <code className="font-mono">data.user.email</code>{' '}
+        {t('external_request_editor.json_path_hint_suffix')}
       </p>
       {rows.map((r, i) => (
         <div key={i} className="flex items-center gap-1">
@@ -366,7 +380,7 @@ function MappingBuilder({
           <Input
             value={r.field_id}
             onChange={(e) => update(i, { field_id: e.target.value })}
-            placeholder="custom field ID"
+            placeholder={t('external_request_editor.field_id_placeholder')}
             className="h-7 text-xs flex-1"
           />
           <Button
@@ -387,7 +401,7 @@ function MappingBuilder({
         onClick={add}
         className="h-7 text-xs"
       >
-        <Plus className="h-3 w-3 mr-1" /> Add mapping
+        <Plus className="h-3 w-3 mr-1" /> {t('external_request_editor.add_mapping')}
       </Button>
     </div>
   );

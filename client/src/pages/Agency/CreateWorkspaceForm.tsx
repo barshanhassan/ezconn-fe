@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onCancel: () => void;
@@ -86,6 +87,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const dark = mode === 'dark';
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const isEdit = !!initialData;
 
   const userInfo = getUserInfo();
@@ -154,21 +156,21 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
-      toast({ title: isEdit ? "Workspace updated" : "Workspace created successfully" });
+      toast({ title: isEdit ? t("create_workspace_form.updated_toast") : t("create_workspace_form.created_toast") });
       onCancel();
     },
     onError: (err: unknown) => {
       // ApiErrors are already toasted by the global handler in apiRequest.
       // Only show a fallback for unexpected non-API failures (network drops, etc.).
       if (!(err instanceof ApiError)) {
-        toast({ title: "Error", description: "Failed to save workspace.", variant: "destructive" });
+        toast({ title: t("create_workspace_form.error_title"), description: t("create_workspace_form.error_desc"), variant: "destructive" });
       }
     },
   });
 
   const handleSubmit = () => {
     if (!form.name.trim()) {
-      toast({ title: "Name required", description: "Please enter a workspace name.", variant: "destructive" });
+      toast({ title: t("create_workspace_form.name_required_title"), description: t("create_workspace_form.name_required_desc"), variant: "destructive" });
       return;
     }
     saveMutation.mutate();
@@ -203,9 +205,9 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
             <ChevronLeft size={16} />
           </button>
           <div>
-            <h1 className="text-lg font-bold">{isEdit ? `Edit — ${initialData.name}` : "Create Workspace"}</h1>
+            <h1 className="text-lg font-bold">{isEdit ? t("create_workspace_form.edit_title", { name: initialData.name }) : t("create_workspace_form.create_title")}</h1>
             <p className={cn("text-xs mt-0.5", dark ? "text-slate-500" : "text-slate-400")}>
-              {isEdit ? "Update workspace configuration and limits" : "Set up a new client workspace in minutes"}
+              {isEdit ? t("create_workspace_form.edit_desc") : t("create_workspace_form.create_desc")}
             </p>
           </div>
         </div>
@@ -217,7 +219,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-white"
             )}
           >
-            Cancel
+            {t("create_workspace_form.cancel")}
           </button>
           <button
             onClick={handleSubmit}
@@ -230,12 +232,12 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Saving…
+                {t("create_workspace_form.saving")}
               </>
             ) : (
               <>
                 <Check size={15} />
-                {isEdit ? "Save Changes" : "Save"}
+                {isEdit ? t("create_workspace_form.save_changes") : t("create_workspace_form.save")}
               </>
             )}
           </button>
@@ -251,16 +253,16 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               <Building2 size={14} className="text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Basic Information</p>
-              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Workspace name, domain and timezone</p>
+              <p className="text-sm font-semibold">{t("create_workspace_form.basic_info_title")}</p>
+              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.basic_info_desc")}</p>
             </div>
           </div>
           <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Name */}
             <div>
-              <label className={labelCls}>Workspace Name</label>
+              <label className={labelCls}>{t("create_workspace_form.workspace_name_label")}</label>
               <Input
-                placeholder="e.g. Acme Corp"
+                placeholder={t("create_workspace_form.name_placeholder")}
                 maxLength={100}
                 value={form.name}
                 onChange={(e) => {
@@ -274,7 +276,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
             {/* Subdomain */}
             <div>
               <label className={cn(labelCls, "flex items-center gap-1")}>
-                Domain <Info size={11} className="text-slate-400" />
+                {t("create_workspace_form.domain_label")} <Info size={11} className="text-slate-400" />
               </label>
               <div className={cn("flex h-10 rounded-lg overflow-hidden border", isEdit && "opacity-50 cursor-not-allowed", dark ? "border-slate-700" : "border-slate-200")}>
                 <span className={cn(
@@ -284,7 +286,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                   https://
                 </span>
                 <Input
-                  placeholder="acmecorp"
+                  placeholder={t("create_workspace_form.domain_placeholder")}
                   maxLength={30}
                   value={form.subdomain}
                   onChange={(e) => set('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
@@ -301,7 +303,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
             </div>
             {/* Timezone */}
             <div>
-              <label className={labelCls}>Timezone</label>
+              <label className={labelCls}>{t("create_workspace_form.timezone_label")}</label>
               <Select value={form.timezone} onValueChange={(v) => set('timezone', v)}>
                 <SelectTrigger className={selectCls}>
                   <SelectValue />
@@ -316,7 +318,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
             {/* Agent */}
             <div>
               <label className={cn(labelCls, "flex items-center gap-1")}>
-                Assign Agency Agent <Info size={11} className="text-slate-400" />
+                {t("create_workspace_form.assign_agent_label")} <Info size={11} className="text-slate-400" />
               </label>
               <Select value={form.agentId} onValueChange={(v) => set('agentId', v)}>
                 <SelectTrigger className={cn(selectCls, "gap-2")}>
@@ -333,13 +335,13 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                         </span>
                       </>
                     ) : (
-                      <span className={cn("text-sm", dark ? "text-slate-500" : "text-slate-400")}>Select an agent…</span>
+                      <span className={cn("text-sm", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.select_agent_placeholder")}</span>
                     )}
                   </div>
                 </SelectTrigger>
                 <SelectContent className={cn(dark ? "bg-[#1e293b] border-slate-700" : "")}>
                   {members.length === 0 ? (
-                    <div className="px-3 py-2 text-xs text-slate-400">No team members found</div>
+                    <div className="px-3 py-2 text-xs text-slate-400">{t("create_workspace_form.no_members_found")}</div>
                   ) : (
                     members.map((m: any, i: number) => {
                       const fullName = `${m.first_name || ''} ${m.last_name || ''}`.trim();
@@ -372,8 +374,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               <Settings2 size={14} className="text-violet-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Settings & Limits</p>
-              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Control access and resource limits for this workspace</p>
+              <p className="text-sm font-semibold">{t("create_workspace_form.settings_limits_title")}</p>
+              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.settings_limits_desc")}</p>
             </div>
           </div>
           <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -383,8 +385,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 <Globe size={15} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">White Label</p>
-                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Custom branding for workspace</p>
+                <p className="text-sm font-medium">{t("create_workspace_form.white_label_title")}</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.white_label_desc")}</p>
               </div>
               <Switch checked={form.whiteLabel} onCheckedChange={(v) => set('whiteLabel', v)} className={switchCls} />
             </div>
@@ -394,8 +396,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 <Monitor size={15} className="text-emerald-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Allow Support</p>
-                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Organization can log in to workspace</p>
+                <p className="text-sm font-medium">{t("create_workspace_form.allow_support_title")}</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.allow_support_desc")}</p>
               </div>
               <Switch checked={form.allowSupport} onCheckedChange={(v) => set('allowSupport', v)} className={switchCls} />
             </div>
@@ -405,8 +407,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 <Users size={15} className="text-orange-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Limit Contacts</p>
-                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Cap active contact count</p>
+                <p className="text-sm font-medium">{t("create_workspace_form.limit_contacts_title")}</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.limit_contacts_desc")}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {form.limitContacts && (
@@ -434,8 +436,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 <User size={15} className="text-violet-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Limit Agents</p>
-                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Max agents in this workspace</p>
+                <p className="text-sm font-medium">{t("create_workspace_form.limit_agents_title")}</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.limit_agents_desc")}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Input
@@ -462,8 +464,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               <Layers size={14} className="text-emerald-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Channel Connections</p>
-              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Set how many connections each channel can have</p>
+              <p className="text-sm font-semibold">{t("create_workspace_form.channel_connections_title")}</p>
+              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.channel_connections_desc")}</p>
             </div>
           </div>
 
@@ -473,12 +475,12 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               <Bot size={18} className={dark ? "text-slate-300" : "text-slate-600"} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className={cn("text-sm font-medium", dark ? "text-slate-200" : "text-slate-700")}>AI Chat Assistants</p>
+              <p className={cn("text-sm font-medium", dark ? "text-slate-200" : "text-slate-700")}>{t("create_workspace_form.ai_chat_assistants_label")}</p>
             </div>
-            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>Included in plan: 10</span>
-            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>Additional: $4 ea.</span>
+            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.included_in_plan", { count: 10 })}</span>
+            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.additional_price", { price: "$4" })}</span>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-xs font-medium text-blue-500 whitespace-nowrap">Connection limit</span>
+              <span className="text-xs font-medium text-blue-500 whitespace-nowrap">{t("create_workspace_form.connection_limit")}</span>
               <Info size={11} className="text-slate-400" />
               <Input
                 type="number"
@@ -515,10 +517,10 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 <div className="flex-1 min-w-0">
                   <p className={cn("text-sm font-medium", dark ? "text-slate-200" : "text-slate-700")}>{ch.name}</p>
                 </div>
-                <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>First connection: FREE</span>
-                <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>Additional: {ch.price} ea.</span>
+                <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.first_connection_free")}</span>
+                <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.additional_price", { price: ch.price })}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs font-medium text-primary whitespace-nowrap">Connection limit</span>
+                  <span className="text-xs font-medium text-primary whitespace-nowrap">{t("create_workspace_form.connection_limit")}</span>
                   <Info size={11} className="text-slate-400" />
                   <Input
                     type="number"

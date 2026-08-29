@@ -15,6 +15,7 @@
  * automation_steps / automation_step_activities / automation_flow rows.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useRoute } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactFlow, {
@@ -186,6 +187,7 @@ export default function SmartFlowBuilderPage() {
 }
 
 function BuilderInner() {
+  const { t } = useTranslation();
   const [, params] = useRoute("/automations/:id");
   const [, setLocation] = useLocation();
   const automationId = params?.id ?? null;
@@ -417,7 +419,7 @@ function BuilderInner() {
   useEffect(() => {
     if (!automationId || !state.dirty) return;
     if (!hydratedRef.current) return; // don't save before first hydrate
-    const t = setTimeout(async () => {
+    const autoSaveTimer = setTimeout(async () => {
       try {
         actions.setSaving(true);
         // Guard against wiping backend flows: if state.edges is empty
@@ -473,7 +475,7 @@ function BuilderInner() {
         actions.setSaving(false);
       }
     }, 1500);
-    return () => clearTimeout(t);
+    return () => clearTimeout(autoSaveTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.dirty, state.nodes, state.edges, automationId]);
 
@@ -504,7 +506,7 @@ function BuilderInner() {
     onSuccess: () => {
       actions.setSaving(false);
       actions.markClean();
-      toast({ title: "Saved" });
+      toast({ title: t("smart_flow_builder_page.toasts.saved") });
       // Do NOT invalidate — a mid-session refetch would trigger
       // hydrate (guarded to run once) OR briefly race the user's
       // continuing edits. refetchOnMount: 'always' handles the
@@ -512,7 +514,7 @@ function BuilderInner() {
     },
     onError: (err: any) => {
       actions.setSaving(false);
-      toast({ title: "Save failed", description: err?.message, variant: "destructive" });
+      toast({ title: t("smart_flow_builder_page.toasts.save_failed"), description: err?.message, variant: "destructive" });
     },
   });
 
@@ -528,7 +530,7 @@ function BuilderInner() {
     mutationFn: () =>
       apiPost(`/api/automations/${automationId}/publish`, {}),
     onSuccess: () => {
-      toast({ title: "Published" });
+      toast({ title: t("smart_flow_builder_page.toasts.published") });
       actions.setMode("published");
       queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
     },
@@ -538,7 +540,7 @@ function BuilderInner() {
       if (err?.body?.error_code === "loop_detected") {
         setLoopDialogOpen(true);
       } else {
-        toast({ title: "Publish failed", description: err?.message, variant: "destructive" });
+        toast({ title: t("smart_flow_builder_page.toasts.publish_failed"), description: err?.message, variant: "destructive" });
       }
     },
   });
@@ -547,7 +549,7 @@ function BuilderInner() {
     mutationFn: () =>
       apiPost(`/api/automations/${automationId}/unpublish`, {}),
     onSuccess: () => {
-      toast({ title: "Unpublished" });
+      toast({ title: t("smart_flow_builder_page.toasts.unpublished") });
       actions.setMode("draft");
       queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
     },
@@ -557,7 +559,7 @@ function BuilderInner() {
     mutationFn: () =>
       apiPost(`/api/automations/${automationId}/flush-queue`, {}),
     onSuccess: () => {
-      toast({ title: "Queue cleared" });
+      toast({ title: t("smart_flow_builder_page.toasts.queue_cleared") });
       setFlushQueueOpen(false);
     },
   });
@@ -786,7 +788,7 @@ function BuilderInner() {
     <div className="h-screen flex flex-col bg-background">
       {/* ─── Top toolbar ─── */}
       <BuilderToolbar
-        automationName={automation?.automation?.name ?? "Loading…"}
+        automationName={automation?.automation?.name ?? t("smart_flow_builder_page.toolbar.loading_name")}
         onRename={(name) => renameMutation.mutate(name)}
         saving={state.saving || saveMutation.isPending}
         dirty={state.dirty}
@@ -809,7 +811,7 @@ function BuilderInner() {
         }}
         publishing={publishMutation.isPending}
         onUnpublish={() => unpublishMutation.mutate()}
-        onTest={() => toast({ title: "Test run started" })}
+        onTest={() => toast({ title: t("smart_flow_builder_page.toasts.test_run_started") })}
         onFlushQueue={() => setFlushQueueOpen(true)}
         onExit={async () => {
           // Flush any pending edits before leaving so the flow the user
@@ -874,7 +876,7 @@ function BuilderInner() {
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Loading flow…
+              {t("smart_flow_builder_page.canvas.loading_flow")}
             </div>
           ) : (
             <div ref={reactFlowRef} className="absolute inset-0">
@@ -1083,10 +1085,10 @@ function BuilderInner() {
             .then(() => {
               setLoopDialogOpen(false);
               actions.setMode("published");
-              toast({ title: "Published" });
+              toast({ title: t("smart_flow_builder_page.toasts.published") });
               queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             })
-            .catch((err) => toast({ title: "Publish failed", description: err?.message, variant: "destructive" }))
+            .catch((err) => toast({ title: t("smart_flow_builder_page.toasts.publish_failed"), description: err?.message, variant: "destructive" }))
         }
       />
       <QueueContactsModal
@@ -1102,10 +1104,10 @@ function BuilderInner() {
             .then(() => {
               setQueueModalOpen(false);
               actions.setMode("published");
-              toast({ title: "Published" });
+              toast({ title: t("smart_flow_builder_page.toasts.published") });
               queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             })
-            .catch((err) => toast({ title: "Publish failed", description: err?.message, variant: "destructive" }));
+            .catch((err) => toast({ title: t("smart_flow_builder_page.toasts.publish_failed"), description: err?.message, variant: "destructive" }));
         }}
       />
       <ConfirmDeleteStep
@@ -1183,6 +1185,7 @@ function BuilderToolbar({
   onFlushQueue: () => void;
   onExit: () => void;
 }) {
+  const { t } = useTranslation();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(automationName);
 
@@ -1224,11 +1227,11 @@ function BuilderToolbar({
         {saving && (
           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
-            saving…
+            {t("smart_flow_builder_page.toolbar.saving")}
           </span>
         )}
         {dirty && !saving && (
-          <span className="text-[10px] text-amber-600">unsaved</span>
+          <span className="text-[10px] text-amber-600">{t("smart_flow_builder_page.toolbar.unsaved")}</span>
         )}
       </div>
 
@@ -1237,7 +1240,7 @@ function BuilderToolbar({
         size="icon"
         onClick={onUndo}
         disabled={!canUndo}
-        title="Undo"
+        title={t("smart_flow_builder_page.toolbar.undo")}
       >
         <Undo2 className="h-4 w-4" />
       </Button>
@@ -1246,7 +1249,7 @@ function BuilderToolbar({
         size="icon"
         onClick={onRedo}
         disabled={!canRedo}
-        title="Redo"
+        title={t("smart_flow_builder_page.toolbar.redo")}
       >
         <Redo2 className="h-4 w-4" />
       </Button>
@@ -1259,7 +1262,7 @@ function BuilderToolbar({
           className="border-emerald-500 text-emerald-700 hover:bg-emerald-50"
         >
           {publishing && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
-          Publish
+          {t("smart_flow_builder_page.toolbar.publish")}
         </Button>
       ) : (
         <>
@@ -1270,51 +1273,51 @@ function BuilderToolbar({
             variant="ghost"
             size="sm"
             className="text-xs"
-            title="View published flow with run statistics"
+            title={t("smart_flow_builder_page.toolbar.preview_title")}
             disabled
           >
-            Preview
+            {t("smart_flow_builder_page.toolbar.preview")}
           </Button>
           <Button
             variant="outline"
             onClick={onUnpublish}
             className="border-emerald-500 text-emerald-700"
           >
-            Edit draft
+            {t("smart_flow_builder_page.toolbar.edit_draft")}
           </Button>
         </>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" title="More">
+          <Button variant="ghost" size="icon" title={t("smart_flow_builder_page.toolbar.more")}>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onSave} disabled={saving}>
             <Save className="h-3.5 w-3.5 mr-2" />
-            Save now
+            {t("smart_flow_builder_page.toolbar.save_now")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onTest}>
             <Play className="h-3.5 w-3.5 mr-2" />
-            Test run
+            {t("smart_flow_builder_page.toolbar.test_run")}
           </DropdownMenuItem>
           <DropdownMenuItem disabled>
             <span className="text-xs text-muted-foreground">
-              {runs} total runs
+              {t("smart_flow_builder_page.toolbar.total_runs", { count: runs })}
             </span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onFlushQueue}>
             <Trash2 className="h-3.5 w-3.5 mr-2 text-destructive" />
-            Clear queue
+            {t("smart_flow_builder_page.toolbar.clear_queue")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Button variant="outline" onClick={onExit}>
-        Exit
+        {t("smart_flow_builder_page.toolbar.exit")}
       </Button>
     </div>
   );
@@ -1335,6 +1338,7 @@ function CanvasContextMenu({
   onClose: () => void;
   connectedChannelTypes: Set<string>;
 }) {
+  const { t } = useTranslation();
   // Close on outside click — capture-phase so the menu doesn't eat the click
   // that would deselect the canvas.
   useEffect(() => {
@@ -1359,11 +1363,11 @@ function CanvasContextMenu({
   const channelItems = ALL_CHANNELS.filter((it) => connectedChannelTypes.has(it.type));
 
   const featureItems: Array<{ type: string; label: string; icon: React.ReactNode }> = [
-    { type: "randomizer", label: "Randomizer", icon: <Shuffle className="h-3.5 w-3.5 text-indigo-600" /> },
-    { type: "delay", label: "Delay", icon: <Clock className="h-3.5 w-3.5 text-amber-600" /> },
-    { type: "condition", label: "Condition", icon: <GitBranch className="h-3.5 w-3.5 text-teal-600" /> },
-    { type: "action", label: "Action", icon: <Cog className="h-3.5 w-3.5 text-slate-600" /> },
-    { type: "splitter", label: "Splitter", icon: <Shuffle className="h-3.5 w-3.5 text-rose-600" /> },
+    { type: "randomizer", label: t("smart_flow_builder_page.canvas.feature_randomizer"), icon: <Shuffle className="h-3.5 w-3.5 text-indigo-600" /> },
+    { type: "delay", label: t("smart_flow_builder_page.canvas.feature_delay"), icon: <Clock className="h-3.5 w-3.5 text-amber-600" /> },
+    { type: "condition", label: t("smart_flow_builder_page.canvas.feature_condition"), icon: <GitBranch className="h-3.5 w-3.5 text-teal-600" /> },
+    { type: "action", label: t("smart_flow_builder_page.canvas.feature_action"), icon: <Cog className="h-3.5 w-3.5 text-slate-600" /> },
+    { type: "splitter", label: t("smart_flow_builder_page.canvas.feature_splitter"), icon: <Shuffle className="h-3.5 w-3.5 text-rose-600" /> },
   ];
 
   const items = [...channelItems, ...featureItems];
@@ -1393,7 +1397,7 @@ function CanvasContextMenu({
           className="w-full px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/50"
           onClick={onClose}
         >
-          Cancel
+          {t("smart_flow_builder_page.canvas.cancel")}
         </button>
       </div>
     </div>
@@ -1409,6 +1413,7 @@ function AddNodeButton({
   onPick: (type: string) => void;
   connectedChannelTypes: Set<string>;
 }) {
+  const { t } = useTranslation();
   const ALL_CHANNELS: Array<{ type: string; label: string; icon: React.ReactNode; color: string }> = [
     { type: "whatsapp", label: "WhatsApp", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-emerald-600" },
     { type: "telegram", label: "Telegram", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-sky-600" },
@@ -1424,11 +1429,11 @@ function AddNodeButton({
   const channelItems = ALL_CHANNELS.filter((it) => connectedChannelTypes.has(it.type));
 
   const featureItems: Array<{ type: string; label: string; icon: React.ReactNode; color: string }> = [
-    { type: "randomizer", label: "Randomizer", icon: <Shuffle className="h-3.5 w-3.5" />, color: "text-indigo-600" },
-    { type: "delay", label: "Delay", icon: <Clock className="h-3.5 w-3.5" />, color: "text-amber-600" },
-    { type: "condition", label: "Condition", icon: <GitBranch className="h-3.5 w-3.5" />, color: "text-teal-600" },
-    { type: "action", label: "Action", icon: <Cog className="h-3.5 w-3.5" />, color: "text-slate-600" },
-    { type: "splitter", label: "Splitter", icon: <Shuffle className="h-3.5 w-3.5" />, color: "text-rose-600" },
+    { type: "randomizer", label: t("smart_flow_builder_page.canvas.feature_randomizer"), icon: <Shuffle className="h-3.5 w-3.5" />, color: "text-indigo-600" },
+    { type: "delay", label: t("smart_flow_builder_page.canvas.feature_delay"), icon: <Clock className="h-3.5 w-3.5" />, color: "text-amber-600" },
+    { type: "condition", label: t("smart_flow_builder_page.canvas.feature_condition"), icon: <GitBranch className="h-3.5 w-3.5" />, color: "text-teal-600" },
+    { type: "action", label: t("smart_flow_builder_page.canvas.feature_action"), icon: <Cog className="h-3.5 w-3.5" />, color: "text-slate-600" },
+    { type: "splitter", label: t("smart_flow_builder_page.canvas.feature_splitter"), icon: <Shuffle className="h-3.5 w-3.5" />, color: "text-rose-600" },
   ];
 
   return (
@@ -1438,10 +1443,10 @@ function AddNodeButton({
           variant="outline"
           size="sm"
           className="h-8 px-2 shadow-sm bg-white border-emerald-500 text-emerald-700 hover:bg-emerald-50"
-          title="Add step"
+          title={t("smart_flow_builder_page.canvas.add_step")}
         >
           <Plus className="h-3.5 w-3.5 mr-1" />
-          Add
+          {t("smart_flow_builder_page.canvas.add")}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-[70vh] overflow-auto">
@@ -1464,7 +1469,7 @@ function AddNodeButton({
           className="text-muted-foreground"
         >
           <span className="text-slate-500 mr-2 text-xs">→</span>
-          Cancel
+          {t("smart_flow_builder_page.canvas.cancel")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -1490,6 +1495,7 @@ function SidebarPanel({
   onPickAutomation: (opts: { onPick: (a: any) => void; excludeId?: string }) => void;
   onChangeTrigger: (nodeId: string) => void;
 }) {
+  const { t } = useTranslation();
   const type = node.type ?? (node.data?.stepType as string);
   const value = node.data?.value ?? {};
   const setValue = (next: any) => onChange({ value: next });
@@ -1500,8 +1506,8 @@ function SidebarPanel({
   const headerStyle = sidebarHeaderStyle(type);
   const title =
     type === "trigger"
-      ? "Start"
-      : (node.data?.label as string) ?? "Step";
+      ? t("smart_flow_builder_page.sidebar.start")
+      : (node.data?.label as string) ?? t("smart_flow_builder_page.sidebar.step");
 
   // Header buttons sit on a coloured band, so they're rendered as plain
   // <button> elements with transparent backgrounds + white icons to match
@@ -1531,7 +1537,7 @@ function SidebarPanel({
         <button
           type="button"
           onClick={onCommentEdit}
-          title="Comment"
+          title={t("smart_flow_builder_page.sidebar.comment")}
           className={headerBtn}
         >
           <MessageSquare className="h-4 w-4" />
@@ -1540,7 +1546,7 @@ function SidebarPanel({
           <button
             type="button"
             onClick={onDelete}
-            title="Delete step"
+            title={t("smart_flow_builder_page.sidebar.delete_step")}
             className={headerBtn}
           >
             <Trash2 className="h-4 w-4" />
@@ -1549,7 +1555,7 @@ function SidebarPanel({
         <button
           type="button"
           onClick={onClose}
-          title="Close"
+          title={t("smart_flow_builder_page.sidebar.close")}
           className={headerBtn}
         >
           <X className="h-4 w-4" />
@@ -1584,7 +1590,7 @@ function SidebarPanel({
           />
         ) : (
           <p className="text-sm text-muted-foreground">
-            Unknown step type: {type}
+            {t("smart_flow_builder_page.sidebar.unknown_step_type", { type })}
           </p>
         )}
       </ScrollArea>
@@ -1604,6 +1610,7 @@ function ActionStepEditor({
   onChange: (next: any) => void;
   onPickAutomation: (opts: { onPick: (a: any) => void; excludeId?: string }) => void;
 }) {
+  const { t } = useTranslation();
   const slug = value?.slug ?? "";
   const schema = ACTION_SCHEMAS[slug];
 
@@ -1621,7 +1628,7 @@ function ActionStepEditor({
   if (!schema) {
     return (
       <div className="space-y-3">
-        <p className="text-sm font-medium">Pick an action</p>
+        <p className="text-sm font-medium">{t("smart_flow_builder_page.action_editor.pick_action")}</p>
         <ScrollArea className="h-96">
           {grouped.map(([group, items]) => (
             <div key={group} className="mb-3">
@@ -1663,7 +1670,7 @@ function ActionStepEditor({
           size="sm"
           onClick={() => onChange({ slug: undefined })}
         >
-          Change action
+          {t("smart_flow_builder_page.action_editor.change_action")}
         </Button>
       </div>
       <p className="text-sm font-medium">{schema.label}</p>
@@ -1683,7 +1690,7 @@ function ActionStepEditor({
             })
           }
         >
-          Pick automation
+          {t("smart_flow_builder_page.action_editor.pick_automation")}
         </Button>
       )}
     </div>

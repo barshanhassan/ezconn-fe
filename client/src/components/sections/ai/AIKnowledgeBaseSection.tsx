@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +42,7 @@ const mockFetchedPages = [
 ];
 
 export default function AIKnowledgeBaseSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -95,10 +97,10 @@ export default function AIKnowledgeBaseSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/knowledge-bases"] });
-      toast({ title: "Deleted", description: "Knowledge base removed successfully." });
+      toast({ title: t("ai_knowledge_base_section.toast_deleted_title"), description: t("ai_knowledge_base_section.toast_deleted_desc") });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to delete knowledge base.", variant: "destructive" });
+      toast({ title: t("ai_knowledge_base_section.toast_error_title"), description: t("ai_knowledge_base_section.toast_delete_error_desc"), variant: "destructive" });
     },
   });
 
@@ -147,14 +149,14 @@ export default function AIKnowledgeBaseSection() {
 
   const validateForm = () => {
     const newErrors: any = {};
-    if (!formData?.name?.trim()) newErrors.name = "Name is required";
+    if (!formData?.name?.trim()) newErrors.name = t("ai_knowledge_base_section.error_name_required");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
     if (!validateForm()) return;
-    toast({ title: "Saved", description: "Knowledge base saved." });
+    toast({ title: t("ai_knowledge_base_section.toast_saved_title"), description: t("ai_knowledge_base_section.toast_saved_desc") });
     setViewMode("list");
   };
 
@@ -168,7 +170,7 @@ export default function AIKnowledgeBaseSection() {
         web_pages: mockFetchedPages,
         selected_pages: [],
       }));
-      toast({ title: "Pages Fetched", description: `Found ${mockFetchedPages.length} pages from ${formData.website}.` });
+      toast({ title: t("ai_knowledge_base_section.toast_pages_fetched_title"), description: t("ai_knowledge_base_section.toast_pages_fetched_desc", { count: mockFetchedPages.length, site: formData.website }) });
     }, 1500);
   };
 
@@ -191,12 +193,12 @@ export default function AIKnowledgeBaseSection() {
   const handleAddFile = () => {
     const newFile = { id: Date.now(), object_name: `document_${formData.files.length + 1}.pdf` };
     setFormData((prev: any) => ({ ...prev, files: [...prev.files, newFile] }));
-    toast({ title: "File Added", description: `${newFile.object_name} attached.` });
+    toast({ title: t("ai_knowledge_base_section.toast_file_added_title"), description: t("ai_knowledge_base_section.toast_file_added_desc", { name: newFile.object_name }) });
   };
 
   const removeFile = (id: number) => {
     setFormData((prev: any) => ({ ...prev, files: prev.files.filter((f: any) => f.id !== id) }));
-    toast({ title: "File Removed", description: "Document removed." });
+    toast({ title: t("ai_knowledge_base_section.toast_file_removed_title"), description: t("ai_knowledge_base_section.toast_file_removed_desc") });
   };
 
   const confirmDelete = () => {
@@ -230,17 +232,17 @@ export default function AIKnowledgeBaseSection() {
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                  {formData.id ? "Edit Knowledge Base" : "Create Knowledge Base"}
+                  {formData.id ? t("ai_knowledge_base_section.title_edit_kb") : t("ai_knowledge_base_section.title_create_kb")}
                 </h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                  Train your AI agents on your specific business data.
+                  {t("ai_knowledge_base_section.subtitle_edit")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setViewMode("list")} className={outlineBtn}>Cancel</button>
+              <button onClick={() => setViewMode("list")} className={outlineBtn}>{t("ai_knowledge_base_section.btn_cancel")}</button>
               <button onClick={handleSave} className={primaryBtn}>
-                <Sparkles size={12} /> Publish
+                <Sparkles size={12} /> {t("ai_knowledge_base_section.btn_publish")}
               </button>
             </div>
           </div>
@@ -248,11 +250,11 @@ export default function AIKnowledgeBaseSection() {
           <div className="p-8 space-y-6">
             {/* Name */}
             <div className="space-y-2 max-w-md">
-              <FieldLabel dark={dark}>Name</FieldLabel>
+              <FieldLabel dark={dark}>{t("ai_knowledge_base_section.label_name")}</FieldLabel>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. Support Knowledge Base"
+                placeholder={t("ai_knowledge_base_section.placeholder_kb_name")}
                 maxLength={250}
                 className={cn(inputCls, errors.name && "border-rose-500")}
               />
@@ -264,21 +266,21 @@ export default function AIKnowledgeBaseSection() {
             <Tabs value={formData.source_type} onValueChange={(val) => setFormData({ ...formData, source_type: val })}>
               <TabsList className={cn("inline-flex h-auto p-1 rounded-xl border bg-transparent gap-1", softBorder)}>
                 {[
-                  { value: "website", label: "Website", icon: Globe },
-                  { value: "pdf",     label: "PDF",     icon: File },
-                  { value: "text",    label: "Text",    icon: FileText },
-                ].map((t) => (
+                  { value: "website", label: t("ai_knowledge_base_section.tab_website"), icon: Globe },
+                  { value: "pdf",     label: t("ai_knowledge_base_section.tab_pdf"),     icon: File },
+                  { value: "text",    label: t("ai_knowledge_base_section.tab_text"),    icon: FileText },
+                ].map((tab) => (
                   <TabsTrigger
-                    key={t.value}
-                    value={t.value}
+                    key={tab.value}
+                    value={tab.value}
                     className={cn(
                       "h-9 px-5 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-2",
                       "data-[state=active]:!bg-primary data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-primary/20",
                       dark ? "text-slate-400" : "text-slate-500"
                     )}
                   >
-                    <t.icon size={12} />
-                    {t.label}
+                    <tab.icon size={12} />
+                    {tab.label}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -286,7 +288,7 @@ export default function AIKnowledgeBaseSection() {
               {/* WEBSITE */}
               <TabsContent value="website" className="mt-6 space-y-5 outline-none">
                 <div className="space-y-2">
-                  <FieldLabel dark={dark}>Website URL</FieldLabel>
+                  <FieldLabel dark={dark}>{t("ai_knowledge_base_section.label_website_url")}</FieldLabel>
                   <div className="flex gap-2">
                     <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all flex-1",
                       dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
@@ -295,7 +297,7 @@ export default function AIKnowledgeBaseSection() {
                       <input
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        placeholder="yoursite.com"
+                        placeholder={t("ai_knowledge_base_section.placeholder_yoursite")}
                         className={cn("bg-transparent h-full text-[13px] font-bold outline-none px-3 flex-1 min-w-0", text)}
                       />
                     </div>
@@ -305,7 +307,7 @@ export default function AIKnowledgeBaseSection() {
                       className={primaryOutlineBtn}
                     >
                       {fetching ? <Loader2 size={12} className="animate-spin" /> : <Globe size={12} />}
-                      {fetching ? "Fetching..." : "Fetch Pages"}
+                      {fetching ? t("ai_knowledge_base_section.btn_fetching") : t("ai_knowledge_base_section.btn_fetch_pages")}
                     </button>
                   </div>
                 </div>
@@ -322,13 +324,13 @@ export default function AIKnowledgeBaseSection() {
                             onCheckedChange={(c) => toggleAllPages(c as boolean)}
                           />
                           <label htmlFor="select-all" className={cn("text-[11px] font-semibold cursor-pointer", text)}>
-                            Select All
+                            {t("ai_knowledge_base_section.label_select_all")}
                           </label>
                         </div>
                         <div className="relative w-full sm:w-auto">
                           <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <Input
-                            placeholder="Search URLs..."
+                            placeholder={t("ai_knowledge_base_section.placeholder_search_urls")}
                             value={searchUrl}
                             onChange={(e) => setSearchUrl(e.target.value)}
                             className={cn(inputCls, "h-9 pl-8 w-full sm:w-[220px] text-[12px]")}
@@ -337,10 +339,10 @@ export default function AIKnowledgeBaseSection() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={cn("h-6 px-2.5 rounded-md text-[10px] font-semibold", dark ? "border-slate-800 bg-slate-900 text-slate-300" : "border-slate-200 bg-white text-slate-600")}>
-                          Total: {formData.web_pages.length}
+                          {t("ai_knowledge_base_section.badge_total", { count: formData.web_pages.length })}
                         </Badge>
                         <Badge className="h-6 px-2.5 rounded-md bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
-                          Selected: {formData.selected_pages.length}
+                          {t("ai_knowledge_base_section.badge_selected", { count: formData.selected_pages.length })}
                         </Badge>
                       </div>
                     </div>
@@ -373,7 +375,7 @@ export default function AIKnowledgeBaseSection() {
                       })}
                       {filteredPages.length === 0 && (
                         <div className={cn("p-8 text-center text-[11px] font-bold opacity-60", sub)}>
-                          No pages found matching your search.
+                          {t("ai_knowledge_base_section.no_pages_found")}
                         </div>
                       )}
                     </div>
@@ -384,8 +386,8 @@ export default function AIKnowledgeBaseSection() {
               {/* PDF */}
               <TabsContent value="pdf" className="mt-6 space-y-5 outline-none">
                 <div className="flex items-center justify-between">
-                  <FieldLabel dark={dark}>Assistant Files (PDF only)</FieldLabel>
-                  <span className={cn("text-[10px] font-bold opacity-60", sub)}>Max 10 files</span>
+                  <FieldLabel dark={dark}>{t("ai_knowledge_base_section.label_assistant_files")}</FieldLabel>
+                  <span className={cn("text-[10px] font-bold opacity-60", sub)}>{t("ai_knowledge_base_section.max_files_hint")}</span>
                 </div>
 
                 <button
@@ -401,13 +403,13 @@ export default function AIKnowledgeBaseSection() {
                   <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                     <Upload size={18} />
                   </div>
-                  <p className="text-[13px] font-semibold text-primary">Click to add PDF files</p>
-                  <p className={cn("text-[10px] font-medium opacity-60", sub)}>Upload documents from your gallery</p>
+                  <p className="text-[13px] font-semibold text-primary">{t("ai_knowledge_base_section.btn_add_pdf")}</p>
+                  <p className={cn("text-[10px] font-medium opacity-60", sub)}>{t("ai_knowledge_base_section.upload_docs_hint")}</p>
                 </button>
 
                 {formData.files.length > 0 && (
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Attached Files</FieldLabel>
+                    <FieldLabel dark={dark}>{t("ai_knowledge_base_section.label_attached_files")}</FieldLabel>
                     <div className="space-y-2">
                       {formData.files.map((file: any) => (
                         <div
@@ -435,12 +437,12 @@ export default function AIKnowledgeBaseSection() {
 
               {/* TEXT */}
               <TabsContent value="text" className="mt-6 space-y-2 outline-none">
-                <FieldLabel dark={dark}>Text Content</FieldLabel>
+                <FieldLabel dark={dark}>{t("ai_knowledge_base_section.label_text_content")}</FieldLabel>
                 <Textarea
                   value={formData.website_content}
                   onChange={(e) => setFormData({ ...formData, website_content: e.target.value })}
                   rows={12}
-                  placeholder="Paste your text content here to train the AI..."
+                  placeholder={t("ai_knowledge_base_section.placeholder_text_content")}
                   className={cn(
                     "rounded-xl text-[12px] font-mono leading-relaxed resize-none p-4 transition-all",
                     "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
@@ -448,7 +450,7 @@ export default function AIKnowledgeBaseSection() {
                   )}
                 />
                 <p className={cn("text-[10px] font-medium opacity-60", sub)}>
-                  Enter raw text content that you want the AI knowledge base to learn from.
+                  {t("ai_knowledge_base_section.text_content_hint")}
                 </p>
               </TabsContent>
             </Tabs>
@@ -456,9 +458,9 @@ export default function AIKnowledgeBaseSection() {
 
           {/* Footer */}
           <div className={cn("px-6 py-4 border-t flex justify-end gap-2", border, softBg)}>
-            <button onClick={() => setViewMode("list")} className={outlineBtn}>Cancel</button>
+            <button onClick={() => setViewMode("list")} className={outlineBtn}>{t("ai_knowledge_base_section.btn_cancel")}</button>
             <button onClick={handleSave} className={primaryBtn}>
-              <Sparkles size={12} /> Publish
+              <Sparkles size={12} /> {t("ai_knowledge_base_section.btn_publish")}
             </button>
           </div>
         </CardContent>
@@ -478,15 +480,15 @@ export default function AIKnowledgeBaseSection() {
                 <Book className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Knowledge base</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("ai_knowledge_base_section.header_title_list")}</h1>
                 <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                  Manage knowledge bases for your AI agents.
+                  {t("ai_knowledge_base_section.header_subtitle_list")}
                 </p>
               </div>
             </div>
             {canCreateKB && (
               <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
-                <Plus size={12} /> Add Knowledge Base
+                <Plus size={12} /> {t("ai_knowledge_base_section.btn_add_kb")}
               </button>
             )}
           </div>
@@ -499,16 +501,11 @@ export default function AIKnowledgeBaseSection() {
                   <Book className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-1.5 max-w-sm">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No knowledge bases yet</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_knowledge_base_section.empty_title")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                    Create a knowledge base to train your AI agents on your specific business data.
+                    {t("ai_knowledge_base_section.empty_desc")}
                   </p>
                 </div>
-                {canCreateKB && (
-                  <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Create Knowledge Base
-                  </button>
-                )}
               </div>
             ) : (
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
@@ -516,10 +513,10 @@ export default function AIKnowledgeBaseSection() {
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Name</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Status</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Type</th>
-                      <th className={cn("py-4 px-6 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_knowledge_base_section.col_name")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_knowledge_base_section.col_status")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_knowledge_base_section.col_type")}</th>
+                      <th className={cn("py-4 px-6 text-right text-[11px] font-semibold", sub)}>{t("ai_knowledge_base_section.col_actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -578,19 +575,19 @@ export default function AIKnowledgeBaseSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Knowledge Base?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_knowledge_base_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">"{kbToDelete?.name}"</span> will be permanently removed. This action cannot be undone.
+                  <span className="text-rose-500 font-black">"{kbToDelete?.name}"</span> {t("ai_knowledge_base_section.delete_dialog_desc_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_knowledge_base_section.btn_cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("ai_knowledge_base_section.btn_delete")}
               </AlertDialogAction>
             </div>
           </div>

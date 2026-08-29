@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Film, Folder, Plus, Search, Grid, List, FileText,
   Image as ImageIcon, Mic, Video, UploadCloud, Check, X,
@@ -42,6 +43,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
   const border     = dark ? "border-slate-800" : "border-slate-200";
@@ -106,20 +108,20 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     }
     return { message: err?.message };
   };
-  const errorToast = (err: any, fallbackTitle = "Error") => {
+  const errorToast = (err: any, fallbackTitle = t("media_gallery_section.error_title_default")) => {
     const { code, message } = extractError(err);
     const titleByCode: Record<string, string> = {
-      ACCESS_DENIED: "Belongs to another agent",
-      SIZE_EXCEEDED: "File too large",
-      COMPRESSED_BLOCKED: "Compressed files not allowed",
-      INVALID_FILE_TYPE: "Invalid file type",
-      BATCH_LIMIT: "Too many files",
-      NAME_TOO_LONG: "Name too long",
-      NAME_REQUIRED: "Name is required",
+      ACCESS_DENIED: t("media_gallery_section.error_access_denied"),
+      SIZE_EXCEEDED: t("media_gallery_section.error_size_exceeded"),
+      COMPRESSED_BLOCKED: t("media_gallery_section.error_compressed_blocked"),
+      INVALID_FILE_TYPE: t("media_gallery_section.error_invalid_file_type"),
+      BATCH_LIMIT: t("media_gallery_section.error_batch_limit"),
+      NAME_TOO_LONG: t("media_gallery_section.error_name_too_long"),
+      NAME_REQUIRED: t("media_gallery_section.error_name_required"),
     };
     toast({
       title: code && titleByCode[code] ? titleByCode[code] : fallbackTitle,
-      description: message ?? "Something went wrong.",
+      description: message ?? t("media_gallery_section.error_message_default"),
       variant: "destructive",
     });
   };
@@ -128,9 +130,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/gallery/media/${id}`); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
-      toast({ title: "Deleted", description: "File removed." });
+      toast({ title: t("media_gallery_section.deleted_title"), description: t("media_gallery_section.deleted_description") });
     },
-    onError: (err) => errorToast(err, "Delete failed"),
+    onError: (err) => errorToast(err, t("media_gallery_section.delete_failed_title")),
   });
 
   const renameMutation = useMutation({
@@ -139,9 +141,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
-      toast({ title: "Renamed", description: "File name updated." });
+      toast({ title: t("media_gallery_section.renamed_title"), description: t("media_gallery_section.renamed_description") });
     },
-    onError: (err) => errorToast(err, "Rename failed"),
+    onError: (err) => errorToast(err, t("media_gallery_section.rename_failed_title")),
   });
 
   const createFolderMutation = useMutation({
@@ -150,9 +152,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
-      toast({ title: "Created", description: "Folder created." });
+      toast({ title: t("media_gallery_section.created_title"), description: t("media_gallery_section.created_description") });
     },
-    onError: (err) => errorToast(err, "Folder create failed"),
+    onError: (err) => errorToast(err, t("media_gallery_section.folder_create_failed_title")),
   });
 
   const uploadMutation = useMutation({
@@ -163,9 +165,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
-      toast({ title: "Uploaded", description: "Files uploaded successfully." });
+      toast({ title: t("media_gallery_section.uploaded_title"), description: t("media_gallery_section.uploaded_description") });
     },
-    onError: (err) => errorToast(err, "Upload failed"),
+    onError: (err) => errorToast(err, t("media_gallery_section.upload_failed_title")),
     onSettled: () => {
       setUploadProgress(0);
       setUploadFileCount(0);
@@ -215,14 +217,22 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     txt: "DOCUMENT", odt: "DOCUMENT", html: "DOCUMENT", htm: "DOCUMENT",
   };
 
+  const KIND_LABEL: Record<string, string> = {
+    IMAGE: t("media_gallery_section.kind_image"),
+    VIDEO: t("media_gallery_section.kind_video"),
+    AUDIO: t("media_gallery_section.kind_audio"),
+    DOCUMENT: t("media_gallery_section.kind_document"),
+    FILE: t("media_gallery_section.kind_file"),
+  };
+
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const fileArr = Array.from(files);
 
     if (fileArr.length > MAX_FILES) {
       toast({
-        title: "Too many files",
-        description: `Max ${MAX_FILES} files per upload.`,
+        title: t("media_gallery_section.error_batch_limit"),
+        description: t("media_gallery_section.too_many_files_description", { max: MAX_FILES }),
         variant: "destructive",
       });
       return;
@@ -231,23 +241,23 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     for (const file of fileArr) {
       const ext = (file.name.split(".").pop() ?? "").toLowerCase();
       if (!ext) {
-        toast({ title: "Invalid file type", description: `"${file.name}" has no extension.`, variant: "destructive" });
+        toast({ title: t("media_gallery_section.error_invalid_file_type"), description: t("media_gallery_section.no_extension_description", { name: file.name }), variant: "destructive" });
         return;
       }
       if (COMPRESSED.has(ext)) {
-        toast({ title: "Compressed files not allowed", description: `${file.name} (.${ext}) blocked.`, variant: "destructive" });
+        toast({ title: t("media_gallery_section.error_compressed_blocked"), description: t("media_gallery_section.compressed_blocked_description", { name: file.name, ext }), variant: "destructive" });
         return;
       }
       const kind = EXT_KIND[ext];
       if (!kind) {
-        toast({ title: "Invalid file type", description: `${file.name} (.${ext}) is not supported.`, variant: "destructive" });
+        toast({ title: t("media_gallery_section.error_invalid_file_type"), description: t("media_gallery_section.unsupported_file_description", { name: file.name, ext }), variant: "destructive" });
         return;
       }
       const cap = SIZE_MB[kind];
       if (file.size / (1024 * 1024) > cap) {
         toast({
-          title: "File too large",
-          description: `${file.name} exceeds the ${cap} MB limit for ${kind.toLowerCase()} files.`,
+          title: t("media_gallery_section.error_size_exceeded"),
+          description: t("media_gallery_section.file_too_large_description", { name: file.name, cap, kind: KIND_LABEL[kind] }),
           variant: "destructive",
         });
         return;
@@ -312,14 +322,14 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
               <Film className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Media gallery</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("media_gallery_section.title")}</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                Efficiently manage and organize the workspace media right here.
+                {t("media_gallery_section.subtitle")}
               </p>
             </div>
           </div>
           <button onClick={() => setUploadDialogOpen(true)} className={primaryBtn}>
-            <Upload size={12} /> Upload
+            <Upload size={12} /> {t("media_gallery_section.upload")}
           </button>
         </div>
 
@@ -328,12 +338,12 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
             <div className="flex items-center gap-3 flex-wrap">
               {parentId ? (
                 <button onClick={() => setParentId(null)} className={outlineBtn}>
-                  <ArrowLeft size={12} /> Back
+                  <ArrowLeft size={12} /> {t("media_gallery_section.back")}
                 </button>
               ) : (
                 <div className="flex items-center gap-2 px-3 h-10">
                   <Folder size={14} className="text-primary" />
-                  <span className={cn("text-[12px] font-semibold", sub)}>Root</span>
+                  <span className={cn("text-[12px] font-semibold", sub)}>{t("media_gallery_section.root")}</span>
                 </div>
               )}
 
@@ -342,7 +352,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   <Input
                     autoFocus
                     value={newFolderName}
-                    placeholder="Folder name..."
+                    placeholder={t("media_gallery_section.folder_name_placeholder")}
                     maxLength={100}
                     className={cn(inputCls, "h-10 w-44")}
                     onChange={(e) => setNewFolderName(e.target.value.slice(0, 100))}
@@ -378,7 +388,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 </div>
               ) : (
                 <button onClick={() => setIsCreatingFolder(true)} className={outlineBtn}>
-                  <Plus size={12} /> New Folder
+                  <Plus size={12} /> {t("media_gallery_section.new_folder")}
                 </button>
               )}
             </div>
@@ -387,7 +397,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                 <Input
-                  placeholder="Search files..."
+                  placeholder={t("media_gallery_section.search_placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={cn(inputCls, "pl-9 h-10 w-56")}
@@ -419,12 +429,19 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
           {/* Filter Pills */}
           <div className={cn("px-6 py-3 border-b flex items-center gap-2 overflow-x-auto", softBorder)}>
             <Filter size={12} className="text-slate-400 shrink-0" />
-            {["All files", "Folders", "Images", "Videos", "Audios", "Files"].map((f) => {
-              const active = filter === f;
+            {[
+              { value: "All files", label: t("media_gallery_section.filter_all_files") },
+              { value: "Folders", label: t("media_gallery_section.filter_folders") },
+              { value: "Images", label: t("media_gallery_section.filter_images") },
+              { value: "Videos", label: t("media_gallery_section.filter_videos") },
+              { value: "Audios", label: t("media_gallery_section.filter_audios") },
+              { value: "Files", label: t("media_gallery_section.filter_files") },
+            ].map((f) => {
+              const active = filter === f.value;
               return (
                 <button
-                  key={f}
-                  onClick={() => setFilter(f)}
+                  key={f.value}
+                  onClick={() => setFilter(f.value)}
                   className={cn(
                     "h-8 px-3 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap",
                     active
@@ -432,7 +449,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                       : dark ? "text-slate-500 hover:text-primary hover:bg-slate-900/40" : "text-slate-500 hover:text-primary hover:bg-slate-100/60"
                   )}
                 >
-                  {f}
+                  {f.label}
                 </button>
               );
             })}
@@ -443,7 +460,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3">
                 <Loader2 className="w-7 h-7 animate-spin text-primary" />
-                <p className={cn("text-[11px] font-bold opacity-60", sub)}>Loading files...</p>
+                <p className={cn("text-[11px] font-bold opacity-60", sub)}>{t("media_gallery_section.loading_files")}</p>
               </div>
             ) : filteredMedia.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
@@ -451,13 +468,13 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   <Film className="w-6 h-6 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className={cn("text-[14px] font-semibold", text)}>No Files Found</p>
+                  <p className={cn("text-[14px] font-semibold", text)}>{t("media_gallery_section.no_files_found_title")}</p>
                   <p className={cn("text-[11px] font-medium opacity-60 max-w-xs", sub)}>
-                    Upload your first file to get started.
+                    {t("media_gallery_section.no_files_found_subtitle")}
                   </p>
                 </div>
                 <button onClick={() => setUploadDialogOpen(true)} className={primaryBtn}>
-                  <Upload size={12} /> Upload File
+                  <Upload size={12} /> {t("media_gallery_section.upload_file")}
                 </button>
               </div>
             ) : viewMode === "grid" ? (
@@ -521,7 +538,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigator.clipboard.writeText(item.url);
-                                toast({ title: "Copied", description: "Link copied to clipboard." });
+                                toast({ title: t("media_gallery_section.copied_title"), description: t("media_gallery_section.copied_description") });
                               }}
                               className="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center hover:scale-110 transition-transform shadow-md"
                             >
@@ -547,13 +564,13 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                                 setRenameValue(item.name);
                               }}
                             >
-                              <Pencil size={12} /> Rename
+                              <Pencil size={12} /> {t("media_gallery_section.rename")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                               onClick={(e) => { e.stopPropagation(); setDeleteId(item.id); }}
                             >
-                              <Trash2 size={12} /> Delete
+                              <Trash2 size={12} /> {t("media_gallery_section.delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -577,10 +594,10 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 <Table>
                   <TableHeader>
                     <TableRow className={cn("border-b hover:bg-transparent", softBorder)}>
-                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Name</TableHead>
-                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Type</TableHead>
-                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>Size</TableHead>
-                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold text-right", sub)}>Actions</TableHead>
+                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("media_gallery_section.table_name")}</TableHead>
+                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("media_gallery_section.table_type")}</TableHead>
+                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold", sub)}>{t("media_gallery_section.table_size")}</TableHead>
+                      <TableHead className={cn("py-4 px-6 text-[11px] font-semibold text-right", sub)}>{t("media_gallery_section.table_actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -662,8 +679,8 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 <Pencil size={16} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Rename File</h2>
-                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>Update the file name</p>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("media_gallery_section.rename_dialog_title")}</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>{t("media_gallery_section.rename_dialog_subtitle")}</p>
               </div>
             </div>
             <Input
@@ -674,7 +691,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
               className={inputCls}
             />
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("media_gallery_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   if (renamingId && renameValue.trim()) renameMutation.mutate({ id: renamingId, newName: renameValue.trim() });
@@ -682,7 +699,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 }}
                 className={primaryBtn}
               >
-                Save
+                {t("media_gallery_section.save")}
               </AlertDialogAction>
             </div>
           </div>
@@ -698,19 +715,19 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete File?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("media_gallery_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  This action cannot be undone. The file will be permanently removed.
+                  {t("media_gallery_section.delete_dialog_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("media_gallery_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); setDeleteId(null); }}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("media_gallery_section.delete")}
               </AlertDialogAction>
             </div>
           </div>
@@ -734,12 +751,12 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 </div>
                 <div>
                   <h2 className={cn("text-[14px] font-semibold", text)}>
-                    {uploadMutation.isPending ? "Uploading..." : "Upload Files"}
+                    {uploadMutation.isPending ? t("media_gallery_section.upload_dialog_title_uploading") : t("media_gallery_section.upload_dialog_title_default")}
                   </h2>
                   <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
                     {uploadMutation.isPending
-                      ? `${uploadFileCount} file${uploadFileCount > 1 ? "s" : ""} • ${(uploadTotalBytes / (1024 * 1024)).toFixed(1)} MB total`
-                      : "Drag and drop or browse"}
+                      ? `${t("media_gallery_section.file_count", { count: uploadFileCount })} • ${t("media_gallery_section.mb_total", { mb: (uploadTotalBytes / (1024 * 1024)).toFixed(1) })}`
+                      : t("media_gallery_section.upload_dialog_subtitle_default")}
                   </p>
                 </div>
               </div>
@@ -759,7 +776,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 <div className="w-full space-y-2">
                   <div className="flex items-center justify-between">
                     <span className={cn("text-[12px] font-semibold", text)}>
-                      {uploadProgress < 100 ? "Uploading" : "Finalizing"}
+                      {uploadProgress < 100 ? t("media_gallery_section.uploading_status") : t("media_gallery_section.finalizing_status")}
                     </span>
                     <span className={cn("text-[13px] font-black", "text-primary")}>{uploadProgress}%</span>
                   </div>
@@ -771,8 +788,8 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   </div>
                   <p className={cn("text-[10px] font-medium opacity-60", sub)}>
                     {uploadProgress < 100
-                      ? `${((uploadProgress / 100) * uploadTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${(uploadTotalBytes / (1024 * 1024)).toFixed(1)} MB`
-                      : "Saving to storage..."}
+                      ? t("media_gallery_section.progress_bytes", { done: ((uploadProgress / 100) * uploadTotalBytes / (1024 * 1024)).toFixed(1), total: (uploadTotalBytes / (1024 * 1024)).toFixed(1) })
+                      : t("media_gallery_section.saving_to_storage")}
                   </p>
                 </div>
               </div>
@@ -792,9 +809,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   <Upload size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className={cn("text-[13px] font-semibold", text)}>Drop files here</p>
+                  <p className={cn("text-[13px] font-semibold", text)}>{t("media_gallery_section.drop_files_here")}</p>
                   <p className={cn("text-[11px] font-medium opacity-60 mt-1", sub)}>
-                    or <span className="text-primary font-black">browse</span> to choose files
+                    {t("media_gallery_section.browse_prefix")} <span className="text-primary font-black">{t("media_gallery_section.browse_word")}</span> {t("media_gallery_section.browse_suffix")}
                   </p>
                 </div>
                 <input
@@ -811,10 +828,10 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
                 <div className="text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed space-y-0.5">
                   <p>
-                    Up to <span className="font-black">10 files</span> per upload. Compressed files (.zip, .rar, .7z) are blocked.
+                    {t("media_gallery_section.limits_prefix")} <span className="font-black">{t("media_gallery_section.limits_files_bold")}</span> {t("media_gallery_section.limits_suffix")}
                   </p>
                   <p>
-                    Image <span className="font-black">10 MB</span> · Video <span className="font-black">15 MB</span> · Audio <span className="font-black">10 MB</span> · Document <span className="font-black">10 MB</span>
+                    {t("media_gallery_section.limits_image")} <span className="font-black">10 MB</span> · {t("media_gallery_section.limits_video")} <span className="font-black">15 MB</span> · {t("media_gallery_section.limits_audio")} <span className="font-black">10 MB</span> · {t("media_gallery_section.limits_document")} <span className="font-black">10 MB</span>
                   </p>
                 </div>
               </div>

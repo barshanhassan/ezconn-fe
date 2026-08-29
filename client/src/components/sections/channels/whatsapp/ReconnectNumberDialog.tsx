@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Info, RotateCw } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +32,7 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const [confirmation, setConfirmation] = useState(false);
   const [guardOk, setGuardOk] = useState(false);
@@ -51,7 +53,7 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
     },
     onSuccess: (data: any) => {
       toast({
-        title: data?.success ? "Reconnect requested" : "Could not reconnect",
+        title: data?.success ? t("reconnect_number_dialog.reconnect_requested") : t("reconnect_number_dialog.could_not_reconnect"),
         description: data?.message ?? "",
         variant: data?.success ? "default" : "destructive",
       });
@@ -72,7 +74,7 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
               <Info size={32} />
             </div>
             <div className={cn("text-base font-black tracking-tight", dark ? "text-white" : "text-slate-900")}>
-              Refresh number status
+              {t("reconnect_number_dialog.title")}
             </div>
             <div className={cn("mt-2 text-[13px] font-mono", dark ? "text-emerald-400" : "text-emerald-600")}>
               {number.display_phone_number}
@@ -80,27 +82,25 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
           </div>
 
           <p className={cn("text-[12px] font-bold leading-relaxed", dark ? "text-orange-400" : "text-orange-600")}>
-            Before clicking Refresh, please make sure you've checked the items below directly on Meta Business
-            Manager — otherwise the same blocked / locked state will return.
+            {t("reconnect_number_dialog.refresh_warning")}
           </p>
 
           <ul className={cn("text-[12px] leading-relaxed space-y-2 list-disc list-inside", dark ? "text-slate-300" : "text-slate-700")}>
             <li>
-              If your number status is <strong>Blocked</strong>, first check your WhatsApp Account & Phone number on
-              your{" "}
+              {t("reconnect_number_dialog.bullet1_prefix")} <strong>{t("reconnect_number_dialog.blocked")}</strong>
+              {t("reconnect_number_dialog.bullet1_middle")}{" "}
               <a
                 href="https://business.facebook.com/latest/settings/whatsapp_account"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary font-black underline-offset-2 hover:underline"
               >
-                Meta Business Account
+                {t("reconnect_number_dialog.meta_business_account")}
               </a>{" "}
-              and ensure a valid payment method is attached.
+              {t("reconnect_number_dialog.bullet1_suffix")}
             </li>
             <li>
-              If the number was disconnected during a payment failure, settle the dispute on Meta's side first, then
-              come back and refresh — otherwise the lock will re-apply.
+              {t("reconnect_number_dialog.bullet2")}
             </li>
           </ul>
 
@@ -116,8 +116,7 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
                 htmlFor="reconnect_confirm"
                 className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}
               >
-                I confirm I've reviewed this number on Meta Business Manager and resolved any payment / verification
-                issues before refreshing.
+                {t("reconnect_number_dialog.confirm_label")}
               </label>
             </div>
             <DeletionGuard phrase="REFRESH" onValid={setGuardOk} />
@@ -131,7 +130,7 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
                 dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400",
               )}
             >
-              Cancel
+              {t("reconnect_number_dialog.cancel")}
             </button>
             <button
               onClick={() => mutation.mutate()}
@@ -139,7 +138,7 @@ export default function ReconnectNumberDialog({ open, number, onClose }: Props) 
               className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-2 bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <RotateCw size={12} className={mutation.isPending ? "animate-spin" : ""} />{" "}
-              {mutation.isPending ? "Refreshing…" : "Refresh"}
+              {mutation.isPending ? t("reconnect_number_dialog.refreshing") : t("reconnect_number_dialog.refresh")}
             </button>
           </div>
         </div>

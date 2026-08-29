@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
 import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code } from "lucide-react";
 import data from '@emoji-mart/data';
@@ -85,11 +86,11 @@ const WA_DOC_LIMIT = 100 * 1024 * 1024; // 100 MB for documents
 // ALL/AUTOMATION/INBOX map to communication_mode; NOTE shows note_action/note
 // rows; OLD_DATA shows messages older than 3 months (replyagent archive view).
 const CHAT_MODES = [
-  { value: "ALL", label: "Smart flow & Inbox" },
-  { value: "AUTOMATION", label: "Smart flow messages" },
-  { value: "INBOX", label: "Inbox messages" },
-  { value: "NOTE", label: "Note messages" },
-  { value: "OLD_DATA", label: "Older than 3 months" },
+  { value: "ALL", labelKey: "conversations_inbox.chat_modes.all" },
+  { value: "AUTOMATION", labelKey: "conversations_inbox.chat_modes.automation" },
+  { value: "INBOX", labelKey: "conversations_inbox.chat_modes.inbox" },
+  { value: "NOTE", labelKey: "conversations_inbox.chat_modes.note" },
+  { value: "OLD_DATA", labelKey: "conversations_inbox.chat_modes.old_data" },
 ] as const;
 
 // Target languages for the AI translate picker (replyagent language list).
@@ -254,6 +255,7 @@ const getInitials = (name?: string | null): string => {
 // (replyagent TemplatePreview). Parses Meta components (HEADER/BODY/FOOTER/
 // BUTTONS) and substitutes the sent {{n}} body variables.
 const TemplateMessageCard: React.FC<{ template: { name: string; components: any[]; params: any[] } }> = ({ template }) => {
+  const { t } = useTranslation();
   const components = Array.isArray(template.components) ? template.components : [];
   const header = components.find((c: any) => c.type === "HEADER");
   const body = components.find((c: any) => c.type === "BODY");
@@ -270,7 +272,7 @@ const TemplateMessageCard: React.FC<{ template: { name: string; components: any[
   return (
     <div className="rounded-md border border-black/10 dark:border-white/10 bg-white/60 dark:bg-black/20 overflow-hidden min-w-[12rem] max-w-[20rem]">
       <div className="px-2 py-1 bg-black/5 dark:bg-white/5 text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-        <FileText size={11} /> Template{template.name ? ` · ${template.name}` : ""}
+        <FileText size={11} /> {t("conversations_inbox.template_card.label")}{template.name ? ` · ${template.name}` : ""}
       </div>
       {header?.text && <div className="px-3 pt-2 text-sm font-semibold">{header.text}</div>}
       {bodyText && <div className="px-3 py-2 text-sm whitespace-pre-wrap">{bodyText}</div>}
@@ -293,26 +295,28 @@ const TemplateMessageCard: React.FC<{ template: { name: string; components: any[
 //   read      -> double blue ✓✓
 //   failed    -> red ⚠ (with tooltip)
 const MessageStatusTick: React.FC<{ status: MessageStatus }> = ({ status }) => {
+  const { t } = useTranslation();
   const size = 12;
   if (status === 'pending') {
-    return <Clock size={size} className="text-gray-400 dark:text-slate-500" aria-label="Sending" />;
+    return <Clock size={size} className="text-gray-400 dark:text-slate-500" aria-label={t("conversations_inbox.messages.sending")} />;
   }
   if (status === 'sent') {
-    return <Check size={size} className="text-gray-500 dark:text-slate-400" aria-label="Sent" />;
+    return <Check size={size} className="text-gray-500 dark:text-slate-400" aria-label={t("conversations_inbox.messages.sent")} />;
   }
   if (status === 'delivered') {
-    return <CheckCheck size={size} className="text-gray-500 dark:text-slate-400" aria-label="Delivered" />;
+    return <CheckCheck size={size} className="text-gray-500 dark:text-slate-400" aria-label={t("conversations_inbox.messages.delivered")} />;
   }
   if (status === 'read') {
-    return <CheckCheck size={size} className="text-blue-500 dark:text-blue-400" aria-label="Read" />;
+    return <CheckCheck size={size} className="text-blue-500 dark:text-blue-400" aria-label={t("conversations_inbox.messages.read")} />;
   }
   if (status === 'failed') {
-    return <AlertCircle size={size} className="text-red-500" aria-label="Failed to send" />;
+    return <AlertCircle size={size} className="text-red-500" aria-label={t("conversations_inbox.messages.failed_to_send")} />;
   }
   return null;
 };
 
 export default function ConversationsInbox() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const workspaceTz = useWorkspaceTimezone();
@@ -402,7 +406,7 @@ export default function ConversationsInbox() {
       }
 
       if (msg?.direction !== 'OUTGOING') {
-        toast({ description: msg?.text || "New message received" });
+        toast({ description: msg?.text || t("conversations_inbox.toasts.new_message_received") });
       }
     };
 
@@ -528,7 +532,7 @@ export default function ConversationsInbox() {
           if (n?.id == null) continue;
           const label = n.verified_name
             ? `${n.verified_name} (${n.display_phone_number ?? n.phone_number ?? ""})`
-            : (n.display_phone_number ?? n.phone_number ?? `Number ${n.id}`);
+            : (n.display_phone_number ?? n.phone_number ?? t("conversations_inbox.search.number_fallback", { id: n.id }));
           list.push({ id: String(n.id), label });
         }
       }
@@ -551,9 +555,9 @@ export default function ConversationsInbox() {
   const [selectedFilterAgents, setSelectedFilterAgents] = useState<string[]>([]);
   // Sort menu (replyagent sort_list). Declared early — the list query reads it.
   const SORT_OPTIONS = [
-    { column: "last_updated", order: "desc", text: "Latest message ↓" },
-    { column: "last_updated", order: "asc", text: "Latest message ↑" },
-    { column: "queued_at", order: "asc", text: "Queue order" },
+    { column: "last_updated", order: "desc", text: `${t("conversations_inbox.sort.latest_message")} ↓` },
+    { column: "last_updated", order: "asc", text: `${t("conversations_inbox.sort.latest_message")} ↑` },
+    { column: "queued_at", order: "asc", text: t("conversations_inbox.sort.queue_order") },
   ] as const;
   const [sortBy, setSortBy] = useState<{ column: string; order: string; text: string }>({
     ...SORT_OPTIONS[0],
@@ -561,17 +565,17 @@ export default function ConversationsInbox() {
   // Search-box type selector (replyagent listItems). Default = broad name match
   // so the plain box keeps working. The list query sends `search_type`.
   const SEARCH_TYPES = [
-    { slug: "full_name", name: "Full name" },
-    { slug: "first_name", name: "First name" },
-    { slug: "last_name", name: "Last name" },
-    { slug: "phone", name: "Phone" },
-    { slug: "email", name: "Email" },
-    { slug: "whatsapp", name: "WhatsApp number" },
-    { slug: "instagram", name: "Instagram handle" },
-    { slug: "telegram", name: "Telegram handle" },
-    { slug: "messenger", name: "Messenger handle" },
-    { slug: "support-ticket", name: "Support ticket" },
-    { slug: "id", name: "Contact ID" },
+    { slug: "full_name", name: t("conversations_inbox.search.types.full_name") },
+    { slug: "first_name", name: t("conversations_inbox.search.types.first_name") },
+    { slug: "last_name", name: t("conversations_inbox.search.types.last_name") },
+    { slug: "phone", name: t("conversations_inbox.search.types.phone") },
+    { slug: "email", name: t("conversations_inbox.search.types.email") },
+    { slug: "whatsapp", name: t("conversations_inbox.search.types.whatsapp_number") },
+    { slug: "instagram", name: t("conversations_inbox.search.types.instagram_handle") },
+    { slug: "telegram", name: t("conversations_inbox.search.types.telegram_handle") },
+    { slug: "messenger", name: t("conversations_inbox.search.types.messenger_handle") },
+    { slug: "support-ticket", name: t("conversations_inbox.search.types.support_ticket") },
+    { slug: "id", name: t("conversations_inbox.search.types.contact_id") },
   ] as const;
   const [searchType, setSearchType] = useState<string>("full_name");
   const searchMinChars = searchType === "whatsapp" ? 4 : 3;
@@ -1075,13 +1079,13 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Template sent", description: "Customer can reply within 24h now." });
+      toast({ title: t("conversations_inbox.toasts.template_sent_title"), description: t("conversations_inbox.toasts.template_sent_desc") });
       setTemplateDialogOpen(false);
       setSelectedTemplateId("");
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
     },
     onError: (err: Error) => {
-      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.send_failed"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -1091,7 +1095,7 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Folder created" });
+      toast({ title: t("conversations_inbox.toasts.folder_created") });
       setFolderModalOpen(false);
       setFolderName("");
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
@@ -1104,7 +1108,7 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Folder renamed" });
+      toast({ title: t("conversations_inbox.toasts.folder_renamed") });
       setFolderModalOpen(false);
       setFolderEditing(null);
       setFolderName("");
@@ -1118,7 +1122,7 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Folder deleted" });
+      toast({ title: t("conversations_inbox.toasts.folder_deleted") });
       if (activeFolderId === folderEditing?.id?.toString()) setActiveFolderId(null);
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
     },
@@ -1130,7 +1134,7 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Snoozed", description: "Conversation snoozed." });
+      toast({ title: t("conversations_inbox.toasts.snoozed_title"), description: t("conversations_inbox.toasts.snoozed_desc") });
       setSnoozeDialogOpen(false);
       setSnoozeUntil("");
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
@@ -1144,7 +1148,7 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Reminder scheduled", description: "It will be sent at the chosen time." });
+      toast({ title: t("conversations_inbox.toasts.reminder_scheduled_title"), description: t("conversations_inbox.toasts.reminder_scheduled_desc") });
       setReminderDialogOpen(false);
       setReminderAt("");
       setReminderText("");
@@ -1153,7 +1157,7 @@ export default function ConversationsInbox() {
       }
     },
     onError: (err: Error) => {
-      toast({ title: "Couldn't schedule", description: err.message, variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.couldnt_schedule"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -1163,7 +1167,7 @@ export default function ConversationsInbox() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Deleted", description: "Conversation deleted." });
+      toast({ title: t("conversations_inbox.toasts.deleted_title"), description: t("conversations_inbox.toasts.deleted_conversation_desc") });
       setSelectedConversation(null);
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
@@ -1178,7 +1182,7 @@ export default function ConversationsInbox() {
   });
   const composerAutomations = useMemo(() => {
     const rows: any[] = automationsData?.automations ?? [];
-    return rows.map((a) => ({ id: String(a.id), name: a.name ?? "Untitled", status: a.status }));
+    return rows.map((a) => ({ id: String(a.id), name: a.name ?? t("conversations_inbox.composer.untitled"), status: a.status }));
   }, [automationsData]);
 
   const automateMutation = useMutation({
@@ -1191,12 +1195,12 @@ export default function ConversationsInbox() {
     },
     onSuccess: () => {
       setAutomationDialogOpen(false);
-      toast({ title: "Automation dispatched" });
+      toast({ title: t("conversations_inbox.toasts.automation_dispatched") });
       if (selectedConversation) {
         queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       }
     },
-    onError: (err: Error) => toast({ title: "Couldn't run automation", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.couldnt_run_automation"), description: err.message, variant: "destructive" }),
   });
 
   // Media gallery for the composer "+" → Media gallery (replyagent Gallery).
@@ -1211,7 +1215,7 @@ export default function ConversationsInbox() {
       id: String(f.id),
       file_url: f.file_url,
       thumb: f.thumb_200 || f.file_url,
-      name: f.object_name || "media",
+      name: f.object_name || t("conversations_inbox.dialogs.gallery.media_fallback"),
       media_type: f.media_type,
       mime_type: f.mime_type,
       extension: f.extension,
@@ -1234,14 +1238,14 @@ export default function ConversationsInbox() {
       sendMessageMutation.mutate({ text: "", files: [file], is_sticker: true } as any);
       setStickerDialogOpen(false);
     } catch {
-      toast({ title: "Couldn't send sticker", variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.couldnt_send_sticker"), variant: "destructive" });
     }
   };
 
   // Fill the location form from the browser's geolocation (best-effort).
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
-      toast({ title: "Geolocation not supported by this browser", variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.geolocation_not_supported"), variant: "destructive" });
       return;
     }
     setLocGeoLoading(true);
@@ -1253,7 +1257,7 @@ export default function ConversationsInbox() {
       },
       (err) => {
         setLocGeoLoading(false);
-        toast({ title: "Couldn't get location", description: err.message, variant: "destructive" });
+        toast({ title: t("conversations_inbox.toasts.couldnt_get_location"), description: err.message, variant: "destructive" });
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
@@ -1264,7 +1268,7 @@ export default function ConversationsInbox() {
     const latitude = parseFloat(locLat);
     const longitude = parseFloat(locLng);
     if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
-      toast({ title: "Enter a valid latitude and longitude", variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.enter_valid_lat_lng"), variant: "destructive" });
       return;
     }
     sendMessageMutation.mutate({
@@ -1292,7 +1296,7 @@ export default function ConversationsInbox() {
       setAttachedFiles((prev) => [...prev, new File([blob], name, { type: f.mime_type || blob.type || "application/octet-stream" })]);
       setGalleryDialogOpen(false);
     } catch {
-      toast({ title: "Couldn't attach", description: "Media could not be loaded.", variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.couldnt_attach_title"), description: t("conversations_inbox.toasts.couldnt_attach_desc"), variant: "destructive" });
     }
   };
 
@@ -1360,10 +1364,10 @@ export default function ConversationsInbox() {
       if (selectedConversation) {
         queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       }
-      toast({ title: "Message deleted" });
+      toast({ title: t("conversations_inbox.toasts.message_deleted") });
     },
     onError: (err: any) =>
-      toast({ title: "Couldn't delete message", description: err?.message ?? "", variant: "destructive" }),
+      toast({ title: t("conversations_inbox.toasts.couldnt_delete_message"), description: err?.message ?? "", variant: "destructive" }),
   });
 
   // ─── Folders sidebar (uses already-existing /folders endpoints) ───
@@ -1582,7 +1586,7 @@ export default function ConversationsInbox() {
         queryClient.setQueryData(["/api/inbox/messages", selectedConversation], context.previousData);
       }
       setMessageText(typeof _input === "string" ? _input : (_input as any).text || "");
-      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+      toast({ title: t("conversations_inbox.toasts.send_failed"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -1596,8 +1600,8 @@ export default function ConversationsInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
       toast({
-        title: "Status updated",
-        description: "Conversation status has been updated successfully.",
+        title: t("conversations_inbox.toasts.status_updated_title"),
+        description: t("conversations_inbox.toasts.status_updated_desc"),
       });
     }
   });
@@ -1618,8 +1622,8 @@ export default function ConversationsInbox() {
         queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       }
       toast({
-        title: "Agent assigned",
-        description: "The conversation has been assigned successfully.",
+        title: t("conversations_inbox.toasts.agent_assigned_title"),
+        description: t("conversations_inbox.toasts.agent_assigned_desc"),
       });
     }
   });
@@ -1639,9 +1643,9 @@ export default function ConversationsInbox() {
       setSelectedInboxIds([]);
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
-      toast({ title: "Done", description: `${vars.ids.length} conversation(s) updated.` });
+      toast({ title: t("conversations_inbox.toasts.done_title"), description: t("conversations_inbox.toasts.bulk_updated_desc", { count: vars.ids.length }) });
     },
-    onError: (err: Error) => toast({ title: "Action failed", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.action_failed"), description: err.message, variant: "destructive" }),
   });
 
   const bulkSnoozeMutation = useMutation({
@@ -1658,9 +1662,9 @@ export default function ConversationsInbox() {
       setBulkSnoozeUntil("");
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
-      toast({ title: "Snoozed" });
+      toast({ title: t("conversations_inbox.toasts.snoozed_title") });
     },
-    onError: (err: Error) => toast({ title: "Snooze failed", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.snooze_failed"), description: err.message, variant: "destructive" }),
   });
 
   const bulkAssignMutation = useMutation({
@@ -1680,9 +1684,9 @@ export default function ConversationsInbox() {
       if (selectedConversation) {
         queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       }
-      toast({ title: "Assigned" });
+      toast({ title: t("conversations_inbox.toasts.assigned_title") });
     },
-    onError: (err: Error) => toast({ title: "Assign failed", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.assign_failed"), description: err.message, variant: "destructive" }),
   });
 
   const bulkDeleteMutation = useMutation({
@@ -1696,9 +1700,9 @@ export default function ConversationsInbox() {
       setSelectedInboxIds([]);
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
-      toast({ title: "Deleted", description: `${ids.length} conversation(s) deleted.` });
+      toast({ title: t("conversations_inbox.toasts.deleted_title"), description: t("conversations_inbox.toasts.bulk_deleted_desc", { count: ids.length }) });
     },
-    onError: (err: Error) => toast({ title: "Delete failed", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.delete_failed"), description: err.message, variant: "destructive" }),
   });
 
   // Clear any ticked rows when the visible set changes (tab / folder / channel /
@@ -1730,9 +1734,9 @@ export default function ConversationsInbox() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
-      toast({ title: "Folder updated" });
+      toast({ title: t("conversations_inbox.toasts.folder_updated") });
     },
-    onError: (err: Error) => toast({ title: "Couldn't move", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.couldnt_move"), description: err.message, variant: "destructive" }),
   });
 
   // Toggle a single row's checkbox without opening the conversation.
@@ -1849,7 +1853,7 @@ export default function ConversationsInbox() {
   
   // Helper function to get agent name by ID
   const getAgentName = (agentId: string | null) => {
-    if (!agentId) return "Unassigned";
+    if (!agentId) return t("conversations_inbox.list.unassigned");
     const agent = agentOptions.find((a: AgentOption) => a.id === agentId);
     return agent?.name || agentId;
   };
@@ -2334,7 +2338,7 @@ export default function ConversationsInbox() {
           return !m.startsWith('image/') && !m.startsWith('video/') && !m.startsWith('audio/');
         });
         if (unsupported.length > 0) {
-          toast({ title: 'Instagram does not support document files. Only images, videos, and audio can be sent.', variant: 'destructive' });
+          toast({ title: t("conversations_inbox.composer.instagram_unsupported_files"), variant: 'destructive' });
           if (fileInputRef.current) fileInputRef.current.value = '';
           return;
         }
@@ -2345,7 +2349,7 @@ export default function ConversationsInbox() {
         const valid = Array.from(files).filter(f => f.size <= getWaLimit(f));
         if (tooBig.length > 0) {
           const labels = tooBig.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB — limit ${waLimitLabel(f)})`).join(', ');
-          toast({ title: `File size limit exceeded: ${labels}`, variant: 'destructive' });
+          toast({ title: t("conversations_inbox.composer.file_size_limit_exceeded", { labels }), variant: 'destructive' });
         }
         if (valid.length > 0) setAttachedFiles(prev => [...prev, ...valid]);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -2368,7 +2372,7 @@ export default function ConversationsInbox() {
         const valid = Array.from(files).filter(f => f.size <= getWaLimit(f));
         if (tooBig.length > 0) {
           const labels = tooBig.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB — limit ${waLimitLabel(f)})`).join(', ');
-          toast({ title: `File size limit exceeded: ${labels}`, variant: 'destructive' });
+          toast({ title: t("conversations_inbox.composer.file_size_limit_exceeded", { labels }), variant: 'destructive' });
         }
         if (valid.length > 0) setAttachedFiles(prev => [...prev, ...valid]);
         if (imageInputRef.current) imageInputRef.current.value = '';
@@ -2649,7 +2653,7 @@ export default function ConversationsInbox() {
   // Helper to handle file downloads
   const handleDownload = async (url: string, filename: string) => {
     toast({
-      description: "Downloading...",
+      description: t("conversations_inbox.toasts.downloading"),
       duration: 2000,
     });
 
@@ -2721,12 +2725,12 @@ export default function ConversationsInbox() {
                   don't change when you switch tabs. */}
               <div className="px-3 flex justify-between border-b pb-0 w-full">
                 {[
-                  { key: "all",       label: "All",       count: tabCounts.all },
-                  { key: "read",      label: "Read",      count: tabCounts.read },
-                  { key: "unread",    label: "Unread",    count: tabCounts.unread },
-                  { key: "queue",     label: "Queue",     count: tabCounts.queue },
-                  { key: "upcoming",  label: "Upcoming",  count: tabCounts.upcoming },
-                  { key: "completed", label: "Done",      count: tabCounts.completed },
+                  { key: "all",       label: t("conversations_inbox.tabs.all"),       count: tabCounts.all },
+                  { key: "read",      label: t("conversations_inbox.tabs.read"),      count: tabCounts.read },
+                  { key: "unread",    label: t("conversations_inbox.tabs.unread"),    count: tabCounts.unread },
+                  { key: "queue",     label: t("conversations_inbox.tabs.queue"),     count: tabCounts.queue },
+                  { key: "upcoming",  label: t("conversations_inbox.tabs.upcoming"),  count: tabCounts.upcoming },
+                  { key: "completed", label: t("conversations_inbox.tabs.done"),      count: tabCounts.completed },
                 ].filter(({ key }) =>
                   !(key === "queue" && blockQueueFolder) &&
                   !(key === "completed" && blockDoneFolder)
@@ -2760,18 +2764,18 @@ export default function ConversationsInbox() {
                           className="h-9 px-2 text-xs shrink-0 border border-input dark:border-slate-700 bg-white dark:bg-background hover:bg-accent dark:hover:bg-slate-700"
                           data-testid="search-type-trigger"
                         >
-                          {SEARCH_TYPES.find((t) => t.slug === searchType)?.name ?? "Full name"}
+                          {SEARCH_TYPES.find((st) => st.slug === searchType)?.name ?? t("conversations_inbox.search.types.full_name")}
                           <ChevronDown size={12} className="ml-1" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="bg-white dark:bg-background max-h-72 overflow-auto">
-                        {SEARCH_TYPES.map((t) => (
+                        {SEARCH_TYPES.map((st) => (
                           <DropdownMenuItem
-                            key={t.slug}
-                            className={searchType === t.slug ? "font-semibold text-primary" : ""}
-                            onClick={() => setSearchType(t.slug)}
+                            key={st.slug}
+                            className={searchType === st.slug ? "font-semibold text-primary" : ""}
+                            onClick={() => setSearchType(st.slug)}
                           >
-                            {t.name}
+                            {st.name}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
@@ -2782,8 +2786,8 @@ export default function ConversationsInbox() {
                     <Input
                       placeholder={
                         isSearchFocused
-                          ? `Search by ${(SEARCH_TYPES.find((t) => t.slug === searchType)?.name ?? "name").toLowerCase()} (min ${searchMinChars})`
-                          : "Search"
+                          ? t("conversations_inbox.search.search_by", { field: (SEARCH_TYPES.find((st) => st.slug === searchType)?.name ?? t("conversations_inbox.search.name_fallback")).toLowerCase(), min: searchMinChars })
+                          : t("conversations_inbox.search.placeholder")
                       }
                       className="pl-10 border-input h-9 text-xs"
                       data-testid="input-search"
@@ -2802,7 +2806,7 @@ export default function ConversationsInbox() {
                         options={agentOptions.map((a: Agent) => ({ id: a.id, name: a.name, icon: a.icon }))}
                         selected={selectedFilterAgents}
                         onChange={setSelectedFilterAgents}
-                        placeholder="Agents"
+                        placeholder={t("conversations_inbox.search.agents")}
                         width="auto"
                         className="h-9 w-9 px-[0.5rem] justify-center bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                         triggerContent={<User size={16} />}
@@ -2817,7 +2821,7 @@ export default function ConversationsInbox() {
                         options={channelOptions}
                         selected={selectedChannels}
                         onChange={setSelectedChannels}
-                        placeholder="Channels"
+                        placeholder={t("conversations_inbox.search.channels")}
                         width="auto"
                         className="h-9 w-9 px-[0.5rem] justify-center bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                         triggerContent={<ListFilter size={16} />}
@@ -2839,7 +2843,7 @@ export default function ConversationsInbox() {
                             <Filter size={16} />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Filter</TooltipContent>
+                        <TooltipContent>{t("conversations_inbox.search.filter")}</TooltipContent>
                       </Tooltip>
 
                       {/* Filter Popover Content */}
@@ -2851,7 +2855,7 @@ export default function ConversationsInbox() {
                           {/* Folders chip section. "+" creates; right-click renames/deletes. */}
                           <div className="mb-3 pb-3 border-b border-border/60">
                             <div className="flex items-center justify-between mb-1.5">
-                              <p className="text-[10px] font-semibold uppercase text-muted-foreground">Folders</p>
+                              <p className="text-[10px] font-semibold uppercase text-muted-foreground">{t("conversations_inbox.folders.title")}</p>
                               <button
                                 className="text-[10px] font-bold text-muted-foreground hover:text-foreground"
                                 onClick={() => {
@@ -2859,9 +2863,9 @@ export default function ConversationsInbox() {
                                   setFolderName("");
                                   setFolderModalOpen(true);
                                 }}
-                                title="Create folder"
+                                title={t("conversations_inbox.folders.create_folder_tooltip")}
                               >
-                                + New
+                                {t("conversations_inbox.folders.new")}
                               </button>
                             </div>
                             <div className="flex flex-wrap gap-1">
@@ -2873,7 +2877,7 @@ export default function ConversationsInbox() {
                                 }`}
                                 onClick={() => setActiveFolderId(null)}
                               >
-                                All folders
+                                {t("conversations_inbox.folders.all_folders")}
                               </button>
                               {folders.map((f: any) => (
                                 <button
@@ -2890,7 +2894,7 @@ export default function ConversationsInbox() {
                                     setFolderName(f.name ?? "");
                                     setFolderModalOpen(true);
                                   }}
-                                  title={`${f.name} — right-click to rename/delete`}
+                                  title={t("conversations_inbox.folders.rename_hint", { name: f.name })}
                                 >
                                   {f.name}
                                   <span className="ml-1 opacity-60">({folderCountMap[String(f.id)] ?? 0})</span>
@@ -2901,9 +2905,9 @@ export default function ConversationsInbox() {
 
                           {filters.length === 0 ? (
                             <div className="text-center py-6">
-                              <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
-                              <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
-                              <Button onClick={addFilter} className="btn-outline-primary" variant="outline">Add filter</Button>
+                              <h3 className="font-semibold text-sm mb-1">{t("conversations_inbox.filters.no_filters_title")}</h3>
+                              <p className="text-xs text-muted-foreground mb-4">{t("conversations_inbox.filters.no_filters_desc")}</p>
+                              <Button onClick={addFilter} className="btn-outline-primary" variant="outline">{t("conversations_inbox.filters.add_filter")}</Button>
                             </div>
                           ) : (
                             <div className="space-y-3">
@@ -2923,12 +2927,12 @@ export default function ConversationsInbox() {
                                       className="w-[140px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
                                     >
                                       <span className="truncate text-sm font-normal">{
-                                        filter.column === "name" ? "Full Name" :
-                                        filter.column === "firstName" ? "First Name" :
-                                        filter.column === "lastName" ? "Last Name" :
-                                        filter.column === "phoneNumber" ? "Phone Number" :
-                                        filter.column === "email" ? "Email" :
-                                        "Tags"
+                                        filter.column === "name" ? t("conversations_inbox.filters.column_full_name") :
+                                        filter.column === "firstName" ? t("conversations_inbox.filters.column_first_name") :
+                                        filter.column === "lastName" ? t("conversations_inbox.filters.column_last_name") :
+                                        filter.column === "phoneNumber" ? t("conversations_inbox.filters.column_phone_number") :
+                                        filter.column === "email" ? t("conversations_inbox.filters.column_email") :
+                                        t("conversations_inbox.filters.column_tags")
                                       }</span>
                                       <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                                     </button>
@@ -2936,12 +2940,12 @@ export default function ConversationsInbox() {
                                       <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                                         <ul className="py-1">
                                           {[
-                                            { key: "name", label: "Full Name" },
-                                            { key: "firstName", label: "First Name" },
-                                            { key: "lastName", label: "Last Name" },
-                                            { key: "phoneNumber", label: "Phone Number" },
-                                            { key: "email", label: "Email" },
-                                            { key: "tags", label: "Tags" },
+                                            { key: "name", label: t("conversations_inbox.filters.column_full_name") },
+                                            { key: "firstName", label: t("conversations_inbox.filters.column_first_name") },
+                                            { key: "lastName", label: t("conversations_inbox.filters.column_last_name") },
+                                            { key: "phoneNumber", label: t("conversations_inbox.filters.column_phone_number") },
+                                            { key: "email", label: t("conversations_inbox.filters.column_email") },
+                                            { key: "tags", label: t("conversations_inbox.filters.column_tags") },
                                           ].map(({ key, label }) => {
                                             const isCurrentOption = key === filter.column;
                                             return (
@@ -2975,16 +2979,23 @@ export default function ConversationsInbox() {
                                     {openFilterOperatorDropdown === filter.id && (
                                       <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                                         <ul className="py-1">
-                                          {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
+                                          {[
+                                            { value: "contains", label: t("conversations_inbox.filters.op_contains") },
+                                            { value: "does not contain", label: t("conversations_inbox.filters.op_not_contains") },
+                                            { value: "is", label: t("conversations_inbox.filters.op_is") },
+                                            { value: "is not", label: t("conversations_inbox.filters.op_is_not") },
+                                            { value: "is empty", label: t("conversations_inbox.filters.op_is_empty") },
+                                            { value: "is not empty", label: t("conversations_inbox.filters.op_is_not_empty") },
+                                          ].map(option => (
                                             <li
-                                              key={option}
+                                              key={option.value}
                                               className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
                                               onClick={() => {
-                                                updateFilter(filter.id, filter.column, option, filter.value);
+                                                updateFilter(filter.id, filter.column, option.value, filter.value);
                                                 setOpenFilterOperatorDropdown(null);
                                               }}
                                             >
-                                              {option}
+                                              {option.label}
                                             </li>
                                           ))}
                                         </ul>
@@ -2993,7 +3004,7 @@ export default function ConversationsInbox() {
                                   </div>
                                   <input
                                     type="text"
-                                    placeholder="Value..."
+                                    placeholder={t("conversations_inbox.filters.value_placeholder")}
                                     value={filter.value}
                                     onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
                                     className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none transition-colors bg-card"
@@ -3003,8 +3014,8 @@ export default function ConversationsInbox() {
                                 </div>
                               ))}
                               <div className="flex gap-2 pt-2 border-t">
-                                <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">Add filter</Button>
-                                <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset</Button>
+                                <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">{t("conversations_inbox.filters.add_filter")}</Button>
+                                <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">{t("conversations_inbox.filters.reset")}</Button>
                               </div>
                             </div>
                           )}
@@ -3065,7 +3076,7 @@ export default function ConversationsInbox() {
                         <X size={16} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Clear Search</TooltipContent>
+                    <TooltipContent>{t("conversations_inbox.search.clear_search")}</TooltipContent>
                   </Tooltip>
                 ) : (
                   <DropdownMenu open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
@@ -3077,20 +3088,20 @@ export default function ConversationsInbox() {
                           </Button>
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
-                      <TooltipContent>Call or Message</TooltipContent>
+                      <TooltipContent>{t("conversations_inbox.search.call_or_message")}</TooltipContent>
                     </Tooltip>
                     <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                       <DropdownMenuItem onClick={() => {
                         setIsMakeCallModalOpen(true);
                         setIsAddMenuOpen(false);
                       }}>
-                        Make Call
+                        {t("conversations_inbox.add_menu.make_call")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {
                         setIsTemplateMessageModalOpen(true);
                         setIsAddMenuOpen(false);
                       }}>
-                        Send Template Message
+                        {t("conversations_inbox.add_menu.send_template_message")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -3105,7 +3116,7 @@ export default function ConversationsInbox() {
                 <input
                   type="checkbox"
                   className="h-4 w-4 rounded border-input text-primary cursor-pointer"
-                  aria-label="Select all conversations"
+                  aria-label={t("conversations_inbox.list.select_all_aria")}
                   checked={
                     selectedInboxIds.length > 0 &&
                     selectedInboxIds.length === getFilteredConversations().length
@@ -3126,12 +3137,12 @@ export default function ConversationsInbox() {
                 {selectedInboxIds.length > 0 ? (
                   <>
                     <span className="text-xs text-muted-foreground">
-                      {selectedInboxIds.length} selected
+                      {t("conversations_inbox.list.selected_count", { count: selectedInboxIds.length })}
                     </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs ml-auto" data-testid="bulk-actions-trigger">
-                          <ListFilter size={12} className="mr-1" /> Actions
+                          <ListFilter size={12} className="mr-1" /> {t("conversations_inbox.list.actions")}
                           <ChevronDown size={12} className="ml-1" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -3140,7 +3151,7 @@ export default function ConversationsInbox() {
                           <DropdownMenuItem
                             onClick={() => bulkStatusMutation.mutate({ ids: selectedInboxIds, action: "COMPLETED" })}
                           >
-                            <CheckCircle size={14} className="mr-2" /> Mark as done
+                            <CheckCircle size={14} className="mr-2" /> {t("conversations_inbox.list.mark_as_done")}
                           </DropdownMenuItem>
                         )}
                         {(activeTab === "all" || activeTab === "upcoming") && (
@@ -3150,7 +3161,7 @@ export default function ConversationsInbox() {
                               setBulkSnoozeOpen(true);
                             }}
                           >
-                            <Clock size={14} className="mr-2" /> Snooze
+                            <Clock size={14} className="mr-2" /> {t("conversations_inbox.list.snooze")}
                           </DropdownMenuItem>
                         )}
                         {canAssignConversations && (
@@ -3160,18 +3171,18 @@ export default function ConversationsInbox() {
                               setBulkAssignOpen(true);
                             }}
                           >
-                            <User size={14} className="mr-2" /> Assign conversations
+                            <User size={14} className="mr-2" /> {t("conversations_inbox.list.assign_conversations")}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
                           onClick={() => bulkStatusMutation.mutate({ ids: selectedInboxIds, action: "READ" })}
                         >
-                          <Eye size={14} className="mr-2" /> Mark read
+                          <Eye size={14} className="mr-2" /> {t("conversations_inbox.list.mark_read")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => bulkStatusMutation.mutate({ ids: selectedInboxIds, action: "UNREAD" })}
                         >
-                          <EyeOff size={14} className="mr-2" /> Mark unread
+                          <EyeOff size={14} className="mr-2" /> {t("conversations_inbox.list.mark_unread")}
                         </DropdownMenuItem>
                         {!blockDeletingChats && (
                           <>
@@ -3179,11 +3190,11 @@ export default function ConversationsInbox() {
                             <DropdownMenuItem
                               className="text-red-600 focus:text-red-600"
                               onClick={() => {
-                                if (window.confirm(`Delete ${selectedInboxIds.length} conversation(s)?`))
+                                if (window.confirm(t("conversations_inbox.list.delete_confirm", { count: selectedInboxIds.length })))
                                   bulkDeleteMutation.mutate(selectedInboxIds);
                               }}
                             >
-                              <Trash2 size={14} className="mr-2" /> Delete chat
+                              <Trash2 size={14} className="mr-2" /> {t("conversations_inbox.list.delete_chat")}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -3191,7 +3202,7 @@ export default function ConversationsInbox() {
                     </DropdownMenu>
                   </>
                 ) : (
-                  <span className="text-xs text-muted-foreground">Select all</span>
+                  <span className="text-xs text-muted-foreground">{t("conversations_inbox.list.select_all")}</span>
                 )}
               </div>
             )}
@@ -3201,7 +3212,7 @@ export default function ConversationsInbox() {
                 {getFilteredConversations().length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Search className="w-8 h-8 text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">No conversations found</p>
+                    <p className="text-sm text-muted-foreground">{t("conversations_inbox.list.no_conversations")}</p>
                   </div>
                 ) : (
                   getFilteredConversations().map((conv: Conversation) => (
@@ -3288,20 +3299,20 @@ export default function ConversationsInbox() {
                           <div className="flex items-center justify-between gap-2">
                             {conv.assignedAgent ? (
                               <p className="text-xs text-muted-foreground truncate">
-                                Assigned to: <span className="font-medium">{conv.assignedAgentName || getAgentName(conv.assignedAgent)}</span>
+                                {t("conversations_inbox.list.assigned_to")} <span className="font-medium">{conv.assignedAgentName || getAgentName(conv.assignedAgent)}</span>
                               </p>
                             ) : (
                               <span className="flex items-center gap-1 text-xs text-red-600">
                                 <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                                Waiting for assistance
+                                {t("conversations_inbox.list.waiting_for_assistance")}
                               </span>
                             )}
                             {conv.unread > 0 ? (
                               <span className="flex items-center gap-1 text-[11px] text-red-600 flex-shrink-0">
-                                <span className="h-1.5 w-1.5 rounded-full bg-red-600" /> New
+                                <span className="h-1.5 w-1.5 rounded-full bg-red-600" /> {t("conversations_inbox.list.new")}
                               </span>
                             ) : conv.isAssigned ? (
-                              <span className="text-[11px] text-amber-600 flex-shrink-0">Transferred</span>
+                              <span className="text-[11px] text-amber-600 flex-shrink-0">{t("conversations_inbox.list.transferred")}</span>
                             ) : null}
                           </div>
                         </div>
@@ -3318,7 +3329,7 @@ export default function ConversationsInbox() {
                     className="w-full py-2 text-center text-xs text-muted-foreground hover:text-foreground hover:underline"
                     data-testid="load-more-conversations"
                   >
-                    {isLoadingInbox ? "Loading…" : "Load more"}
+                    {isLoadingInbox ? t("conversations_inbox.list.loading") : t("conversations_inbox.list.load_more")}
                   </button>
                 )}
               </div>
@@ -3333,7 +3344,7 @@ export default function ConversationsInbox() {
               : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
               }`}
             style={{ cursor: "col-resize", right: "-8px", top: "50%", transform: "translateY(-50%)" }}
-            title="Drag to resize sidebar"
+            title={t("conversations_inbox.list.drag_to_resize")}
           >
             <GripVertical size={16} />
           </button>
@@ -3364,7 +3375,7 @@ export default function ConversationsInbox() {
                   </Avatar>
                   <div>
                     <h3 className="text-sm font-semibold">{getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation))}</h3>
-                    <p className="text-xs text-muted-foreground">Active now</p>
+                    <p className="text-xs text-muted-foreground">{t("conversations_inbox.header.active_now")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -3376,12 +3387,12 @@ export default function ConversationsInbox() {
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm" className="hover-elevate gap-1.5" data-testid="button-folder">
                             <FolderIcon size={16} />
-                            <span className="text-xs font-medium">Folder</span>
+                            <span className="text-xs font-medium">{t("conversations_inbox.header.folder")}</span>
                             <ChevronDown size={12} />
                           </Button>
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
-                      <TooltipContent>Move to folder</TooltipContent>
+                      <TooltipContent>{t("conversations_inbox.header.move_to_folder")}</TooltipContent>
                     </Tooltip>
                     <DropdownMenuContent align="end" className="bg-white dark:bg-background max-h-72 overflow-auto">
                       <DropdownMenuItem
@@ -3391,10 +3402,10 @@ export default function ConversationsInbox() {
                           moveToFolderMutation.mutate({ id: selectedConversation, folderId: null })
                         }
                       >
-                        No folder
+                        {t("conversations_inbox.header.no_folder")}
                       </DropdownMenuItem>
                       {folders.length === 0 ? (
-                        <DropdownMenuItem disabled>No folders yet</DropdownMenuItem>
+                        <DropdownMenuItem disabled>{t("conversations_inbox.header.no_folders_yet")}</DropdownMenuItem>
                       ) : (
                         folders.map((f: any) => (
                           <DropdownMenuItem
@@ -3420,13 +3431,13 @@ export default function ConversationsInbox() {
                           <Button variant="ghost" size="sm" className="hover-elevate gap-1.5" data-testid="button-chat-mode">
                             <ListFilter size={16} />
                             <span className="text-xs font-medium">
-                              {CHAT_MODES.find((m) => m.value === chatMode)?.label ?? CHAT_MODES[0].label}
+                              {t(CHAT_MODES.find((m) => m.value === chatMode)?.labelKey ?? CHAT_MODES[0].labelKey)}
                             </span>
                             <ChevronDown size={12} />
                           </Button>
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
-                      <TooltipContent>Filter messages</TooltipContent>
+                      <TooltipContent>{t("conversations_inbox.header.filter_messages")}</TooltipContent>
                     </Tooltip>
                     <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                       {CHAT_MODES.map((m) => (
@@ -3435,7 +3446,7 @@ export default function ConversationsInbox() {
                           className={chatMode === m.value ? "font-semibold text-primary" : ""}
                           onClick={() => setChatMode(m.value)}
                         >
-                          {m.label}
+                          {t(m.labelKey)}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -3447,7 +3458,7 @@ export default function ConversationsInbox() {
                         {showContactPanel ? <EyeOff size={18} /> : <Eye size={18} />}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>{showContactPanel ? "Hide" : "Show"} contact profile</TooltipContent>
+                    <TooltipContent>{showContactPanel ? t("conversations_inbox.header.hide_contact_profile") : t("conversations_inbox.header.show_contact_profile")}</TooltipContent>
                   </Tooltip>
                   {/* Mark as Done / Move to Inbox toggle — mirrors replyagent behaviour:
                       active/unassigned → "Mark as done" (COMPLETED)
@@ -3459,7 +3470,7 @@ export default function ConversationsInbox() {
                     // replyagent reopen: done + agent → back to Inbox (ACTIVE);
                     // done + no agent → back to the unassigned queue.
                     const reopenStatus = hasAgent ? "active" : "unassigned";
-                    const reopenLabel = hasAgent ? "Move to Inbox" : "Move to unassigned";
+                    const reopenLabel = hasAgent ? t("conversations_inbox.header.move_to_inbox") : t("conversations_inbox.header.move_to_unassigned");
                     return (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -3481,10 +3492,10 @@ export default function ConversationsInbox() {
                             data-testid="button-mark-done"
                           >
                             {isDone ? <CornerUpLeft size={16} /> : <CheckCircle size={16} />}
-                            <span className="text-xs font-medium">{isDone ? reopenLabel : "Mark as done"}</span>
+                            <span className="text-xs font-medium">{isDone ? reopenLabel : t("conversations_inbox.header.mark_as_done")}</span>
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>{isDone ? "Reopen this conversation" : "Close this conversation"}</TooltipContent>
+                        <TooltipContent>{isDone ? t("conversations_inbox.header.reopen_conversation") : t("conversations_inbox.header.close_conversation")}</TooltipContent>
                       </Tooltip>
                     );
                   })()}
@@ -3516,7 +3527,7 @@ export default function ConversationsInbox() {
                               className={!isMine ? "opacity-50 cursor-not-allowed" : ""}
                             >
                               <UserX size={16} className="mr-2" />
-                              Unassign Chat
+                              {t("conversations_inbox.header.unassign_chat")}
                             </DropdownMenuItem>
                           );
                         })()}
@@ -3527,7 +3538,7 @@ export default function ConversationsInbox() {
                           onClick={() => setSnoozeDialogOpen(true)}
                         >
                           <Clock size={16} className="mr-2" />
-                          Snooze conversation
+                          {t("conversations_inbox.header.snooze_conversation")}
                         </DropdownMenuItem>
 
                         {/* Schedule Reminder — opens reminder dialog */}
@@ -3535,7 +3546,7 @@ export default function ConversationsInbox() {
                           onClick={() => setReminderDialogOpen(true)}
                         >
                           <Clock size={16} className="mr-2" />
-                          Schedule reminder
+                          {t("conversations_inbox.header.schedule_reminder")}
                         </DropdownMenuItem>
 
                         {/* Delete conversation (soft delete) — hidden when the agent
@@ -3552,7 +3563,7 @@ export default function ConversationsInbox() {
                               className="text-red-600 dark:text-red-400"
                             >
                               <Trash2 size={16} className="mr-2" />
-                              Delete conversation
+                              {t("conversations_inbox.header.delete_conversation")}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -3616,7 +3627,7 @@ export default function ConversationsInbox() {
                                   setReplyingTo(msg);
                                 }}
                                 className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                title="Reply to this message"
+                                title={t("conversations_inbox.messages.reply_to_this")}
                                 data-testid={`button-reply-${msg.id}`}
                               >
                                 <CornerUpLeft size={13} className="text-muted-foreground" />
@@ -3628,7 +3639,7 @@ export default function ConversationsInbox() {
                                 <PopoverTrigger asChild>
                                   <button
                                     className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                    title="Add reaction"
+                                    title={t("conversations_inbox.messages.add_reaction")}
                                     data-testid={`button-react-${msg.id}`}
                                   >
                                     <Smile size={13} className="text-muted-foreground" />
@@ -3668,7 +3679,7 @@ export default function ConversationsInbox() {
                                     deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
                                   }}
                                   className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                  title="Delete message"
+                                  title={t("conversations_inbox.messages.delete_message")}
                                   data-testid={`button-delete-${msg.id}`}
                                 >
                                   <Trash2 size={13} className="text-muted-foreground" />
@@ -3691,7 +3702,7 @@ export default function ConversationsInbox() {
                                 data-testid={`reply-quote-${msg.id}`}
                               >
                                 <span className="block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                  {msg.reply.from === "agent" ? "You" : "Customer"}
+                                  {msg.reply.from === "agent" ? t("conversations_inbox.messages.you") : t("conversations_inbox.messages.customer")}
                                 </span>
                                 <span className="block text-[11px] text-muted-foreground truncate">{msg.reply.text}</span>
                               </button>
@@ -3715,9 +3726,9 @@ export default function ConversationsInbox() {
                               >
                                 <MapPin size={16} className="mt-0.5 text-red-500 flex-shrink-0" />
                                 <span className="min-w-0">
-                                  <span className="font-medium block truncate">{msg.location.name || "Shared location"}</span>
+                                  <span className="font-medium block truncate">{msg.location.name || t("conversations_inbox.messages.shared_location")}</span>
                                   {msg.location.address && <span className="text-xs text-muted-foreground block truncate">{msg.location.address}</span>}
-                                  <span className="text-xs text-blue-600 dark:text-blue-400">Open in Maps</span>
+                                  <span className="text-xs text-blue-600 dark:text-blue-400">{t("conversations_inbox.messages.open_in_maps")}</span>
                                 </span>
                               </a>
                             )}
@@ -3729,7 +3740,7 @@ export default function ConversationsInbox() {
                                   <div key={ci} className="rounded-md border border-black/10 dark:border-white/10 bg-white/60 dark:bg-black/20 p-2 text-sm">
                                     <div className="font-semibold flex items-center gap-2">
                                       <User size={14} />
-                                      {c.name?.formatted_name ?? c.name?.first_name ?? "Contact"}
+                                      {c.name?.formatted_name ?? c.name?.first_name ?? t("conversations_inbox.messages.contact_fallback")}
                                     </div>
                                     {(c.phones || []).map((p: any, pi: number) => p?.phone && (
                                       <div key={pi} className="text-xs flex items-center gap-2 mt-1"><Phone size={11} />{p.phone}</div>
@@ -3767,7 +3778,7 @@ export default function ConversationsInbox() {
                                           handleDownload(image.url, image.name);
                                         }}
                                         className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                        title="Download image"
+                                        title={t("conversations_inbox.messages.download_image")}
                                       >
                                         <Download size={14} />
                                       </button>
@@ -3793,7 +3804,7 @@ export default function ConversationsInbox() {
                                         handleDownload(attachment.url, attachment.name);
                                       }}
                                       className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                      title="Download file"
+                                      title={t("conversations_inbox.messages.download_file")}
                                     >
                                       <Download size={14} />
                                     </button>
@@ -3831,17 +3842,17 @@ export default function ConversationsInbox() {
                                     controlsList="nodownload"
                                   >
                                     <source src={msg.audio!.url} type={msg.audio!.url?.includes('.m4a') ? 'audio/mp4' : msg.audio!.url?.includes('.mp4') ? 'video/mp4' : 'audio/webm'} />
-                                    Your browser does not support the audio element.
+                                    {t("conversations_inbox.messages.audio_not_supported")}
                                   </audio>
                                   <div className="flex items-center justify-between mt-2">
-                                    <p className="text-xs font-medium">Voice message</p>
+                                    <p className="text-xs font-medium">{t("conversations_inbox.messages.voice_message")}</p>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`);
                                       }}
                                       className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                      title="Download voice message"
+                                      title={t("conversations_inbox.messages.download_voice_message")}
                                     >
                                       <Download size={14} />
                                     </button>
@@ -3867,7 +3878,7 @@ export default function ConversationsInbox() {
                                       </a>
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-xs break-words">
-                                      {msg.errorData || "Failed to send"}
+                                      {msg.errorData || t("conversations_inbox.messages.failed_to_send")}
                                     </TooltipContent>
                                   </Tooltip>
                                 ) : (
@@ -3893,7 +3904,7 @@ export default function ConversationsInbox() {
                                   setReplyingTo(msg);
                                 }}
                                 className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                title="Reply to this message"
+                                title={t("conversations_inbox.messages.reply_to_this")}
                                 data-testid={`button-reply-${msg.id}`}
                               >
                                 <CornerUpLeft size={13} className="text-muted-foreground" />
@@ -3905,7 +3916,7 @@ export default function ConversationsInbox() {
                                 <PopoverTrigger asChild>
                                   <button
                                     className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                    title="Add reaction"
+                                    title={t("conversations_inbox.messages.add_reaction")}
                                     data-testid={`button-react-${msg.id}`}
                                   >
                                     <Smile size={13} className="text-muted-foreground" />
@@ -3945,7 +3956,7 @@ export default function ConversationsInbox() {
                                     deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
                                   }}
                                   className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                  title="Delete message"
+                                  title={t("conversations_inbox.messages.delete_message")}
                                   data-testid={`button-delete-${msg.id}`}
                                 >
                                   <Trash2 size={13} className="text-muted-foreground" />
@@ -3959,12 +3970,12 @@ export default function ConversationsInbox() {
                           {msg.from === "agent" && (
                             <div className="self-end mb-5 flex-shrink-0">
                               {msg.communicationMode && msg.communicationMode !== "INBOX" ? (
-                                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title="Sent by automation">
+                                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={t("conversations_inbox.messages.sent_by_automation")}>
                                   <Bot size={14} className="text-primary" />
                                 </div>
                               ) : (
-                                <div className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white ${getAvatarColor(msg.senderName || "Agent")}`} title={msg.senderName || "Agent"}>
-                                  {getInitials(msg.senderName || "Agent")}
+                                <div className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white ${getAvatarColor(msg.senderName || t("conversations_inbox.messages.agent_fallback"))}`} title={msg.senderName || t("conversations_inbox.messages.agent_fallback")}>
+                                  {getInitials(msg.senderName || t("conversations_inbox.messages.agent_fallback"))}
                                 </div>
                               )}
                             </div>
@@ -3985,7 +3996,7 @@ export default function ConversationsInbox() {
                 <div className="p-6 flex-shrink-0 bg-muted/30 flex flex-col items-center justify-center gap-3">
                   <AlertCircle className="w-6 h-6 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground text-center max-w-md">
-                    This contact has opted out — you can't send messages on this channel.
+                    {t("conversations_inbox.composer.opted_out")}
                   </p>
                 </div>
               ) : canReply ? (
@@ -4012,7 +4023,7 @@ export default function ConversationsInbox() {
                         <div className="flex items-center justify-between gap-2 text-sm">
                           <div className="flex items-center gap-2 flex-1">
                             <Mic size={14} className="text-muted-foreground" />
-                            <span className="text-foreground">Voice message</span>
+                            <span className="text-foreground">{t("conversations_inbox.messages.voice_message")}</span>
                             <span className="text-xs text-muted-foreground">({(recordedAudio.size / 1024).toFixed(1)}KB)</span>
                           </div>
                           <button
@@ -4039,7 +4050,7 @@ export default function ConversationsInbox() {
                     return (
                       <div className="absolute bottom-[5.5rem] left-4 right-4 z-40 max-h-60 overflow-auto rounded-md border bg-white dark:bg-slate-900 shadow-lg divide-y">
                         <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground sticky top-0 bg-white dark:bg-slate-900">
-                          Canned responses
+                          {t("conversations_inbox.composer.canned_responses")}
                         </div>
                         {matches.map((c) => (
                           <button
@@ -4049,7 +4060,7 @@ export default function ConversationsInbox() {
                             data-testid={`canned-option-${c.id}`}
                           >
                             <div className="text-sm font-medium truncate flex items-center gap-1">
-                              {c.title || "Untitled"}
+                              {c.title || t("conversations_inbox.composer.untitled")}
                               {c.media.length > 0 && <Paperclip size={11} className="opacity-60" />}
                             </div>
                             {c.text && <div className="text-xs text-muted-foreground truncate">{c.text}</div>}
@@ -4078,7 +4089,7 @@ export default function ConversationsInbox() {
                       <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-md flex items-center gap-2">
                         <AlertCircle size={14} className="text-amber-600 flex-shrink-0" />
                         <p className="text-[11px] text-amber-700 dark:text-amber-300 flex-1">
-                          Last interaction was {Math.floor(hoursSince)}h ago. WhatsApp requires an approved template to reach this contact now.
+                          {t("conversations_inbox.composer.whatsapp_window_notice", { hours: Math.floor(hoursSince) })}
                         </p>
                         <Button
                           size="sm"
@@ -4087,7 +4098,7 @@ export default function ConversationsInbox() {
                           onClick={() => setTemplateDialogOpen(true)}
                           data-testid="button-send-template"
                         >
-                          Send Template
+                          {t("conversations_inbox.composer.send_template")}
                         </Button>
                       </div>
                     );
@@ -4102,14 +4113,14 @@ export default function ConversationsInbox() {
                       <CornerUpLeft size={14} className="text-primary flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-semibold text-primary">
-                          Replying to {replyingTo.from === "agent" ? "your message" : "this message"}
+                          {replyingTo.from === "agent" ? t("conversations_inbox.composer.replying_to_your_message") : t("conversations_inbox.composer.replying_to_this_message")}
                         </p>
-                        <p className="text-[11px] text-muted-foreground truncate">{replyingTo.text || "(media)"}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{replyingTo.text || t("conversations_inbox.composer.media_placeholder")}</p>
                       </div>
                       <button
                         onClick={() => setReplyingTo(null)}
                         className="text-muted-foreground hover:text-foreground flex-shrink-0"
-                        title="Cancel reply"
+                        title={t("conversations_inbox.composer.cancel_reply")}
                       >
                         <X size={14} />
                       </button>
@@ -4132,12 +4143,12 @@ export default function ConversationsInbox() {
                         }`}
                         data-testid={`tab-compose-${m}`}
                       >
-                        {m === "reply" ? "Reply" : "Note"}
+                        {m === "reply" ? t("conversations_inbox.composer.reply_tab") : t("conversations_inbox.composer.note_tab")}
                       </button>
                     ))}
                     {composeMode === "note" && (
                       <span className="text-[10px] text-amber-600 ml-auto">
-                        Internal — not sent to customer
+                        {t("conversations_inbox.composer.note_internal_hint")}
                       </span>
                     )}
                   </div>
@@ -4155,7 +4166,7 @@ export default function ConversationsInbox() {
                     return (
                       <div className="absolute bottom-[3.5rem] left-4 z-40 w-64 max-h-48 overflow-auto rounded-md border bg-white dark:bg-slate-900 shadow-lg divide-y">
                         <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground sticky top-0 bg-white dark:bg-slate-900">
-                          Mention an agent
+                          {t("conversations_inbox.composer.mention_agent")}
                         </div>
                         {matches.slice(0, 8).map((a) => (
                           <button
@@ -4175,7 +4186,7 @@ export default function ConversationsInbox() {
                   <div className="flex gap-2 items-end">
                     <Textarea
                       ref={composerTextareaRef}
-                      placeholder={composeMode === "note" ? "Write an internal note… (@ to mention)" : "Type a message…"}
+                      placeholder={composeMode === "note" ? t("conversations_inbox.composer.note_placeholder") : t("conversations_inbox.composer.reply_placeholder")}
                       rows={1}
                       className={`flex-1 min-h-[2.5rem] max-h-40 resize-none ${composeMode === "note" ? "bg-amber-50 dark:bg-amber-900/10" : ""}`}
                       data-testid="input-message"
@@ -4207,41 +4218,41 @@ export default function ConversationsInbox() {
                         markdown (replyagent addBodyStyle). */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 [border-color:hsl(var(--input))]" title="Format text" data-testid="composer-format">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 [border-color:hsl(var(--input))]" title={t("conversations_inbox.composer.format_text")} data-testid="composer-format">
                           <TypeIcon size={18} />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="bg-white dark:bg-background">
-                        <DropdownMenuItem onClick={() => applyTextStyle("*")}><Bold size={14} className="mr-2" /> Bold</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => applyTextStyle("_")}><Italic size={14} className="mr-2" /> Italic</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => applyTextStyle("~")}><Strikethrough size={14} className="mr-2" /> Strikethrough</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => applyTextStyle("```")}><Code size={14} className="mr-2" /> Monospace</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => applyTextStyle("*")}><Bold size={14} className="mr-2" /> {t("conversations_inbox.composer.bold")}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => applyTextStyle("_")}><Italic size={14} className="mr-2" /> {t("conversations_inbox.composer.italic")}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => applyTextStyle("~")}><Strikethrough size={14} className="mr-2" /> {t("conversations_inbox.composer.strikethrough")}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => applyTextStyle("```")}><Code size={14} className="mr-2" /> {t("conversations_inbox.composer.monospace")}</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
 
                     {/* "+" menu — Media gallery + Start automation (replyagent). */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 [border-color:hsl(var(--input))]" title="More" data-testid="composer-plus">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 [border-color:hsl(var(--input))]" title={t("conversations_inbox.composer.more")} data-testid="composer-plus">
                           <Plus size={18} />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="bg-white dark:bg-background">
                         <DropdownMenuItem onClick={() => setGalleryDialogOpen(true)}>
-                          <Image size={14} className="mr-2" /> Media gallery
+                          <Image size={14} className="mr-2" /> {t("conversations_inbox.composer.media_gallery")}
                         </DropdownMenuItem>
                         {selectedConvObj?.channel === "whatsapp" && (
                           <DropdownMenuItem onClick={() => setStickerDialogOpen(true)}>
-                            <Smile size={14} className="mr-2" /> Sticker
+                            <Smile size={14} className="mr-2" /> {t("conversations_inbox.composer.sticker")}
                           </DropdownMenuItem>
                         )}
                         {selectedConvObj?.channel === "whatsapp" && (
                           <DropdownMenuItem onClick={() => setLocationDialogOpen(true)}>
-                            <MapPin size={14} className="mr-2" /> Location
+                            <MapPin size={14} className="mr-2" /> {t("conversations_inbox.composer.location")}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={() => setAutomationDialogOpen(true)}>
-                          <Bot size={14} className="mr-2" /> Start automation
+                          <Bot size={14} className="mr-2" /> {t("conversations_inbox.composer.start_automation")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -4252,7 +4263,7 @@ export default function ConversationsInbox() {
                         variant="ghost"
                         size="icon"
                         className="h-9 w-9 [border-color:hsl(var(--input))]"
-                        title="AI text helper"
+                        title={t("conversations_inbox.composer.ai_helper")}
                         disabled={!messageText.trim() || transformAiMutation.isPending}
                         onClick={() => setAiTransformOpen((v) => !v)}
                       >
@@ -4264,17 +4275,21 @@ export default function ConversationsInbox() {
                       </Button>
                       {aiTransformOpen && (
                         <div className="absolute bottom-12 right-0 z-50 bg-white dark:bg-slate-900 border rounded-md shadow-lg p-1 w-48">
-                          {["correct", "expand", "shorten"].map((m) => (
+                          {[
+                            { mode: "correct", label: t("conversations_inbox.composer.correct") },
+                            { mode: "expand", label: t("conversations_inbox.composer.expand") },
+                            { mode: "shorten", label: t("conversations_inbox.composer.shorten") },
+                          ].map((opt) => (
                             <button
-                              key={m}
-                              onClick={() => transformAiMutation.mutate({ text: messageText, mode: m })}
+                              key={opt.mode}
+                              onClick={() => transformAiMutation.mutate({ text: messageText, mode: opt.mode })}
                               className="w-full text-left text-xs px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
                             >
-                              {m.charAt(0).toUpperCase() + m.slice(1)}
+                              {opt.label}
                             </button>
                           ))}
                           <div className="border-t my-1" />
-                          <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">Translate to</div>
+                          <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{t("conversations_inbox.composer.translate_to")}</div>
                           <div className="max-h-44 overflow-auto">
                             {AI_LANGUAGES.map((lang) => (
                               <button
@@ -4295,7 +4310,7 @@ export default function ConversationsInbox() {
                         variant="ghost"
                         size="icon"
                         className="h-9 w-9 [border-color:hsl(var(--input))]"
-                        title="Add emoji"
+                        title={t("conversations_inbox.composer.add_emoji")}
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                       >
                         <Smile size={18} />
@@ -4331,7 +4346,7 @@ export default function ConversationsInbox() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 [border-color:hsl(var(--input))]"
-                      title="Attach file"
+                      title={t("conversations_inbox.composer.attach_file")}
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Paperclip size={18} />
@@ -4350,7 +4365,7 @@ export default function ConversationsInbox() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 [border-color:hsl(var(--input))]"
-                      title="Send picture"
+                      title={t("conversations_inbox.composer.send_picture")}
                       onClick={() => imageInputRef.current?.click()}
                     >
                       <Image size={18} />
@@ -4361,7 +4376,7 @@ export default function ConversationsInbox() {
                       variant="ghost"
                       size="icon"
                       className={`h-9 w-9 [border-color:hsl(var(--input))] ${isRecording ? "bg-red-100 text-red-600" : ""}`}
-                      title={isRecording ? "Stop recording" : "Send voice message"}
+                      title={isRecording ? t("conversations_inbox.composer.stop_recording") : t("conversations_inbox.composer.send_voice_message")}
                       onClick={isRecording ? handleStopRecording : handleStartRecording}
                     >
                       <Mic size={18} />
@@ -4393,16 +4408,16 @@ export default function ConversationsInbox() {
                       {lockedByOther ? (
                         <>
                           <p className="text-sm font-medium text-foreground">
-                            This conversation is assigned to {lockName}.
+                            {t("conversations_inbox.locked.assigned_to_other", { name: lockName })}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Only the assigned agent can reply. Reassign it to yourself to take over.
+                            {t("conversations_inbox.locked.only_assigned_can_reply")}
                           </p>
                         </>
                       ) : (
                         <>
-                          <p className="text-sm font-medium text-foreground">To send messages, please assign this chat to an agent.</p>
-                          <p className="text-xs text-muted-foreground mt-1">Use the assignment options in the contact profile to get started</p>
+                          <p className="text-sm font-medium text-foreground">{t("conversations_inbox.locked.assign_prompt_title")}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{t("conversations_inbox.locked.assign_prompt_desc")}</p>
                         </>
                       )}
                     </div>
@@ -4414,8 +4429,8 @@ export default function ConversationsInbox() {
           ) : (
             <Card className="flex-1 flex flex-col items-center justify-center border-l-0 rounded-none">
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Select a conversation</h3>
-                <p className="text-sm text-muted-foreground">Choose a conversation from the list to start messaging</p>
+                <h3 className="text-lg font-semibold mb-2">{t("conversations_inbox.header.select_conversation_title")}</h3>
+                <p className="text-sm text-muted-foreground">{t("conversations_inbox.header.select_conversation_desc")}</p>
               </div>
             </Card>
           )
@@ -4485,39 +4500,39 @@ export default function ConversationsInbox() {
         <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader className="mb-2">
-              <DialogTitle>Filter Conversations</DialogTitle>
+              <DialogTitle>{t("conversations_inbox.dialogs.filter.title")}</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Team</label>
+                <label className="text-sm font-medium mb-2 block">{t("conversations_inbox.dialogs.filter.team")}</label>
                 <CustomDropdown
                   options={teamOptions}
                   selected={filterTeams}
                   onChange={setFilterTeams}
-                  placeholder="Select teams"
+                  placeholder={t("conversations_inbox.dialogs.filter.select_teams")}
                   width="100%"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Agent</label>
+                <label className="text-sm font-medium mb-2 block">{t("conversations_inbox.dialogs.filter.agent")}</label>
                 <CustomDropdown
                   options={agentOptions}
                   selected={filterAgents}
                   onChange={setFilterAgents}
-                  placeholder="Select agents"
+                  placeholder={t("conversations_inbox.dialogs.filter.select_agents")}
                   width="100%"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
+                <label className="text-sm font-medium mb-2 block">{t("conversations_inbox.dialogs.filter.status")}</label>
                 <CustomDropdown
                   options={[]}
                   selected={filterStatus}
                   onChange={setFilterStatus}
-                  placeholder="Select status"
+                  placeholder={t("conversations_inbox.dialogs.filter.select_status")}
                   width="100%"
                 />
               </div>
@@ -4525,10 +4540,10 @@ export default function ConversationsInbox() {
 
             <DialogFooter className="mt-2">
               <Button variant="ghost" onClick={() => setIsFilterModalOpen(false)} className="bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 font-normal">
-                Cancel
+                {t("conversations_inbox.dialogs.filter.cancel")}
               </Button>
               <Button onClick={() => setIsFilterModalOpen(false)} className="btn-outline-primary font-normal" variant="outline">
-                Apply Filters
+                {t("conversations_inbox.dialogs.filter.apply")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -4538,7 +4553,7 @@ export default function ConversationsInbox() {
         <Dialog open={isMakeCallModalOpen} onOpenChange={setIsMakeCallModalOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader className="mb-2">
-              <DialogTitle>Make Outbound Call</DialogTitle>
+              <DialogTitle>{t("conversations_inbox.dialogs.make_call.title")}</DialogTitle>
             </DialogHeader>
 
             {/* Tabs */}
@@ -4552,7 +4567,7 @@ export default function ConversationsInbox() {
                   : "border-b-transparent text-muted-foreground hover:text-foreground"
                   }`}
               >
-                Make Call
+                {t("conversations_inbox.dialogs.make_call.make_call_tab")}
               </button>
               <button
                 onClick={() => setMakeCallTab("search-contacts")}
@@ -4561,7 +4576,7 @@ export default function ConversationsInbox() {
                   : "border-b-transparent text-muted-foreground hover:text-foreground"
                   }`}
               >
-                Search Contacts
+                {t("conversations_inbox.dialogs.make_call.search_contacts_tab")}
               </button>
             </div>
 
@@ -4570,16 +4585,16 @@ export default function ConversationsInbox() {
               <div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Search for a customer or enter a phone number to place an outbound call using the WhatsApp Business API. Please note that outbound calls are chargeable as per{" "}
+                    {t("conversations_inbox.dialogs.make_call.description")}{" "}
                     <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/calling/pricing" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">
-                      Meta's pricing policies
+                      {t("conversations_inbox.dialogs.make_call.meta_pricing_policies")}
                     </a>
                   </p>
                 </div>
 
                 {!(hasCallPermission && selectedContact) && (
                   <div>
-                    <label className="text-sm font-medium">Enter phone number</label>
+                    <label className="text-sm font-medium">{t("conversations_inbox.dialogs.make_call.phone_label")}</label>
                     <div className="flex gap-2 mt-1 mb-4">
                       <Input
                         placeholder="+1 (555) 000-0000"
@@ -4589,7 +4604,7 @@ export default function ConversationsInbox() {
                       />
 
                       <Button onClick={handleCheckPermission} className="h-9 btn-outline-primary font-normal" variant="outline" disabled={!phoneNumber.trim()}>
-                        Check Permission
+                        {t("conversations_inbox.dialogs.make_call.check_permission")}
                       </Button>
                     </div>
                   </div>
@@ -4612,7 +4627,7 @@ export default function ConversationsInbox() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs font-medium text-green-600">Contact Found</p>
+                            <p className="text-xs font-medium text-green-600">{t("conversations_inbox.dialogs.make_call.contact_found")}</p>
                           </div>
                         </div>
                       </div>
@@ -4620,7 +4635,7 @@ export default function ConversationsInbox() {
 
                       <div className="p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/30 dark:border-red-800">
                         <p className="text-sm text-red-800 dark:text-red-300">
-                          <strong>Contact Not Found</strong> - No contact with this number exists in your workspace.
+                          <strong>{t("conversations_inbox.dialogs.make_call.contact_not_found")}</strong> - {t("conversations_inbox.dialogs.make_call.contact_not_found_desc")}
                         </p>
                       </div>
                     )}
@@ -4635,7 +4650,7 @@ export default function ConversationsInbox() {
                     setSelectedContact(null);
                     setLimitReached(false);
                   }} className="[border-color:hsl(var(--input))]">
-                    Clear
+                    {t("conversations_inbox.dialogs.make_call.clear")}
                   </Button>
                   <Button
                     disabled={!hasCallPermission || !callPermissionChecked || limitReached}
@@ -4650,7 +4665,7 @@ export default function ConversationsInbox() {
                     }}
                     className="btn-outline-primary font-normal" variant="outline"
                   >
-                    Call
+                    {t("conversations_inbox.dialogs.make_call.call")}
                   </Button>
                 </div>
               </div>
@@ -4662,7 +4677,7 @@ export default function ConversationsInbox() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search contacts..."
+                    placeholder={t("conversations_inbox.dialogs.make_call.search_placeholder")}
                     value={searchContactsQuery}
                     onChange={(e) => setSearchContactsQuery(e.target.value)}
                     className="border-input pl-9"
@@ -4673,7 +4688,7 @@ export default function ConversationsInbox() {
                   <div className="space-y-2 p-3">
                     {callContacts.length === 0 && (
                       <p className="text-sm text-muted-foreground text-center py-4">
-                        {searchContactsQuery.trim() ? "No contacts found" : "Type to search contacts"}
+                        {searchContactsQuery.trim() ? t("conversations_inbox.dialogs.make_call.no_contacts_found") : t("conversations_inbox.dialogs.make_call.type_to_search")}
                       </p>
                     )}
                     {callContacts.map((contact: any) => {
@@ -4708,10 +4723,10 @@ export default function ConversationsInbox() {
                               <div className="flex items-center justify-between">
                                 <p className="font-medium text-sm">{name}</p>
                                 <div className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
-                                  Found
+                                  {t("conversations_inbox.dialogs.make_call.found_badge")}
                                 </div>
                               </div>
-                              <p className="text-xs text-muted-foreground">{number || "No number on file"}</p>
+                              <p className="text-xs text-muted-foreground">{number || t("conversations_inbox.dialogs.make_call.no_number_on_file")}</p>
                             </div>
                           </div>
                         </div>
@@ -4729,7 +4744,7 @@ export default function ConversationsInbox() {
                     setSearchContactsQuery("");
                     setLimitReached(false);
                   }} className="[border-color:hsl(var(--input))]">
-                    Clear
+                    {t("conversations_inbox.dialogs.make_call.clear")}
                   </Button>
                   <Button
                     disabled={!selectedContact}
@@ -4746,7 +4761,7 @@ export default function ConversationsInbox() {
                     }}
                     className="btn-outline-primary font-normal" variant="outline"
                   >
-                    Call
+                    {t("conversations_inbox.dialogs.make_call.call")}
                   </Button>
                 </div>
               </div>
@@ -4758,7 +4773,7 @@ export default function ConversationsInbox() {
         <Dialog open={isTemplateMessageModalOpen} onOpenChange={setIsTemplateMessageModalOpen}>
           <DialogContent className="sm:max-w-3xl flex flex-col">
             <DialogHeader className="mb-2">
-              <DialogTitle>Send Template Message</DialogTitle>
+              <DialogTitle>{t("conversations_inbox.dialogs.template_message.title")}</DialogTitle>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto -ml-1">
@@ -4766,7 +4781,7 @@ export default function ConversationsInbox() {
                 {/* Left: Phone Numbers and Template Selection */}
                 <div className="space-y-4 pl-1">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Recipients (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
+                    <label className="text-sm font-medium mb-2 block">{t("conversations_inbox.dialogs.template_message.recipients_label")}<span className="text-red-500 pl-0.5">*</span></label>
                     <div className="space-y-2">
                       {templatePhoneNumbers.map((phone, index) => (
                         <div key={index} className="flex gap-2 items-center">
@@ -4807,13 +4822,13 @@ export default function ConversationsInbox() {
                         }}
                       >
                         <Plus size={14} className="mr-1" />
-                        Add another recipient
+                        {t("conversations_inbox.dialogs.template_message.add_recipient")}
                       </Button>
                     )}
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block">WhatsApp Template<span className="text-red-500 pl-0.5">*</span></label>
+                    <label className="text-sm font-medium mb-2 block">{t("conversations_inbox.dialogs.template_message.template_label")}<span className="text-red-500 pl-0.5">*</span></label>
                     <div className="space-y-3">
                       <CustomDropdown
                         options={broadcastTemplates.map(t => ({ id: String(t.id), name: t.name }))}
@@ -4827,20 +4842,20 @@ export default function ConversationsInbox() {
                             }
                           }
                         }}
-                        placeholder="Select a template"
+                        placeholder={t("conversations_inbox.dialogs.template_message.select_template")}
                         width="100%"
                         showSelectedOption={true}
                       />
                       {broadcastTemplates.length === 0 && (
                         <p className="text-sm text-muted-foreground">
-                          You don't have any templates yet. Create one to send messages.{" "}
+                          {t("conversations_inbox.dialogs.template_message.no_templates")}{" "}
                           <a
                             href="/template-manager"
                             className="text-primary underline hover:no-underline"
                           >
-                            Go to Template Manager
+                            {t("conversations_inbox.dialogs.template_message.go_to_template_manager")}
                           </a>
-                          {" "}to create one.
+                          {" "}{t("conversations_inbox.dialogs.template_message.to_create_one")}
                         </p>
                       )}
                     </div>
@@ -4849,13 +4864,13 @@ export default function ConversationsInbox() {
                   {/* Variable inputs */}
                   {selectedTemplate && selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
                     <div>
-                      <label className="text-sm font-medium block pt-2">Customize Variables</label>
+                      <label className="text-sm font-medium block pt-2">{t("conversations_inbox.dialogs.template_message.customize_variables")}</label>
                       <div className="space-y-2">
                         {selectedTemplate.variables.map((variable: string, index: number) => (
                           <div key={index} className="space-y-1">
                             <label className="text-xs font-medium text-gray-600">{variable}</label>
                             <Input
-                              placeholder={`Enter ${variable}...`}
+                              placeholder={t("conversations_inbox.dialogs.template_message.enter_variable", { variable })}
                               value={templateVariables[variable] || ""}
                               onChange={(e) => {
                                 setTemplateVariables({
@@ -4874,7 +4889,7 @@ export default function ConversationsInbox() {
 
                 {/* Right: Template Preview */}
                 <div className="flex flex-col items-center">
-                  <label className="text-sm font-medium mb-3 block self-start">Template Preview</label>
+                  <label className="text-sm font-medium mb-3 block self-start">{t("conversations_inbox.dialogs.template_message.preview_label")}</label>
                   <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
                       mode="chat"
@@ -4883,26 +4898,26 @@ export default function ConversationsInbox() {
                       footerText={selectedTemplate?.footer || ""}
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={templateVariables}
-                      placeholderText="Select a template to see preview..."
+                      placeholderText={t("conversations_inbox.dialogs.template_message.preview_placeholder")}
                     />
                   </div>
-                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
+                  <p className="text-[10px] py-1">{t("conversations_inbox.dialogs.template_message.preview_disclaimer")}</p>
                 </div>
               </div>
             </div>
 
             <div className="border-t pt-4 px-4 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                Message rates apply. See{" "}
+                {t("conversations_inbox.dialogs.template_message.message_rates")}{" "}
                 <a
                   href="https://developers.facebook.com/docs/whatsapp/cloud-api/calling/pricing"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  WhatsApp pricing
+                  {t("conversations_inbox.dialogs.template_message.whatsapp_pricing")}
                 </a>
-                {" "}for details.
+                {" "}{t("conversations_inbox.dialogs.template_message.for_details")}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -4915,7 +4930,7 @@ export default function ConversationsInbox() {
                   }}
                   className="[border-color:hsl(var(--input))]"
                 >
-                  Cancel
+                  {t("conversations_inbox.dialogs.template_message.cancel")}
                 </Button>
                 <Button
                   disabled={
@@ -4927,7 +4942,7 @@ export default function ConversationsInbox() {
                   onClick={handleSendTemplateMessage}
                   className="btn-outline-primary font-normal" variant="outline"
                 >
-                  Send Message
+                  {t("conversations_inbox.dialogs.template_message.send")}
                 </Button>
               </div>
             </div>
@@ -4948,7 +4963,7 @@ export default function ConversationsInbox() {
 
                 {/* Contact Info */}
                 <div className="text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">Calling</p>
+                  <p className="text-sm text-muted-foreground">{t("conversations_inbox.call_ui.calling")}</p>
                   {callContactName && <p className="text-2xl font-bold">{callContactName}</p>}
                   <p className="text-lg font-semibold text-muted-foreground">{callPhoneNumber}</p>
                 </div>
@@ -4967,7 +4982,7 @@ export default function ConversationsInbox() {
                       ? "bg-red-100 hover:bg-red-200"
                       : "bg-muted hover:bg-muted/80"
                       }`}
-                    title={isMuted ? "Unmute" : "Mute"}
+                    title={isMuted ? t("conversations_inbox.call_ui.unmute") : t("conversations_inbox.call_ui.mute")}
                   >
                     {isMuted ? (
                       <MicOff size={20} className={isMuted ? "text-red-600" : "text-foreground"} />
@@ -4983,7 +4998,7 @@ export default function ConversationsInbox() {
                       ? "bg-primary/15 hover:bg-primary/25"
                       : "bg-muted hover:bg-muted/80"
                       }`}
-                    title={isSpeakerOn ? "Speaker off" : "Speaker on"}
+                    title={isSpeakerOn ? t("conversations_inbox.call_ui.speaker_off") : t("conversations_inbox.call_ui.speaker_on")}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isSpeakerOn ? "text-primary" : "text-foreground"}>
                       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -5004,7 +5019,7 @@ export default function ConversationsInbox() {
                       setIsMakeCallModalOpen(false);
                     }}
                     className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors"
-                    title="End call"
+                    title={t("conversations_inbox.call_ui.end_call")}
                   >
                     <Phone size={20} className="text-white rotate-135" />
                   </button>
@@ -5012,7 +5027,7 @@ export default function ConversationsInbox() {
 
                 {/* Call Status */}
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Connected</p>
+                  <p className="text-sm text-muted-foreground">{t("conversations_inbox.call_ui.connected")}</p>
                 </div>
               </div>
             </div>
@@ -5025,11 +5040,11 @@ export default function ConversationsInbox() {
       <Dialog open={snoozeDialogOpen} onOpenChange={setSnoozeDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Snooze conversation</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.snooze.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Pick a future time. The conversation will move out of your inbox and reappear at the chosen moment.
+              {t("conversations_inbox.dialogs.snooze.description")}
             </p>
             <Input
               type="datetime-local"
@@ -5040,7 +5055,7 @@ export default function ConversationsInbox() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSnoozeDialogOpen(false)}>
-              Cancel
+              {t("conversations_inbox.dialogs.snooze.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -5052,7 +5067,7 @@ export default function ConversationsInbox() {
               }
               disabled={!snoozeUntil || snoozeMutation.isPending}
             >
-              {snoozeMutation.isPending ? "Snoozing…" : "Snooze"}
+              {snoozeMutation.isPending ? t("conversations_inbox.dialogs.snooze.snoozing") : t("conversations_inbox.dialogs.snooze.snooze")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -5062,11 +5077,11 @@ export default function ConversationsInbox() {
       <Dialog open={automationDialogOpen} onOpenChange={setAutomationDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Start an automation</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.automation.title")}</DialogTitle>
           </DialogHeader>
           <div className="max-h-80 overflow-auto divide-y">
             {composerAutomations.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No automations found.</p>
+              <p className="text-sm text-muted-foreground py-6 text-center">{t("conversations_inbox.dialogs.automation.no_automations")}</p>
             ) : (
               composerAutomations.map((a) => (
                 <button
@@ -5091,11 +5106,11 @@ export default function ConversationsInbox() {
       <Dialog open={galleryDialogOpen} onOpenChange={setGalleryDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Media gallery</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.gallery.title")}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-auto">
             {galleryFiles.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-10 text-center">No media in the gallery yet.</p>
+              <p className="text-sm text-muted-foreground py-10 text-center">{t("conversations_inbox.dialogs.gallery.empty")}</p>
             ) : (
               <div className="grid grid-cols-4 gap-2">
                 {galleryFiles.map((f) => (
@@ -5126,12 +5141,12 @@ export default function ConversationsInbox() {
       <Dialog open={stickerDialogOpen} onOpenChange={setStickerDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Send a sticker</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.sticker.title")}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[55vh] overflow-auto">
             {stickerFiles.length === 0 ? (
               <p className="text-sm text-muted-foreground py-10 text-center">
-                No stickers in the gallery. Upload .webp images to the gallery to use them as stickers.
+                {t("conversations_inbox.dialogs.sticker.empty")}
               </p>
             ) : (
               <div className="grid grid-cols-5 gap-2">
@@ -5156,34 +5171,34 @@ export default function ConversationsInbox() {
       <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Share a location</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.location.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Button variant="outline" size="sm" onClick={useCurrentLocation} disabled={locGeoLoading} className="w-full">
-              <MapPin size={14} className="mr-2" /> {locGeoLoading ? "Getting location…" : "Use my current location"}
+              <MapPin size={14} className="mr-2" /> {locGeoLoading ? t("conversations_inbox.dialogs.location.getting_location") : t("conversations_inbox.dialogs.location.use_current")}
             </Button>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-muted-foreground">Latitude *</label>
+                <label className="text-[11px] font-semibold text-muted-foreground">{t("conversations_inbox.dialogs.location.latitude")}</label>
                 <Input value={locLat} onChange={(e) => setLocLat(e.target.value)} placeholder="e.g. 24.8607" />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-muted-foreground">Longitude *</label>
+                <label className="text-[11px] font-semibold text-muted-foreground">{t("conversations_inbox.dialogs.location.longitude")}</label>
                 <Input value={locLng} onChange={(e) => setLocLng(e.target.value)} placeholder="e.g. 67.0011" />
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-muted-foreground">Name</label>
-              <Input value={locName} onChange={(e) => setLocName(e.target.value)} placeholder="Place name (optional)" />
+              <label className="text-[11px] font-semibold text-muted-foreground">{t("conversations_inbox.dialogs.location.name")}</label>
+              <Input value={locName} onChange={(e) => setLocName(e.target.value)} placeholder={t("conversations_inbox.dialogs.location.name_placeholder")} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-muted-foreground">Address</label>
-              <Input value={locAddress} onChange={(e) => setLocAddress(e.target.value)} placeholder="Street address (optional)" />
+              <label className="text-[11px] font-semibold text-muted-foreground">{t("conversations_inbox.dialogs.location.address")}</label>
+              <Input value={locAddress} onChange={(e) => setLocAddress(e.target.value)} placeholder={t("conversations_inbox.dialogs.location.address_placeholder")} />
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="ghost" size="sm" onClick={() => setLocationDialogOpen(false)}>Cancel</Button>
+              <Button variant="ghost" size="sm" onClick={() => setLocationDialogOpen(false)}>{t("conversations_inbox.dialogs.location.cancel")}</Button>
               <Button size="sm" onClick={sendLocation} disabled={sendMessageMutation.isPending || !locLat.trim() || !locLng.trim()}>
-                <MapPin size={14} className="mr-2" /> Send location
+                <MapPin size={14} className="mr-2" /> {t("conversations_inbox.dialogs.location.send_location")}
               </Button>
             </div>
           </div>
@@ -5194,11 +5209,11 @@ export default function ConversationsInbox() {
       <Dialog open={bulkSnoozeOpen} onOpenChange={setBulkSnoozeOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Snooze {selectedInboxIds.length} conversation(s)</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.bulk_snooze.title", { count: selectedInboxIds.length })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Pick a future time. The selected conversations will move out of the inbox and reappear at the chosen moment.
+              {t("conversations_inbox.dialogs.bulk_snooze.description")}
             </p>
             <Input
               type="datetime-local"
@@ -5209,7 +5224,7 @@ export default function ConversationsInbox() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkSnoozeOpen(false)}>
-              Cancel
+              {t("conversations_inbox.dialogs.bulk_snooze.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -5220,7 +5235,7 @@ export default function ConversationsInbox() {
               }
               disabled={!bulkSnoozeUntil || bulkSnoozeMutation.isPending}
             >
-              {bulkSnoozeMutation.isPending ? "Snoozing…" : "Snooze"}
+              {bulkSnoozeMutation.isPending ? t("conversations_inbox.dialogs.bulk_snooze.snoozing") : t("conversations_inbox.dialogs.bulk_snooze.snooze")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -5230,15 +5245,15 @@ export default function ConversationsInbox() {
       <Dialog open={bulkAssignOpen} onOpenChange={setBulkAssignOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Assign {selectedInboxIds.length} conversation(s)</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.bulk_assign.title", { count: selectedInboxIds.length })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <Select value={bulkAssignAgent} onValueChange={setBulkAssignAgent}>
               <SelectTrigger data-testid="select-bulk-assign-agent">
-                <SelectValue placeholder="Choose an agent…" />
+                <SelectValue placeholder={t("conversations_inbox.dialogs.bulk_assign.choose_agent")} />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-background">
-                <SelectItem value="null">Unassign (move to queue)</SelectItem>
+                <SelectItem value="null">{t("conversations_inbox.dialogs.bulk_assign.unassign_option")}</SelectItem>
                 {agentOptions.map((a: AgentOption) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.name}
@@ -5249,7 +5264,7 @@ export default function ConversationsInbox() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkAssignOpen(false)}>
-              Cancel
+              {t("conversations_inbox.dialogs.bulk_assign.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -5260,7 +5275,7 @@ export default function ConversationsInbox() {
               }
               disabled={!bulkAssignAgent || bulkAssignMutation.isPending}
             >
-              {bulkAssignMutation.isPending ? "Assigning…" : "Assign"}
+              {bulkAssignMutation.isPending ? t("conversations_inbox.dialogs.bulk_assign.assigning") : t("conversations_inbox.dialogs.bulk_assign.assign")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -5272,19 +5287,19 @@ export default function ConversationsInbox() {
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Send WhatsApp Template</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.send_template.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Pick an approved template to reach this contact outside the 24-hour reply window.
+              {t("conversations_inbox.dialogs.send_template.description")}
             </p>
             <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a template…" />
+                <SelectValue placeholder={t("conversations_inbox.dialogs.send_template.choose_template")} />
               </SelectTrigger>
               <SelectContent>
                 {waTemplates.length === 0 ? (
-                  <div className="px-2 py-1 text-xs text-muted-foreground">No approved templates</div>
+                  <div className="px-2 py-1 text-xs text-muted-foreground">{t("conversations_inbox.dialogs.send_template.no_approved_templates")}</div>
                 ) : (
                   waTemplates.map((t: any) => (
                     <SelectItem key={String(t.id)} value={String(t.id)}>
@@ -5297,13 +5312,13 @@ export default function ConversationsInbox() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
-              Cancel
+              {t("conversations_inbox.dialogs.send_template.cancel")}
             </Button>
             <Button
               onClick={() => sendTemplateMutation.mutate(selectedTemplateId)}
               disabled={!selectedTemplateId || sendTemplateMutation.isPending}
             >
-              {sendTemplateMutation.isPending ? "Sending…" : "Send"}
+              {sendTemplateMutation.isPending ? t("conversations_inbox.dialogs.send_template.sending") : t("conversations_inbox.dialogs.send_template.send")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -5315,11 +5330,11 @@ export default function ConversationsInbox() {
       <Dialog open={folderModalOpen} onOpenChange={setFolderModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{folderEditing ? "Rename folder" : "New folder"}</DialogTitle>
+            <DialogTitle>{folderEditing ? t("conversations_inbox.dialogs.folder.rename_title") : t("conversations_inbox.dialogs.folder.new_title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <Input
-              placeholder="Folder name"
+              placeholder={t("conversations_inbox.dialogs.folder.placeholder")}
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
               maxLength={30}
@@ -5332,12 +5347,12 @@ export default function ConversationsInbox() {
                 size="sm"
                 onClick={() => folderDeleteMutation.mutate(String(folderEditing.id))}
               >
-                Delete
+                {t("conversations_inbox.dialogs.folder.delete")}
               </Button>
             )}
             <div className="flex gap-2 ml-auto">
               <Button variant="outline" onClick={() => setFolderModalOpen(false)}>
-                Cancel
+                {t("conversations_inbox.dialogs.folder.cancel")}
               </Button>
               <Button
                 onClick={() =>
@@ -5347,7 +5362,7 @@ export default function ConversationsInbox() {
                 }
                 disabled={!folderName.trim()}
               >
-                {folderEditing ? "Save" : "Create"}
+                {folderEditing ? t("conversations_inbox.dialogs.folder.save") : t("conversations_inbox.dialogs.folder.create")}
               </Button>
             </div>
           </DialogFooter>
@@ -5359,14 +5374,14 @@ export default function ConversationsInbox() {
       <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Schedule reminder</DialogTitle>
+            <DialogTitle>{t("conversations_inbox.dialogs.reminder.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Reminders are supported on WhatsApp, Telegram, and Z-API conversations only.
+              {t("conversations_inbox.dialogs.reminder.description")}
             </p>
             <div>
-              <label className="text-xs font-medium">When</label>
+              <label className="text-xs font-medium">{t("conversations_inbox.dialogs.reminder.when_label")}</label>
               <Input
                 type="datetime-local"
                 value={reminderAt}
@@ -5375,9 +5390,9 @@ export default function ConversationsInbox() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium">Message</label>
+              <label className="text-xs font-medium">{t("conversations_inbox.dialogs.reminder.message_label")}</label>
               <Textarea
-                placeholder="Reminder text…"
+                placeholder={t("conversations_inbox.dialogs.reminder.message_placeholder")}
                 value={reminderText}
                 onChange={(e) => setReminderText(e.target.value)}
                 rows={3}
@@ -5387,7 +5402,7 @@ export default function ConversationsInbox() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setReminderDialogOpen(false)}>
-              Cancel
+              {t("conversations_inbox.dialogs.reminder.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -5400,7 +5415,7 @@ export default function ConversationsInbox() {
               }
               disabled={!reminderAt || !reminderText.trim() || reminderMutation.isPending}
             >
-              {reminderMutation.isPending ? "Scheduling…" : "Schedule"}
+              {reminderMutation.isPending ? t("conversations_inbox.dialogs.reminder.scheduling") : t("conversations_inbox.dialogs.reminder.schedule")}
             </Button>
           </DialogFooter>
         </DialogContent>

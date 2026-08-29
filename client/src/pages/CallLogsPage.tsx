@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Search, RefreshCw, MoreVertical, Download, FileText } from "react-feather";
 import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic, Play, Pause, SkipForward, SkipBack, X, Activity } from "lucide-react";
@@ -125,6 +126,7 @@ interface CallLog {
 
 
 export default function CallLogsPage() {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const workspaceTz = useWorkspaceTimezone();
 
@@ -230,17 +232,17 @@ export default function CallLogsPage() {
     const [duration, setDuration] = useState(0);
 
     const directionOptions = [
-        { id: "Inbound", name: "Inbound" },
-        { id: "Outbound", name: "Outbound" },
+        { id: "Inbound", name: t("call_logs_page.direction_inbound") },
+        { id: "Outbound", name: t("call_logs_page.direction_outbound") },
     ];
 
     const callStatusOptions = [
-        { id: "__all__", name: "All" },
-        { id: "Completed", name: "Completed" },
-        { id: "Missed", name: "Missed" },
-        { id: "Declined", name: "Declined" },
-        { id: "Failed", name: "Failed" },
-        { id: "In Progress", name: "In Progress" },
+        { id: "__all__", name: t("call_logs_page.status_all") },
+        { id: "Completed", name: t("call_logs_page.status_completed") },
+        { id: "Missed", name: t("call_logs_page.status_missed") },
+        { id: "Declined", name: t("call_logs_page.status_declined") },
+        { id: "Failed", name: t("call_logs_page.status_failed") },
+        { id: "In Progress", name: t("call_logs_page.status_in_progress") },
     ];
 
     const callKpiData = {
@@ -511,7 +513,19 @@ export default function CallLogsPage() {
             return str;
         };
 
-        const headers = ["Contact Number", "Contact Name", "Started Time", "Duration", "Agent Name", "Agent ID", "Direction", "Status", "Sentiment", "Sentiment Summary", "Recording"];
+        const headers = [
+            t("call_logs_page.csv_contact_number"),
+            t("call_logs_page.csv_contact_name"),
+            t("call_logs_page.csv_started_time"),
+            t("call_logs_page.csv_duration"),
+            t("call_logs_page.csv_agent_name"),
+            t("call_logs_page.csv_agent_id"),
+            t("call_logs_page.csv_direction"),
+            t("call_logs_page.csv_status"),
+            t("call_logs_page.csv_sentiment"),
+            t("call_logs_page.csv_sentiment_summary"),
+            t("call_logs_page.csv_recording"),
+        ];
 
         const rows = selectedCallLogs.map(call => [
             escapeCSV(call.contactNumber),
@@ -552,7 +566,19 @@ export default function CallLogsPage() {
             return str;
         };
 
-        const headers = ["Contact Number", "Contact Name", "Started Time", "Duration", "Agent Name", "Agent ID", "Direction", "Status", "Sentiment", "Sentiment Summary", "Recording"];
+        const headers = [
+            t("call_logs_page.csv_contact_number"),
+            t("call_logs_page.csv_contact_name"),
+            t("call_logs_page.csv_started_time"),
+            t("call_logs_page.csv_duration"),
+            t("call_logs_page.csv_agent_name"),
+            t("call_logs_page.csv_agent_id"),
+            t("call_logs_page.csv_direction"),
+            t("call_logs_page.csv_status"),
+            t("call_logs_page.csv_sentiment"),
+            t("call_logs_page.csv_sentiment_summary"),
+            t("call_logs_page.csv_recording"),
+        ];
 
         const row = [
             escapeCSV(call.contactNumber),
@@ -597,10 +623,10 @@ export default function CallLogsPage() {
                         </div>
                         <div className="space-y-0.5">
                             <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                                Call Logs
+                                {t("call_logs_page.title")}
                             </h1>
                             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                Comprehensive history and metrics for all inbound and outbound voice calls
+                                {t("call_logs_page.subtitle")}
                             </p>
                         </div>
                     </div>
@@ -617,7 +643,7 @@ export default function CallLogsPage() {
                                     <RefreshCw size={14} className={cn("text-slate-500", isLoading && "animate-spin")} />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="text-[10px]">Refresh Logs</TooltipContent>
+                            <TooltipContent className="text-[10px]">{t("call_logs_page.refresh_logs")}</TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
@@ -629,38 +655,38 @@ export default function CallLogsPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-5 border-b border-slate-200 dark:border-slate-800/80 divide-x divide-slate-100 dark:divide-slate-800/50">
                     <div className="p-3 bg-slate-50/30 dark:bg-transparent">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total Calls</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t("call_logs_page.kpi_total_calls")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-lg font-bold text-slate-900 dark:text-white">{callKpiData.totalCalls}</p>
-                            <span className="text-[10px] font-medium text-slate-400">total</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("call_logs_page.kpi_total")}</span>
                         </div>
                     </div>
                     <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Completed</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t("call_logs_page.kpi_completed")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-lg font-bold text-emerald-600">{callKpiData.completed}</p>
-                            <span className="text-[10px] font-medium text-slate-400">successful</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("call_logs_page.kpi_successful")}</span>
                         </div>
                     </div>
                     <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Inbound</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t("call_logs_page.kpi_inbound")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-lg font-bold text-blue-600">{callKpiData.inboundCalls}</p>
-                            <span className="text-[10px] font-medium text-slate-400">received</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("call_logs_page.kpi_received")}</span>
                         </div>
                     </div>
                     <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Outbound</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t("call_logs_page.kpi_outbound")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-lg font-bold text-amber-600">{callKpiData.outboundCalls}</p>
-                            <span className="text-[10px] font-medium text-slate-400">initiated</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("call_logs_page.kpi_initiated")}</span>
                         </div>
                     </div>
                     <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Avg. Duration</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t("call_logs_page.kpi_avg_duration")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-lg font-bold text-indigo-600">{callKpiData.avgDuration}</p>
-                            <span className="text-[10px] font-medium text-slate-400">per call</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("call_logs_page.kpi_per_call")}</span>
                         </div>
                     </div>
                 </div>
@@ -673,7 +699,7 @@ export default function CallLogsPage() {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search contact, agent or number..."
+                            placeholder={t("call_logs_page.search_placeholder")}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="block w-full pl-9 pr-3 h-9 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
@@ -687,12 +713,12 @@ export default function CallLogsPage() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border border-input dark:border-slate-800 shadow-xl">
-                                <SelectItem value="last-7-days" className="text-xs">Last 7 Days</SelectItem>
-                                <SelectItem value="last-14-days" className="text-xs">Last 14 Days</SelectItem>
-                                <SelectItem value="last-30-days" className="text-xs">Last 30 Days</SelectItem>
-                                <SelectItem value="this-month" className="text-xs">This Month</SelectItem>
-                                <SelectItem value="this-quarter" className="text-xs">This Quarter</SelectItem>
-                                <SelectItem value="custom" className="text-xs text-primary font-bold">Custom Range</SelectItem>
+                                <SelectItem value="last-7-days" className="text-xs">{t("call_logs_page.date_last_7_days")}</SelectItem>
+                                <SelectItem value="last-14-days" className="text-xs">{t("call_logs_page.date_last_14_days")}</SelectItem>
+                                <SelectItem value="last-30-days" className="text-xs">{t("call_logs_page.date_last_30_days")}</SelectItem>
+                                <SelectItem value="this-month" className="text-xs">{t("call_logs_page.date_this_month")}</SelectItem>
+                                <SelectItem value="this-quarter" className="text-xs">{t("call_logs_page.date_this_quarter")}</SelectItem>
+                                <SelectItem value="custom" className="text-xs text-primary font-bold">{t("call_logs_page.date_custom_range")}</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -702,7 +728,7 @@ export default function CallLogsPage() {
                                     <Button variant="outline" style={{ borderRadius: '6px' }} className="h-9 px-3 !rounded-md border border-input bg-white dark:bg-slate-800/50 text-[11px] font-medium gap-2 shadow-sm">
                                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                         <span>
-                                            {customDateRange?.from ? format(customDateRange.from, 'dd/MM') : "Start"} - {customDateRange?.to ? format(customDateRange.to, 'dd/MM') : "End"}
+                                            {customDateRange?.from ? format(customDateRange.from, 'dd/MM') : t("call_logs_page.date_start")} - {customDateRange?.to ? format(customDateRange.to, 'dd/MM') : t("call_logs_page.date_end")}
                                         </span>
                                     </Button>
                                 </PopoverTrigger>
@@ -721,7 +747,7 @@ export default function CallLogsPage() {
                             options={directionOptions}
                             selected={selectedDirection}
                             onChange={(v) => { setSelectedDirection(v); setPage(1); }}
-                            placeholder="Direction"
+                            placeholder={t("call_logs_page.direction_placeholder")}
                             width="140px"
                             className="!w-[140px]"
                             showSelectedOption={true}
@@ -731,7 +757,7 @@ export default function CallLogsPage() {
                                     <div className="flex items-center gap-2 truncate">
                                         <ChevronsUpDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                         <span className={cn("truncate text-[12px]", selectedDirection.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
-                                            {selectedDirection.length === 0 ? "Direction" : selectedDirection[0]}
+                                            {selectedDirection.length === 0 ? t("call_logs_page.direction_placeholder") : selectedDirection[0]}
                                         </span>
                                     </div>
                                     <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
@@ -743,7 +769,7 @@ export default function CallLogsPage() {
                             options={callStatusOptions}
                             selected={selectedStatus}
                             onChange={(v) => { setSelectedStatus(v); setPage(1); }}
-                            placeholder="Status"
+                            placeholder={t("call_logs_page.status_placeholder")}
                             width="140px"
                             className="!w-[140px]"
                             popoutAlign="right"
@@ -755,7 +781,7 @@ export default function CallLogsPage() {
                                         <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                         <span className={cn("truncate text-[12px]", selectedStatus.length > 0 && !selectedStatus.includes("__all__") ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
                                             {selectedStatus.length === 0 || selectedStatus.includes("__all__")
-                                                ? "Status"
+                                                ? t("call_logs_page.status_placeholder")
                                                 : callStatusOptions.find(o => o.id === selectedStatus[0])?.name ?? selectedStatus[0]}
                                         </span>
                                     </div>
@@ -770,15 +796,15 @@ export default function CallLogsPage() {
                 <div className="flex-1 overflow-auto min-h-[300px]">
                     {selectedRows.size > 0 && (
                         <div className="flex items-center gap-3 px-5 py-2 bg-primary/[0.06] dark:bg-primary/5 border-b border-primary/20 dark:border-primary/20 animate-in slide-in-from-top-2">
-                            <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{selectedRows.size} Selected</span>
+                            <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{t("call_logs_page.selected_count", { count: selectedRows.size })}</span>
                             <div className="flex gap-1 ml-auto">
-                                <Button 
+                                <Button
                                     onClick={handleExportSelectedCallLogsAsCSV}
-                                    variant="outline" 
+                                    variant="outline"
                                     className="h-7 px-3 rounded-md border-primary/30 text-primary gap-2 text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all"
                                 >
                                     <Download size={12} />
-                                    Export Selected
+                                    {t("call_logs_page.export_selected")}
                                 </Button>
                             </div>
                         </div>
@@ -799,51 +825,51 @@ export default function CallLogsPage() {
                                     className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Contact {renderCallSortIcon("contact")}
+                                        {t("call_logs_page.col_contact")} {renderCallSortIcon("contact")}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     onClick={() => handleCallColumnSort("agent")}
                                     className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Agent {renderCallSortIcon("agent")}
+                                        {t("call_logs_page.col_agent")} {renderCallSortIcon("agent")}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     onClick={() => handleCallColumnSort("direction")}
                                     className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Direction {renderCallSortIcon("direction")}
+                                        {t("call_logs_page.col_direction")} {renderCallSortIcon("direction")}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     onClick={() => handleCallColumnSort("startTime")}
                                     className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Start Time {renderCallSortIcon("startTime")}
+                                        {t("call_logs_page.col_start_time")} {renderCallSortIcon("startTime")}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     onClick={() => handleCallColumnSort("duration")}
                                     className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Duration {renderCallSortIcon("duration")}
+                                        {t("call_logs_page.col_duration")} {renderCallSortIcon("duration")}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     onClick={() => handleCallColumnSort("status")}
                                     className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Status {renderCallSortIcon("status")}
+                                        {t("call_logs_page.col_status")} {renderCallSortIcon("status")}
                                     </div>
                                 </th>
                                 <th className="px-5 py-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 w-20">
-                                    Actions
+                                    {t("call_logs_page.col_actions")}
                                 </th>
                             </tr>
                         </thead>
@@ -855,7 +881,7 @@ export default function CallLogsPage() {
                                             <div className="p-4 rounded-full bg-slate-50 dark:bg-slate-800">
                                                 <Mic className="w-8 h-8 text-slate-300" />
                                             </div>
-                                            <p className="text-sm font-medium text-slate-400">No call logs found</p>
+                                            <p className="text-sm font-medium text-slate-400">{t("call_logs_page.empty_state")}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -924,14 +950,14 @@ export default function CallLogsPage() {
                                                         className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
                                                     >
                                                         <FileText size={13} className="text-primary" />
-                                                        View Details
+                                                        {t("call_logs_page.action_view_details")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         onClick={() => handleExportSingleCallLogAsCSV(call)}
                                                         className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
                                                     >
                                                         <Download size={13} className="text-emerald-500" />
-                                                        Export CSV
+                                                        {t("call_logs_page.action_export_csv")}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -946,10 +972,10 @@ export default function CallLogsPage() {
                 {/* 5. Footer / Pagination Section */}
                 <div className="px-5 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
                     <div className="flex items-center gap-4 text-[11px] font-medium text-slate-500">
-                        <span>{logsResponse?.total || 0} results found</span>
+                        <span>{t("call_logs_page.results_found", { count: logsResponse?.total || 0 })}</span>
                         <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
                         <div className="flex items-center gap-2">
-                            <span>Show</span>
+                            <span>{t("call_logs_page.show_label")}</span>
                             <div className="relative" ref={dropdownRef}>
                                 <button
                                     type="button"
@@ -982,9 +1008,9 @@ export default function CallLogsPage() {
 
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mr-2">
-                            <span>Page</span>
+                            <span>{t("call_logs_page.page_label")}</span>
                             <span className="text-slate-900 dark:text-white">{page}</span>
-                            <span>of</span>
+                            <span>{t("call_logs_page.of_label")}</span>
                             <span>{totalPages || 1}</span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -1034,20 +1060,20 @@ export default function CallLogsPage() {
                 <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
                     <DialogContent className="max-w-lg">
                         <DialogHeader className="mb-2">
-                            <DialogTitle>Call Details</DialogTitle>
+                            <DialogTitle>{t("call_logs_page.dialog_title")}</DialogTitle>
                         </DialogHeader>
                         {selectedCallLog && (
                             <div className="space-y-5">
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Contact</label>
-                                        <p className="mt-1 text-sm font-medium">{selectedCallLog.contact || "Unknown"}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.field_contact")}</label>
+                                        <p className="mt-1 text-sm font-medium">{selectedCallLog.contact || t("call_logs_page.unknown")}</p>
                                         {selectedCallLog.contactNumber && (
                                             <p className="text-xs text-slate-500">{selectedCallLog.contactNumber}</p>
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Direction</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.field_direction")}</label>
                                         <p className="mt-1">
                                             <span className={cn(
                                                 "inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
@@ -1060,7 +1086,7 @@ export default function CallLogsPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Started</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.field_started")}</label>
                                         <p className="mt-1 text-xs font-medium">
                                             {selectedCallLog.startTime
                                                 ? formatInWorkspaceTz(selectedCallLog.startTime, "dd MMM yyyy, HH:mm", workspaceTz)
@@ -1068,11 +1094,11 @@ export default function CallLogsPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Duration</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.field_duration")}</label>
                                         <p className="mt-1 text-xs font-medium">{selectedCallLog.duration}</p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.field_status")}</label>
                                         <p className="mt-1">
                                             <span className={cn(
                                                 "inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
@@ -1088,7 +1114,7 @@ export default function CallLogsPage() {
                                     </div>
                                     {selectedCallLog.call_sid && (
                                         <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call SID</label>
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.field_call_sid")}</label>
                                             <p className="mt-1 text-[10px] font-mono text-slate-500 truncate" title={selectedCallLog.call_sid}>
                                                 {selectedCallLog.call_sid}
                                             </p>
@@ -1098,20 +1124,20 @@ export default function CallLogsPage() {
 
                                 {/* Recording — only renders if backend resolved a real RecordingUrl. */}
                                 <div className="border-t pt-4">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call Recording</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("call_logs_page.recording_label")}</label>
                                     <div className="mt-2">
                                         {detailLoading ? (
-                                            <p className="text-xs text-slate-400">Loading recording…</p>
+                                            <p className="text-xs text-slate-400">{t("call_logs_page.recording_loading")}</p>
                                         ) : (detailData?.call?.recordingUrl ?? selectedCallLog.recordingUrl) ? (
                                             <audio
                                                 controls
                                                 className="w-full h-12"
                                                 src={detailData?.call?.recordingUrl ?? selectedCallLog.recordingUrl ?? undefined}
                                             >
-                                                Your browser does not support the audio element.
+                                                {t("call_logs_page.audio_not_supported")}
                                             </audio>
                                         ) : (
-                                            <p className="text-sm text-muted-foreground">Call recording unavailable</p>
+                                            <p className="text-sm text-muted-foreground">{t("call_logs_page.recording_unavailable")}</p>
                                         )}
                                     </div>
                                 </div>
@@ -1125,7 +1151,7 @@ export default function CallLogsPage() {
                                 variant="outline"
                                 className="border-input [border-color:hsl(var(--input))] font-normal"
                             >
-                                Close
+                                {t("call_logs_page.close")}
                             </Button>
                         </div>
                     </DialogContent>

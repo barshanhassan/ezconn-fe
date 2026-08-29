@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Reply, ExternalLink, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -22,19 +23,20 @@ interface Props {
   onClose: () => void;
 }
 
-// Labels mirror replyagent (automation.trigger_auto_reply_once / _once_per_24 / _always).
-const INTERVAL_OPTIONS = [
-  { value: "0", label: "Once", description: "The default reply runs the first time this contact messages this account, ever." },
-  { value: "24", label: "Once per 24h", description: "The default reply runs at most once per 24 hour window per contact." },
-  { value: "247", label: "Always", description: "The default reply runs on every inbound message from this contact." },
-];
-
 export default function InstagramDefaultReplyDialog({ open, account, onClose }: Props) {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
+
+  // Labels mirror replyagent (automation.trigger_auto_reply_once / _once_per_24 / _always).
+  const INTERVAL_OPTIONS = [
+    { value: "0", label: t("instagram_default_reply_dialog.interval_once_label"), description: t("instagram_default_reply_dialog.interval_once_description") },
+    { value: "24", label: t("instagram_default_reply_dialog.interval_24h_label"), description: t("instagram_default_reply_dialog.interval_24h_description") },
+    { value: "247", label: t("instagram_default_reply_dialog.interval_always_label"), description: t("instagram_default_reply_dialog.interval_always_description") },
+  ];
 
   const initialAutomationId = account?.auto_reply_automation_id ? String(account.auto_reply_automation_id) : "";
   const initialInterval = account?.auto_reply_interval ?? "247";
@@ -71,11 +73,11 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
       });
     },
     onSuccess: () => {
-      toast({ title: "Auto-reply saved", description: "Default reply is now active for this account." });
+      toast({ title: t("instagram_default_reply_dialog.saved"), description: t("instagram_default_reply_dialog.saved_description") });
       invalidate();
       onClose();
     },
-    onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
+    onError: () => toast({ title: t("instagram_default_reply_dialog.error"), description: t("instagram_default_reply_dialog.failed_to_save"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -86,7 +88,7 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
       });
     },
     onSuccess: () => {
-      toast({ title: "Auto-reply cleared" });
+      toast({ title: t("instagram_default_reply_dialog.cleared") });
       invalidate();
       onClose();
     },
@@ -105,9 +107,9 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
               <Reply size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={cn("text-[14px] font-semibold", dark ? "text-white" : "text-slate-900")}>Instant replies</div>
+              <div className={cn("text-[14px] font-semibold", dark ? "text-white" : "text-slate-900")}>{t("instagram_default_reply_dialog.title")}</div>
               <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>
-                Pick a Smart Flow to run automatically whenever a contact messages{" "}
+                {t("instagram_default_reply_dialog.description_prefix")}{" "}
                 <span className="font-mono">@{account.username ?? account.name}</span>.
               </p>
             </div>
@@ -115,15 +117,15 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2 space-y-2">
-              <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>Select automation</label>
+              <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>{t("instagram_default_reply_dialog.select_automation")}</label>
               <select
                 value={automationId}
                 onChange={(e) => setAutomationId(e.target.value)}
                 className={cn("w-full h-11 px-4 rounded-xl border text-[13px] font-bold focus:ring-2 focus:ring-primary/30 transition-all", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}
               >
-                <option value="">— Choose an automation —</option>
+                <option value="">{t("instagram_default_reply_dialog.choose_automation")}</option>
                 {automations.map((a: any) => (
-                  <option key={a.id} value={a.id}>{a.name ?? `Automation #${a.id}`}</option>
+                  <option key={a.id} value={a.id}>{a.name ?? t("instagram_default_reply_dialog.automation_number", { id: a.id })}</option>
                 ))}
               </select>
               {automationId && (
@@ -131,12 +133,12 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
                   onClick={() => { onClose(); setLocation(`/automations/${automationId}`); }}
                   className="text-[11px] font-bold text-primary inline-flex items-center gap-1 hover:underline"
                 >
-                  View Automation <ExternalLink size={10} />
+                  {t("instagram_default_reply_dialog.view_automation")} <ExternalLink size={10} />
                 </button>
               )}
             </div>
             <div className="space-y-2">
-              <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>Trigger</label>
+              <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>{t("instagram_default_reply_dialog.trigger")}</label>
               <select
                 value={interval}
                 onChange={(e) => setInterval(e.target.value)}
@@ -161,7 +163,7 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
                   disabled={deleteMutation.isPending}
                   className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-2 bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50"
                 >
-                  <Trash2 size={12} /> {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                  <Trash2 size={12} /> {deleteMutation.isPending ? t("instagram_default_reply_dialog.deleting") : t("instagram_default_reply_dialog.delete")}
                 </button>
               )}
             </div>
@@ -171,14 +173,14 @@ export default function InstagramDefaultReplyDialog({ open, account, onClose }: 
                 disabled={saveMutation.isPending || deleteMutation.isPending}
                 className={cn("h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
               >
-                Close
+                {t("instagram_default_reply_dialog.close")}
               </button>
               <button
                 onClick={() => saveMutation.mutate()}
                 disabled={!automationId || saveMutation.isPending}
                 className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saveMutation.isPending ? "Saving…" : "Save"}
+                {saveMutation.isPending ? t("instagram_default_reply_dialog.saving") : t("instagram_default_reply_dialog.save")}
               </button>
             </div>
           </div>

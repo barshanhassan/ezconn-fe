@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { getUserInfo } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface CheckoutProps {
   onBack: () => void;
@@ -31,6 +32,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const agencyId = (() => { try { return getUserInfo()?.modelable_id; } catch { return null; } })();
   const agencyEmail = (() => { try { return getUserInfo()?.email || ""; } catch { return ""; } })();
@@ -42,7 +44,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     },
     enabled: !!agencyId,
   });
-  const agencyName: string = agencyResp?.agency?.name || "Agency Owner";
+  const agencyName: string = agencyResp?.agency?.name || t("agency_swich_checkout.agency_owner_fallback");
   // Swich's own record of "who paid" is the msisdn — we don't have the
   // agency owner's mobile number stored anywhere on the frontend, so unlike
   // name/email (pulled from the session) it has to be typed here.
@@ -67,7 +69,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
       const customerTransactionId = `AGW${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`.slice(0, 50);
       const res = await apiRequest("POST", "/api/swich/agency/landing-page", {
         customerTransactionId,
-        item: "Swich Test Plan",
+        item: t("agency_swich_checkout.plan_name"),
         amount: 1,
         description: "Agentawk agency test plan",
         payeeName: agencyName,
@@ -89,8 +91,8 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Could not start Swich checkout. Connect Swich under Billing → Manage first.",
+        title: t("agency_swich_checkout.error_title"),
+        description: t("agency_swich_checkout.error_desc"),
         variant: "destructive",
       });
     },
@@ -119,7 +121,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
         >
-          <ArrowLeft size={14} /> Back
+          <ArrowLeft size={14} /> {t("agency_swich_checkout.back")}
         </button>
       </div>
 
@@ -136,12 +138,12 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                     </div>
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <span className={cn("text-[13px] font-bold", text)}>Swich Test Plan</span>
+                        <span className={cn("text-[13px] font-bold", text)}>{t("agency_swich_checkout.plan_name")}</span>
                         <span className={cn("text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded uppercase", dark ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400")}>
-                          PLAN
+                          {t("agency_swich_checkout.plan_badge")}
                         </span>
                       </div>
-                      <p className={cn("text-[11px] font-medium mt-0.5", sub)}>One-time, settled via Swich PayIn</p>
+                      <p className={cn("text-[11px] font-medium mt-0.5", sub)}>{t("agency_swich_checkout.plan_desc")}</p>
                     </div>
                   </div>
                   <span className={cn("text-[14px] font-bold", text)}>Rs. 1.00</span>
@@ -153,13 +155,13 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-5">
             <div className={cn("rounded-[20px] border p-8 sticky top-8 shadow-xl", card, border)}>
-              <h3 className={cn("text-[16px] font-bold mb-8", text)}>Order summary</h3>
+              <h3 className={cn("text-[16px] font-bold mb-8", text)}>{t("agency_swich_checkout.order_summary")}</h3>
 
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className={cn("text-[12px] font-bold", text)}>Swich Test Plan</p>
-                    <p className={cn("text-[10px] font-medium", sub)}>One-time</p>
+                    <p className={cn("text-[12px] font-bold", text)}>{t("agency_swich_checkout.plan_name")}</p>
+                    <p className={cn("text-[10px] font-medium", sub)}>{t("agency_swich_checkout.one_time")}</p>
                   </div>
                   <span className={cn("text-[12px] font-bold", text)}>Rs. 1.00</span>
                 </div>
@@ -167,11 +169,11 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
               <div className={cn("pt-6 border-t space-y-3", border)}>
                 <div className="flex justify-between items-center">
-                  <span className={cn("text-[12px] font-medium", sub)}>Subtotal (1 item)</span>
+                  <span className={cn("text-[12px] font-medium", sub)}>{t("agency_swich_checkout.subtotal")}</span>
                   <span className={cn("text-[12px] font-bold", text)}>Rs. 1.00</span>
                 </div>
                 <div className="flex justify-between items-center pt-4">
-                  <span className={cn("text-[18px] font-black", text)}>Total</span>
+                  <span className={cn("text-[18px] font-black", text)}>{t("agency_swich_checkout.total")}</span>
                   <span className={cn("text-[20px] font-black", text)}>Rs. 1.00</span>
                 </div>
               </div>
@@ -179,7 +181,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
               {/* Swich requires the actual payer's mobile — we don't have it
                   on file, so it's collected here rather than faked. */}
               <div className="mt-6">
-                <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Your Mobile Number</label>
+                <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("agency_swich_checkout.mobile_label")}</label>
                 <input
                   className={cn(
                     "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
@@ -191,7 +193,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                   onChange={(e) => setMsisdn(e.target.value)}
                 />
                 <p className={cn("text-[10px] font-medium mt-1.5 leading-relaxed", sub)}>
-                  Required — Swich sends a confirmation SMS to this number to complete the payment. Without it, the transaction will fail.
+                  {t("agency_swich_checkout.mobile_help")}
                 </p>
               </div>
 
@@ -200,7 +202,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                   <div className="w-1.5 h-1.5 rounded-full bg-white" />
                 </div>
                 <p className={cn("text-[10px] font-medium leading-relaxed", sub)}>
-                  This redirects to Swich's real payment page — a one-time Rs. 1 charge, no recurring billing.
+                  {t("agency_swich_checkout.redirect_note")}
                 </p>
               </div>
 
@@ -210,13 +212,13 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white py-3.5 rounded-xl font-black text-[14px] mt-8 transition-all shadow-lg shadow-teal-600/20 active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 {checkoutMutation.isPending && <Loader2 size={16} className="animate-spin" />}
-                Proceed To Checkout
+                {t("agency_swich_checkout.proceed_btn")}
               </button>
 
               <div className="mt-6 flex items-center justify-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Secure Checkout by Swich
+                  {t("agency_swich_checkout.secure_checkout")}
                 </span>
               </div>
             </div>

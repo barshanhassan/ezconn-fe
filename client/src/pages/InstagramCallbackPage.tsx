@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Instagram, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function InstagramCallbackPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -26,7 +28,7 @@ export default function InstagramCallbackPage() {
 
     if (!code) {
       setStatus("error");
-      setMessage("No authorization code received from Instagram.");
+      setMessage(t("instagram_callback_page.no_auth_code"));
       setTimeout(() => setLocation("/"), 3000);
       return;
     }
@@ -43,19 +45,19 @@ export default function InstagramCallbackPage() {
       .then(async (res) => {
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.message ?? "Connection failed");
+          throw new Error(err.message ?? t("instagram_callback_page.connection_failed"));
         }
         setStatus("success");
         setMessage(
           reconnectPageId
-            ? "Instagram account reconnected successfully!"
-            : "Instagram account connected successfully!",
+            ? t("instagram_callback_page.reconnected_success")
+            : t("instagram_callback_page.connected_success"),
         );
         setTimeout(() => setLocation("/"), 2500);
       })
       .catch((err) => {
         setStatus("error");
-        setMessage(err?.message ?? "Failed to connect Instagram account.");
+        setMessage(err?.message ?? t("instagram_callback_page.connect_failed"));
         setTimeout(() => setLocation("/"), 3500);
       });
   }, [setLocation]);
@@ -69,13 +71,13 @@ export default function InstagramCallbackPage() {
 
         <div>
           <h2 className="text-[15px] font-black text-white uppercase tracking-widest">Instagram</h2>
-          <p className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-widest">OAuth Callback</p>
+          <p className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-widest">{t("instagram_callback_page.oauth_callback")}</p>
         </div>
 
         {status === "loading" && (
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-[12px] font-bold text-slate-400">Connecting your account…</p>
+            <p className="text-[12px] font-bold text-slate-400">{t("instagram_callback_page.connecting")}</p>
           </div>
         )}
 
@@ -83,7 +85,7 @@ export default function InstagramCallbackPage() {
           <div className="flex flex-col items-center gap-3">
             <CheckCircle className="w-8 h-8 text-emerald-500" />
             <p className="text-[12px] font-bold text-emerald-400">{message}</p>
-            <p className="text-[10px] text-slate-500">Redirecting to settings…</p>
+            <p className="text-[10px] text-slate-500">{t("instagram_callback_page.redirecting_settings")}</p>
           </div>
         )}
 
@@ -91,7 +93,7 @@ export default function InstagramCallbackPage() {
           <div className="flex flex-col items-center gap-3">
             <XCircle className="w-8 h-8 text-rose-500" />
             <p className="text-[12px] font-bold text-rose-400">{message}</p>
-            <p className="text-[10px] text-slate-500">Redirecting back…</p>
+            <p className="text-[10px] text-slate-500">{t("instagram_callback_page.redirecting_back")}</p>
           </div>
         )}
       </div>

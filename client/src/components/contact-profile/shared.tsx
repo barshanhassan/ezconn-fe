@@ -31,6 +31,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 const apiGet = async (url: string) => (await apiRequest("GET", url)).json();
 
@@ -99,6 +100,7 @@ export function CountryPicker({
   onChange: (c: Country) => void;
   buttonClassName?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
   const [search, setSearch] = useState("");
@@ -133,7 +135,7 @@ export function CountryPicker({
               <span className="text-xs">+{value.phone_code}</span>
             </span>
           ) : (
-            <span className="text-xs">Country</span>
+            <span className="text-xs">{t("contact_profile_shared.country_label")}</span>
           )}
           <ChevronDown className="h-3 w-3 ml-1" />
         </Button>
@@ -143,14 +145,14 @@ export function CountryPicker({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search…"
+            placeholder={t("contact_profile_shared.search_placeholder")}
             className="h-8 text-sm"
             autoFocus
           />
         </div>
         <ScrollArea className="h-64">
           {filtered.length === 0 ? (
-            <p className="p-3 text-xs text-muted-foreground">No match</p>
+            <p className="p-3 text-xs text-muted-foreground">{t("contact_profile_shared.no_match")}</p>
           ) : (
             filtered.map((c) => (
               <button
@@ -217,6 +219,7 @@ export function PhoneFieldEditor({
   typeOptions: { value: string; label: string }[];
   saving?: boolean;
 }) {
+  const { t } = useTranslation();
   const [country, setCountry] = useState<Country | null>(initialCountry);
   const [value, setValue] = useState(initialValue);
   const [type, setType] = useState(initialType);
@@ -227,7 +230,7 @@ export function PhoneFieldEditor({
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value.replace(/[^0-9\s\-()]/g, ""))}
-        placeholder={country?.placeholder ?? "Phone"}
+        placeholder={country?.placeholder ?? t("contact_profile_shared.phone_placeholder")}
         className="flex-1 min-w-[180px]"
       />
       <Select value={type} onValueChange={setType}>
@@ -296,38 +299,39 @@ export function AddressEditor({
   saving?: boolean;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   const [a, setA] = useState<AddressValue>(initial);
   return (
     <div className="space-y-2">
       <Input
         value={a.street ?? ""}
         onChange={(e) => setA({ ...a, street: e.target.value })}
-        placeholder="Street"
+        placeholder={t("contact_profile_shared.street_placeholder")}
         disabled={disabled}
       />
       <div className="grid grid-cols-2 gap-2">
         <Input
           value={a.city ?? ""}
           onChange={(e) => setA({ ...a, city: e.target.value })}
-          placeholder="City"
+          placeholder={t("contact_profile_shared.city_placeholder")}
           disabled={disabled}
         />
         <Input
           value={a.state ?? ""}
           onChange={(e) => setA({ ...a, state: e.target.value })}
-          placeholder="State"
+          placeholder={t("contact_profile_shared.state_placeholder")}
           disabled={disabled}
         />
         <Input
           value={a.zip ?? ""}
           onChange={(e) => setA({ ...a, zip: e.target.value })}
-          placeholder="Zip"
+          placeholder={t("contact_profile_shared.zip_placeholder")}
           disabled={disabled}
         />
         <Input
           value={a.country ?? ""}
           onChange={(e) => setA({ ...a, country: e.target.value })}
-          placeholder="Country"
+          placeholder={t("contact_profile_shared.country_placeholder")}
           disabled={disabled}
         />
       </div>
@@ -404,15 +408,16 @@ export function LanguagePicker({
   onChange: (v: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Select value={value ?? ""} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select language" />
+        <SelectValue placeholder={t("contact_profile_shared.select_language_placeholder")} />
       </SelectTrigger>
       <SelectContent>
         {COMMON_LANGUAGES.map((l) => (
           <SelectItem key={l.code} value={l.code}>
-            {l.label} ({l.code})
+            {t(`contact_profile_shared.languages.${l.code}`)} ({l.code})
           </SelectItem>
         ))}
       </SelectContent>
@@ -429,10 +434,11 @@ export function LocalePicker({
   onChange: (v: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Select value={value ?? ""} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select locale" />
+        <SelectValue placeholder={t("contact_profile_shared.select_locale_placeholder")} />
       </SelectTrigger>
       <SelectContent>
         {COMMON_LOCALES.map((l) => (
@@ -454,6 +460,7 @@ export function TimezonePicker({
   onChange: (v: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   // Use Intl supportedValuesOf when available; fall back to a curated list.
   const timezones = useMemo(() => {
     try {
@@ -484,7 +491,7 @@ export function TimezonePicker({
   return (
     <Select value={value ?? ""} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select timezone" />
+        <SelectValue placeholder={t("contact_profile_shared.select_timezone_placeholder")} />
       </SelectTrigger>
       <SelectContent>
         <ScrollArea className="h-64">
@@ -522,6 +529,7 @@ export function CustomFieldRenderer({
   onChange: (v: any) => void;
   countryHint?: Country | null;
 }) {
+  const { t } = useTranslation();
   const ct = String(field.content_type ?? "").toUpperCase();
   const it = String(field.input_type ?? "").toLowerCase();
 
@@ -560,7 +568,7 @@ export function CustomFieldRenderer({
     return (
       <Select value={value ?? ""} onValueChange={onChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Select…" />
+          <SelectValue placeholder={t("contact_profile_shared.select_placeholder")} />
         </SelectTrigger>
         <SelectContent>
           {(field.properties ?? []).map((p) => (
@@ -591,7 +599,7 @@ export function CustomFieldRenderer({
         <Input
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Phone number"
+          placeholder={t("contact_profile_shared.phone_number_placeholder")}
         />
       </div>
     );
@@ -648,7 +656,7 @@ export function CustomFieldRenderer({
         <Input
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="example.com"
+          placeholder={t("contact_profile_shared.url_placeholder")}
         />
       </div>
     );
@@ -660,7 +668,7 @@ export function CustomFieldRenderer({
         type="email"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="name@example.com"
+        placeholder={t("contact_profile_shared.email_placeholder")}
       />
     );
   }
@@ -670,7 +678,7 @@ export function CustomFieldRenderer({
     <Input
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Enter value"
+      placeholder={t("contact_profile_shared.enter_value_placeholder")}
     />
   );
 }
@@ -686,6 +694,7 @@ export function OptinChip({
   subscribed: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -695,7 +704,11 @@ export function OptinChip({
           ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
           : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
       }`}
-      title={subscribed ? `Unsubscribe ${channel}` : `Opt back in to ${channel}`}
+      title={
+        subscribed
+          ? t("contact_profile_shared.unsubscribe_channel", { channel })
+          : t("contact_profile_shared.optin_channel", { channel })
+      }
     >
       {channel} {subscribed ? "✓" : "✗"}
     </button>

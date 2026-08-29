@@ -151,6 +151,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 type Placement = "settings_menu" | "main_menu";
 
@@ -172,6 +173,7 @@ interface WorkspaceMember {
 }
 
 export default function IframeSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -245,7 +247,7 @@ export default function IframeSection() {
   });
 
   const iframes: IframeRow[] = data?.iframes ?? [];
-  const menuTitle = data?.menu_title ?? "Iframes";
+  const menuTitle = data?.menu_title ?? t("iframe_section.default_menu_title");
 
   const members: WorkspaceMember[] = useMemo(() => {
     const list = membersData?.members ?? membersData?.data ?? membersData ?? [];
@@ -281,12 +283,12 @@ export default function IframeSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: formData.id ? "Iframe updated" : "Iframe created" });
+      toast({ title: formData.id ? t("iframe_section.toast_iframe_updated") : t("iframe_section.toast_iframe_created") });
       resetForm();
       setView("list");
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("iframe_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -295,11 +297,11 @@ export default function IframeSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Iframe deleted" });
+      toast({ title: t("iframe_section.toast_iframe_deleted") });
       setIframeToDelete(null);
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("iframe_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const titleMutation = useMutation({
@@ -308,16 +310,16 @@ export default function IframeSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Menu title updated" });
+      toast({ title: t("iframe_section.toast_menu_title_updated") });
       setIsEditTitleModalOpen(false);
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("iframe_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const permissionsMutation = useMutation({
     mutationFn: async () => {
-      if (!permissionTarget) throw new Error("No iframe selected");
+      if (!permissionTarget) throw new Error(t("iframe_section.error_no_iframe_selected"));
       const payload = {
         permissions: Array.from(permissionSelections).map((id) => ({ user_id: id })),
       };
@@ -330,13 +332,13 @@ export default function IframeSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Permissions saved" });
+      toast({ title: t("iframe_section.toast_permissions_saved") });
       setView("list");
       setPermissionTarget(null);
       setPermissionSelections(new Set());
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("iframe_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   // ── Handlers ─────────────────────────────────────────────────────
@@ -377,19 +379,19 @@ export default function IframeSection() {
 
   const handleSave = () => {
     if (!formData.name.trim()) {
-      toast({ title: "Name is required", variant: "destructive" });
+      toast({ title: t("iframe_section.toast_name_required"), variant: "destructive" });
       return;
     }
     if (formData.placement === "settings_menu" && !formData.menu.trim()) {
       toast({
-        title: "Menu group required",
-        description: "Settings-menu iframes need a parent group name.",
+        title: t("iframe_section.toast_menu_group_required_title"),
+        description: t("iframe_section.toast_menu_group_required_desc"),
         variant: "destructive",
       });
       return;
     }
     if (!formData.html.trim()) {
-      toast({ title: "HTML is required", variant: "destructive" });
+      toast({ title: t("iframe_section.toast_html_required"), variant: "destructive" });
       return;
     }
     saveMutation.mutate();
@@ -407,10 +409,10 @@ export default function IframeSection() {
   const headerTitle =
     view === "form"
       ? formData.id
-        ? "Edit Iframe"
-        : "Create Iframe"
+        ? t("iframe_section.edit_iframe_title")
+        : t("iframe_section.create_iframe_title")
       : view === "permissions"
-        ? `Permissions — ${permissionTarget?.name ?? ""}`
+        ? t("iframe_section.permissions_header", { name: permissionTarget?.name ?? "" })
         : menuTitle;
 
   return (
@@ -428,7 +430,7 @@ export default function IframeSection() {
                   {headerTitle}
                 </h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Embed another webpage or resource inside your current page.
+                  {t("iframe_section.header_subtitle")}
                 </p>
               </div>
             </div>
@@ -437,10 +439,10 @@ export default function IframeSection() {
               {view === "list" && (
                 <>
                   <button onClick={() => { setMenuTitleInput(menuTitle); setIsEditTitleModalOpen(true); }} className={outlineBtn}>
-                    <Edit2 size={12} /> Edit Menu Title
+                    <Edit2 size={12} /> {t("iframe_section.edit_menu_title")}
                   </button>
                   <button onClick={openCreate} disabled={iframes.length >= 3} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add New
+                    <Plus size={12} /> {t("iframe_section.add_new")}
                   </button>
                 </>
               )}
@@ -453,7 +455,7 @@ export default function IframeSection() {
                   }}
                   className={outlineBtn}
                 >
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("iframe_section.back")}
                 </button>
               )}
             </div>
@@ -464,17 +466,17 @@ export default function IframeSection() {
             <div className="p-8">
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
                 <div className={cn("px-6 py-3 border-b text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                  You can create a maximum of 3 items
+                  {t("iframe_section.max_items_notice")}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Name</th>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Placement</th>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Sidebar Group</th>
-                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Permissions</th>
-                        <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("iframe_section.col_name")}</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("iframe_section.col_placement")}</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("iframe_section.col_sidebar_group")}</th>
+                        <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("iframe_section.col_permissions")}</th>
+                        <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("iframe_section.col_actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -492,9 +494,9 @@ export default function IframeSection() {
                                 <Globe className="w-7 h-7 text-primary" />
                               </div>
                               <div className="space-y-1">
-                                <h3 className={cn("text-[13px] font-black", text)}>No iframes yet</h3>
+                                <h3 className={cn("text-[13px] font-black", text)}>{t("iframe_section.empty_title")}</h3>
                                 <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                                  Click "Add New" to embed your first iframe.
+                                  {t("iframe_section.empty_description")}
                                 </p>
                               </div>
                             </div>
@@ -525,7 +527,7 @@ export default function IframeSection() {
                             </td>
                             <td className="px-6 py-4">
                               <span className="inline-flex h-5 px-2 items-center rounded-md border border-primary/30 bg-primary/5 text-primary text-[10px] font-semibold">
-                                {iframe.placement === "main_menu" ? "Main menu" : "Settings menu"}
+                                {iframe.placement === "main_menu" ? t("iframe_section.placement_main_menu") : t("iframe_section.placement_settings_menu")}
                               </span>
                             </td>
                             <td className={cn("px-6 py-4 text-[12px] font-bold", sub)}>
@@ -533,29 +535,29 @@ export default function IframeSection() {
                             </td>
                             <td className={cn("px-6 py-4 text-[12px] font-bold", sub)}>
                               {(iframe.permissions ?? []).length === 0
-                                ? "Everyone"
-                                : `${(iframe.permissions ?? []).length} agents`}
+                                ? t("iframe_section.permissions_everyone")
+                                : t("iframe_section.permissions_count", { count: (iframe.permissions ?? []).length })}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => openPermissions(iframe)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
-                                  title="Permissions"
+                                  title={t("iframe_section.action_permissions")}
                                 >
                                   <Shield size={13} />
                                 </button>
                                 <button
                                   onClick={() => openEdit(iframe)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
-                                  title="Edit"
+                                  title={t("iframe_section.action_edit")}
                                 >
                                   <Edit2 size={13} />
                                 </button>
                                 <button
                                   onClick={() => setIframeToDelete(iframe)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
-                                  title="Delete"
+                                  title={t("iframe_section.action_delete")}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -568,7 +570,7 @@ export default function IframeSection() {
                   </table>
                 </div>
                 <div className={cn("px-6 py-3 border-t text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                  Showing {iframes.length} of {iframes.length} iframes
+                  {t("iframe_section.showing_count", { count: iframes.length })}
                 </div>
               </div>
             </div>
@@ -581,16 +583,16 @@ export default function IframeSection() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className={labelCls}>Name</label>
+                      <label className={labelCls}>{t("iframe_section.col_name")}</label>
                       <input
                         value={formData.name}
                         onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value.slice(0, 255) }))}
                         className={inputCls}
-                        placeholder="Enter iframe name"
+                        placeholder={t("iframe_section.placeholder_name")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={labelCls}>Placement</label>
+                      <label className={labelCls}>{t("iframe_section.col_placement")}</label>
                       <select
                         value={formData.placement}
                         onChange={(e) =>
@@ -598,36 +600,36 @@ export default function IframeSection() {
                         }
                         className={selectCls}
                       >
-                        <option value="settings_menu">Settings menu</option>
-                        <option value="main_menu">Main menu (top-level)</option>
+                        <option value="settings_menu">{t("iframe_section.placement_settings_menu")}</option>
+                        <option value="main_menu">{t("iframe_section.placement_option_main")}</option>
                       </select>
                     </div>
                   </div>
 
                   {formData.placement === "settings_menu" && (
                     <div className="space-y-2">
-                      <label className={labelCls}>Sidebar group (menu)</label>
+                      <label className={labelCls}>{t("iframe_section.form_label_sidebar_group")}</label>
                       <input
                         value={formData.menu}
                         onChange={(e) => setFormData((p) => ({ ...p, menu: e.target.value.slice(0, 255) }))}
                         className={inputCls}
-                        placeholder="Settings sidebar group name"
+                        placeholder={t("iframe_section.placeholder_sidebar_group")}
                       />
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className={labelCls}>Sidebar label</label>
+                      <label className={labelCls}>{t("iframe_section.form_label_sidebar_label")}</label>
                       <input
                         value={formData.menu_text}
                         onChange={(e) => setFormData((p) => ({ ...p, menu_text: e.target.value.slice(0, 255) }))}
                         className={inputCls}
-                        placeholder="Text shown in the sidebar"
+                        placeholder={t("iframe_section.placeholder_sidebar_label")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={labelCls}>Icon</label>
+                      <label className={labelCls}>{t("iframe_section.form_label_icon")}</label>
                       <button
                         type="button"
                         onClick={() => setIconPickerOpen(true)}
@@ -636,22 +638,22 @@ export default function IframeSection() {
                         <span className="flex items-center gap-2">
                           <IconByKey iconKey={formData.icon} size={15} className="text-primary" />
                           <span className={cn("text-[12px] font-bold", formData.icon ? text : sub)}>
-                            {formData.icon ? formData.icon : "Pick an icon"}
+                            {formData.icon ? formData.icon : t("iframe_section.pick_icon")}
                           </span>
                         </span>
-                        <span className={cn("text-[10px] font-black", sub)}>Change</span>
+                        <span className={cn("text-[10px] font-black", sub)}>{t("iframe_section.change")}</span>
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className={labelCls}>HTML / Embed code</label>
+                    <label className={labelCls}>{t("iframe_section.form_label_html")}</label>
                     <textarea
                       value={formData.html}
                       onChange={(e) => setFormData((p) => ({ ...p, html: e.target.value }))}
                       rows={10}
                       className={textareaCls}
-                      placeholder="Paste your embed / iframe HTML here..."
+                      placeholder={t("iframe_section.placeholder_html")}
                     />
                   </div>
                 </div>
@@ -664,7 +666,7 @@ export default function IframeSection() {
                     }}
                     className={outlineBtn}
                   >
-                    Cancel
+                    {t("iframe_section.cancel")}
                   </button>
                   <button
                     onClick={handleSave}
@@ -672,7 +674,7 @@ export default function IframeSection() {
                     className={primaryBtn}
                   >
                     {saveMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                    {formData.id ? "Save" : "Publish"}
+                    {formData.id ? t("iframe_section.save") : t("iframe_section.publish")}
                   </button>
                 </div>
               </div>
@@ -687,10 +689,10 @@ export default function IframeSection() {
                   <Users size={16} className="text-primary" />
                   <div>
                     <p className={cn("text-[13px] font-black", text)}>
-                      Pick the agents who can see this iframe
+                      {t("iframe_section.permissions_pick_heading")}
                     </p>
                     <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                      Leave the list empty to grant access to every workspace member.
+                      {t("iframe_section.permissions_pick_description")}
                     </p>
                   </div>
                 </div>
@@ -698,7 +700,7 @@ export default function IframeSection() {
                 <div className="max-h-80 overflow-y-auto space-y-1.5 pr-2">
                   {members.length === 0 ? (
                     <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                      No other agents in this workspace yet.
+                      {t("iframe_section.permissions_no_members")}
                     </p>
                   ) : (
                     members.map((m) => {
@@ -741,7 +743,7 @@ export default function IframeSection() {
                     }}
                     className={outlineBtn}
                   >
-                    Cancel
+                    {t("iframe_section.cancel")}
                   </button>
                   <button
                     onClick={() => permissionsMutation.mutate()}
@@ -749,7 +751,7 @@ export default function IframeSection() {
                     className={primaryBtn}
                   >
                     {permissionsMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                    Save
+                    {t("iframe_section.save")}
                   </button>
                 </div>
               </div>
@@ -769,17 +771,17 @@ export default function IframeSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    Edit Menu Title
+                    {t("iframe_section.edit_menu_title")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Change the label shown in the sidebar group.
+                    {t("iframe_section.edit_menu_title_desc")}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
             <div className="space-y-2">
-              <label className={labelCls}>Menu Title</label>
+              <label className={labelCls}>{t("iframe_section.menu_title_label")}</label>
               <input
                 value={menuTitleInput}
                 onChange={(e) => setMenuTitleInput(e.target.value)}
@@ -789,7 +791,7 @@ export default function IframeSection() {
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
               <button onClick={() => setIsEditTitleModalOpen(false)} className={outlineBtn}>
-                Cancel
+                {t("iframe_section.cancel")}
               </button>
               <button
                 onClick={() => titleMutation.mutate(menuTitleInput || menuTitle)}
@@ -797,7 +799,7 @@ export default function IframeSection() {
                 className={primaryBtn}
               >
                 {titleMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                Save
+                {t("iframe_section.save")}
               </button>
             </div>
           </div>
@@ -815,10 +817,10 @@ export default function IframeSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    Pick an icon
+                    {t("iframe_section.pick_icon")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Shown beside the iframe in the sidebar.
+                    {t("iframe_section.icon_picker_desc")}
                   </DialogDescription>
                 </div>
               </div>
@@ -829,7 +831,7 @@ export default function IframeSection() {
               <input
                 value={iconSearch}
                 onChange={(e) => setIconSearch(e.target.value.toLowerCase())}
-                placeholder="Search icons…"
+                placeholder={t("iframe_section.search_icons_placeholder")}
                 className={cn(inputCls, "pl-10")}
               />
             </div>
@@ -871,14 +873,14 @@ export default function IframeSection() {
                 }}
                 className={cn(outlineBtn, "border-rose-500/30 text-rose-500 hover:bg-rose-500/5")}
               >
-                <X size={12} /> Clear icon
+                <X size={12} /> {t("iframe_section.clear_icon")}
               </button>
               <button
                 type="button"
                 onClick={() => { setIconPickerOpen(false); setIconSearch(""); }}
                 className={outlineBtn}
               >
-                Done
+                {t("iframe_section.done")}
               </button>
             </div>
           </div>
@@ -894,21 +896,21 @@ export default function IframeSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Iframe?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("iframe_section.delete_confirm_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{iframeToDelete?.name || "This iframe"}</span> will be permanently removed.
+                  <span className="text-rose-500 font-black">{iframeToDelete?.name || t("iframe_section.delete_confirm_name_fallback")}</span> {t("iframe_section.delete_confirm_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("iframe_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => iframeToDelete && deleteMutation.mutate(iframeToDelete.id)}
                 disabled={deleteMutation.isPending}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
                 {deleteMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                Delete
+                {t("iframe_section.action_delete")}
               </AlertDialogAction>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, ArrowRight, UserPlus, KeyRound, LogIn, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { apiRequest } from '../lib/queryClient';
@@ -45,10 +46,10 @@ const FLOATING_ICONS = [
   { Icon: MessengerIcon, left: 469, top: 165, delay: '.5s', dur: '5.1s' },
 ];
 
-const ONBOARD_STEPS = [
-  { label: 'STEP 1', icon: UserPlus, title: "You've been invited", subtitle: 'An agency admin added you to their workspace.', dark: false },
-  { label: 'STEP 2', icon: KeyRound, title: 'Set your password', subtitle: 'Choose a strong password to activate your login.', dark: false },
-  { label: "YOU'RE IN", icon: LogIn, title: 'Log in and get to work', subtitle: 'Conversations, contacts and AI tools are ready for you.', dark: true },
+const useOnboardSteps = (t: (key: string) => string) => [
+  { label: t('accept_invitation_page.step1_label'), icon: UserPlus, title: t('accept_invitation_page.step1_title'), subtitle: t('accept_invitation_page.step1_subtitle'), dark: false },
+  { label: t('accept_invitation_page.step2_label'), icon: KeyRound, title: t('accept_invitation_page.step2_title'), subtitle: t('accept_invitation_page.step2_subtitle'), dark: false },
+  { label: t('accept_invitation_page.step3_label'), icon: LogIn, title: t('accept_invitation_page.step3_title'), subtitle: t('accept_invitation_page.step3_subtitle'), dark: true },
 ];
 
 const BotMark: React.FC<{ className?: string; fill?: string }> = ({ className, fill = '#25d366' }) => (
@@ -60,6 +61,8 @@ const BotMark: React.FC<{ className?: string; fill?: string }> = ({ className, f
 );
 
 const AcceptInvitationPage: React.FC = () => {
+  const { t } = useTranslation();
+  const ONBOARD_STEPS = useOnboardSteps(t);
   const [invitationId, setInvitationId] = useState('');
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid'>('loading');
   const [email, setEmail] = useState('');
@@ -84,6 +87,7 @@ const AcceptInvitationPage: React.FC = () => {
       .then((data: any) => {
         setEmail(data?.member?.email || '');
         setFirstName(data?.member?.first_name || '');
+        setLastName(data?.member?.last_name || '');
         setStatus('valid');
       })
       .catch(() => setStatus('invalid'));
@@ -94,11 +98,11 @@ const AcceptInvitationPage: React.FC = () => {
     setErrorMessage('');
 
     if (password !== rePassword) {
-      setErrorMessage('Passwords do not match');
+      setErrorMessage(t('accept_invitation_page.passwords_no_match'));
       return;
     }
     if (password.length < 8) {
-      setErrorMessage('Password must be at least 8 characters');
+      setErrorMessage(t('accept_invitation_page.password_min_length'));
       return;
     }
 
@@ -112,12 +116,12 @@ const AcceptInvitationPage: React.FC = () => {
         re_password: rePassword,
       });
       toast({
-        title: 'Password set',
-        description: 'You can now log in.',
+        title: t('accept_invitation_page.toast_password_set_title'),
+        description: t('accept_invitation_page.toast_password_set_desc'),
       });
       navigate('/login');
     } catch (error: any) {
-      setErrorMessage(error?.message || 'Failed to accept invitation');
+      setErrorMessage(error?.message || t('accept_invitation_page.accept_invitation_failed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -145,7 +149,7 @@ const AcceptInvitationPage: React.FC = () => {
         <div className="w-full lg:w-[600px] shrink-0 flex flex-col justify-center px-6 sm:px-10 lg:px-16 py-10 z-10 overflow-y-auto">
           <div className="w-full max-w-md mx-auto">
             {status === 'loading' && (
-              <div className="text-center py-16" style={{ color: '#6b7482' }}>Checking your invitation…</div>
+              <div className="text-center py-16" style={{ color: '#6b7482' }}>{t('accept_invitation_page.checking_invitation')}</div>
             )}
 
             {status === 'invalid' && (
@@ -154,13 +158,13 @@ const AcceptInvitationPage: React.FC = () => {
                   <AlertCircle className="w-7 h-7" style={{ color: '#f2545b' }} />
                 </div>
                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 26, color: '#0B1020' }}>
-                  Invalid invitation
+                  {t('accept_invitation_page.invalid_title')}
                 </h2>
                 <p style={{ fontSize: 14, color: '#6b7482' }}>
-                  This invitation link is invalid or has already been used.
+                  {t('accept_invitation_page.invalid_desc')}
                 </p>
                 <button type="button" onClick={() => navigate('/login')} style={{ color: '#1eb955', fontWeight: 600, fontSize: 14 }}>
-                  &lt; Back to login
+                  &lt; {t('accept_invitation_page.back_to_login')}
                 </button>
               </div>
             )}
@@ -168,19 +172,19 @@ const AcceptInvitationPage: React.FC = () => {
             {status === 'valid' && (
               <>
                 <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
-                  Account activation
+                  {t('accept_invitation_page.account_activation')}
                 </div>
                 <h2 className="mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 32, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-                  Set your password
+                  {t('accept_invitation_page.set_password_title')}
                 </h2>
                 <p className="mb-8" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
-                  For <span style={{ fontWeight: 700, color: '#0B1020' }}>{email}</span> to activate this login.
+                  {t('accept_invitation_page.for_email_prefix')} <span style={{ fontWeight: 700, color: '#0B1020' }}>{email}</span> {t('accept_invitation_page.for_email_suffix')}
                 </p>
 
                 <form onSubmit={handleAccept} className="flex flex-col gap-8">
                   <div className="grid grid-cols-2 gap-4">
                     <label className="block relative">
-                      <span className={inputLabelCls} style={inputLabelStyle}>First Name</span>
+                      <span className={inputLabelCls} style={inputLabelStyle}>{t('accept_invitation_page.first_name')}</span>
                       <input
                         id="firstName"
                         type="text"
@@ -193,7 +197,7 @@ const AcceptInvitationPage: React.FC = () => {
                       />
                     </label>
                     <label className="block relative">
-                      <span className={inputLabelCls} style={inputLabelStyle}>Last Name</span>
+                      <span className={inputLabelCls} style={inputLabelStyle}>{t('accept_invitation_page.last_name')}</span>
                       <input
                         id="lastName"
                         type="text"
@@ -207,12 +211,12 @@ const AcceptInvitationPage: React.FC = () => {
                   </div>
 
                   <label className="block relative">
-                    <span className={inputLabelCls} style={inputLabelStyle}>Password</span>
+                    <span className={inputLabelCls} style={inputLabelStyle}>{t('accept_invitation_page.password')}</span>
                     <div className="relative">
                       <input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="At least 8 characters"
+                        placeholder={t('accept_invitation_page.password_placeholder')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -231,11 +235,11 @@ const AcceptInvitationPage: React.FC = () => {
                   </label>
 
                   <label className="block relative">
-                    <span className={inputLabelCls} style={inputLabelStyle}>Confirm Password</span>
+                    <span className={inputLabelCls} style={inputLabelStyle}>{t('accept_invitation_page.confirm_password')}</span>
                     <input
                       id="rePassword"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Re-enter your password"
+                      placeholder={t('accept_invitation_page.confirm_password_placeholder')}
                       value={rePassword}
                       onChange={(e) => setRePassword(e.target.value)}
                       required
@@ -254,13 +258,13 @@ const AcceptInvitationPage: React.FC = () => {
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#1ea34e')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '#22B257')}
                   >
-                    {isSubmitting ? 'Activating…' : (<>Set password & activate <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} /></>)}
+                    {isSubmitting ? t('accept_invitation_page.activating') : (<>{t('accept_invitation_page.submit_button')} <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} /></>)}
                   </button>
                 </form>
 
                 <p className="text-center mt-6" style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, color: '#6b7482' }}>
                   <button type="button" onClick={() => navigate('/login')} style={{ color: '#1eb955', fontWeight: 600 }}>
-                    &lt; Back to login
+                    &lt; {t('accept_invitation_page.back_to_login')}
                   </button>
                 </p>
               </>
@@ -277,7 +281,7 @@ const AcceptInvitationPage: React.FC = () => {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#25d366" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
-                  Verified Tech Partner
+                  {t('accept_invitation_page.verified_tech_partner')}
                 </span>
               </div>
             </div>
@@ -301,7 +305,7 @@ const AcceptInvitationPage: React.FC = () => {
           {/* headline */}
           <div className="absolute" style={{ left: 41, top: 63, width: 340 }}>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-              Join your team on agentawk
+              {t('accept_invitation_page.join_team_headline')}
             </div>
           </div>
 

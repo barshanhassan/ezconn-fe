@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Sparkles } from "lucide-react";
@@ -22,6 +23,7 @@ const AIAssistantsSection = () => {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [settings, setSettings] = React.useState<AIAssistantSettings>(DEFAULT_SETTINGS);
 
   // ── Design tokens ─────────────────────────────────────────
@@ -55,10 +57,10 @@ const AIAssistantsSection = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/ai-assistant-settings"] });
-      toast({ title: "Settings Saved", description: "AI Assistants settings have been updated." });
+      toast({ title: t("ai_assistants_section.settings_saved"), description: t("ai_assistants_section.settings_updated") });
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("ai_assistants_section.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -88,9 +90,9 @@ const AIAssistantsSection = () => {
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>AI assistants</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("ai_assistants_section.title")}</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60 max-w-2xl", sub)}>
-                These settings apply to the entire account.
+                {t("ai_assistants_section.subtitle")}
               </p>
             </div>
           </div>
@@ -100,7 +102,7 @@ const AIAssistantsSection = () => {
             className={primaryBtn}
           >
             {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
-            Save
+            {t("ai_assistants_section.save")}
           </button>
         </div>
 
@@ -110,13 +112,13 @@ const AIAssistantsSection = () => {
           <div className={cn("rounded-[1.5rem] border p-6 space-y-4", softBg, softBorder)}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h4 className={cn("text-[13px] font-black", text)}>Content Prompts</h4>
+                <h4 className={cn("text-[13px] font-black", text)}>{t("ai_assistants_section.content_prompts_title")}</h4>
                 <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed mt-1 max-w-2xl", sub)}>
-                  Lets agents use AI to rewrite and refine responses in real time during customer conversations.
+                  {t("ai_assistants_section.content_prompts_description")}
                 </p>
               </div>
               <Switch
-                aria-label="Enable Content Prompts"
+                aria-label={t("ai_assistants_section.enable_content_prompts")}
                 checked={settings.contentPrompts}
                 onCheckedChange={(val) => setSettings((prev) => ({ ...prev, contentPrompts: val }))}
                 disabled={!settings.agreeToTerms}
@@ -133,15 +135,15 @@ const AIAssistantsSection = () => {
                 className="rounded accent-[hsl(var(--primary))] w-4 h-4 mt-0.5 shrink-0"
               />
               <label htmlFor="terms" className={cn("text-[11px] font-medium leading-relaxed cursor-pointer", sub)}>
-                By using this tool, you agree to comply with Google's{" "}
+                {t("ai_assistants_section.terms_prefix")}{" "}
                 <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline">
-                  Gemini API Additional Terms of Service
+                  {t("ai_assistants_section.gemini_terms_link")}
                 </a>{" "}
-                and{" "}
+                {t("ai_assistants_section.terms_and")}{" "}
                 <a href="https://policies.google.com/terms/generative-ai/use-policy" target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline">
-                  Generative AI Prohibited Use Policy
+                  {t("ai_assistants_section.generative_ai_policy_link")}
                 </a>
-                . Please avoid sharing any sensitive information in your prompts.
+                . {t("ai_assistants_section.terms_suffix")}
               </label>
             </div>
           </div>
@@ -150,25 +152,25 @@ const AIAssistantsSection = () => {
           <div className={cn("rounded-[1.5rem] border p-6 space-y-4", softBg, softBorder)}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h4 className={cn("text-[13px] font-black", text)}>Customer Analysis</h4>
+                <h4 className={cn("text-[13px] font-black", text)}>{t("ai_assistants_section.customer_analysis_title")}</h4>
                 <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed mt-1 max-w-2xl", sub)}>
-                  Lets agents use AI to understand customer conversations — generate summaries, run sentiment analysis, and more.
+                  {t("ai_assistants_section.customer_analysis_description")}
                 </p>
               </div>
               <button
-                onClick={() => toast({ title: "Request Sent", description: "Your request for access has been sent." })}
+                onClick={() => toast({ title: t("ai_assistants_section.request_sent"), description: t("ai_assistants_section.request_sent_description") })}
                 className={cn(outlineBtn, "shrink-0 border-primary text-primary hover:bg-primary hover:text-white")}
               >
-                Request Access
+                {t("ai_assistants_section.request_access")}
               </button>
             </div>
 
             <div className={cn("pt-4 border-t", softBorder)}>
               <p className={cn("text-[11px] font-bold opacity-60", sub)}>
-                Available in these modules
+                {t("ai_assistants_section.available_in_modules")}
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
-                {["Chat Manager", "Insights"].map((m) => (
+                {[t("ai_assistants_section.module_chat_manager"), t("ai_assistants_section.module_insights")].map((m) => (
                   <span
                     key={m}
                     className="inline-flex h-6 px-3 items-center rounded-md border border-primary/20 bg-primary/5 text-primary text-[11px] font-semibold"

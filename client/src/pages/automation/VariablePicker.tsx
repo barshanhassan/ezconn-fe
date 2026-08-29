@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { IntegrationsContext } from './ActionEditor';
 
 /**
@@ -21,20 +22,21 @@ interface VariablePickerProps {
   integrations: IntegrationsContext;
 }
 
-const SYSTEM_FIELDS = [
-  { key: 'first_name', label: 'First name' },
-  { key: 'last_name', label: 'Last name' },
-  { key: 'full_name', label: 'Full name' },
-  { key: 'email', label: 'Email' },
-  { key: 'mobile_number', label: 'Mobile' },
-  { key: 'language', label: 'Language' },
-  { key: 'locale', label: 'Locale' },
-  { key: 'timezone', label: 'Timezone' },
-];
-
 export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, integrations }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
+
+  const SYSTEM_FIELDS = [
+    { key: 'first_name', label: t('variable_picker.first_name') },
+    { key: 'last_name', label: t('variable_picker.last_name') },
+    { key: 'full_name', label: t('variable_picker.full_name') },
+    { key: 'email', label: t('variable_picker.email') },
+    { key: 'mobile_number', label: t('variable_picker.mobile') },
+    { key: 'language', label: t('variable_picker.language') },
+    { key: 'locale', label: t('variable_picker.locale') },
+    { key: 'timezone', label: t('variable_picker.timezone') },
+  ];
 
   React.useEffect(() => {
     if (!open) return;
@@ -56,19 +58,19 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, integr
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="text-[10px] uppercase font-bold text-indigo-600 hover:text-indigo-800 px-1.5 py-0.5 border border-indigo-200 rounded bg-white"
-        title="Insert variable"
+        title={t('variable_picker.insert_variable')}
       >
         + var
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-1 w-[260px] max-h-[360px] overflow-auto bg-white border border-gray-200 rounded shadow-xl">
-          <Section label="Contact (system)">
+          <Section label={t('variable_picker.contact_system')}>
             {SYSTEM_FIELDS.map((f) => (
               <Token key={f.key} label={f.label} token={`{{contact.${f.key}}}`} onInsert={insert} />
             ))}
           </Section>
           {(integrations.custom_fields ?? []).length > 0 && (
-            <Section label="Contact (custom)">
+            <Section label={t('variable_picker.contact_custom')}>
               {(integrations.custom_fields ?? []).map((f: any) => (
                 <Token
                   key={f.id}
@@ -79,13 +81,13 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({ onInsert, integr
               ))}
             </Section>
           )}
-          <Section label="Time helpers">
-            <Token label="Now (ISO)" token="{{now.iso}}" onInsert={insert} />
-            <Token label="Now (epoch seconds)" token="{{now.epoch}}" onInsert={insert} />
-            <Token label="Today (date)" token="{{now.date}}" onInsert={insert} />
+          <Section label={t('variable_picker.time_helpers')}>
+            <Token label={t('variable_picker.now_iso')} token="{{now.iso}}" onInsert={insert} />
+            <Token label={t('variable_picker.now_epoch')} token="{{now.epoch}}" onInsert={insert} />
+            <Token label={t('variable_picker.today_date')} token="{{now.date}}" onInsert={insert} />
           </Section>
-          <Section label="Workspace">
-            <Token label="Workspace ID" token="{{workspace.id}}" onInsert={insert} />
+          <Section label={t('variable_picker.workspace')}>
+            <Token label={t('variable_picker.workspace_id')} token="{{workspace.id}}" onInsert={insert} />
           </Section>
         </div>
       )}

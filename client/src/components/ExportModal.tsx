@@ -8,8 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { useExport } from "@/contexts/ExportContext";
 import { useTab } from "@/contexts/TabContext";
+import { useTranslation } from "react-i18next";
 
 export default function ExportModal() {
+  const { t } = useTranslation();
   const { exportOptions, setExportOptions, isExportModalOpen, setIsExportModalOpen } = useExport();
   const { activeTab, activeSubTab } = useTab();
 
@@ -118,12 +120,12 @@ export default function ExportModal() {
     <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
       <DialogContent className="sm:max-w-md" data-testid="export-modal">
         <DialogHeader className="flex flex-row items-center justify-between mb-2">
-          <DialogTitle>Export Insights</DialogTitle>
+          <DialogTitle>{t("export_modal.title")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium mb-3">Include Breakdown By:</p>
+            <p className="text-sm font-medium mb-3">{t("export_modal.include_breakdown_by")}</p>
             <div className="space-y-3">
               {renderCheckboxes()}
             </div>
@@ -137,7 +139,7 @@ export default function ExportModal() {
             data-testid="close-button"
             className="[border-color:hsl(var(--input))]"
           >
-            Close
+            {t("export_modal.close")}
           </Button>
           <Button
             onClick={handleExport}
@@ -145,7 +147,7 @@ export default function ExportModal() {
             className="btn-outline-primary font-normal"
             variant="outline"
           >
-            Export
+            {t("export_modal.export")}
           </Button>
         </div>
       </DialogContent>

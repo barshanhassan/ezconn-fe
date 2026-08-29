@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MessageSquare, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const text = dark ? "text-white" : "text-slate-900";
   const sub = dark ? "text-slate-500" : "text-slate-400";
@@ -77,14 +79,14 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
         items: items.map((i) => ({ text: i.text, automationId: i.automationId })),
       });
     },
-    onSuccess: () => { invalidate(); toast({ title: "Saved", description: "Quick starters updated." }); onClose(); },
-    onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
+    onSuccess: () => { invalidate(); toast({ title: t("instagram_ice_breakers_dialog.saved"), description: t("instagram_ice_breakers_dialog.updated_description") }); onClose(); },
+    onError: () => toast({ title: t("instagram_ice_breakers_dialog.error"), description: t("instagram_ice_breakers_dialog.failed_to_save"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => { await apiRequest("DELETE", `/api/instagram/pages/${account?.id}/ice-breakers`); },
-    onSuccess: () => { setItems([]); invalidate(); toast({ title: "Cleared", description: "All quick starters removed." }); onClose(); },
-    onError: () => toast({ title: "Error", description: "Failed to clear.", variant: "destructive" }),
+    onSuccess: () => { setItems([]); invalidate(); toast({ title: t("instagram_ice_breakers_dialog.cleared"), description: t("instagram_ice_breakers_dialog.cleared_description") }); onClose(); },
+    onError: () => toast({ title: t("instagram_ice_breakers_dialog.error"), description: t("instagram_ice_breakers_dialog.failed_to_clear"), variant: "destructive" }),
   });
 
   if (!account) return null;
@@ -98,10 +100,10 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
               <MessageSquare size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={cn("text-[14px] font-semibold", text)}>Quick Starter Questions</div>
+              <div className={cn("text-[14px] font-semibold", text)}>{t("instagram_ice_breakers_dialog.title")}</div>
               <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                Add up to 4 questions shown when a user first messages{" "}
-                <span className="font-mono">@{account.username ?? account.name}</span>. Each can trigger an automation.
+                {t("instagram_ice_breakers_dialog.description_prefix")}{" "}
+                <span className="font-mono">@{account.username ?? account.name}</span>. {t("instagram_ice_breakers_dialog.description_suffix")}
               </p>
             </div>
           </div>
@@ -111,7 +113,7 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
           ) : items.length === 0 ? (
             <div className={cn("rounded-xl border py-10 flex flex-col items-center justify-center text-center gap-3", dark ? "border-slate-800" : "border-slate-100")}>
               <MessageSquare size={24} className="opacity-30" />
-              <p className={cn("text-[11px] opacity-50 font-medium", sub)}>No quick starter questions yet. Add up to 4.</p>
+              <p className={cn("text-[11px] opacity-50 font-medium", sub)}>{t("instagram_ice_breakers_dialog.no_questions_yet")}</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
@@ -123,7 +125,7 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
                       value={item.text}
                       maxLength={60}
                       onChange={(e) => setItems((p) => p.map((it, idx) => idx === i ? { ...it, text: e.target.value } : it))}
-                      placeholder="Question text (max 60 chars)"
+                      placeholder={t("instagram_ice_breakers_dialog.question_placeholder")}
                       className={cn(inputCls, "flex-1")}
                     />
                     <button
@@ -134,13 +136,13 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
                     </button>
                   </div>
                   <div className="pl-8">
-                    <label className={cn("text-[11px] font-semibold opacity-50 mb-1 block", sub)}>Trigger automation</label>
+                    <label className={cn("text-[11px] font-semibold opacity-50 mb-1 block", sub)}>{t("instagram_ice_breakers_dialog.trigger_automation")}</label>
                     <select
                       value={item.automationId ?? ""}
                       onChange={(e) => setItems((p) => p.map((it, idx) => idx === i ? { ...it, automationId: e.target.value || null } : it))}
                       className={selectCls}
                     >
-                      <option value="">— No automation —</option>
+                      <option value="">{t("instagram_ice_breakers_dialog.no_automation")}</option>
                       {automations.map((a: any) => (
                         <option key={a.id} value={String(a.id)}>{a.name}</option>
                       ))}
@@ -159,7 +161,7 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
                   disabled={deleteMutation.isPending}
                   className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-2 bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50"
                 >
-                  <Trash2 size={12} /> Clear all
+                  <Trash2 size={12} /> {t("instagram_ice_breakers_dialog.clear_all")}
                 </button>
               )}
               {items.length < 4 && (
@@ -167,7 +169,7 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
                   onClick={() => setItems((p) => [...p, { text: "", automationId: null }])}
                   className="h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
                 >
-                  <Plus size={12} /> Add Question
+                  <Plus size={12} /> {t("instagram_ice_breakers_dialog.add_question")}
                 </button>
               )}
             </div>
@@ -177,14 +179,14 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
                 disabled={saveMutation.isPending || deleteMutation.isPending}
                 className={cn("h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
               >
-                Close
+                {t("instagram_ice_breakers_dialog.close")}
               </button>
               <button
                 onClick={() => saveMutation.mutate()}
                 disabled={saveMutation.isPending || items.length === 0}
                 className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saveMutation.isPending ? "Saving…" : "Save"}
+                {saveMutation.isPending ? t("instagram_ice_breakers_dialog.saving") : t("instagram_ice_breakers_dialog.save")}
               </button>
             </div>
           </div>

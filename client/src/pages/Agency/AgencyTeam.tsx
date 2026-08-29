@@ -63,7 +63,7 @@ const AgencyTeam = () => {
         if (!old?.members) return old;
         return { ...old, members: old.members.filter((m: any) => String(m.id) !== String(memberId)) };
       });
-      toast({ title: 'Deleted Successfully' });
+      toast({ title: t('agency_team_page.deleted_successfully') });
       setDeleteTarget(null);
     },
     onError: () => {
@@ -83,7 +83,7 @@ const AgencyTeam = () => {
           String(m.id) === String(memberId) ? { ...m, status: 'SUSPENDED' } : m
         )};
       });
-      toast({ title: 'Member suspended' });
+      toast({ title: t('agency_team_page.member_suspended') });
     },
     onError: () => {
       toast({ title: t('common.error'), variant: 'destructive' });
@@ -102,7 +102,7 @@ const AgencyTeam = () => {
           String(m.id) === String(memberId) ? { ...m, status: 'ACTIVE' } : m
         )};
       });
-      toast({ title: 'Member activated' });
+      toast({ title: t('agency_team_page.member_activated') });
     },
     onError: () => {
       toast({ title: t('common.error'), variant: 'destructive' });
@@ -133,9 +133,13 @@ const AgencyTeam = () => {
         (!q || m.email.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)) &&
         (showInactive ? m.status !== 'ACTIVE' : m.status === 'ACTIVE')
       )
-      .sort((a: any, b: any) =>
-        sortOrder === 'newest' ? b._ts - a._ts : a._ts - b._ts
-      );
+      .sort((a: any, b: any) => {
+        // Owner always first, then sort by timestamp
+        if (a.is_owner !== b.is_owner) {
+          return a.is_owner ? -1 : 1;
+        }
+        return sortOrder === 'newest' ? b._ts - a._ts : a._ts - b._ts;
+      });
   }, [rawMembers, search, showInactive, sortOrder]);
 
   if (viewMode === 'ADD' || viewMode === 'EDIT') {
@@ -166,9 +170,9 @@ const AgencyTeam = () => {
             <Users className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>Users</h1>
+            <h1 className={cn('text-[15px] font-bold', text)}>{t('agency_team_page.title')}</h1>
             <p className={cn('text-[11px] mt-0.5', sub)}>
-              {activeCount} active · {inactiveCount} inactive
+              {t('agency_team_page.active_inactive_count', { active: activeCount, inactive: inactiveCount })}
             </p>
           </div>
         </div>
@@ -176,7 +180,7 @@ const AgencyTeam = () => {
           onClick={() => { setEditingMember(null); setViewMode('ADD'); }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
         >
-          <Plus size={14} /> Add User
+          <Plus size={14} /> {t('agency_team_page.add_user')}
         </button>
       </div>
 
@@ -187,7 +191,7 @@ const AgencyTeam = () => {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search users..."
+            placeholder={t('agency_team_page.search_placeholder')}
             className={cn(
               'pl-9 pr-3 h-8 w-full text-[12px] rounded-lg border outline-none transition-colors',
               dark
@@ -204,7 +208,7 @@ const AgencyTeam = () => {
               onCheckedChange={(v) => setShowInactive(v === true)}
               className="border-slate-300 w-3.5 h-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            Show Inactive
+            {t('agency_team_page.show_inactive')}
           </label>
 
           <DropdownMenu>
@@ -212,11 +216,11 @@ const AgencyTeam = () => {
               'flex items-center gap-1.5 px-3 h-8 rounded-lg border text-[11px] font-bold uppercase tracking-widest transition-colors',
               dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             )}>
-              {sortOrder === 'newest' ? 'Newest first' : 'Oldest first'} <ChevronDown size={12} />
+              {sortOrder === 'newest' ? t('agency_team_page.newest_first') : t('agency_team_page.oldest_first')} <ChevronDown size={12} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className={cn(dark ? 'bg-[#0f1829] border-slate-800' : 'bg-white border-slate-200')}>
-              <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Newest first</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Oldest first</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t('agency_team_page.newest_first')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t('agency_team_page.oldest_first')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -236,10 +240,10 @@ const AgencyTeam = () => {
               style={{ gridTemplateColumns: '4.5rem 1fr 9rem 8rem 8rem' }}
             >
               <span />
-              <span>User</span>
-              <span className="text-center">Role</span>
-              <span className="text-center">Status</span>
-              <span className="text-right pr-4">Actions</span>
+              <span>{t('agency_team_page.col_user')}</span>
+              <span className="text-center">{t('agency_team_page.col_role')}</span>
+              <span className="text-center">{t('agency_team_page.col_status')}</span>
+              <span className="text-right pr-4">{t('agency_team_page.col_actions')}</span>
             </div>
           )}
 
@@ -262,17 +266,17 @@ const AgencyTeam = () => {
                 <Users className="w-6 h-6 text-slate-400" />
               </div>
               <p className={cn('text-[13px] font-bold mb-1', text)}>
-                {search ? 'No users found' : 'No users yet'}
+                {search ? t('agency_team_page.no_users_found') : t('agency_team_page.no_users_yet')}
               </p>
               <p className={cn('text-[12px] mb-5', sub)}>
-                {search ? 'Try a different search term' : 'Add your first user to get started'}
+                {search ? t('agency_team_page.try_different_search') : t('agency_team_page.add_first_user')}
               </p>
               {!search && (
                 <button
                   onClick={() => setViewMode('ADD')}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground"
                 >
-                  <Plus size={13} /> Add User
+                  <Plus size={13} /> {t('agency_team_page.add_user')}
                 </button>
               )}
             </div>
@@ -305,7 +309,7 @@ const AgencyTeam = () => {
                       <p className={cn('text-[14px] font-bold tracking-tight truncate', text)}>{member.name}</p>
                       {member.is_owner && (
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 shrink-0">
-                          <Crown size={8} /> Owner
+                          <Crown size={8} /> {t('agency_team_page.owner')}
                         </span>
                       )}
                     </div>
@@ -337,7 +341,7 @@ const AgencyTeam = () => {
                         : member.status === 'SUSPENDED' ? 'bg-amber-500'
                         : 'bg-slate-400'
                       )} />
-                      {member.status === 'ACTIVE' ? 'Active' : member.status === 'SUSPENDED' ? 'Suspended' : 'Inactive'}
+                      {member.status === 'ACTIVE' ? t('agency_team_page.status_active') : member.status === 'SUSPENDED' ? t('agency_team_page.status_suspended') : t('agency_team_page.status_inactive')}
                     </span>
                   </div>
 
@@ -360,7 +364,7 @@ const AgencyTeam = () => {
                           <button
                             disabled={suspendMutation.isPending}
                             onClick={() => setStatusTarget({ member, action: 'suspend' })}
-                            title="Suspend member"
+                            title={t('agency_team_page.suspend_member_title')}
                             className={cn(
                               'p-1.5 rounded-lg border transition-all shadow-sm',
                               dark
@@ -374,7 +378,7 @@ const AgencyTeam = () => {
                           <button
                             disabled={activateMutation.isPending}
                             onClick={() => setStatusTarget({ member, action: 'activate' })}
-                            title="Activate member"
+                            title={t('agency_team_page.activate_member_title')}
                             className={cn(
                               'p-1.5 rounded-lg border transition-all shadow-sm',
                               dark
@@ -431,7 +435,7 @@ const AgencyTeam = () => {
                 </div>
                 <div className="ml-auto shrink-0">
                   <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20">
-                    Removing
+                    {t('agency_team_page.removing')}
                   </span>
                 </div>
               </div>
@@ -441,13 +445,13 @@ const AgencyTeam = () => {
                 'rounded-xl border p-3.5 mb-5 text-[11px] leading-relaxed',
                 dark ? 'bg-red-500/5 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-700'
               )}>
-                This user will lose all access immediately. Workspaces they manage will need to be reassigned. <strong>This cannot be undone.</strong>
+                {t('agency_team_page.delete_warning_prefix')} <strong>{t('agency_team_page.delete_warning_bold')}</strong>
               </div>
 
               {/* Confirm input */}
               <div className="mb-5">
                 <label className={cn('block text-[11px] font-bold mb-1.5', sub)}>
-                  Type <span className={cn('font-black', text)}>{deleteTarget.name.split(' ')[0]}</span> to confirm
+                  {t('agency_team_page.type_prefix')} <span className={cn('font-black', text)}>{deleteTarget.name.split(' ')[0]}</span> {t('agency_team_page.type_suffix')}
                 </label>
                 <Input
                   value={deleteConfirm}
@@ -471,7 +475,7 @@ const AgencyTeam = () => {
                     dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   )}
                 >
-                  Cancel
+                  {t('agency_team_page.cancel')}
                 </button>
                 <button
                   disabled={deleteConfirm !== deleteTarget.name.split(' ')[0] || removeMutation.isPending}
@@ -486,7 +490,7 @@ const AgencyTeam = () => {
                       : dark ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   )}
                 >
-                  {removeMutation.isPending ? 'Removing…' : 'Remove User'}
+                  {removeMutation.isPending ? t('agency_team_page.removing_ellipsis') : t('agency_team_page.remove_user')}
                 </button>
               </div>
             </div>
@@ -498,11 +502,11 @@ const AgencyTeam = () => {
       {statusTarget && (() => {
         const isSuspend = statusTarget.action === 'suspend';
         const mutation = isSuspend ? suspendMutation : activateMutation;
-        const verb = isSuspend ? 'Suspend' : 'Activate';
-        const verbIng = isSuspend ? 'Suspending' : 'Activating';
+        const verb = isSuspend ? t('agency_team_page.verb_suspend') : t('agency_team_page.verb_activate');
+        const verbIng = isSuspend ? t('agency_team_page.verb_suspending') : t('agency_team_page.verb_activating');
         const desc = isSuspend
-          ? 'This user will lose access immediately and can no longer sign in to the platform until reactivated.'
-          : 'This user will regain full access to the platform and can sign in again.';
+          ? t('agency_team_page.suspend_desc')
+          : t('agency_team_page.activate_desc');
         return (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className={cn(
@@ -541,7 +545,7 @@ const AgencyTeam = () => {
                     ? (dark ? 'bg-amber-500/5 border-amber-500/20 text-amber-300' : 'bg-amber-50 border-amber-100 text-amber-800')
                     : (dark ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300' : 'bg-emerald-50 border-emerald-100 text-emerald-800')
                 )}>
-                  Are you sure you want to <strong>{verb.toLowerCase()}</strong> this user? {desc}
+                  {t('agency_team_page.confirm_prefix')} <strong>{verb.toLowerCase()}</strong> {t('agency_team_page.confirm_suffix')} {desc}
                 </div>
 
                 <div className="flex gap-2">
@@ -553,7 +557,7 @@ const AgencyTeam = () => {
                       dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     )}
                   >
-                    Cancel
+                    {t('agency_team_page.cancel')}
                   </button>
                   <button
                     disabled={mutation.isPending}
@@ -569,7 +573,7 @@ const AgencyTeam = () => {
                         : (isSuspend ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600')
                     )}
                   >
-                    {mutation.isPending ? `${verbIng}…` : `${verb} User`}
+                    {mutation.isPending ? t('agency_team_page.verb_ing_ellipsis', { verbIng }) : t('agency_team_page.verb_user', { verb })}
                   </button>
                 </div>
               </div>

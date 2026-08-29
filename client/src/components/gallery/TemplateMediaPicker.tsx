@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2, Check, FileText, Film, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 /**
  * Media picker for a WhatsApp template header.
@@ -53,6 +54,7 @@ interface Props {
 }
 
 export default function TemplateMediaPicker({ open, format, onClose, onSelect }: Props) {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const [error, setError] = useState<string | null>(null);
@@ -85,12 +87,17 @@ export default function TemplateMediaPicker({ open, format, onClose, onSelect }:
     const cap = MAX_BYTES[format];
     if (cap && file.file_length > cap) {
       setError(
-        `${file.file_name} is ${(file.file_length / 1024 / 1024).toFixed(1)} MB — the limit for a ${format.toLowerCase()} header is ${cap / 1024 / 1024} MB.`,
+        t("template_media_picker.size_limit_error", {
+          fileName: file.file_name,
+          sizeMb: (file.file_length / 1024 / 1024).toFixed(1),
+          format: format.toLowerCase(),
+          capMb: cap / 1024 / 1024,
+        }),
       );
       return;
     }
     if (format === "IMAGE" && file.extension && !ALLOWED_IMAGE_EXT.includes(file.extension)) {
-      setError("Image headers must be a PNG or JPG.");
+      setError(t("template_media_picker.image_format_error"));
       return;
     }
     setError(null);
@@ -118,11 +125,10 @@ export default function TemplateMediaPicker({ open, format, onClose, onSelect }:
         <div className="p-6 space-y-4">
           <div>
             <h2 className={cn("text-[14px] font-bold", text)}>
-              Choose a {format.toLowerCase()} for the header
+              {t("template_media_picker.choose_header_title", { format: format.toLowerCase() })}
             </h2>
             <p className={cn("text-[11px] font-medium opacity-70 mt-0.5", sub)}>
-              Pick a file from your media gallery. It gets uploaded to Meta when the template is
-              submitted for review.
+              {t("template_media_picker.choose_header_subtitle")}
             </p>
           </div>
 
@@ -140,10 +146,10 @@ export default function TemplateMediaPicker({ open, format, onClose, onSelect }:
             <div className={cn("h-56 flex flex-col items-center justify-center gap-2 text-center", sub)}>
               <FormatIcon size={28} className="opacity-40" />
               <p className="text-[12px] font-semibold">
-                No {format.toLowerCase()} files in the gallery yet
+                {t("template_media_picker.no_files_title", { format: format.toLowerCase() })}
               </p>
               <p className="text-[11px] font-medium opacity-70 max-w-xs">
-                Upload one from Workspace → Media gallery, then come back here.
+                {t("template_media_picker.no_files_hint")}
               </p>
             </div>
           ) : (

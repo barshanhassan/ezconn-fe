@@ -24,10 +24,10 @@ const EMPTY_ERRORS: PasswordErrors = {
 // `UsersService.changePassword` so a client-side pass is never weaker than
 // the server's pass.
 const complexityRules = [
-  { label: "Minimum 8 characters", test: (p: string) => p.length >= 8 },
-  { label: "Upper case letter [A-Z]", test: (p: string) => /[A-Z]/.test(p) },
-  { label: "Special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
-  { label: "Number [0-9]", test: (p: string) => /\d/.test(p) },
+  { key: "min_chars", test: (p: string) => p.length >= 8 },
+  { key: "upper_case", test: (p: string) => /[A-Z]/.test(p) },
+  { key: "special_char", test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+  { key: "number", test: (p: string) => /\d/.test(p) },
 ];
 
 /**
@@ -49,6 +49,8 @@ interface PasswordFieldProps {
   inputCls: string;
   labelCls: string;
   subClass: string;
+  hideLabel: string;
+  showLabel: string;
 }
 
 const PasswordField: React.FC<PasswordFieldProps> = ({
@@ -63,6 +65,8 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
   inputCls,
   labelCls,
   subClass,
+  hideLabel,
+  showLabel,
 }) => (
   <div className="space-y-2">
     <label htmlFor={id} className={labelCls}>
@@ -87,7 +91,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
           subClass,
           "hover:text-primary",
         )}
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? hideLabel : showLabel}
       >
         {visible ? <EyeOff size={15} /> : <Eye size={15} />}
       </button>
@@ -129,14 +133,14 @@ const ChangePasswordSection = () => {
   // Save. Server still re-validates, so a successful API call is a guarantee
   // of correctness even when the client is bypassed.
   const validatePassword = (password: string): string => {
-    const failed = complexityRules.filter((r) => !r.test(password)).map((r) => r.label);
+    const failed = complexityRules.filter((r) => !r.test(password)).map((r) => t(`password.${r.key}`));
     return failed.join(", ");
   };
 
   useEffect(() => {
     const newPasswordError = newPassword ? validatePassword(newPassword) : "";
     const retypeError =
-      retypePassword && newPassword !== retypePassword ? "Passwords do not match" : "";
+      retypePassword && newPassword !== retypePassword ? t("password.no_match") : "";
     setErrors((prev) => ({
       ...prev,
       newPassword: newPasswordError,
@@ -235,93 +239,103 @@ const ChangePasswordSection = () => {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-8 space-y-6">
-          {/* Requirements */}
-          <div className={cn("rounded-[1.5rem] border p-6 space-y-3", softBg, softBorder)}>
-            <p className={cn("text-[12px] font-semibold text-primary")}>
-              {t("password.requirements", { defaultValue: "Password Requirements" })}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {complexityRules.map((r) => {
-                const ok = newPassword ? r.test(newPassword) : false;
-                return (
-                  <div key={r.label} className="flex items-center gap-2">
-                    <div
-                      className={cn(
-                        "w-4 h-4 rounded-full flex items-center justify-center shrink-0",
-                        ok
-                          ? "bg-emerald-500/15 text-emerald-500"
-                          : cn(dark ? "bg-slate-800" : "bg-slate-200", sub),
-                      )}
-                    >
-                      {ok ? <Check size={10} /> : <X size={10} />}
+        {/* Body — one card, fields on the left and the requirements
+            checklist filling the space on the right instead of stacking
+            full-width above the (narrower) fields. */}
+        <div className="p-8">
+          <div className={cn("rounded-[1.5rem] border grid grid-cols-1 lg:grid-cols-2", softBg, softBorder)}>
+            {/* Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSave();
+              }}
+              className={cn("p-6 space-y-5 border-b lg:border-b-0 lg:border-r", softBorder)}
+            >
+              <PasswordField
+                id="current-password"
+                label={t("password.currentLabel", { defaultValue: "Current Password" })}
+                value={currentPassword}
+                onChange={setCurrentPassword}
+                error={errors.currentPassword}
+                visible={!!show["current-password"]}
+                toggleVisible={() => toggleShow("current-password")}
+                autoComplete="current-password"
+                inputCls={inputCls}
+                labelCls={labelCls}
+                subClass={sub}
+                hideLabel={t("password.hide")}
+                showLabel={t("password.show")}
+              />
+              <PasswordField
+                id="new-password"
+                label={t("password.newLabel", { defaultValue: "New Password" })}
+                value={newPassword}
+                onChange={setNewPassword}
+                error={errors.newPassword}
+                visible={!!show["new-password"]}
+                toggleVisible={() => toggleShow("new-password")}
+                autoComplete="new-password"
+                inputCls={inputCls}
+                labelCls={labelCls}
+                subClass={sub}
+                hideLabel={t("password.hide")}
+                showLabel={t("password.show")}
+              />
+              <PasswordField
+                id="retype-password"
+                label={t("password.retypeLabel", { defaultValue: "Retype New Password" })}
+                value={retypePassword}
+                onChange={setRetypePassword}
+                error={errors.retypePassword}
+                visible={!!show["retype-password"]}
+                toggleVisible={() => toggleShow("retype-password")}
+                autoComplete="new-password"
+                inputCls={inputCls}
+                labelCls={labelCls}
+                subClass={sub}
+                hideLabel={t("password.hide")}
+                showLabel={t("password.show")}
+              />
+              {/* Submit button is in the header — keep the form element wrapping
+                  the inputs so Enter-to-submit works without an extra button. */}
+              <button type="submit" hidden disabled={isSaveDisabled || mutation.isPending} />
+            </form>
+
+            {/* Requirements */}
+            <div className="p-6 space-y-3">
+              <p className={cn("text-[12px] font-semibold text-primary")}>
+                {t("password.requirements", { defaultValue: "Password Requirements" })}
+              </p>
+              <div className="grid grid-cols-1 gap-2.5">
+                {complexityRules.map((r) => {
+                  const ok = newPassword ? r.test(newPassword) : false;
+                  return (
+                    <div key={r.key} className="flex items-center gap-2">
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-full flex items-center justify-center shrink-0",
+                          ok
+                            ? "bg-emerald-500/15 text-emerald-500"
+                            : cn(dark ? "bg-slate-800" : "bg-slate-200", sub),
+                        )}
+                      >
+                        {ok ? <Check size={10} /> : <X size={10} />}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-[12px] font-bold",
+                          ok ? "text-emerald-600 dark:text-emerald-400" : sub,
+                        )}
+                      >
+                        {t(`password.${r.key}`)}
+                      </span>
                     </div>
-                    <span
-                      className={cn(
-                        "text-[12px] font-bold",
-                        ok ? "text-emerald-600 dark:text-emerald-400" : sub,
-                      )}
-                    >
-                      {r.label}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
-
-          {/* Form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-            className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}
-          >
-            <PasswordField
-              id="current-password"
-              label={t("password.currentLabel", { defaultValue: "Current Password" })}
-              value={currentPassword}
-              onChange={setCurrentPassword}
-              error={errors.currentPassword}
-              visible={!!show["current-password"]}
-              toggleVisible={() => toggleShow("current-password")}
-              autoComplete="current-password"
-              inputCls={inputCls}
-              labelCls={labelCls}
-              subClass={sub}
-            />
-            <PasswordField
-              id="new-password"
-              label={t("password.newLabel", { defaultValue: "New Password" })}
-              value={newPassword}
-              onChange={setNewPassword}
-              error={errors.newPassword}
-              visible={!!show["new-password"]}
-              toggleVisible={() => toggleShow("new-password")}
-              autoComplete="new-password"
-              inputCls={inputCls}
-              labelCls={labelCls}
-              subClass={sub}
-            />
-            <PasswordField
-              id="retype-password"
-              label={t("password.retypeLabel", { defaultValue: "Retype New Password" })}
-              value={retypePassword}
-              onChange={setRetypePassword}
-              error={errors.retypePassword}
-              visible={!!show["retype-password"]}
-              toggleVisible={() => toggleShow("retype-password")}
-              autoComplete="new-password"
-              inputCls={inputCls}
-              labelCls={labelCls}
-              subClass={sub}
-            />
-            {/* Submit button is in the header — keep the form element wrapping
-                the inputs so Enter-to-submit works without an extra button. */}
-            <button type="submit" hidden disabled={isSaveDisabled || mutation.isPending} />
-          </form>
         </div>
       </CardContent>
     </Card>

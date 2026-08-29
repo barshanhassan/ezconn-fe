@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import {
   BadgeCheck,
   Mail,
@@ -32,6 +33,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 
 export default function WhiteLabelSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const dark = mode === "dark";
@@ -63,12 +65,12 @@ export default function WhiteLabelSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/branding"] });
-      toast({ title: "Saved", description: "Your branding has been updated." });
+      toast({ title: t("white_label_section.toast_saved_title"), description: t("white_label_section.toast_saved_description") });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to save",
+        title: t("white_label_section.toast_error_title"),
+        description: error.message || t("white_label_section.toast_failed_to_save"),
         variant: "destructive",
       });
     },
@@ -162,7 +164,7 @@ export default function WhiteLabelSection() {
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid file", description: "Please choose an image file.", variant: "destructive" });
+      toast({ title: t("white_label_section.toast_invalid_file_title"), description: t("white_label_section.toast_invalid_file_description"), variant: "destructive" });
       return;
     }
 
@@ -186,7 +188,7 @@ export default function WhiteLabelSection() {
       // 2) Save the media id on the branding row. Backend returns refreshed signed URLs.
       updateBrandingMutation.mutate({ [`${brandingKey}Id`]: String(media.id) });
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err?.message || "Could not save image.", variant: "destructive" });
+      toast({ title: t("white_label_section.toast_upload_failed_title"), description: err?.message || t("white_label_section.toast_could_not_save_image"), variant: "destructive" });
       setLogoPreview((p) => {
         const next = { ...p };
         delete next[target];
@@ -208,7 +210,7 @@ export default function WhiteLabelSection() {
         `/api/domains/validate-domain?sub_domain=${encodeURIComponent(slug.trim())}&root_domain=${encodeURIComponent(customDomain.trim())}`,
       );
       const vj = await v.json();
-      if (vj && vj.available === false) throw new Error("That domain is already taken.");
+      if (vj && vj.available === false) throw new Error(t("white_label_section.domain_already_taken"));
       const res = await apiRequest("POST", "/api/domains/add-custom-domain", {
         sub_domain: slug.trim(),
         root_domain: customDomain.trim(),
@@ -216,18 +218,18 @@ export default function WhiteLabelSection() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Domain connected", description: "Point the DNS record at your provider to finish." });
+      toast({ title: t("white_label_section.toast_domain_connected_title"), description: t("white_label_section.toast_domain_connected_description") });
       setSlug("");
       setCustomDomain("");
       refetchDomain();
     },
-    onError: (e: any) => toast({ title: "Could not connect", description: e?.message ?? "", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("white_label_section.toast_could_not_connect_title"), description: e?.message ?? "", variant: "destructive" }),
   });
 
   const deleteDomainMutation = useMutation({
     mutationFn: async () => (await apiRequest("DELETE", "/api/domains/delete-custom-domain")).json(),
-    onSuccess: () => { toast({ title: "Domain removed" }); refetchDomain(); },
-    onError: (e: any) => toast({ title: "Could not remove", description: e?.message ?? "", variant: "destructive" }),
+    onSuccess: () => { toast({ title: t("white_label_section.toast_domain_removed_title") }); refetchDomain(); },
+    onError: (e: any) => toast({ title: t("white_label_section.toast_could_not_remove_title"), description: e?.message ?? "", variant: "destructive" }),
   });
 
   // ─── Custom email domain (Email tab) ─────────────────────────────
@@ -240,11 +242,11 @@ export default function WhiteLabelSection() {
       (await apiRequest("POST", "/api/notification-email", { prefix: emailUser.trim(), domain: emailDomain.trim() })).json(),
     onSuccess: (d: any) => {
       if (d?.notification_email) {
-        toast({ title: "Domain added", description: "Add the DNS records below, then Verify." });
+        toast({ title: t("white_label_section.toast_domain_added_title"), description: t("white_label_section.toast_domain_added_description") });
         refetchEmail();
       }
     },
-    onError: (e: any) => toast({ title: "Could not add", description: e?.message ?? "", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("white_label_section.toast_could_not_add_title"), description: e?.message ?? "", variant: "destructive" }),
   });
 
   const verifyEmailMutation = useMutation({
@@ -252,27 +254,27 @@ export default function WhiteLabelSection() {
     onSuccess: (d: any) => {
       const verified = d?.notification_email?.status === "VERIFIED";
       toast({
-        title: verified ? "Verified!" : "Not verified yet",
+        title: verified ? t("white_label_section.toast_verified_title") : t("white_label_section.toast_not_verified_title"),
         description: verified
-          ? "Your custom email domain is active."
-          : "DNS records aren't visible to SMTP2GO yet — they can take time to propagate.",
+          ? t("white_label_section.toast_verified_description")
+          : t("white_label_section.toast_not_verified_description"),
         variant: verified ? undefined : "destructive",
       });
       refetchEmail();
     },
-    onError: (e: any) => toast({ title: "Verification failed", description: e?.message ?? "", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("white_label_section.toast_verification_failed_title"), description: e?.message ?? "", variant: "destructive" }),
   });
 
   const deleteEmailMutation = useMutation({
     mutationFn: async (id: string) => (await apiRequest("DELETE", `/api/notification-email/${id}`)).json(),
-    onSuccess: () => { toast({ title: "Removed" }); setShowEmailForm(false); refetchEmail(); },
-    onError: (e: any) => toast({ title: "Could not remove", description: e?.message ?? "", variant: "destructive" }),
+    onSuccess: () => { toast({ title: t("white_label_section.toast_removed_title") }); setShowEmailForm(false); refetchEmail(); },
+    onError: (e: any) => toast({ title: t("white_label_section.toast_could_not_remove_title"), description: e?.message ?? "", variant: "destructive" }),
   });
 
   const copyToClipboard = (val: string) => {
     if (!val) return;
     navigator.clipboard.writeText(val);
-    toast({ title: "Copied" });
+    toast({ title: t("white_label_section.toast_copied_title") });
   };
 
   if (isLoading) {
@@ -284,10 +286,10 @@ export default function WhiteLabelSection() {
   }
 
   const tabs = [
-    { value: "logo", label: "Logo", icon: ImageIcon },
-    { value: "favicon", label: "Favicon", icon: Zap },
-    { value: "colors", label: "Colors", icon: Palette },
-    { value: "email", label: "Notification E-mail", icon: Mail },
+    { value: "logo", label: t("white_label_section.tab_logo"), icon: ImageIcon },
+    { value: "favicon", label: t("white_label_section.tab_favicon"), icon: Zap },
+    { value: "colors", label: t("white_label_section.tab_colors"), icon: Palette },
+    { value: "email", label: t("white_label_section.tab_email"), icon: Mail },
   ];
 
   return (
@@ -307,14 +309,14 @@ export default function WhiteLabelSection() {
               <BadgeCheck className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Theme</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("white_label_section.header_title")}</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                Change color, logo and favicon of your workspace
+                {t("white_label_section.header_description")}
               </p>
             </div>
           </div>
           <div className={cn("px-3 py-1.5 rounded-lg border text-[10px] font-semibold flex items-center gap-1.5", dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600")}>
-            <Sparkles size={11} className="text-primary" /> Premium Branding
+            <Sparkles size={11} className="text-primary" /> {t("white_label_section.premium_branding")}
           </div>
         </div>
 
@@ -345,31 +347,33 @@ export default function WhiteLabelSection() {
             <TabsContent value="logo" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
-                title="Brand Logo"
-                description="Upload your logo for light and dark mode. Transparent PNG or SVG recommended (460×140px)."
+                title={t("white_label_section.logo_section_title")}
+                description={t("white_label_section.logo_section_description")}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <LogoUpload
                   dark={dark}
-                  themeLabel="Light Theme"
+                  themeLabel={t("white_label_section.light_theme")}
                   logoSrc={logoPreview.light || "/images/agentawk-logo-horizontal-ink.svg"}
                   zoneBg={dark ? "bg-white/95" : "bg-slate-50/80"}
                   zoneBorder={dark ? "border-slate-700" : "border-slate-200"}
                   onAction={(a) => handleLogoAction(a, "light")}
+                  t={t}
                 />
                 <LogoUpload
                   dark={dark}
-                  themeLabel="Dark Theme"
+                  themeLabel={t("white_label_section.dark_theme")}
                   logoSrc={logoPreview.dark || "/images/agentawk-logo-horizontal-white.svg"}
                   zoneBg="bg-[#020617]"
                   zoneBorder="border-slate-800"
                   onAction={(a) => handleLogoAction(a, "dark")}
+                  t={t}
                 />
               </div>
 
               <InfoNote dark={dark}>
-                Logo displays in the top-left of your workspace. Recommended dimensions: 460×140px.
+                {t("white_label_section.logo_info_note")}
               </InfoNote>
             </TabsContent>
 
@@ -377,32 +381,32 @@ export default function WhiteLabelSection() {
             <TabsContent value="favicon" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
-                title="Browser Favicon"
-                description="The small icon that appears in browser tabs. Square ICO or PNG (64×64px recommended)."
+                title={t("white_label_section.favicon_section_title")}
+                description={t("white_label_section.favicon_section_description")}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Upload zone */}
                 <div className="space-y-3">
-                  <FieldLabel dark={dark}>Upload Favicon</FieldLabel>
+                  <FieldLabel dark={dark}>{t("white_label_section.upload_favicon")}</FieldLabel>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <div className={cn(
                         "w-32 h-32 border-2 border-dashed rounded-[1.5rem] flex items-center justify-center cursor-pointer transition-all hover:border-primary/40 group",
                         dark ? "bg-slate-950/50 border-slate-800" : "bg-slate-50 border-slate-200"
                       )}>
-                        <img src={logoPreview.favicon || "/images/agentawk-bot-green.svg"} alt="Favicon" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
+                        <img src={logoPreview.favicon || "/images/agentawk-bot-green.svg"} alt={t("white_label_section.favicon_alt")} className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
                       </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className={cn("w-52 rounded-xl p-1.5", dark ? "bg-[#0f1829] border-slate-800" : "")}>
                       <DropdownMenuItem onClick={() => handleLogoAction("upload", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                        <Upload size={13} /> Upload New
+                        <Upload size={13} /> {t("white_label_section.upload_new")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleLogoAction("gallery", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-                        <ImageIcon size={13} /> From Gallery
+                        <ImageIcon size={13} /> {t("white_label_section.from_gallery")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleLogoAction("remove", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
-                        <Trash2 size={13} /> Remove
+                        <Trash2 size={13} /> {t("white_label_section.remove")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -410,7 +414,7 @@ export default function WhiteLabelSection() {
 
                 {/* Browser preview */}
                 <div className="space-y-3">
-                  <FieldLabel dark={dark}>Browser Tab Preview</FieldLabel>
+                  <FieldLabel dark={dark}>{t("white_label_section.browser_tab_preview_label")}</FieldLabel>
                   <div className={cn("p-4 rounded-[1.25rem] border", softBg, softBorder)}>
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="bg-slate-100 px-2 py-1.5 flex items-center gap-1.5">
@@ -421,7 +425,7 @@ export default function WhiteLabelSection() {
                         </div>
                         <div className="flex-1 ml-2 bg-white rounded px-2 py-1 flex items-center gap-1.5 max-w-[200px]">
                           <img src={logoPreview.favicon || "/images/agentawk-bot-green.svg"} className="w-3 h-3 shrink-0" alt="" />
-                          <span className="text-[9px] font-bold text-slate-700 truncate">Workspace — Agentawk</span>
+                          <span className="text-[9px] font-bold text-slate-700 truncate">{t("white_label_section.browser_tab_preview_title")}</span>
                         </div>
                       </div>
                       <div className="h-12 bg-white" />
@@ -435,31 +439,31 @@ export default function WhiteLabelSection() {
             <TabsContent value="colors" className="p-6 outline-none space-y-4">
               <SectionHeading
                 dark={dark}
-                title="Theme Colors"
-                description="Customize the colors used across your workspace UI and chat bubbles."
+                title={t("white_label_section.colors_section_title")}
+                description={t("white_label_section.colors_section_description")}
               />
 
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-4 bg-primary rounded-full" />
-                  <h4 className={cn("text-[12px] font-semibold", text)}>Brand</h4>
+                  <h4 className={cn("text-[12px] font-semibold", text)}>{t("white_label_section.brand_heading")}</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <ColorPicker dark={dark} label="Main Theme" value={colors.mainTheme} onChange={(v) => handleColorChange("mainTheme", v)} />
-                  <ColorPicker dark={dark} label="Links & Actions" value={colors.links} onChange={(v) => handleColorChange("links", v)} />
+                  <ColorPicker dark={dark} label={t("white_label_section.main_theme_label")} value={colors.mainTheme} onChange={(v) => handleColorChange("mainTheme", v)} />
+                  <ColorPicker dark={dark} label={t("white_label_section.links_actions_label")} value={colors.links} onChange={(v) => handleColorChange("links", v)} />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-4 bg-primary rounded-full" />
-                  <h4 className={cn("text-[12px] font-semibold", text)}>Chat Bubbles</h4>
+                  <h4 className={cn("text-[12px] font-semibold", text)}>{t("white_label_section.chat_bubbles_heading")}</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <ColorPicker dark={dark} label="Incoming Bubble" value={colors.incomingBubble} onChange={(v) => handleColorChange("incomingBubble", v)} />
-                  <ColorPicker dark={dark} label="Incoming Text" value={colors.incomingText} onChange={(v) => handleColorChange("incomingText", v)} />
-                  <ColorPicker dark={dark} label="Outgoing Bubble" value={colors.outgoingBubble} onChange={(v) => handleColorChange("outgoingBubble", v)} />
-                  <ColorPicker dark={dark} label="Outgoing Text" value={colors.outgoingText} onChange={(v) => handleColorChange("outgoingText", v)} />
+                  <ColorPicker dark={dark} label={t("white_label_section.incoming_bubble_label")} value={colors.incomingBubble} onChange={(v) => handleColorChange("incomingBubble", v)} />
+                  <ColorPicker dark={dark} label={t("white_label_section.incoming_text_label")} value={colors.incomingText} onChange={(v) => handleColorChange("incomingText", v)} />
+                  <ColorPicker dark={dark} label={t("white_label_section.outgoing_bubble_label")} value={colors.outgoingBubble} onChange={(v) => handleColorChange("outgoingBubble", v)} />
+                  <ColorPicker dark={dark} label={t("white_label_section.outgoing_text_label")} value={colors.outgoingText} onChange={(v) => handleColorChange("outgoingText", v)} />
                 </div>
               </div>
 
@@ -468,6 +472,7 @@ export default function WhiteLabelSection() {
                 onClick={handleSaveColors}
                 loading={updateBrandingMutation.isPending}
                 primaryBtn={primaryBtn}
+                t={t}
               />
             </TabsContent>
 
@@ -480,15 +485,15 @@ export default function WhiteLabelSection() {
                     <div className={cn("p-4 rounded-[1.25rem] border flex items-start gap-3 bg-emerald-500/10 border-emerald-500/20")}>
                       <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500 shrink-0"><BadgeCheck size={14} /></div>
                       <p className="text-[11px] font-medium leading-relaxed text-emerald-700/90 dark:text-emerald-300/90">
-                        Your custom email domain is verified. Notifications will be sent from this address.
+                        {t("white_label_section.email_verified_banner")}
                       </p>
                     </div>
                     <div className={cn("p-5 rounded-[1.5rem] border flex items-center justify-between gap-4", softBg, softBorder)}>
                       <div className="min-w-0">
-                        <FieldLabel dark={dark}>Verified email</FieldLabel>
+                        <FieldLabel dark={dark}>{t("white_label_section.verified_email_label")}</FieldLabel>
                         <div className="flex items-center gap-2 mt-1">
                           <p className={cn("text-[13px] font-black truncate", text)}>{notificationEmail.email}</p>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Verified</span>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{t("white_label_section.verified_badge")}</span>
                         </div>
                       </div>
                       <button
@@ -496,7 +501,7 @@ export default function WhiteLabelSection() {
                         disabled={deleteEmailMutation.isPending}
                         className="h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50 shrink-0"
                       >
-                        <Trash2 size={12} /> Remove
+                        <Trash2 size={12} /> {t("white_label_section.remove")}
                       </button>
                     </div>
                   </div>
@@ -505,24 +510,24 @@ export default function WhiteLabelSection() {
                   <div className="space-y-5 max-w-3xl">
                     <SectionHeading
                       dark={dark}
-                      title="Verify your domain"
-                      description={`Add these DNS records for ${notificationEmail.domain} at your DNS provider, then click Verify. Propagation can take a few minutes to hours.`}
+                      title={t("white_label_section.verify_your_domain_title")}
+                      description={t("white_label_section.verify_your_domain_description", { domain: notificationEmail.domain })}
                     />
                     <div className={cn("rounded-[1.5rem] border overflow-x-auto", softBorder)}>
                       <div className="min-w-[520px]">
                         <div className={cn("grid grid-cols-12 px-5 py-3 text-[10px] font-semibold", dark ? "bg-slate-900/40 text-slate-400" : "bg-slate-50 text-slate-500")}>
-                          <div className="col-span-2">Type</div>
-                          <div className="col-span-5">Hostname</div>
-                          <div className="col-span-5">Value</div>
+                          <div className="col-span-2">{t("white_label_section.dns_type")}</div>
+                          <div className="col-span-5">{t("white_label_section.dns_hostname")}</div>
+                          <div className="col-span-5">{t("white_label_section.dns_value")}</div>
                         </div>
                         {notificationEmail.rpath_value && (
-                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.rpath_selector} value={notificationEmail.rpath_value} verified={notificationEmail.rpath_verified} onCopy={copyToClipboard} />
+                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.rpath_selector} value={notificationEmail.rpath_value} verified={notificationEmail.rpath_verified} onCopy={copyToClipboard} t={t} />
                         )}
                         {notificationEmail.dkim_value && (
-                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={`${notificationEmail.dkim_selector}._domainkey`} value={notificationEmail.dkim_value} verified={notificationEmail.dkim_verified} onCopy={copyToClipboard} />
+                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={`${notificationEmail.dkim_selector}._domainkey`} value={notificationEmail.dkim_value} verified={notificationEmail.dkim_verified} onCopy={copyToClipboard} t={t} />
                         )}
                         {notificationEmail.cname_selector && (
-                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.cname_selector} value={notificationEmail.cname_value || notificationEmail.cname_expected} verified={notificationEmail.cname_verified} onCopy={copyToClipboard} />
+                          <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.cname_selector} value={notificationEmail.cname_value || notificationEmail.cname_expected} verified={notificationEmail.cname_verified} onCopy={copyToClipboard} t={t} />
                         )}
                       </div>
                     </div>
@@ -533,14 +538,14 @@ export default function WhiteLabelSection() {
                         disabled={deleteEmailMutation.isPending}
                         className={cn("h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all border-rose-500/30 text-rose-500 hover:bg-rose-500/10 disabled:opacity-50")}
                       >
-                        Remove
+                        {t("white_label_section.remove")}
                       </button>
                       <button
                         onClick={() => verifyEmailMutation.mutate(String(notificationEmail.id))}
                         disabled={verifyEmailMutation.isPending}
                         className={primaryBtn}
                       >
-                        {verifyEmailMutation.isPending ? "Verifying..." : "Verify"}
+                        {verifyEmailMutation.isPending ? t("white_label_section.verifying") : t("white_label_section.verify_button")}
                       </button>
                     </div>
                   </div>
@@ -552,13 +557,13 @@ export default function WhiteLabelSection() {
                     <Mail className="w-8 h-8 text-primary transition-transform group-hover:scale-110" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[16px] font-bold tracking-tight", text)}>Notification E-mail</h3>
+                    <h3 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("white_label_section.notification_email_title")}</h3>
                     <p className={cn("text-[12px] font-medium leading-relaxed opacity-60", sub)}>
-                      Integrate your e-mail to send branded agent invitation and forgot password emails.
+                      {t("white_label_section.notification_email_description")}
                     </p>
                   </div>
                   <button onClick={() => setShowEmailForm(true)} className={primaryBtn}>
-                    Connect now
+                    {t("white_label_section.connect_now")}
                   </button>
                 </div>
               ) : (
@@ -566,12 +571,12 @@ export default function WhiteLabelSection() {
                 <div className="space-y-5 max-w-2xl">
                   <SectionHeading
                     dark={dark}
-                    title="Notification E-mail"
-                    description="Integrate your e-mail to send branded agent invitation and forgot password emails."
+                    title={t("white_label_section.notification_email_title")}
+                    description={t("white_label_section.notification_email_description")}
                   />
 
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Enter your domain</FieldLabel>
+                    <FieldLabel dark={dark}>{t("white_label_section.enter_domain_label")}</FieldLabel>
                     <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all",
                       dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
                       <input
@@ -583,7 +588,7 @@ export default function WhiteLabelSection() {
                         @
                       </div>
                       <input
-                        placeholder="your-domain.com"
+                        placeholder={t("white_label_section.domain_placeholder")}
                         value={emailDomain}
                         onChange={(e) => setEmailDomain(e.target.value)}
                         className={cn("flex-1 h-full text-[12px] font-black outline-none px-3 min-w-0", text)}
@@ -599,14 +604,14 @@ export default function WhiteLabelSection() {
                         dark ? "border-slate-800 text-slate-300 hover:border-slate-700" : "border-slate-200 text-slate-700 hover:border-slate-300"
                       )}
                     >
-                      Cancel
+                      {t("white_label_section.cancel")}
                     </button>
                     <button
                       onClick={() => addEmailMutation.mutate()}
                       disabled={addEmailMutation.isPending || !emailUser.trim() || !emailDomain.trim()}
                       className={primaryBtn}
                     >
-                      {addEmailMutation.isPending ? "Adding..." : "Continue"}
+                      {addEmailMutation.isPending ? t("white_label_section.adding") : t("white_label_section.continue")}
                     </button>
                   </div>
                 </div>
@@ -646,11 +651,13 @@ function SaveFooter({
   onClick,
   loading,
   primaryBtn,
+  t,
 }: {
   dark: boolean;
   onClick: () => void;
   loading: boolean;
   primaryBtn: string;
+  t: (key: string) => string;
 }) {
   const sub = dark ? "text-slate-500" : "text-slate-400";
   const border = dark ? "border-slate-800" : "border-slate-100";
@@ -658,10 +665,10 @@ function SaveFooter({
     <div className={cn("flex items-center justify-end gap-3 pt-6 border-t", border)}>
       <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
         <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
-        Branding applies across the entire Workspace
+        {t("white_label_section.save_footer_note")}
       </p>
       <button onClick={onClick} disabled={loading} className={primaryBtn}>
-        {loading ? "Saving..." : "Save Changes"}
+        {loading ? t("white_label_section.saving") : t("white_label_section.save_changes")}
       </button>
     </div>
   );
@@ -676,6 +683,7 @@ function DnsRecordRow({
   value,
   verified,
   onCopy,
+  t,
 }: {
   dark: boolean;
   text: string;
@@ -685,6 +693,7 @@ function DnsRecordRow({
   value: string;
   verified: boolean;
   onCopy: (v: string) => void;
+  t: (key: string) => string;
 }) {
   const border = dark ? "border-slate-800" : "border-slate-100";
   return (
@@ -694,7 +703,7 @@ function DnsRecordRow({
         {verified ? (
           <CheckCircle2 size={12} className="text-emerald-500" />
         ) : (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="Pending verification" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={t("white_label_section.pending_verification")} />
         )}
       </div>
       <button onClick={() => onCopy(hostname)} className="col-span-5 flex items-center gap-1.5 text-left min-w-0 group">
@@ -770,6 +779,7 @@ function LogoUpload({
   zoneBg,
   zoneBorder,
   onAction,
+  t,
 }: {
   dark: boolean;
   themeLabel: string;
@@ -777,6 +787,7 @@ function LogoUpload({
   zoneBg: string;
   zoneBorder: string;
   onAction: (action: string) => void;
+  t: (key: string) => string;
 }) {
   return (
     <div className="space-y-3">
@@ -798,13 +809,13 @@ function LogoUpload({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="center" className={cn("w-52 rounded-xl p-1.5", dark ? "bg-[#0f1829] border-slate-800" : "")}>
           <DropdownMenuItem onClick={() => onAction("upload")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-            <Upload size={13} /> Upload New
+            <Upload size={13} /> {t("white_label_section.upload_new")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onAction("gallery")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
-            <ImageIcon size={13} /> From Gallery
+            <ImageIcon size={13} /> {t("white_label_section.from_gallery")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onAction("remove")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
-            <Trash2 size={13} /> Remove
+            <Trash2 size={13} /> {t("white_label_section.remove")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

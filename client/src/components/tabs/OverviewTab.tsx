@@ -1,5 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, AreaChart, Area } from "recharts";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2, Users, UserPlus, BarChart2, Cpu } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -43,6 +44,7 @@ const CustomTooltip = ({ active, payload, label, isStickinessChart, dark }: any)
 };
 
 export default function OverviewTab() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -171,44 +173,44 @@ export default function OverviewTab() {
 
   const kpiCards = [
     {
-      title: "User Activity",
+      title: t("overview_tab.user_activity"),
       icon: <Users size={15} className="text-primary" />,
       rows: [
-        { label: "Active Today", value: abbreviateNumber(kpiData.activeToday) },
-        { label: "Active Week",  value: abbreviateNumber(kpiData.activeWeek) },
-        { label: "Active Month", value: abbreviateNumber(kpiData.activeMonth) },
-        { label: "Total Users",  value: abbreviateNumber(kpiData.totalUsers) },
-        { label: "Stickiness",   value: formatPercentage(kpiData.stickiness), border: true },
+        { label: t("overview_tab.active_today"), value: abbreviateNumber(kpiData.activeToday) },
+        { label: t("overview_tab.active_week"),  value: abbreviateNumber(kpiData.activeWeek) },
+        { label: t("overview_tab.active_month"), value: abbreviateNumber(kpiData.activeMonth) },
+        { label: t("overview_tab.total_users"),  value: abbreviateNumber(kpiData.totalUsers) },
+        { label: t("overview_tab.stickiness"),   value: formatPercentage(kpiData.stickiness), border: true },
       ],
     },
     {
-      title: "New Users",
+      title: t("overview_tab.new_users"),
       icon: <UserPlus size={15} className="text-primary" />,
       rows: [
         // Sign + format the delta so the existing badge color logic still
         // works (badge.startsWith('+') for green vs red).
-        { label: "Daily",   badge: formatDelta(kpiData.dailyNewUsersChange),   value: abbreviateNumber(kpiData.dailyNewUsers) },
-        { label: "Weekly",  badge: formatDelta(kpiData.weeklyNewUsersChange),  value: abbreviateNumber(kpiData.weeklyNewUsers) },
-        { label: "Monthly", badge: formatDelta(kpiData.monthlyNewUsersChange), value: abbreviateNumber(kpiData.monthlyNewUsers) },
+        { label: t("overview_tab.daily"),   badge: formatDelta(kpiData.dailyNewUsersChange),   value: abbreviateNumber(kpiData.dailyNewUsers) },
+        { label: t("overview_tab.weekly"),  badge: formatDelta(kpiData.weeklyNewUsersChange),  value: abbreviateNumber(kpiData.weeklyNewUsers) },
+        { label: t("overview_tab.monthly"), badge: formatDelta(kpiData.monthlyNewUsersChange), value: abbreviateNumber(kpiData.monthlyNewUsers) },
       ],
     },
     {
-      title: "Plan Usage",
+      title: t("overview_tab.plan_usage"),
       icon: <BarChart2 size={15} className="text-primary" />,
       rows: [
-        { label: "Current MAU", value: abbreviateNumber(kpiData.currentMAU) },
-        { label: "MAU Limit",   value: contactsLimitActive ? abbreviateNumber(kpiData.mauLimit) : "Unlimited" },
-        { label: "Usage",       value: contactsLimitActive ? formatPercentage(mauUsagePercentage) : "—" },
+        { label: t("overview_tab.current_mau"), value: abbreviateNumber(kpiData.currentMAU) },
+        { label: t("overview_tab.mau_limit"),   value: contactsLimitActive ? abbreviateNumber(kpiData.mauLimit) : t("overview_tab.unlimited") },
+        { label: t("overview_tab.usage"),       value: contactsLimitActive ? formatPercentage(mauUsagePercentage) : "—" },
       ],
       progress: mauUsagePercentage,
     },
     {
-      title: "Agent Capacity",
+      title: t("overview_tab.agent_capacity"),
       icon: <Cpu size={15} className="text-primary" />,
       rows: [
-        { label: "Active Agents", value: abbreviateNumber(kpiData.activeAgents) },
-        { label: "Total Seats",   value: isUnlimitedSeats ? "Unlimited" : abbreviateNumber(kpiData.totalSeats) },
-        { label: "Utilization",   value: isUnlimitedSeats ? "—" : formatPercentage(agentUtilizationPercentage) },
+        { label: t("overview_tab.active_agents"), value: abbreviateNumber(kpiData.activeAgents) },
+        { label: t("overview_tab.total_seats"),   value: isUnlimitedSeats ? t("overview_tab.unlimited") : abbreviateNumber(kpiData.totalSeats) },
+        { label: t("overview_tab.utilization"),   value: isUnlimitedSeats ? "—" : formatPercentage(agentUtilizationPercentage) },
       ],
       progress: agentUtilizationPercentage,
     },
@@ -279,13 +281,13 @@ export default function OverviewTab() {
       {/* ── Row 2: Main Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {[
-          { title: "Daily Active Users", data: dauData, xKey: "day", yKey: "users", color: "#3b82f6" },
-          { title: "Monthly Active Users", data: mauData, xKey: "month", yKey: "users", color: "#8b5cf6" },
+          { title: t("overview_tab.daily_active_users"), data: dauData, xKey: "day", yKey: "users", color: "#3b82f6" },
+          { title: t("overview_tab.monthly_active_users"), data: mauData, xKey: "month", yKey: "users", color: "#8b5cf6" },
         ].map((chart, idx) => (
           <div key={idx} className={cn("rounded-xl border p-4 transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-bottom-2", card)}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={cn("text-[12px] font-bold tracking-tight", text)}>{chart.title}</h3>
-              <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 opacity-60">Real-time</div>
+              <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 opacity-60">{t("overview_tab.real_time")}</div>
             </div>
             <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={chart.data} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
@@ -318,13 +320,13 @@ export default function OverviewTab() {
       {/* ── Row 3: Secondary Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {[
-          { title: "Weekly Growth", data: wauData, xKey: "week", yKey: "users", color: "#10b981" },
-          { title: "Stickiness Ratio", data: stickinessData, xKey: "day", yKey: "ratio", color: "#f59e0b", isStickiness: true },
+          { title: t("overview_tab.weekly_growth"), data: wauData, xKey: "week", yKey: "users", color: "#10b981" },
+          { title: t("overview_tab.stickiness_ratio"), data: stickinessData, xKey: "day", yKey: "ratio", color: "#f59e0b", isStickiness: true },
         ].map((chart, idx) => (
           <div key={idx} className={cn("rounded-xl border p-4 transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-bottom-2", card)}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={cn("text-[12px] font-bold tracking-tight", text)}>{chart.title}</h3>
-              <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 opacity-60">Last 30 Days</div>
+              <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 opacity-60">{t("overview_tab.last_30_days")}</div>
             </div>
             <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={chart.data} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>

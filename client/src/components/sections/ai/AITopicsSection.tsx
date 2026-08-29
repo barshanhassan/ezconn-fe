@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Sparkles,
   Edit2,
@@ -28,6 +29,7 @@ export default function AITopicsSection() {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
@@ -69,10 +71,10 @@ export default function AITopicsSection() {
     if (formData.name.trim()) {
       if (editingTopicId) {
         setTopics(topics.map((t) => (t.id === editingTopicId ? { ...t, name: formData.name } : t)));
-        toast({ title: "Updated", description: "Topic updated successfully." });
+        toast({ title: t("ai_topics_section.updated"), description: t("ai_topics_section.updated_description") });
       } else {
         setTopics([...topics, { id: String(Date.now()), name: formData.name }]);
-        toast({ title: "Created", description: "Topic added successfully." });
+        toast({ title: t("ai_topics_section.created"), description: t("ai_topics_section.created_description") });
       }
       setFormData({ name: "" });
       setIsCreateFormOpen(false);
@@ -95,19 +97,23 @@ export default function AITopicsSection() {
   const handleDeleteTopic = () => {
     if (topicToDelete) {
       setTopics(topics.filter((t) => t.id !== topicToDelete.id));
-      toast({ title: "Deleted", description: "Topic removed." });
+      toast({ title: t("ai_topics_section.deleted"), description: t("ai_topics_section.deleted_description") });
     }
     setShowDeleteConfirm(false);
     setTopicToDelete(null);
   };
 
   const hasTopics = topics.length > 0;
-  const headerTitle = isCreateFormOpen ? (editingTopicId ? "Edit Topic" : "Add Topic") : "AI Topics";
+  const headerTitle = isCreateFormOpen
+    ? editingTopicId
+      ? t("ai_topics_section.edit_topic")
+      : t("ai_topics_section.add_topic")
+    : t("ai_topics_section.ai_topics");
   const headerSub = isCreateFormOpen
     ? editingTopicId
-      ? "Update your AI topic"
-      : "Create a new AI topic"
-    : "Manage your AI topics";
+      ? t("ai_topics_section.update_your_topic")
+      : t("ai_topics_section.create_new_topic")
+    : t("ai_topics_section.manage_topics");
 
   return (
     <>
@@ -128,11 +134,11 @@ export default function AITopicsSection() {
             <div className="flex items-center gap-2 shrink-0">
               {!isCreateFormOpen ? (
                 <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add Topic
+                  <Plus size={12} /> {t("ai_topics_section.add_topic")}
                 </button>
               ) : (
                 <button onClick={handleCancel} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("ai_topics_section.back")}
                 </button>
               )}
             </div>
@@ -147,13 +153,13 @@ export default function AITopicsSection() {
                     <Sparkles className="w-8 h-8 text-primary" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No topic found</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_topics_section.no_topic_found")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Click the button below to add a new topic.
+                      {t("ai_topics_section.no_topic_description")}
                     </p>
                   </div>
                   <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add Topic
+                    <Plus size={12} /> {t("ai_topics_section.add_topic")}
                   </button>
                 </div>
               ) : (
@@ -164,10 +170,10 @@ export default function AITopicsSection() {
                         <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
                           <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>
                             <div className="flex items-center gap-2">
-                              <FileText size={12} /> Name
+                              <FileText size={12} /> {t("ai_topics_section.name")}
                             </div>
                           </th>
-                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("ai_topics_section.actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -189,14 +195,14 @@ export default function AITopicsSection() {
                                 <button
                                   onClick={() => handleEditTopic(topic)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
-                                  title="Edit"
+                                  title={t("ai_topics_section.edit")}
                                 >
                                   <Edit2 size={13} />
                                 </button>
                                 <button
                                   onClick={() => { setTopicToDelete(topic); setShowDeleteConfirm(true); }}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
-                                  title="Delete"
+                                  title={t("ai_topics_section.delete")}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -209,7 +215,7 @@ export default function AITopicsSection() {
                   </div>
 
                   <div className={cn("px-6 py-3 border-t text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                    Showing {topics.length} of {topics.length} topics
+                    {t("ai_topics_section.showing_count", { count: topics.length })}
                   </div>
                 </div>
               )}
@@ -222,13 +228,13 @@ export default function AITopicsSection() {
               <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
                 <div className="max-w-2xl space-y-6">
                   <div className="space-y-2">
-                    <label className={labelCls}>Topic Name</label>
+                    <label className={labelCls}>{t("ai_topics_section.topic_name")}</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className={inputCls}
-                      placeholder="Enter topic name"
+                      placeholder={t("ai_topics_section.topic_name_placeholder")}
                     />
                   </div>
                 </div>
@@ -236,14 +242,14 @@ export default function AITopicsSection() {
                 {/* Footer Actions */}
                 <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
                   <button onClick={handleCancel} className={outlineBtn}>
-                    Cancel
+                    {t("ai_topics_section.cancel")}
                   </button>
                   <button
                     onClick={handlePublish}
                     disabled={!formData.name.trim()}
                     className={primaryBtn}
                   >
-                    <Sparkles size={12} /> {editingTopicId ? "Update Topic" : "Add Topic"}
+                    <Sparkles size={12} /> {editingTopicId ? t("ai_topics_section.update_topic") : t("ai_topics_section.add_topic")}
                   </button>
                 </div>
               </div>
@@ -261,19 +267,19 @@ export default function AITopicsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Topic?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_topics_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{topicToDelete?.name || "This topic"}</span> will be permanently removed.
+                  <span className="text-rose-500 font-black">{topicToDelete?.name || t("ai_topics_section.this_topic")}</span> {t("ai_topics_section.delete_dialog_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_topics_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteTopic}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("ai_topics_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

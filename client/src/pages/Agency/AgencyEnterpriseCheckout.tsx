@@ -72,7 +72,7 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   // Coupon — read-only sync from Billing → Manage (billing_subscriptions.coupons).
   // No apply/remove here; that's Manage's job. Doesn't touch what Swich
   // actually charges (still the Rs. 1 test amount below) — just the displayed rate.
-  const [appliedCoupon, setAppliedCoupon] = React.useState<{ code: string; name: string; discount_percentage: number | null } | null>(null);
+  const [appliedCoupons, setAppliedCoupons] = React.useState<Array<{ code: string; name: string; discount_percentage: number | null }>>([]);
   const { data: accountCoupons } = useQuery<any[]>({
     queryKey: [`/api/organizations/${agencyId}/coupons`],
     queryFn: async () => {
@@ -82,16 +82,20 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     enabled: !!agencyId,
   });
   React.useEffect(() => {
-    if (accountCoupons && accountCoupons.length > 0) {
-      const c = accountCoupons[0];
-      setAppliedCoupon({ code: c.coupon_id, name: c.invoice_name || c.coupon_id, discount_percentage: c.discount_percentage != null ? Number(c.discount_percentage) : null });
-    } else {
-      setAppliedCoupon(null);
-    }
+    setAppliedCoupons(
+      (accountCoupons ?? []).map((c) => ({
+        code: c.coupon_id,
+        name: c.invoice_name || c.coupon_id,
+        discount_percentage: c.discount_percentage != null ? Number(c.discount_percentage) : null,
+      })),
+    );
   }, [accountCoupons]);
 
-  const discountedPriceCents = plan?.price_cents != null && appliedCoupon?.discount_percentage
-    ? Math.round(plan.price_cents * (1 - appliedCoupon.discount_percentage / 100))
+  // Each coupon knocks its own % off the base price independently (matches
+  // Billing → Manage's Current Usage calc) — not compounded.
+  const totalDiscountPct = appliedCoupons.reduce((sum, c) => sum + (c.discount_percentage || 0), 0);
+  const discountedPriceCents = plan?.price_cents != null && totalDiscountPct > 0
+    ? Math.max(0, Math.round(plan.price_cents * (1 - totalDiscountPct / 100)))
     : plan?.price_cents ?? null;
 
   const checkoutMutation = useMutation({
@@ -225,18 +229,26 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 )}
               </div>
 
-              {appliedCoupon && (
+              {appliedCoupons.length > 0 && (
                 <div className="mt-4">
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Coupon (from Billing → Manage)</label>
-                  <div className={cn("flex items-center px-3 py-2 rounded-lg border text-[12px] font-bold", dark ? "bg-primary/10 border-primary/20 text-primary" : "bg-primary/5 border-primary/10 text-primary")}>
-                    {appliedCoupon.code} — {appliedCoupon.discount_percentage}% off
+                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>
+                    {appliedCoupons.length > 1 ? "Coupons" : "Coupon"} (from Billing → Manage)
+                  </label>
+                  <div className="space-y-1.5">
+                    {appliedCoupons.map((c) => (
+                      <div key={c.code} className={cn("flex items-center px-3 py-2 rounded-lg border text-[12px] font-bold", dark ? "bg-primary/10 border-primary/20 text-primary" : "bg-primary/5 border-primary/10 text-primary")}>
+                        {c.code} — {c.discount_percentage}% off
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {appliedCoupon && (
+              {appliedCoupons.length > 0 && (
                 <div className="flex justify-between items-center pt-4 text-primary">
-                  <span className="text-[12px] font-bold">{appliedCoupon.code} coupon applied</span>
+                  <span className="text-[12px] font-bold">
+                    {appliedCoupons.length > 1 ? `${appliedCoupons.length} coupons applied` : `${appliedCoupons[0].code} coupon applied`}
+                  </span>
                   <span className="text-[13px] font-bold">-{formatUsd((plan?.price_cents ?? 0) - (discountedPriceCents ?? 0))}</span>
                 </div>
               )}

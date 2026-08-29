@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Search, RefreshCw, MoreVertical, Download, FileText, Trash2 } from "react-feather";
 import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Activity } from "lucide-react";
@@ -121,6 +122,7 @@ function rangeToQuery(
 
 
 export default function ConversationLogsPage() {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const workspaceTz = useWorkspaceTimezone();
 
@@ -237,10 +239,10 @@ export default function ConversationLogsPage() {
     // statusToLabel in the backend maps UNASSIGNED → "Queued" so we mirror
     // those labels here.
     const statusOptions = [
-        { id: "ACTIVE", name: "Active" },
-        { id: "UNASSIGNED", name: "Queued" },
-        { id: "COMPLETED", name: "Completed" },
-        { id: "DELETED", name: "Deleted" },
+        { id: "ACTIVE", name: t("conversation_logs_page.status_active") },
+        { id: "UNASSIGNED", name: t("conversation_logs_page.status_queued") },
+        { id: "COMPLETED", name: t("conversation_logs_page.status_completed") },
+        { id: "DELETED", name: t("conversation_logs_page.status_deleted") },
     ];
 
     const kpiData = {
@@ -349,7 +351,19 @@ export default function ConversationLogsPage() {
             return str;
         };
 
-        const headers = ["Customer Number", "Customer Name", "Started Time", "Duration", "Agent Name", "Agent ID", "Status", "Number of Messages", "Conversation Timeline", "Sentiment", "Sentiment Summary"];
+        const headers = [
+            t("conversation_logs_page.csv_customer_number"),
+            t("conversation_logs_page.csv_customer_name"),
+            t("conversation_logs_page.csv_started_time"),
+            t("conversation_logs_page.csv_duration"),
+            t("conversation_logs_page.csv_agent_name"),
+            t("conversation_logs_page.csv_agent_id"),
+            t("conversation_logs_page.csv_status"),
+            t("conversation_logs_page.csv_number_of_messages"),
+            t("conversation_logs_page.csv_conversation_timeline"),
+            t("conversation_logs_page.csv_sentiment"),
+            t("conversation_logs_page.csv_sentiment_summary"),
+        ];
 
         const rows = selectedConversations.map(conv => [
             escapeCSV(conv.customerNumber),
@@ -392,7 +406,19 @@ export default function ConversationLogsPage() {
             return str;
         };
 
-        const headers = ["Customer Number", "Customer Name", "Started Time", "Duration", "Agent Name", "Agent ID", "Status", "Number of Messages", "Conversation Timeline", "Sentiment", "Sentiment Summary"];
+        const headers = [
+            t("conversation_logs_page.csv_customer_number"),
+            t("conversation_logs_page.csv_customer_name"),
+            t("conversation_logs_page.csv_started_time"),
+            t("conversation_logs_page.csv_duration"),
+            t("conversation_logs_page.csv_agent_name"),
+            t("conversation_logs_page.csv_agent_id"),
+            t("conversation_logs_page.csv_status"),
+            t("conversation_logs_page.csv_number_of_messages"),
+            t("conversation_logs_page.csv_conversation_timeline"),
+            t("conversation_logs_page.csv_sentiment"),
+            t("conversation_logs_page.csv_sentiment_summary"),
+        ];
 
         const row = [
             escapeCSV(conv.customerNumber),
@@ -447,10 +473,10 @@ export default function ConversationLogsPage() {
                         </div>
                         <div className="space-y-0.5">
                             <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                                Conversation Logs
+                                {t("conversation_logs_page.title")}
                             </h1>
                             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                Detailed history and real-time statistics of all agent-customer interactions
+                                {t("conversation_logs_page.subtitle")}
                             </p>
                         </div>
                     </div>
@@ -467,7 +493,7 @@ export default function ConversationLogsPage() {
                                     <RefreshCw size={14} className={cn("text-slate-500", isLoading && "animate-spin")} />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="text-[10px]">Refresh Logs</TooltipContent>
+                            <TooltipContent className="text-[10px]">{t("conversation_logs_page.refresh_logs")}</TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
@@ -479,38 +505,38 @@ export default function ConversationLogsPage() {
                 {/* 2. Compact Stats Row (Integrated) */}
                 <div className="grid grid-cols-2 md:grid-cols-5 border-b border-slate-200 dark:border-slate-800/80 divide-x divide-slate-100 dark:divide-slate-800/50">
                     <div className="p-4 bg-slate-50/30 dark:bg-transparent">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Conversations</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t("conversation_logs_page.stat_total_conversations")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-xl font-bold text-slate-900 dark:text-white">{kpiData.totalConversations}</p>
-                            <span className="text-[10px] font-medium text-slate-400">total</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("conversation_logs_page.stat_total_suffix")}</span>
                         </div>
                     </div>
                     <div className="p-4">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Queued</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t("conversation_logs_page.stat_queued")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-xl font-bold text-amber-600">{kpiData.queued}</p>
-                            <span className="text-[10px] font-medium text-slate-400">waiting</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("conversation_logs_page.stat_waiting_suffix")}</span>
                         </div>
                     </div>
                     <div className="p-4">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Active</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t("conversation_logs_page.stat_active")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-xl font-bold text-blue-600">{kpiData.active}</p>
-                            <span className="text-[10px] font-medium text-slate-400">in progress</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("conversation_logs_page.stat_in_progress_suffix")}</span>
                         </div>
                     </div>
                     <div className="p-4">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Completed</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t("conversation_logs_page.stat_completed")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-xl font-bold text-emerald-600">{kpiData.completed}</p>
-                            <span className="text-[10px] font-medium text-slate-400">resolved</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("conversation_logs_page.stat_resolved_suffix")}</span>
                         </div>
                     </div>
                     <div className="p-4">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resolution Rate</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t("conversation_logs_page.stat_resolution_rate")}</p>
                         <div className="flex items-baseline gap-2">
                             <p className="text-xl font-bold text-indigo-600">{kpiData.resolutionRate}</p>
-                            <span className="text-[10px] font-medium text-slate-400">success</span>
+                            <span className="text-[10px] font-medium text-slate-400">{t("conversation_logs_page.stat_success_suffix")}</span>
                         </div>
                     </div>
                 </div>
@@ -523,7 +549,7 @@ export default function ConversationLogsPage() {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search customer, agent or number..."
+                            placeholder={t("conversation_logs_page.search_placeholder")}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="block w-full pl-9 pr-3 h-9 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
@@ -537,12 +563,12 @@ export default function ConversationLogsPage() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border border-input dark:border-slate-800 shadow-xl">
-                                <SelectItem value="last-7-days" className="text-xs">Last 7 Days</SelectItem>
-                                <SelectItem value="last-14-days" className="text-xs">Last 14 Days</SelectItem>
-                                <SelectItem value="last-30-days" className="text-xs">Last 30 Days</SelectItem>
-                                <SelectItem value="this-month" className="text-xs">This Month</SelectItem>
-                                <SelectItem value="this-quarter" className="text-xs">This Quarter</SelectItem>
-                                <SelectItem value="custom" className="text-xs text-primary font-bold">Custom Range</SelectItem>
+                                <SelectItem value="last-7-days" className="text-xs">{t("conversation_logs_page.range_last_7_days")}</SelectItem>
+                                <SelectItem value="last-14-days" className="text-xs">{t("conversation_logs_page.range_last_14_days")}</SelectItem>
+                                <SelectItem value="last-30-days" className="text-xs">{t("conversation_logs_page.range_last_30_days")}</SelectItem>
+                                <SelectItem value="this-month" className="text-xs">{t("conversation_logs_page.range_this_month")}</SelectItem>
+                                <SelectItem value="this-quarter" className="text-xs">{t("conversation_logs_page.range_this_quarter")}</SelectItem>
+                                <SelectItem value="custom" className="text-xs text-primary font-bold">{t("conversation_logs_page.range_custom")}</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -552,7 +578,7 @@ export default function ConversationLogsPage() {
                                     <Button variant="outline" style={{ borderRadius: '6px' }} className="h-9 px-3 !rounded-md border border-input bg-white dark:bg-slate-800/50 text-[11px] font-medium gap-2 shadow-sm">
                                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                         <span>
-                                            {customDateRange?.from ? format(customDateRange.from, 'dd/MM') : "Start"} - {customDateRange?.to ? format(customDateRange.to, 'dd/MM') : "End"}
+                                            {customDateRange?.from ? format(customDateRange.from, 'dd/MM') : t("conversation_logs_page.range_start")} - {customDateRange?.to ? format(customDateRange.to, 'dd/MM') : t("conversation_logs_page.range_end")}
                                         </span>
                                     </Button>
                                 </PopoverTrigger>
@@ -571,7 +597,7 @@ export default function ConversationLogsPage() {
                             options={statusOptions}
                             selected={selectedStatus}
                             onChange={(v) => { setSelectedStatus(v); setPage(1); }}
-                            placeholder="Status"
+                            placeholder={t("conversation_logs_page.status_placeholder")}
                             width="140px"
                             showSelectedOption={true}
                             showSearch={false}
@@ -583,7 +609,7 @@ export default function ConversationLogsPage() {
                                         <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                         <span className={cn("truncate text-[12px]", selectedStatus.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
                                             {selectedStatus.length === 0
-                                                ? "Status"
+                                                ? t("conversation_logs_page.status_placeholder")
                                                 : selectedStatus.map(id => statusOptions.find(o => o.id === id)?.name ?? id).join(", ")}
                                         </span>
                                     </div>
@@ -598,15 +624,15 @@ export default function ConversationLogsPage() {
                 <div className="flex-1 overflow-auto min-h-[300px]">
                     {selectedRows.size > 0 && (
                         <div className="flex items-center gap-3 px-5 py-2 bg-primary/[0.06] dark:bg-primary/5 border-b border-primary/20 dark:border-primary/20 animate-in slide-in-from-top-2">
-                            <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{selectedRows.size} Selected</span>
+                            <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{t("conversation_logs_page.selected_count", { count: selectedRows.size })}</span>
                             <div className="flex gap-1 ml-auto">
-                                <Button 
+                                <Button
                                     onClick={handleExportSelectedAsCSV}
-                                    variant="outline" 
+                                    variant="outline"
                                     className="h-7 px-3 rounded-md border-primary/30 text-primary gap-2 text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all"
                                 >
                                     <Download size={12} />
-                                    Export Selected
+                                    {t("conversation_logs_page.export_selected")}
                                 </Button>
                             </div>
                         </div>
@@ -627,7 +653,7 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Customer {renderSortIcon("customer")}
+                                        {t("conversation_logs_page.col_customer")} {renderSortIcon("customer")}
                                     </div>
                                 </th>
                                 <th
@@ -635,7 +661,7 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Channel {renderSortIcon("channel")}
+                                        {t("conversation_logs_page.col_channel")} {renderSortIcon("channel")}
                                     </div>
                                 </th>
                                 <th
@@ -643,7 +669,7 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Agent {renderSortIcon("agent")}
+                                        {t("conversation_logs_page.col_agent")} {renderSortIcon("agent")}
                                     </div>
                                 </th>
                                 <th 
@@ -651,7 +677,7 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Start Time {renderSortIcon("startTime")}
+                                        {t("conversation_logs_page.col_start_time")} {renderSortIcon("startTime")}
                                     </div>
                                 </th>
                                 <th 
@@ -659,7 +685,7 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Duration {renderSortIcon("duration")}
+                                        {t("conversation_logs_page.col_duration")} {renderSortIcon("duration")}
                                     </div>
                                 </th>
                                 <th 
@@ -667,7 +693,7 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        Status {renderSortIcon("status")}
+                                        {t("conversation_logs_page.col_status")} {renderSortIcon("status")}
                                     </div>
                                 </th>
                                 <th 
@@ -675,11 +701,11 @@ export default function ConversationLogsPage() {
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors text-center"
                                 >
                                     <div className="flex items-center justify-center gap-2">
-                                        Messages {renderSortIcon("messages")}
+                                        {t("conversation_logs_page.col_messages")} {renderSortIcon("messages")}
                                     </div>
                                 </th>
                                 <th className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 w-20">
-                                    Actions
+                                    {t("conversation_logs_page.col_actions")}
                                 </th>
                             </tr>
                         </thead>
@@ -691,7 +717,7 @@ export default function ConversationLogsPage() {
                                             <div className="p-4 rounded-full bg-slate-50 dark:bg-slate-800">
                                                 <Search className="w-8 h-8 text-slate-300" />
                                             </div>
-                                            <p className="text-sm font-medium text-slate-400">No conversation logs found</p>
+                                            <p className="text-sm font-medium text-slate-400">{t("conversation_logs_page.empty_state")}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -728,7 +754,7 @@ export default function ConversationLogsPage() {
                                                     <div className="w-4 h-4 rounded bg-slate-200 dark:bg-slate-700" />
                                                 )}
                                                 <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 capitalize">
-                                                    {conv.channel === "sms" ? "SMS" : conv.channel === "zapi" ? "Z-API" : conv.channel}
+                                                    {conv.channel === "sms" ? t("conversation_logs_page.channel_sms") : conv.channel === "zapi" ? "Z-API" : conv.channel}
                                                 </span>
                                             </div>
                                         </td>
@@ -737,7 +763,7 @@ export default function ConversationLogsPage() {
                                                 <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
                                                     {(conv.agent ?? '—').substring(0, 1)}
                                                 </div>
-                                                <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300">{conv.agent ?? 'Unassigned'}</span>
+                                                <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300">{conv.agent ?? t("conversation_logs_page.unassigned")}</span>
                                             </div>
                                         </td>
                                         <td className="px-5 py-2.5 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
@@ -783,21 +809,21 @@ export default function ConversationLogsPage() {
                                                         className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
                                                     >
                                                         <FileText size={13} className="text-primary" />
-                                                        View Details
+                                                        {t("conversation_logs_page.view_details")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => handleExportSingleAsCSV(conv)}
                                                         className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
                                                     >
                                                         <Download size={13} className="text-emerald-500" />
-                                                        Export CSV
+                                                        {t("conversation_logs_page.export_csv")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => setDeleteConfirmId(conv.id)}
                                                         className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-500/10"
                                                     >
                                                         <Trash2 size={13} className="text-red-500" />
-                                                        Delete
+                                                        {t("conversation_logs_page.delete")}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -812,10 +838,10 @@ export default function ConversationLogsPage() {
                 {/* 5. Footer / Pagination Section */}
                 <div className="px-5 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
                     <div className="flex items-center gap-4 text-[11px] font-medium text-slate-500">
-                        <span>{logsResponse?.total || 0} results found</span>
+                        <span>{t("conversation_logs_page.results_found", { count: logsResponse?.total || 0 })}</span>
                         <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
                         <div className="flex items-center gap-2">
-                            <span>Show</span>
+                            <span>{t("conversation_logs_page.show")}</span>
                             <div className="relative" ref={dropdownRef}>
                                 <button
                                     type="button"
@@ -848,9 +874,9 @@ export default function ConversationLogsPage() {
 
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mr-2">
-                            <span>Page</span>
+                            <span>{t("conversation_logs_page.page")}</span>
                             <span className="text-slate-900 dark:text-white">{page}</span>
-                            <span>of</span>
+                            <span>{t("conversation_logs_page.of")}</span>
                             <span>{totalPages || 1}</span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -899,7 +925,7 @@ export default function ConversationLogsPage() {
             <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
                 <DialogContent className="max-w-4xl">
                     <DialogHeader className="mb-2">
-                        <DialogTitle>Conversation Details</DialogTitle>
+                        <DialogTitle>{t("conversation_logs_page.details_title")}</DialogTitle>
                     </DialogHeader>
                     {selectedConversation && (
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -907,18 +933,18 @@ export default function ConversationLogsPage() {
                             <div className="lg:col-span-2 space-y-4">
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Customer</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_customer")}</label>
                                         <p className="mt-1 text-sm font-medium">{selectedConversation.customer}</p>
                                         {selectedConversation.customerNumber && (
                                             <p className="text-xs text-slate-500">{selectedConversation.customerNumber}</p>
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Agent</label>
-                                        <p className="mt-1 text-sm font-medium">{selectedConversation.agent || "Unassigned"}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_agent")}</label>
+                                        <p className="mt-1 text-sm font-medium">{selectedConversation.agent || t("conversation_logs_page.unassigned")}</p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Channel</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_channel")}</label>
                                         <div className="mt-1 flex items-center gap-2">
                                             {["whatsapp", "telegram", "messenger", "instagram"].includes(selectedConversation.channel) ? (
                                                 <img
@@ -929,7 +955,7 @@ export default function ConversationLogsPage() {
                                             ) : null}
                                             <span className="text-sm font-medium capitalize">
                                                 {selectedConversation.channel === "sms"
-                                                    ? "SMS"
+                                                    ? t("conversation_logs_page.channel_sms")
                                                     : selectedConversation.channel === "zapi"
                                                         ? "Z-API"
                                                         : selectedConversation.channel}
@@ -937,7 +963,7 @@ export default function ConversationLogsPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_status")}</label>
                                         <p className="mt-1">
                                             <span className={cn(
                                                 "inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
@@ -951,7 +977,7 @@ export default function ConversationLogsPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Started</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_started")}</label>
                                         <p className="mt-1 text-xs font-medium">
                                             {selectedConversation.startTime
                                                 ? formatInWorkspaceTz(selectedConversation.startTime, "dd MMM yyyy, HH:mm", workspaceTz)
@@ -959,11 +985,11 @@ export default function ConversationLogsPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Duration</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_duration")}</label>
                                         <p className="mt-1 text-xs font-medium">{selectedConversation.duration}</p>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Messages</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("conversation_logs_page.field_messages")}</label>
                                         <p className="mt-1 text-xs font-medium">{selectedConversation.messages}</p>
                                     </div>
                                 </div>
@@ -973,17 +999,17 @@ export default function ConversationLogsPage() {
                             <div className="lg:col-span-3 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                                        Last messages
+                                        {t("conversation_logs_page.last_messages")}
                                     </h3>
                                     {detailData?.messages?.length ? (
                                         <span className="text-[10px] font-medium text-slate-400">
-                                            Showing latest {detailData.messages.length}
+                                            {t("conversation_logs_page.showing_latest", { count: detailData.messages.length })}
                                         </span>
                                     ) : null}
                                 </div>
                                 <div className="space-y-2 max-h-[420px] overflow-y-auto pr-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl p-3 border border-slate-100 dark:border-slate-800/60">
                                     {detailLoading ? (
-                                        <p className="text-xs text-slate-400 text-center py-12">Loading…</p>
+                                        <p className="text-xs text-slate-400 text-center py-12">{t("conversation_logs_page.loading")}</p>
                                     ) : detailData?.messages && detailData.messages.length > 0 ? (
                                         // Server returns newest-first; reverse so oldest renders at top
                                         // — matches how a person reads a chat.
@@ -1016,7 +1042,7 @@ export default function ConversationLogsPage() {
                                         })
                                     ) : (
                                         <p className="text-xs text-slate-400 text-center py-12">
-                                            No messages found for this conversation.
+                                            {t("conversation_logs_page.no_messages_found")}
                                         </p>
                                     )}
                                 </div>
@@ -1031,7 +1057,7 @@ export default function ConversationLogsPage() {
                             variant="outline"
                             className="border-input [border-color:hsl(var(--input))] font-normal"
                         >
-                            Close
+                            {t("conversation_logs_page.close")}
                         </Button>
                     </div>
                 </DialogContent>
@@ -1041,10 +1067,10 @@ export default function ConversationLogsPage() {
             <Dialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
-                        <DialogTitle>Delete Conversation</DialogTitle>
+                        <DialogTitle>{t("conversation_logs_page.delete_conversation_title")}</DialogTitle>
                     </DialogHeader>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Are you sure you want to delete this conversation? This action cannot be undone.
+                        {t("conversation_logs_page.delete_conversation_confirm")}
                     </p>
                     <div className="flex gap-2 justify-end mt-4">
                         <Button
@@ -1053,14 +1079,14 @@ export default function ConversationLogsPage() {
                             disabled={deleteMutation.isPending}
                             className="border-input [border-color:hsl(var(--input))] font-normal"
                         >
-                            Cancel
+                            {t("conversation_logs_page.cancel")}
                         </Button>
                         <Button
                             onClick={() => deleteConfirmId && deleteMutation.mutate(deleteConfirmId)}
                             disabled={deleteMutation.isPending}
                             className="bg-red-500 hover:bg-red-600 text-white font-semibold"
                         >
-                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                            {deleteMutation.isPending ? t("conversation_logs_page.deleting") : t("conversation_logs_page.delete")}
                         </Button>
                     </div>
                 </DialogContent>

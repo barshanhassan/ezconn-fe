@@ -15,6 +15,7 @@
  * store — we read the action-slug / value / channel from there.
  */
 import { memo, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Handle, Position, type NodeProps } from "reactflow";
 import { apiRequest } from "@/lib/queryClient";
@@ -69,6 +70,7 @@ import { BsChatDotsFill } from "react-icons/bs";
 // parent node must have the Tailwind `group` class for the buttons to
 // reveal on hover.
 function NodeHoverActions({ nodeId }: { nodeId: string }) {
+  const { t } = useTranslation();
   const { duplicateNode, removeNode } = useSmartFlowMenu();
   return (
     <div
@@ -77,7 +79,7 @@ function NodeHoverActions({ nodeId }: { nodeId: string }) {
     >
       <button
         type="button"
-        title="Duplicate"
+        title={t("automation_nodes.duplicate")}
         className="h-6 w-6 rounded border bg-white shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100"
         onClick={(e) => {
           e.stopPropagation();
@@ -88,7 +90,7 @@ function NodeHoverActions({ nodeId }: { nodeId: string }) {
       </button>
       <button
         type="button"
-        title="Delete"
+        title={t("automation_nodes.delete")}
         className="h-6 w-6 rounded border border-rose-200 bg-rose-50 shadow-sm flex items-center justify-center text-rose-600 hover:bg-rose-100"
         onClick={(e) => {
           e.stopPropagation();
@@ -158,6 +160,7 @@ function AddStepDropdown({
   handleId,
   style,
 }: AddStepDropdownProps) {
+  const { t } = useTranslation();
   const { connectedChannelTypes, addStepBelow, hasOutgoingEdge } = useSmartFlowMenu();
 
   // "One child per output" rule — once this (node, handle) already has an
@@ -175,19 +178,19 @@ function AddStepDropdown({
     { type: "telegram", label: "Telegram" },
     { type: "messenger", label: "Messenger" },
     { type: "instagram", label: "Instagram" },
-    { type: "webchat", label: "Webchat" },
-    { type: "twilio_sms", label: "SMS" },
-    { type: "twilio_call", label: "Call" },
+    { type: "webchat", label: t("automation_nodes.channel_webchat") },
+    { type: "twilio_sms", label: t("automation_nodes.channel_sms") },
+    { type: "twilio_call", label: t("automation_nodes.channel_call") },
     { type: "zapi", label: "Z-API" },
     { type: "evolution", label: "Evolution" },
   ].filter((it) => connectedChannelTypes.has(it.type));
 
   const features: Array<{ type: string; label: string }> = [
-    { type: "randomizer", label: "Randomizer" },
-    { type: "delay", label: "Delay" },
-    { type: "condition", label: "Condition" },
-    { type: "action", label: "Action" },
-    { type: "splitter", label: "Splitter" },
+    { type: "randomizer", label: t("automation_nodes.feature_randomizer") },
+    { type: "delay", label: t("automation_nodes.feature_delay") },
+    { type: "condition", label: t("automation_nodes.feature_condition") },
+    { type: "action", label: t("automation_nodes.feature_action") },
+    { type: "splitter", label: t("automation_nodes.feature_splitter") },
   ];
 
   const wrapperStyle: React.CSSProperties = style ?? { right: -5, bottom: -5 };
@@ -233,8 +236,8 @@ function AddStepDropdown({
           <button
             type="button"
             className={`relative block h-2.5 w-2.5 rounded-full border-2 bg-white shadow transition-transform hover:scale-125 ${dotColor}`}
-            title="Add next step"
-            aria-label="Add next step"
+            title={t("automation_nodes.add_next_step")}
+            aria-label={t("automation_nodes.add_next_step")}
             onClick={(e) => e.stopPropagation()}
           />
         </DropdownMenuTrigger>
@@ -281,7 +284,7 @@ function AddStepDropdown({
             className="text-muted-foreground text-xs py-1.5"
           >
             <span className="text-slate-500 mr-2 text-xs">→</span>
-            Cancel
+            {t("automation_nodes.cancel")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -316,6 +319,7 @@ const NODE_WIDTH = 200;
  *           Start ↓
  */
 export const TriggerNode = memo(({ id, data }: NodeProps<any>) => {
+  const { t } = useTranslation();
   const activities: any[] = data?.activities ?? [];
   // When the user deletes every custom trigger the canvas card falls back
   // to a synthetic Default row. Historically we read `activity_properties`
@@ -326,7 +330,7 @@ export const TriggerNode = memo(({ id, data }: NodeProps<any>) => {
   // "Default".
   const items = activities.length
     ? activities
-    : [{ event: "default_url", label: "Default" }];
+    : [{ event: "default_url", label: t("automation_nodes.default") }];
 
   // Cached lookups so tag / custom field IDs resolve to their real names on
   // the canvas — matches replyagent showing "Tag applied: marketing" rather
@@ -349,14 +353,14 @@ export const TriggerNode = memo(({ id, data }: NodeProps<any>) => {
         <span className="h-7 w-7 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm shrink-0">
           <span className="h-2.5 w-2.5 rounded-full bg-white" />
         </span>
-        <span className="text-[13px] font-semibold text-slate-800">Start</span>
+        <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.start")}</span>
       </div>
       {/* Activity rows — single-line "Label: value" summary matching
           replyagent's Start card. Value resolves the picked tag/field to
           its actual name; empty payload falls back to "not selected". */}
       <div className="bg-slate-50/50">
         {items.map((it, idx) => {
-          const summary = triggerRowSummary(it, { tagsById, fieldsById });
+          const summary = triggerRowSummary(it, { tagsById, fieldsById }, t);
           return (
             <div
               key={idx}
@@ -370,7 +374,7 @@ export const TriggerNode = memo(({ id, data }: NodeProps<any>) => {
       </div>
       {/* Bottom hint text with the dropdown dot */}
       <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
-        <span>Start</span>
+        <span>{t("automation_nodes.start")}</span>
       </div>
       <AddStepDropdown nodeId={id} />
     </div>
@@ -430,9 +434,10 @@ function useTriggerLookup(
 function triggerRowSummary(
   act: any,
   lookups: { tagsById: Map<string, string>; fieldsById: Map<string, string> },
+  t: (key: string) => string,
 ): string {
   const schema = getTriggerSchema(act.event);
-  const rawLabel = schema?.label ?? act.label ?? "Default";
+  const rawLabel = schema?.label ?? act.label ?? t("automation_nodes.default");
   const label = rawLabel.replace(/:\s*$/, "");
   // The trigger field-form (activity-editors.tsx) writes selected values to
   // `properties`, while some legacy code paths seeded `payload`. Read
@@ -447,15 +452,15 @@ function triggerRowSummary(
 
   switch (act.event) {
     case "default_url":
-      return "Default";
+      return t("automation_nodes.default");
     case "tag_applied":
     case "tag_removed":
-      return `${label}: ${tagName(payload.tag_id) ?? "Tag not selected"}`;
+      return `${label}: ${tagName(payload.tag_id) ?? t("automation_nodes.tag_not_selected")}`;
     case "custom_field_changed":
     case "date_field_changed":
-      return `${label}: ${fieldName(payload.field_id) ?? "Field not selected"}`;
+      return `${label}: ${fieldName(payload.field_id) ?? t("automation_nodes.field_not_selected")}`;
     case "system_field_changed":
-      return `${label}: ${payload.field ?? "Field not selected"}`;
+      return `${label}: ${payload.field ?? t("automation_nodes.field_not_selected")}`;
     case "wa_keyword":
     case "tg_keyword":
     case "ig_keyword":
@@ -465,7 +470,7 @@ function triggerRowSummary(
     case "evolution_keyword":
     case "zapi_keyword": {
       const kw = (payload.keywords ?? []) as string[];
-      return `${label}: ${kw.length ? kw.join(", ") : "No keywords"}`;
+      return `${label}: ${kw.length ? kw.join(", ") : t("automation_nodes.no_keywords")}`;
     }
     default:
       return label;
@@ -477,13 +482,14 @@ function triggerRowSummary(
 function makeChannelNode(channel: string) {
   const meta = CHANNEL_LABELS[channel] ?? { label: channel, icon: "fa-comment", color: "text-muted-foreground" };
   const Component = memo(({ id, data }: NodeProps<any>) => {
+    const { t } = useTranslation();
     // Channel nodes carry a list of activities (Text / Image / Audio / etc.)
     // under `data.activities`. The legacy `data.value` shape is a fallback so
     // older saved flows still render. We list every activity as its own row
     // so the user can see all configured steps directly on the canvas.
     const activities: any[] = data?.activities ?? [];
     const legacyValue = data?.value ?? {};
-    const legacySummary = channelSummary(channel, legacyValue);
+    const legacySummary = channelSummary(channel, legacyValue, t);
     const iconBg = filledIconBgForChannel(channel);
     return (
       <div
@@ -517,7 +523,7 @@ function makeChannelNode(channel: string) {
                 key={idx}
                 className="border-t border-slate-100 first:border-t-0"
               >
-                {renderActivityRow(act)}
+                {renderActivityRow(act, t)}
               </div>
             ))}
           </div>
@@ -525,7 +531,7 @@ function makeChannelNode(channel: string) {
           <div className="px-3 py-3 bg-slate-50/50">
             <div className="border border-dashed border-slate-300 rounded-md px-3 py-2 text-center">
               <p className="text-[11px] font-medium text-slate-400 truncate" title={legacySummary}>
-                {legacySummary || data?.label || "Click to configure"}
+                {legacySummary || data?.label || t("automation_nodes.click_to_configure")}
               </p>
             </div>
           </div>
@@ -533,7 +539,7 @@ function makeChannelNode(channel: string) {
         <StatsOverlay data={data} />
         {/* Bottom "Continue" hint next to the dropdown dot */}
         <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
-          <span>Continue</span>
+          <span>{t("automation_nodes.continue")}</span>
         </div>
         <AddStepDropdown nodeId={id} />
       </div>
@@ -575,15 +581,15 @@ function filledIconBgForChannel(channel: string): string {
 // video activities we render the actual media inline — replyagent's
 // canvas does the same and it's how the user can spot at a glance which
 // asset each WhatsApp node is configured to send.
-function renderActivityRow(act: any): React.ReactNode {
+function renderActivityRow(act: any, t: (key: string) => string): React.ReactNode {
   const p = act?.properties ?? {};
-  const t = p?.type ?? act?.type ?? "";
+  const activityType = p?.type ?? act?.type ?? "";
 
   // Image — inline thumbnail. Picked media is stored under
   //   properties.gallery_media_id = { id, url, object_name }
   // for the gallery flow; the custom_field flow uses properties.custom_field_id
   // (no preview possible because it resolves at runtime).
-  if (t === "image" || t === "image_url") {
+  if (activityType === "image" || activityType === "image_url") {
     const url = mediaUrlFromActivity(p);
     if (url) {
       return (
@@ -595,12 +601,12 @@ function renderActivityRow(act: any): React.ReactNode {
       );
     }
     return (
-      <div className="px-3 py-1.5 text-[11px] truncate">No image selected</div>
+      <div className="px-3 py-1.5 text-[11px] truncate">{t("automation_nodes.no_image_selected")}</div>
     );
   }
 
   // Video — inline player thumbnail
-  if (t === "video") {
+  if (activityType === "video") {
     const url = mediaUrlFromActivity(p);
     if (url) {
       return (
@@ -612,27 +618,27 @@ function renderActivityRow(act: any): React.ReactNode {
         />
       );
     }
-    return <div className="px-3 py-1.5 text-[11px] truncate">No video</div>;
+    return <div className="px-3 py-1.5 text-[11px] truncate">{t("automation_nodes.no_video")}</div>;
   }
 
   // Audio — small player
-  if (t === "audio") {
+  if (activityType === "audio") {
     const url = mediaUrlFromActivity(p);
     if (url) {
       return (
         <audio src={url} controls className="w-full h-8" preload="none" />
       );
     }
-    return <div className="px-3 py-1.5 text-[11px] truncate">No audio</div>;
+    return <div className="px-3 py-1.5 text-[11px] truncate">{t("automation_nodes.no_audio")}</div>;
   }
 
   // Everything else is a single-line text summary
   return (
     <div
       className="px-3 py-1.5 text-[11px] truncate"
-      title={activityTextSummary(act)}
+      title={activityTextSummary(act, t)}
     >
-      {activityTextSummary(act)}
+      {activityTextSummary(act, t)}
     </div>
   );
 }
@@ -652,20 +658,20 @@ function mediaUrlFromActivity(p: any): string | undefined {
   );
 }
 
-function activityTextSummary(act: any): string {
+function activityTextSummary(act: any, t: (key: string, opts?: any) => string): string {
   const p = act?.properties ?? {};
-  const t = p?.type ?? act?.type ?? "";
-  if (t === "text") return (p.message ?? p.text ?? "").slice(0, 60) || "Empty text";
-  if (t === "input") return `Ask: ${(p.message ?? "").slice(0, 50) || "Empty"}`;
-  if (t === "button") return `Buttons: ${(p.choices ?? []).length}`;
-  if (t === "document") return p.filename ?? "Document";
-  if (t === "delay") return `Wait ${p.amount ?? "?"} ${p.unit ?? "min"}`;
-  if (t === "message_list") return `List: ${p.button ?? "(button)"}`;
-  if (t === "message_template") return p.template?.name ?? "Template";
-  if (t === "chatgpt_question") return `AI: ${(p.question ?? "").slice(0, 40)}`;
-  if (t === "dify_question") return `Dify: ${(p.question ?? "").slice(0, 40)}`;
-  if (t === "cta_button") return `CTA: ${p.button_text ?? "?"}`;
-  return t || "Activity";
+  const activityType = p?.type ?? act?.type ?? "";
+  if (activityType === "text") return (p.message ?? p.text ?? "").slice(0, 60) || t("automation_nodes.empty_text");
+  if (activityType === "input") return t("automation_nodes.ask_prefix", { value: (p.message ?? "").slice(0, 50) || t("automation_nodes.empty") });
+  if (activityType === "button") return t("automation_nodes.buttons_count", { count: (p.choices ?? []).length });
+  if (activityType === "document") return p.filename ?? t("automation_nodes.document");
+  if (activityType === "delay") return t("automation_nodes.wait_duration", { amount: p.amount ?? "?", unit: p.unit ?? "min" });
+  if (activityType === "message_list") return t("automation_nodes.list_prefix", { value: p.button ?? t("automation_nodes.button_placeholder") });
+  if (activityType === "message_template") return p.template?.name ?? t("automation_nodes.template");
+  if (activityType === "chatgpt_question") return t("automation_nodes.ai_prefix", { value: (p.question ?? "").slice(0, 40) });
+  if (activityType === "dify_question") return t("automation_nodes.dify_prefix", { value: (p.question ?? "").slice(0, 40) });
+  if (activityType === "cta_button") return t("automation_nodes.cta_prefix", { value: p.button_text ?? "?" });
+  return activityType || t("automation_nodes.activity");
 }
 
 /**
@@ -692,19 +698,19 @@ function StatsOverlay({ data }: { data: any }) {
   );
 }
 
-function channelSummary(channel: string, value: any): string {
+function channelSummary(channel: string, value: any, t: (key: string, opts?: any) => string): string {
   const type = value?.type ?? "text";
   if (type === "text") return (value?.message ?? "").slice(0, 60);
-  if (type === "input") return `Ask: ${(value?.message ?? "").slice(0, 50)}`;
-  if (type === "button") return `Buttons: ${(value?.choices ?? []).length}`;
-  if (type === "image_url") return "Image";
-  if (type === "audio") return "Audio";
-  if (type === "message_list") return `List: ${value?.button ?? "(button)"}`;
-  if (type === "message_template") return `Template: ${value?.template_id ?? "?"}`;
-  if (type === "chatgpt_question") return `AI: ${(value?.question ?? "").slice(0, 40)}`;
-  if (type === "dify_question") return `Dify: ${(value?.question ?? "").slice(0, 40)}`;
-  if (type === "cta_button") return `CTA: ${value?.button_text ?? "?"}`;
-  if (type === "call") return "Call";
+  if (type === "input") return t("automation_nodes.ask_prefix", { value: (value?.message ?? "").slice(0, 50) });
+  if (type === "button") return t("automation_nodes.buttons_count", { count: (value?.choices ?? []).length });
+  if (type === "image_url") return t("automation_nodes.image");
+  if (type === "audio") return t("automation_nodes.audio");
+  if (type === "message_list") return t("automation_nodes.list_prefix", { value: value?.button ?? t("automation_nodes.button_placeholder") });
+  if (type === "message_template") return t("automation_nodes.template_prefix", { value: value?.template_id ?? "?" });
+  if (type === "chatgpt_question") return t("automation_nodes.ai_prefix", { value: (value?.question ?? "").slice(0, 40) });
+  if (type === "dify_question") return t("automation_nodes.dify_prefix", { value: (value?.question ?? "").slice(0, 40) });
+  if (type === "cta_button") return t("automation_nodes.cta_prefix", { value: value?.button_text ?? "?" });
+  if (type === "call") return t("automation_nodes.call");
   return type;
 }
 
@@ -793,11 +799,12 @@ export const EvolutionNode = makeChannelNode("evolution");
 // ─── DelayNode ────────────────────────────────────────────────────────
 
 export const DelayNode = memo(({ id, data }: NodeProps<any>) => {
+  const { t } = useTranslation();
   const v = data?.value ?? {};
   const summary =
     v.mode === "date"
-      ? `Until ${v.until ?? "?"}`
-      : `${v.amount ?? "?"} ${v.unit ?? "minutes"}`;
+      ? t("automation_nodes.until_date", { date: v.until ?? "?" })
+      : `${v.amount ?? "?"} ${v.unit ?? t("automation_nodes.minutes")}`;
   return (
     <div
       className="group relative rounded-xl border border-slate-200 bg-white shadow-md"
@@ -818,18 +825,18 @@ export const DelayNode = memo(({ id, data }: NodeProps<any>) => {
         <span className="h-7 w-7 rounded-full bg-amber-500 flex items-center justify-center shadow-sm shrink-0">
           <Clock className="h-3.5 w-3.5 text-white" />
         </span>
-        <span className="text-[13px] font-semibold text-slate-800">Delay</span>
+        <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.delay")}</span>
       </div>
       <div className="px-3 py-2 text-[12px] text-slate-700 bg-slate-50/50">
         <p className="font-medium truncate">{summary}</p>
         {v.time_window_enabled && (
           <p className="text-[10px] text-slate-400 truncate mt-0.5">
-            {v.window_from ?? "?"} – {v.window_to ?? "?"} on {(v.days ?? []).join(", ") || "any day"}
+            {v.window_from ?? "?"} – {v.window_to ?? "?"} {t("automation_nodes.on_days", { days: (v.days ?? []).join(", ") || t("automation_nodes.any_day") })}
           </p>
         )}
       </div>
       <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
-        <span>Continue</span>
+        <span>{t("automation_nodes.continue")}</span>
       </div>
       <AddStepDropdown nodeId={id} dotColor="border-amber-500" />
     </div>
@@ -840,6 +847,7 @@ DelayNode.displayName = "DelayNode";
 // ─── RandomizerNode ───────────────────────────────────────────────────
 
 export const RandomizerNode = memo(({ id, data }: NodeProps<any>) => {
+  const { t } = useTranslation();
   const weights: number[] = data?.value?.weights ?? [50, 50];
   return (
     <div
@@ -861,7 +869,7 @@ export const RandomizerNode = memo(({ id, data }: NodeProps<any>) => {
         <span className="h-7 w-7 rounded-full bg-indigo-500 flex items-center justify-center shadow-sm shrink-0">
           <Shuffle className="h-3.5 w-3.5 text-white" />
         </span>
-        <span className="text-[13px] font-semibold text-slate-800">Randomizer</span>
+        <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.randomizer")}</span>
       </div>
       {/* One row per branch — each row carries its own clickable dot on the
           right edge, so the edge originates from that exact branch. */}
@@ -897,9 +905,10 @@ RandomizerNode.displayName = "RandomizerNode";
 // and so the dropdown picker can offer it as a distinct choice.
 
 export const SplitterNode = memo(({ id, data }: NodeProps<any>) => {
+  const { t } = useTranslation();
   const paths: any[] = data?.value?.paths ?? data?.value?.weights ?? [
-    { label: "Path A" },
-    { label: "Path B" },
+    { label: t("automation_nodes.path_letter", { letter: "A" }) },
+    { label: t("automation_nodes.path_letter", { letter: "B" }) },
   ];
   return (
     <div
@@ -921,14 +930,14 @@ export const SplitterNode = memo(({ id, data }: NodeProps<any>) => {
         <span className="h-7 w-7 rounded-full bg-rose-500 flex items-center justify-center shadow-sm shrink-0">
           <Shuffle className="h-3.5 w-3.5 text-white" />
         </span>
-        <span className="text-[13px] font-semibold text-slate-800">Splitter</span>
+        <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.splitter")}</span>
       </div>
       <div className="bg-slate-50/50">
         {paths.map((p, i) => {
           const label =
             typeof p === "number"
-              ? `Path ${String.fromCharCode(65 + i)}`
-              : p?.label ?? `Path ${String.fromCharCode(65 + i)}`;
+              ? t("automation_nodes.path_letter", { letter: String.fromCharCode(65 + i) })
+              : p?.label ?? t("automation_nodes.path_letter", { letter: String.fromCharCode(65 + i) });
           return (
             <div
               key={i}
@@ -954,6 +963,7 @@ SplitterNode.displayName = "SplitterNode";
 // ─── ConditionNode ────────────────────────────────────────────────────
 
 export const ConditionNode = memo(({ id, data }: NodeProps<any>) => {
+  const { t } = useTranslation();
   const conditions = data?.value?.conditions ?? [];
   const mode = data?.value?.match_mode ?? "all";
   return (
@@ -976,17 +986,17 @@ export const ConditionNode = memo(({ id, data }: NodeProps<any>) => {
         <span className="h-7 w-7 rounded-full bg-teal-500 flex items-center justify-center shadow-sm shrink-0">
           <GitBranch className="h-3.5 w-3.5 text-white" />
         </span>
-        <span className="text-[13px] font-semibold text-slate-800">Condition</span>
+        <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.condition")}</span>
       </div>
       <div className="px-3 py-2 text-[12px] text-slate-700 bg-slate-50/50">
         <p className="font-medium truncate">
           {conditions.length === 0
-            ? "Add a condition"
-            : `${conditions.length} condition${conditions.length === 1 ? "" : "s"} (${mode})`}
+            ? t("automation_nodes.add_a_condition")
+            : t("automation_nodes.condition_count", { count: conditions.length, mode })}
         </p>
       </div>
       <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
-        <span>Continue</span>
+        <span>{t("automation_nodes.continue")}</span>
       </div>
       <AddStepDropdown nodeId={id} dotColor="border-teal-500" />
     </div>
@@ -997,6 +1007,7 @@ ConditionNode.displayName = "ConditionNode";
 // ─── ActionNode (50+ action types) ────────────────────────────────────
 
 export const ActionNode = memo(({ id, data }: NodeProps<any>) => {
+  const { t } = useTranslation();
   const slug = data?.value?.slug ?? data?.actionSlug ?? "";
   const schema = ACTION_SCHEMAS[slug];
   return (
@@ -1019,16 +1030,16 @@ export const ActionNode = memo(({ id, data }: NodeProps<any>) => {
         <span className="h-7 w-7 rounded-full bg-slate-600 flex items-center justify-center shadow-sm shrink-0">
           <Cog className="h-3.5 w-3.5 text-white" />
         </span>
-        <span className="text-[13px] font-semibold text-slate-800">Action</span>
+        <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.action")}</span>
       </div>
       <div className="px-3 py-2 text-[12px] text-slate-700 bg-slate-50/50">
-        <p className="font-medium truncate">{schema?.label ?? "Pick an action"}</p>
+        <p className="font-medium truncate">{schema?.label ?? t("automation_nodes.pick_an_action")}</p>
         <p className="text-[10px] text-slate-400 truncate mt-0.5">
           {schema?.group ?? slug}
         </p>
       </div>
       <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
-        <span>Continue</span>
+        <span>{t("automation_nodes.continue")}</span>
       </div>
       <AddStepDropdown nodeId={id} dotColor="border-slate-500" />
     </div>

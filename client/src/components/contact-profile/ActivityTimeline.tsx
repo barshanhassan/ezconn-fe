@@ -5,6 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -69,6 +70,7 @@ interface TimelineItem {
 }
 
 export function ActivityTimeline({ contactId }: { contactId: string | null }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -131,7 +133,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm">
               <Filter className="h-3.5 w-3.5 mr-1" />
-              Activities
+              {t("activity_timeline.activities")}
               <Badge variant="outline" className="ml-2 h-5 text-[10px]">
                 {enabledChannels.size + enabledKinds.size}
               </Badge>
@@ -139,7 +141,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
           </PopoverTrigger>
           <PopoverContent className="w-72 p-3">
             <h6 className="text-xs font-semibold uppercase tracking-wider mb-2">
-              Standard
+              {t("activity_timeline.standard")}
             </h6>
             <div className="space-y-1 mb-3">
               {(["note", "message"] as const).map((k) => (
@@ -156,12 +158,14 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
                       setEnabledKinds(next);
                     }}
                   />
-                  <span className="capitalize">{k}</span>
+                  <span className="capitalize">
+                    {k === "note" ? t("activity_timeline.kind_note") : t("activity_timeline.kind_message")}
+                  </span>
                 </label>
               ))}
             </div>
             <h6 className="text-xs font-semibold uppercase tracking-wider mb-2">
-              Channels
+              {t("activity_timeline.channels")}
             </h6>
             <div className="space-y-1">
               {Object.entries(CHANNEL_LABELS).map(([k, label]) => (
@@ -189,17 +193,17 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm">
               <CalendarIcon className="h-3.5 w-3.5 mr-1" />
-              Date
+              {t("activity_timeline.date")}
               {(dateFrom || dateTo) && (
                 <Badge variant="outline" className="ml-2 h-5 text-[10px]">
-                  set
+                  {t("activity_timeline.set")}
                 </Badge>
               )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-3 space-y-2">
             <div>
-              <label className="text-xs">From</label>
+              <label className="text-xs">{t("activity_timeline.from")}</label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -207,7 +211,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
               />
             </div>
             <div>
-              <label className="text-xs">To</label>
+              <label className="text-xs">{t("activity_timeline.to")}</label>
               <Input
                 type="date"
                 value={dateTo}
@@ -224,7 +228,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
                   setDateTo("");
                 }}
               >
-                Clear
+                {t("activity_timeline.clear")}
               </Button>
             )}
           </PopoverContent>
@@ -235,7 +239,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search timeline…"
+            placeholder={t("activity_timeline.search_timeline_placeholder")}
             className="pl-7 h-8 text-sm"
           />
           {search && (
@@ -260,7 +264,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-sm text-muted-foreground">
               <StickyNote className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p>No activity matches your filters.</p>
+              <p>{t("activity_timeline.no_activity_matches")}</p>
               <Button
                 variant="link"
                 size="sm"
@@ -272,7 +276,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
                   setEnabledKinds(new Set<"note" | "message">(["note", "message"]));
                 }}
               >
-                Reset filters
+                {t("activity_timeline.reset_filters")}
               </Button>
             </div>
           ) : (
@@ -281,7 +285,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
           {data?.has_more && (
             <div className="text-center">
               <Button variant="outline" size="sm" onClick={() => setPage((p) => p + 1)}>
-                View more
+                {t("activity_timeline.view_more")}
               </Button>
             </div>
           )}
@@ -292,6 +296,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
 }
 
 function TimelineRow({ item }: { item: TimelineItem }) {
+  const { t } = useTranslation();
   const date = item.created_at
     ? format(parseISO(item.created_at), "MMM d, yyyy HH:mm")
     : "—";
@@ -302,11 +307,11 @@ function TimelineRow({ item }: { item: TimelineItem }) {
         <div className="flex items-center gap-2 mb-1">
           <StickyNote className="h-3.5 w-3.5 text-amber-600" />
           <span className="text-xs font-medium">
-            {item.author?.name ?? "Note"}
+            {item.author?.name ?? t("activity_timeline.note_fallback_author")}
           </span>
           <span className="text-xs text-muted-foreground ml-auto">{date}</span>
         </div>
-        <p className="text-sm whitespace-pre-wrap">{item.text ?? "(empty)"}</p>
+        <p className="text-sm whitespace-pre-wrap">{item.text ?? t("activity_timeline.empty_note")}</p>
       </div>
     );
   }
@@ -331,15 +336,15 @@ function TimelineRow({ item }: { item: TimelineItem }) {
         <span className="text-xs text-muted-foreground ml-auto">{date}</span>
       </div>
       <div className="text-sm whitespace-pre-wrap">
-        {renderMessageBody(item)}
+        {renderMessageBody(item, t)}
       </div>
     </div>
   );
 }
 
-function renderMessageBody(it: TimelineItem) {
-  const t = String(it.type ?? "").toLowerCase();
-  if (it.media && (t === "image" || t === "photo")) {
+function renderMessageBody(it: TimelineItem, t: (key: string) => string) {
+  const msgType = String(it.type ?? "").toLowerCase();
+  if (it.media && (msgType === "image" || msgType === "photo")) {
     const url = (it.media as any).url ?? (it.media as any).thumb_url;
     if (url)
       return (
@@ -351,17 +356,17 @@ function renderMessageBody(it: TimelineItem) {
         />
       );
   }
-  if (it.media && (t === "audio" || t === "voice")) {
+  if (it.media && (msgType === "audio" || msgType === "voice")) {
     const url = (it.media as any).url;
     if (url) return <audio controls src={url} className="max-w-xs" />;
   }
-  if (it.media && t === "video") {
+  if (it.media && msgType === "video") {
     const url = (it.media as any).url;
     if (url) return <video controls src={url} className="max-w-xs rounded" />;
   }
-  if (it.media && t === "document") {
+  if (it.media && msgType === "document") {
     const url = (it.media as any).url;
-    const name = (it.media as any).object_name ?? "Document";
+    const name = (it.media as any).object_name ?? t("activity_timeline.document_fallback_name");
     if (url)
       return (
         <a
@@ -374,5 +379,5 @@ function renderMessageBody(it: TimelineItem) {
         </a>
       );
   }
-  return it.text ?? "(no content)";
+  return it.text ?? t("activity_timeline.no_content");
 }

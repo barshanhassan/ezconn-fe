@@ -31,9 +31,11 @@ import {
   LogOut
 } from "react-feather";
 import { LayoutGrid } from "lucide-react"; // Import for the new grid icon
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { SiWhatsapp } from "react-icons/si";
+import { FaTelegramPlane } from "react-icons/fa";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,11 +45,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import CustomDropdown from "@/components/CustomDropdown";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
+import { SUPPORTED_LANGUAGES } from "@/lib/supportedLanguages";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import ContactProfileModal from "@/components/ContactProfileModal";
@@ -64,6 +68,7 @@ const BotMark = ({ className = "" }: { className?: string }) => (
 export default function AppSidebar() {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation();
 
   // State for Theme and Online Status
   const { mode: theme, setMode: setTheme } = useTheme();
@@ -78,8 +83,26 @@ export default function AppSidebar() {
     }
   }, []);
 
+  // Shares the same query key ProfileSection uses for /api/users/me, so a
+  // photo saved there is reflected here too (react-query dedupes/updates
+  // both from the same cache entry) instead of this header staying stuck
+  // on initials from the login-time localStorage snapshot forever.
+  const { data: meData } = useQuery<any>({
+    queryKey: ["/api/users/me"],
+    queryFn: async () => (await apiRequest("GET", "/api/users/me")).json(),
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [language, setLanguage] = useState<string[]>(["en-us"]);
+  const [language, setLanguage] = useState<string[]>([i18n.language || "en"]);
+  const [openLang, setOpenLang] = useState(false);
+
+  // Keep the dropdown's selected language in sync with i18n — mirrors the
+  // Agency sidebar fix so a language picked elsewhere (or the persisted
+  // choice on load) shows correctly here too.
+  useEffect(() => {
+    const match = SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code));
+    setLanguage([match ? match.code : "en"]);
+  }, [i18n.language]);
   const [searchType, setSearchType] = useState("WhatsApp Number");
   const [profileContact, setProfileContact] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -149,10 +172,10 @@ export default function AppSidebar() {
     if (!iso) return "";
     const date = typeof iso === "string" ? new Date(iso) : iso;
     const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diffSec < 60) return "just now";
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+    if (diffSec < 60) return t("app_sidebar.time_just_now");
+    if (diffSec < 3600) return t("app_sidebar.time_minutes_ago", { count: Math.floor(diffSec / 60) });
+    if (diffSec < 86400) return t("app_sidebar.time_hours_ago", { count: Math.floor(diffSec / 3600) });
+    if (diffSec < 604800) return t("app_sidebar.time_days_ago", { count: Math.floor(diffSec / 86400) });
     return formatInWorkspaceTz(date, "M/d/yyyy", workspaceTz);
   };
 
@@ -220,8 +243,27 @@ export default function AppSidebar() {
     { label: "Support Ticket", icon: <LifeBuoy size={14} /> },
     { label: "Instagram Handle", icon: <Instagram size={14} /> },
     { label: "Messenger Username", icon: <MessageCircle size={14} /> },
+    { label: "Telegram Username", icon: <FaTelegramPlane size={14} /> },
     { label: "Contact ID", icon: <Hash size={14} /> }
   ];
+
+  // Display-only translation for the raw English labels used internally as
+  // both React state values and searchTypeMap keys — translating the value
+  // itself would break that lookup, so we translate only at render time.
+  const searchLabelKeys: Record<string, string> = {
+    "WhatsApp Number": "app_sidebar.search_whatsapp_number",
+    "Email": "app_sidebar.search_email",
+    "Phone Number": "app_sidebar.search_phone_number",
+    "First Name": "app_sidebar.search_first_name",
+    "Last Name": "app_sidebar.search_last_name",
+    "Full Name": "app_sidebar.search_full_name",
+    "Support Ticket": "app_sidebar.search_support_ticket",
+    "Instagram Handle": "app_sidebar.search_instagram_handle",
+    "Messenger Username": "app_sidebar.search_messenger_username",
+    "Telegram Username": "app_sidebar.search_telegram_username",
+    "Contact ID": "app_sidebar.search_contact_id",
+  };
+  const tSearchLabel = (label: string) => t(searchLabelKeys[label] ?? label);
 
   const workspaceOptions = accessibleWorkspaces.map((w) => ({
     id: w.sub_domain || w.slug,
@@ -229,27 +271,13 @@ export default function AppSidebar() {
   }));
 
   const statusOptions = [
-    { id: "available", name: "Available", icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
-    { id: "unavailable", name: "Unavailable", icon: <Circle size={12} className="text-gray-400" /> },
+    { id: "available", name: t("app_sidebar.available"), icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
+    { id: "unavailable", name: t("app_sidebar.unavailable"), icon: <Circle size={12} className="text-gray-400" /> },
   ];
 
   const themeOptions = [
-    { id: "light", name: "Light", icon: <Sun size={14} /> },
-    { id: "dark", name: "Dark", icon: <Moon size={14} /> },
-  ];
-
-  const languageOptions = [
-    {
-      id: "en-us",
-      name: "English (U.S)",
-      icon: (
-        <img
-          src="https://flagcdn.com/w40/us.png"
-          alt="US Flag"
-          className="w-4 h-4 object-cover rounded-sm"
-        />
-      ),
-    },
+    { id: "light", name: t("app_sidebar.light"), icon: <Sun size={14} /> },
+    { id: "dark", name: t("app_sidebar.dark"), icon: <Moon size={14} /> },
   ];
 
   const isActive = (path: string) => {
@@ -279,6 +307,7 @@ export default function AppSidebar() {
     "Full Name": "full_name",
     "Instagram Handle": "instagram",
     "Messenger Username": "messenger",
+    "Telegram Username": "telegram",
     "Contact ID": "id",
     "Support Ticket": "support_ticket",
   };
@@ -309,15 +338,15 @@ export default function AppSidebar() {
   // Per-item permission gating (replyagent: each nav link has a `v-canany`).
   // An item with `permissions` is hidden unless the user has one of them; items
   // without `permissions` are always shown (gated in their own chunks later).
-  const allMenuItems: Array<{ label: string; href: string; icon: any; permissions?: string[]; hidden?: boolean }> = [
-    { label: "Insights", href: "/insights", icon: BarChart2 },
-    { label: "Smart Flows", href: "/automations", icon: GitMerge },
-    { label: "Campaign", href: "/campaigns", icon: Send, permissions: ["workspace.broadcast.view"] },
-    { label: "Contacts", href: "/contacts", icon: Users, permissions: ["workspace.company.view"] },
-    { label: "Inbox", href: "/conversations/inbox", icon: Mail, permissions: ["workspace.inbox.access"] },
-    { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText, hidden: true },
-    { label: "Call Logs", href: "/conversations/call-logs", icon: Phone, hidden: true },
-    { label: "Settings", href: "/settings", icon: Settings },
+  const allMenuItems: Array<{ label: string; labelKey: string; href: string; icon: any; permissions?: string[]; hidden?: boolean }> = [
+    { label: "Insights", labelKey: "app_sidebar.nav_insights", href: "/insights", icon: BarChart2 },
+    { label: "Smart Flows", labelKey: "app_sidebar.nav_smart_flows", href: "/automations", icon: GitMerge },
+    { label: "Campaign", labelKey: "app_sidebar.nav_campaign", href: "/campaigns", icon: Send, permissions: ["workspace.broadcast.view"] },
+    { label: "Contacts", labelKey: "app_sidebar.nav_contacts", href: "/contacts", icon: Users, permissions: ["workspace.company.view"] },
+    { label: "Inbox", labelKey: "app_sidebar.nav_inbox", href: "/conversations/inbox", icon: Mail, permissions: ["workspace.inbox.access"] },
+    { label: "Conversation Logs", labelKey: "app_sidebar.nav_conversation_logs", href: "/conversations/conversation-logs", icon: FileText, hidden: true },
+    { label: "Call Logs", labelKey: "app_sidebar.nav_call_logs", href: "/conversations/call-logs", icon: Phone, hidden: true },
+    { label: "Settings", labelKey: "app_sidebar.nav_settings", href: "/settings", icon: Settings },
   ];
 
   // Hide nav items the current user lacks permission for (replyagent v-canany parity).
@@ -344,7 +373,7 @@ export default function AppSidebar() {
           {/* Logo — white-label aware. The uploaded logo only replaces the "EC" badge and is
               tinted to the white-label primary color. The "EZCONN" wordmark always stays. */}
           <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer group">
+            <div className="flex items-center gap-3 cursor-pointer">
               {isBrandingLoading ? (
                 // Invisible placeholder during initial fetch — prevents the EC-badge flash
                 // before the actual branded logo arrives.
@@ -353,18 +382,17 @@ export default function AppSidebar() {
                 <img
                   src={headerLogoUrl}
                   alt="Workspace logo"
-                  className="w-9 h-9 object-contain shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  className="w-9 h-9 object-contain shrink-0 transition-transform duration-300"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
               ) : (
-                <BotMark className="w-9 h-9 shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                <BotMark className="w-9 h-9 shrink-0 transition-transform duration-300" />
               )}
-              <span className={cn(
-                "font-black text-xl tracking-tighter uppercase hidden md:block transition-colors duration-300",
-                theme === "dark" ? "text-white" : "text-slate-900"
-              )}>
-                agen<span className="text-[#25d366]">tawk</span>
-              </span>
+              <div className="overflow-hidden hidden md:flex items-center cursor-pointer">
+                <p className={cn("font-black text-xl tracking-tighter uppercase transition-colors duration-300", theme === "dark" ? "text-white" : "text-slate-900")}>
+                  agen<span className="text-[#25d366]">tawk</span>
+                </p>
+              </div>
             </div>
           </Link>
 
@@ -398,7 +426,7 @@ export default function AppSidebar() {
                   <circle cx="10" cy="16" r="1.5" />
                   <circle cx="16" cy="16" r="1.5" />
                 </svg>
-                <span className="hidden md:block text-[14px] font-bold tracking-tight">Menu</span>
+                <span className="hidden md:block text-[14px] font-bold tracking-tight">{t("app_sidebar.menu")}</span>
                 <ChevronDown size={14} className="text-gray-400 group-hover:rotate-180 transition-transform duration-300" />
               </button>
             </DropdownMenuTrigger>
@@ -411,7 +439,7 @@ export default function AppSidebar() {
                 theme === "dark" ? "bg-[#1e293b] border-slate-700 text-slate-300" : "bg-white border-slate-100 text-slate-600"
               )}
             >
-              <DropdownMenuLabel className="px-3 py-2 text-[11px] font-bold text-gray-500">Navigation</DropdownMenuLabel>
+              <DropdownMenuLabel className="px-3 py-2 text-[11px] font-bold text-gray-500">{t("app_sidebar.navigation")}</DropdownMenuLabel>
               <div className="space-y-1">
                 {menuItems.map((item) => (
                   <DropdownMenuItem key={item.label} asChild>
@@ -425,7 +453,7 @@ export default function AppSidebar() {
                       )}
                     >
                       <item.icon size={15} className={isActive(item.href) ? (theme === "dark" ? "text-white" : "text-primary") : "text-gray-400"} />
-                      <span>{item.label}</span>
+                      <span>{t(item.labelKey)}</span>
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -464,7 +492,7 @@ export default function AppSidebar() {
                     "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-colors",
                     theme === "dark" ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"
                   )}>
-                    {searchType}
+                    {tSearchLabel(searchType)}
                     <ChevronDown size={14} className="text-gray-400" />
                   </button>
                 </DropdownMenuTrigger>
@@ -484,7 +512,7 @@ export default function AppSidebar() {
                       )}
                     >
                       <div className="shrink-0">{option.icon}</div>
-                      <span className="text-xs">{option.label}</span>
+                      <span className="text-xs">{tSearchLabel(option.label)}</span>
                       {searchType === option.label && <Check size={14} className="ml-auto text-primary-foreground" />}
                     </DropdownMenuItem>
                   ))}
@@ -499,7 +527,7 @@ export default function AppSidebar() {
                 value={searchValue}
                 onChange={(e) => { setSearchValue(e.target.value); setShowSearchResults(true); }}
                 onFocus={() => setShowSearchResults(true)}
-                placeholder="Search anything..."
+                placeholder={t("app_sidebar.search_anything_placeholder")}
                 className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400"
               />
 
@@ -521,7 +549,7 @@ export default function AppSidebar() {
                   theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200"
                 )}>
                   {searchResults.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-sm text-gray-400">No contacts found</div>
+                    <div className="px-4 py-6 text-center text-sm text-gray-400">{t("app_sidebar.no_contacts_found")}</div>
                   ) : (
                     searchResults.map((c: any) => (
                       <button
@@ -580,33 +608,33 @@ export default function AppSidebar() {
               theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-100"
             )}>
               <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                <h3 className="font-bold text-sm">Notifications</h3>
+                <h3 className="font-bold text-sm">{t("app_sidebar.notifications")}</h3>
                 {unreadCount > 0 && (
-                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{unreadCount} unread</span>
+                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{t("app_sidebar.unread_count", { count: unreadCount })}</span>
                 )}
               </div>
               <div className="max-h-96 overflow-y-auto p-1">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-10 text-center">
                     <Bell size={28} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-[12px] text-gray-500 font-medium">You're all caught up</p>
-                    <p className="text-[10px] text-gray-400 mt-1">No new notifications</p>
+                    <p className="text-[12px] text-gray-500 font-medium">{t("app_sidebar.all_caught_up")}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{t("app_sidebar.no_new_notifications")}</p>
                   </div>
                 ) : (
                   notifications.map((n: any) => {
                     const { Icon, color } = getNotifIcon(n.slug);
                     const slugLabels: Record<string, string> = {
-                      'inbox.message_received': 'New Message',
-                      'conversation_assigned': 'Conversation Assigned',
-                      'task_assigned': 'Task Assigned',
-                      'chat_note_mention': 'Mentioned in Note',
+                      'inbox.message_received': t("app_sidebar.notif_new_message"),
+                      'conversation_assigned': t("app_sidebar.notif_conversation_assigned"),
+                      'task_assigned': t("app_sidebar.notif_task_assigned"),
+                      'chat_note_mention': t("app_sidebar.notif_mentioned_in_note"),
                     };
                     const notifTitle =
                       n.data?.title ||
-                      (n.data?.contact_name ? `New message from ${n.data.contact_name}` : null) ||
+                      (n.data?.contact_name ? t("app_sidebar.notif_new_message_from", { name: n.data.contact_name }) : null) ||
                       n.data?.message ||
                       slugLabels[n.slug] ||
-                      'New Notification';
+                      t("app_sidebar.notif_new_notification");
                     return (
                       <DropdownMenuItem
                         key={n.id}
@@ -644,7 +672,7 @@ export default function AppSidebar() {
                   }}
                   className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
                 >
-                  View all notifications
+                  {t("app_sidebar.view_all_notifications")}
                 </button>
               </div>
             </DropdownMenuContent>
@@ -660,6 +688,7 @@ export default function AppSidebar() {
                   : "hover:bg-slate-100 hover:border-slate-200"
               )}>
                 <Avatar className="w-9 h-9 border-2 border-white dark:border-slate-800">
+                  {meData?.avatar_url && <AvatarImage src={meData.avatar_url} alt="Profile" />}
                   <AvatarFallback className="text-[12px] font-bold bg-primary text-primary-foreground">
                     {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                   </AvatarFallback>
@@ -667,12 +696,12 @@ export default function AppSidebar() {
 
                 <div className="text-left hidden sm:block">
                   <p className={cn("text-[13px] font-bold leading-none truncate max-w-[100px]", theme === "dark" ? "text-white" : "text-slate-900")}>
-                    {user ? `${user.first_name} ${user.last_name || ""}` : "Profile"}
+                    {user ? `${user.first_name} ${user.last_name || ""}` : t("app_sidebar.profile")}
                   </p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <div className={cn("w-2 h-2 rounded-full", status === "available" ? "bg-green-500 animate-pulse" : "bg-slate-400")} />
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
-                      {status === "available" ? "Online" : "Away"}
+                      {status === "available" ? t("app_sidebar.online") : t("app_sidebar.away")}
                     </span>
                   </div>
                 </div>
@@ -682,38 +711,43 @@ export default function AppSidebar() {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" sideOffset={12} className={cn(
-              "w-72 p-2 border rounded-2xl shadow-2xl no-focus-outline overflow-hidden",
+              "w-64 p-2 border shadow-2xl no-focus-outline overflow-visible",
               theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-100"
             )}>
-              {/* Header */}
-              <div 
-                className="p-4 mb-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 flex items-center gap-4 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/10 transition-all border border-transparent hover:border-primary/20 dark:hover:border-primary/20"
+              {/* Profile Link */}
+              <DropdownMenuItem
                 onClick={() => setLocation("/settings?tab=My%20Profile")}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-md cursor-pointer group outline-none",
+                  theme === "dark" ? "hover:bg-[#334155] focus:bg-[#334155] focus:text-white" : "hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-900"
+                )}
               >
-                <Avatar className="w-10 h-10 ring-2 ring-white shadow-md">
-                  <AvatarFallback className={cn("text-xs font-black text-white", "bg-primary")}>
-                    {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="overflow-hidden">
-                  <p className="font-bold text-sm truncate">{user ? `${user.first_name} ${user.last_name || ""}` : "Loading..."}</p>
-                  <p className="text-[11px] text-gray-500 truncate">{user?.email || "admin@example.com"}</p>
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-8 h-8">
+                    {meData?.avatar_url && <AvatarImage src={meData.avatar_url} alt="Profile" />}
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                      {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className={cn("font-semibold text-[14px]", theme === "dark" ? "text-white" : "text-slate-900")}>{t("app_sidebar.profile")}</span>
                 </div>
-              </div>
+                <ChevronRight size={16} className="text-gray-500 group-hover:text-primary transition-colors" />
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className={theme === "dark" ? "bg-slate-700 my-2" : "bg-slate-100 my-2"} />
 
               {/* Selectors Group */}
               <div className="space-y-1">
                 <div className="px-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase px-3 py-1 tracking-widest">Preferences</p>
-                  
                   <div className="space-y-3 p-2">
                     {/* Status Dropdown */}
                     <div>
+                      <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">{t("app_sidebar.online_status")}</p>
                       <CustomDropdown
                         options={statusOptions}
                         selected={[status]}
                         onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
-                        placeholder="Status"
+                        placeholder={t("app_sidebar.online_status")}
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
@@ -722,11 +756,12 @@ export default function AppSidebar() {
 
                     {/* Theme Dropdown */}
                     <div>
+                      <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">{t("app_sidebar.theme")}</p>
                       <CustomDropdown
                         options={themeOptions}
                         selected={[theme]}
                         onChange={(val) => setTheme(val[0] as "light" | "dark")}
-                        placeholder="Theme"
+                        placeholder={t("app_sidebar.theme")}
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
@@ -735,34 +770,69 @@ export default function AppSidebar() {
 
                     {/* Language Dropdown */}
                     <div>
-                      <CustomDropdown
-                        options={languageOptions}
-                        selected={language}
-                        onChange={(val) => setLanguage(val)}
-                        placeholder="Language"
-                        width="100%"
-                        showSelectedOption={true}
-                        showSearch={false}
-                      />
+                      <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">{t("app_sidebar.language")}</p>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); setOpenLang(!openLang); }}
+                        className={cn(
+                          "border rounded p-2 flex items-center justify-between cursor-pointer transition-colors group",
+                          theme === "dark" ? "bg-[#0f172a]/50 border-slate-700 hover:border-slate-500" : "bg-slate-50 border-slate-200 hover:border-slate-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={`https://flagcdn.com/w20/${SUPPORTED_LANGUAGES.find((l) => l.code === language[0])?.flag ?? "us"}.png`}
+                            width="18"
+                            alt=""
+                            className="rounded-sm"
+                          />
+                          <span className={cn("text-sm font-medium", theme === "dark" ? "text-white" : "text-slate-900")}>
+                            {SUPPORTED_LANGUAGES.find((l) => l.code === language[0])?.label ?? language[0]}
+                          </span>
+                        </div>
+                        <ChevronDown size={14} className={cn("text-gray-500 transition-transform", openLang ? "rotate-180" : "")} />
+                      </div>
+                      {openLang && (
+                        <div className={cn(
+                          "mt-1 border rounded overflow-hidden shadow-sm max-h-64 overflow-y-auto",
+                          theme === "dark" ? "bg-[#0f172a]/30 border-slate-800" : "bg-white border-slate-100"
+                        )}>
+                          {SUPPORTED_LANGUAGES.map((l) => (
+                            <div
+                              key={l.code}
+                              onClick={() => { i18n.changeLanguage(l.code); setLanguage([l.code]); setOpenLang(false); }}
+                              className={cn(
+                                "flex items-center gap-2 p-2 cursor-pointer text-sm transition-colors",
+                                theme === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50"
+                              )}
+                            >
+                              <img src={`https://flagcdn.com/w20/${l.flag}.png`} width="18" alt="" className="rounded-sm" />
+                              <span className={theme === "dark" ? "text-white" : "text-slate-700"}>{l.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Footer Actions */}
-              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  onClick={() => {
-                    localStorage.removeItem("auth_token");
-                    localStorage.removeItem("user_info");
-                    window.location.href = "/login";
-                  }}
-                  className="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl px-3 py-2.5 text-sm font-bold transition-all"
-                >
-                  <LogOut size={16} />
-                  Sign out
-                </button>
-              </div>
+              <DropdownMenuSeparator className={theme === "dark" ? "bg-slate-700 my-2" : "bg-slate-100 my-2"} />
+
+              {/* Sign Out */}
+              <DropdownMenuItem
+                onClick={() => {
+                  localStorage.removeItem("auth_token");
+                  localStorage.removeItem("user_info");
+                  window.location.href = "/login";
+                }}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-md cursor-pointer text-slate-300 hover:text-red-400 group transition-colors outline-none",
+                  theme === "dark" ? "hover:bg-red-500/10 focus:bg-red-500/10" : "hover:bg-red-50 focus:bg-red-50 focus:text-red-600"
+                )}
+              >
+                <LogOut size={18} className="group-hover:text-red-400" />
+                <span className={cn("font-semibold text-[14px]", theme === "dark" ? "" : "text-slate-600")}>{t("app_sidebar.sign_out")}</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

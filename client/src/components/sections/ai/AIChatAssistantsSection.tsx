@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ const gptModels = [
 ];
 
 export default function AIChatAssistantsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -119,10 +121,10 @@ export default function AIChatAssistantsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
-      toast({ title: "Deleted", description: "Assistant removed successfully." });
+      toast({ title: t("ai_chat_assistants_section.delete_success_title"), description: t("ai_chat_assistants_section.delete_success_description") });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to delete assistant.", variant: "destructive" });
+      toast({ title: t("ai_chat_assistants_section.error_title"), description: t("ai_chat_assistants_section.delete_error_description"), variant: "destructive" });
     },
   });
 
@@ -191,15 +193,15 @@ export default function AIChatAssistantsSection() {
       try {
         if (selectedAgent) {
           await apiRequest("POST", `/api/ai/agents/${selectedAgent.id}/update`, formData);
-          toast({ title: "Saved", description: "Assistant updated successfully." });
+          toast({ title: t("ai_chat_assistants_section.save_success_title"), description: t("ai_chat_assistants_section.update_success_description") });
         } else {
           await apiRequest("POST", "/api/ai/agents/create", formData);
-          toast({ title: "Saved", description: "Assistant created successfully." });
+          toast({ title: t("ai_chat_assistants_section.save_success_title"), description: t("ai_chat_assistants_section.create_success_description") });
         }
         queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
         setViewMode("list");
       } catch {
-        toast({ title: "Error", description: "Failed to save assistant.", variant: "destructive" });
+        toast({ title: t("ai_chat_assistants_section.error_title"), description: t("ai_chat_assistants_section.save_error_description"), variant: "destructive" });
       }
     }
   };
@@ -246,19 +248,19 @@ export default function AIChatAssistantsSection() {
                 </div>
                 <div>
                   <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                    {selectedAgent ? "Edit Assistant" : "Create New Assistant"}
+                    {selectedAgent ? t("ai_chat_assistants_section.edit_title") : t("ai_chat_assistants_section.create_title")}
                   </h1>
                   <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                    Configure your AI assistant settings.
+                    {t("ai_chat_assistants_section.edit_subtitle")}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button type="button" onClick={() => setViewMode("list")} className={outlineBtn}>
-                  Cancel
+                  {t("ai_chat_assistants_section.cancel")}
                 </button>
                 <button type="submit" className={primaryBtn}>
-                  <Sparkles size={12} /> Publish
+                  <Sparkles size={12} /> {t("ai_chat_assistants_section.publish")}
                 </button>
               </div>
             </div>
@@ -268,10 +270,10 @@ export default function AIChatAssistantsSection() {
               <div className={cn("px-8 border-b flex justify-start overflow-x-auto", softBorder)}>
                 <TabsList className="h-auto p-0 gap-8 bg-transparent border-none flex justify-start rounded-none">
                   {[
-                    { value: "personality",    label: "Personality",    icon: User },
-                    { value: "configurations", label: "Configurations", icon: Settings },
-                    { value: "knowledge",      label: "Assistants",     icon: Globe },
-                    { value: "functions",      label: "Functions",      icon: Sparkles },
+                    { value: "personality",    label: t("ai_chat_assistants_section.tab_personality"),    icon: User },
+                    { value: "configurations", label: t("ai_chat_assistants_section.tab_configurations"), icon: Settings },
+                    { value: "knowledge",      label: t("ai_chat_assistants_section.tab_knowledge"),     icon: Globe },
+                    { value: "functions",      label: t("ai_chat_assistants_section.tab_functions"),      icon: Sparkles },
                   ].map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -295,23 +297,23 @@ export default function AIChatAssistantsSection() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="md:col-span-2 space-y-5">
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Assistant Name</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_chat_assistants_section.field_assistant_name")}</FieldLabel>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="e.g. Sales Helper"
+                        placeholder={t("ai_chat_assistants_section.placeholder_assistant_name")}
                         maxLength={250}
                         className={inputCls}
                       />
                       <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{formData.name.length}/250</p>
                     </div>
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Instructions</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_chat_assistants_section.field_instructions")}</FieldLabel>
                       <Textarea
                         rows={12}
                         value={formData.instructions}
                         onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                        placeholder="You are a helpful assistant..."
+                        placeholder={t("ai_chat_assistants_section.placeholder_instructions")}
                         className={cn(
                           "rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
                           "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
@@ -324,10 +326,10 @@ export default function AIChatAssistantsSection() {
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Select Model</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_chat_assistants_section.select_model")}</FieldLabel>
                       <Select value={formData.model} onValueChange={(val) => setFormData({ ...formData, model: val })}>
                         <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="Select Model" />
+                          <SelectValue placeholder={t("ai_chat_assistants_section.select_model")} />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                           {gptModels.map((m) => (
@@ -338,11 +340,11 @@ export default function AIChatAssistantsSection() {
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Model Strategy</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_chat_assistants_section.field_model_strategy")}</FieldLabel>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {([
-                          { v: "fixed",   label: "Fixed",   desc: "Static predefined prompt.", icon: <RotateCcw size={16} /> },
-                          { v: "dynamic", label: "Dynamic", desc: "Variable injection.",       icon: <Sparkles size={16} /> },
+                          { v: "fixed",   label: t("ai_chat_assistants_section.strategy_fixed_label"),   desc: t("ai_chat_assistants_section.strategy_fixed_desc"), icon: <RotateCcw size={16} /> },
+                          { v: "dynamic", label: t("ai_chat_assistants_section.strategy_dynamic_label"), desc: t("ai_chat_assistants_section.strategy_dynamic_desc"),       icon: <Sparkles size={16} /> },
                         ] as const).map((opt) => {
                           const active = formData.prompt_strategy === opt.v;
                           return (
@@ -380,28 +382,28 @@ export default function AIChatAssistantsSection() {
                   <div className="space-y-6">
                     <SliderRow
                       dark={dark}
-                      label="Temperature (Creativity)"
+                      label={t("ai_chat_assistants_section.slider_temperature_label")}
                       value={formData.creativity}
                       min={0} max={2} step={0.01}
                       onChange={(v) => setFormData({ ...formData, creativity: v })}
-                      leftLabel="More Precise"
-                      rightLabel="More Creative"
+                      leftLabel={t("ai_chat_assistants_section.slider_more_precise")}
+                      rightLabel={t("ai_chat_assistants_section.slider_more_creative")}
                     />
 
                     <SliderRow
                       dark={dark}
-                      label="Top P (Diversity)"
+                      label={t("ai_chat_assistants_section.slider_top_p_label")}
                       value={formData.diversity}
                       min={0} max={1} step={0.01}
                       onChange={(v) => setFormData({ ...formData, diversity: v })}
-                      leftLabel="Less Diversity"
-                      rightLabel="More Diversity"
+                      leftLabel={t("ai_chat_assistants_section.slider_less_diversity")}
+                      rightLabel={t("ai_chat_assistants_section.slider_more_diversity")}
                     />
                   </div>
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Response Tokens</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_chat_assistants_section.field_response_tokens")}</FieldLabel>
                       <Input
                         type="number"
                         value={formData.response_tokens}
@@ -411,7 +413,7 @@ export default function AIChatAssistantsSection() {
                     </div>
 
                     <div className="space-y-2">
-                      <FieldLabel dark={dark}>Conversation History Limit</FieldLabel>
+                      <FieldLabel dark={dark}>{t("ai_chat_assistants_section.field_history_limit")}</FieldLabel>
                       <div className="flex gap-2">
                         {[0, 5, 10, 20].map((val) => {
                           const active = formData.history_limit === val;
@@ -429,7 +431,7 @@ export default function AIChatAssistantsSection() {
                                     : "bg-white border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
                               )}
                             >
-                              {val === 0 ? "Auto" : val}
+                              {val === 0 ? t("ai_chat_assistants_section.history_limit_auto") : val}
                             </button>
                           );
                         })}
@@ -441,13 +443,13 @@ export default function AIChatAssistantsSection() {
 
               {/* ── Knowledge ── */}
               <TabsContent value="knowledge" className="p-8 outline-none space-y-5">
-                <h4 className={cn("text-[13px] font-semibold", text)}>Add Assistant Files</h4>
+                <h4 className={cn("text-[13px] font-semibold", text)}>{t("ai_chat_assistants_section.knowledge_heading")}</h4>
 
                 <div className="flex gap-2">
                   {([
-                    { v: "pdf",     label: "PDF Files" },
-                    { v: "website", label: "Website / URL" },
-                    { v: "text",    label: "Text Input" },
+                    { v: "pdf",     label: t("ai_chat_assistants_section.source_pdf") },
+                    { v: "website", label: t("ai_chat_assistants_section.source_website") },
+                    { v: "text",    label: t("ai_chat_assistants_section.source_text") },
                   ] as const).map((opt) => {
                     const active = formData.source_type === opt.v;
                     return (
@@ -476,14 +478,14 @@ export default function AIChatAssistantsSection() {
                       <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                         <FileText size={20} />
                       </div>
-                      <h3 className={cn("text-[14px] font-semibold", text)}>Upload PDF Files</h3>
-                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>Upload your PDF knowledge base files here.</p>
+                      <h3 className={cn("text-[14px] font-semibold", text)}>{t("ai_chat_assistants_section.upload_pdf_title")}</h3>
+                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>{t("ai_chat_assistants_section.upload_pdf_description")}</p>
                       <button
                         type="button"
-                        onClick={() => toast({ title: "Upload PDF", description: "File selection dialog would open here." })}
+                        onClick={() => toast({ title: t("ai_chat_assistants_section.upload_pdf_toast_title"), description: t("ai_chat_assistants_section.upload_pdf_toast_description") })}
                         className={cn(primaryOutlineBtn, "mx-auto")}
                       >
-                        <Upload size={12} /> Select Files
+                        <Upload size={12} /> {t("ai_chat_assistants_section.select_files_button")}
                       </button>
                     </div>
                   )}
@@ -498,10 +500,10 @@ export default function AIChatAssistantsSection() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => toast({ title: "Fetching", description: "Crawling website for knowledge base content..." })}
+                        onClick={() => toast({ title: t("ai_chat_assistants_section.fetching_toast_title"), description: t("ai_chat_assistants_section.fetching_toast_description") })}
                         className={cn(primaryOutlineBtn, "mx-auto")}
                       >
-                        Fetch Pages
+                        {t("ai_chat_assistants_section.fetch_pages_button")}
                       </button>
                     </div>
                   )}
@@ -509,7 +511,7 @@ export default function AIChatAssistantsSection() {
                   {formData.source_type === "text" && (
                     <Textarea
                       rows={8}
-                      placeholder="Enter text content..."
+                      placeholder={t("ai_chat_assistants_section.placeholder_text_content")}
                       className={cn(
                         "w-full rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
                         "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
@@ -527,17 +529,17 @@ export default function AIChatAssistantsSection() {
                     <Zap size={22} />
                   </div>
                   <div className="space-y-1 max-w-md">
-                    <h3 className={cn("text-[14px] font-semibold", text)}>Function Calling</h3>
+                    <h3 className={cn("text-[14px] font-semibold", text)}>{t("ai_chat_assistants_section.function_calling_title")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Define custom functions that the AI can call to interact with your business logic or external APIs.
+                      {t("ai_chat_assistants_section.function_calling_description")}
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
+                    onClick={() => toast({ title: t("ai_chat_assistants_section.functions_toast_title"), description: t("ai_chat_assistants_section.functions_toast_description") })}
                     className={primaryOutlineBtn}
                   >
-                    <Plus size={12} /> Add Function
+                    <Plus size={12} /> {t("ai_chat_assistants_section.add_function_button")}
                   </button>
                 </div>
               </TabsContent>
@@ -546,10 +548,10 @@ export default function AIChatAssistantsSection() {
             {/* Footer */}
             <div className={cn("px-6 py-4 border-t flex justify-end gap-2", border, softBg)}>
               <button type="button" onClick={() => setViewMode("list")} className={outlineBtn}>
-                Cancel
+                {t("ai_chat_assistants_section.cancel")}
               </button>
               <button type="submit" className={primaryBtn}>
-                <Sparkles size={12} /> Publish
+                <Sparkles size={12} /> {t("ai_chat_assistants_section.publish")}
               </button>
             </div>
           </CardContent>
@@ -570,22 +572,22 @@ export default function AIChatAssistantsSection() {
                 <Bot className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>AI chat assistants</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("ai_chat_assistants_section.title")}</h1>
                 <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                  Feed your assistant with custom data.
+                  {t("ai_chat_assistants_section.subtitle")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className={cn("flex items-center gap-3 px-3 h-10 rounded-xl border text-[11px] font-semibold", dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600")}>
-                <span>Active: {totalActive}</span>
+                <span>{t("ai_chat_assistants_section.active_count", { count: totalActive })}</span>
                 <div className="w-px h-3" style={{ backgroundColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }} />
-                <span>Limit: {limit}</span>
+                <span>{t("ai_chat_assistants_section.limit_count", { count: limit })}</span>
                 <Info size={11} className="opacity-50" />
               </div>
               {canCreateKB && (
                 <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add Assistant
+                  <Plus size={12} /> {t("ai_chat_assistants_section.add_assistant")}
                 </button>
               )}
             </div>
@@ -599,14 +601,11 @@ export default function AIChatAssistantsSection() {
                   <Bot className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-1.5 max-w-sm">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Create your first AI Assistant</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_chat_assistants_section.empty_title")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                    Get started by creating a new AI assistant to help automate your conversations.
+                    {t("ai_chat_assistants_section.empty_description")}
                   </p>
                 </div>
-                <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add Assistant
-                </button>
               </div>
             ) : (
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
@@ -614,11 +613,11 @@ export default function AIChatAssistantsSection() {
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Name</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Model</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>AI Calls</th>
-                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>Status</th>
-                      <th className={cn("py-4 px-6 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_chat_assistants_section.table_name")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_chat_assistants_section.table_model")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_chat_assistants_section.table_ai_calls")}</th>
+                      <th className={cn("py-4 px-6 text-left text-[11px] font-semibold", sub)}>{t("ai_chat_assistants_section.table_status")}</th>
+                      <th className={cn("py-4 px-6 text-right text-[11px] font-semibold", sub)}>{t("ai_chat_assistants_section.table_actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -655,7 +654,7 @@ export default function AIChatAssistantsSection() {
                               </button>
                             )}
                             <button
-                              onClick={() => toast({ title: "Logs", description: `Opening logs for ${agent.name}` })}
+                              onClick={() => toast({ title: t("ai_chat_assistants_section.logs_toast_title"), description: t("ai_chat_assistants_section.logs_toast_description", { name: agent.name }) })}
                               className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-primary/10 hover:text-primary text-slate-400" : "hover:bg-primary/10 hover:text-primary text-slate-500")}
                             >
                               <FileText size={12} />
@@ -672,7 +671,7 @@ export default function AIChatAssistantsSection() {
                                     onClick={() => setFeederAgent(agent)}
                                     className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
                                   >
-                                    <Plug size={12} /> AI Feeder
+                                    <Plug size={12} /> {t("ai_chat_assistants_section.ai_feeder_menu_item")}
                                   </DropdownMenuItem>
                                 )}
                                 {canDeleteKB && (
@@ -680,7 +679,7 @@ export default function AIChatAssistantsSection() {
                                     onClick={() => { setAgentToDelete(agent); setShowDeleteConfirm(true); }}
                                     className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                                   >
-                                    <Trash2 size={12} /> Delete
+                                    <Trash2 size={12} /> {t("ai_chat_assistants_section.delete")}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -707,19 +706,19 @@ export default function AIChatAssistantsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Assistant?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_chat_assistants_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">"{agentToDelete?.name}"</span> will be permanently removed and all active conversations with this assistant will stop.
+                  <span className="text-rose-500 font-black">"{agentToDelete?.name}"</span> {t("ai_chat_assistants_section.delete_dialog_description_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_chat_assistants_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDeleteAgent}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("ai_chat_assistants_section.delete")}
               </AlertDialogAction>
             </div>
           </div>
@@ -740,6 +739,7 @@ export default function AIChatAssistantsSection() {
  * agent (grounded on the `feed` knowledge) answers inbound ref-link messages.
  */
 function AiFeederModal({ agent, onClose }: { agent: any | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [name, setName] = useState("");
@@ -794,14 +794,14 @@ function AiFeederModal({ agent, onClose }: { agent: any | null; onClose: () => v
     },
     onSuccess: (data: any) => {
       if (data?.success) {
-        toast({ title: "AI Feeder created", description: "Inbound ref-link messages will now start this automation." });
+        toast({ title: t("ai_chat_assistants_section.feeder_created_title"), description: t("ai_chat_assistants_section.feeder_created_description") });
         qc.invalidateQueries({ queryKey: ["/api/ai-feeder"] });
         close();
       } else {
-        toast({ title: "Could not create feeder", description: data?.message ?? "", variant: "destructive" });
+        toast({ title: t("ai_chat_assistants_section.feeder_error_title"), description: data?.message ?? "", variant: "destructive" });
       }
     },
-    onError: (e: any) => toast({ title: "Could not create feeder", description: e?.message ?? "", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("ai_chat_assistants_section.feeder_error_title"), description: e?.message ?? "", variant: "destructive" }),
   });
 
   const close = () => {
@@ -815,51 +815,51 @@ function AiFeederModal({ agent, onClose }: { agent: any | null; onClose: () => v
     <Dialog open={!!agent} onOpenChange={(o) => { if (!o) close(); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>AI Feeder{agent ? ` — ${agent.name}` : ""}</DialogTitle>
+          <DialogTitle>{t("ai_chat_assistants_section.ai_feeder_dialog_title")}{agent ? ` — ${agent.name}` : ""}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">Feeder name *</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sales assistant" />
+            <label className="text-[11px] font-semibold text-muted-foreground">{t("ai_chat_assistants_section.label_feeder_name")}</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("ai_chat_assistants_section.placeholder_feeder_name")} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">WhatsApp number *</label>
+            <label className="text-[11px] font-semibold text-muted-foreground">{t("ai_chat_assistants_section.label_whatsapp_number")}</label>
             <Select value={channelableId} onValueChange={setChannelableId}>
-              <SelectTrigger><SelectValue placeholder="Select a number" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("ai_chat_assistants_section.placeholder_select_number")} /></SelectTrigger>
               <SelectContent>
                 {numbers.length === 0 ? (
-                  <SelectItem value="none" disabled>No WhatsApp numbers</SelectItem>
+                  <SelectItem value="none" disabled>{t("ai_chat_assistants_section.no_whatsapp_numbers")}</SelectItem>
                 ) : numbers.map((n) => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">Automation *</label>
+            <label className="text-[11px] font-semibold text-muted-foreground">{t("ai_chat_assistants_section.label_automation")}</label>
             <Select value={automationId} onValueChange={setAutomationId}>
-              <SelectTrigger><SelectValue placeholder="Select an automation" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("ai_chat_assistants_section.placeholder_select_automation")} /></SelectTrigger>
               <SelectContent>
                 {automations.length === 0 ? (
-                  <SelectItem value="none" disabled>No automations</SelectItem>
+                  <SelectItem value="none" disabled>{t("ai_chat_assistants_section.no_automations")}</SelectItem>
                 ) : automations.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">Trigger keyword *</label>
-            <Input value={triggerText} onChange={(e) => setTriggerText(e.target.value)} placeholder="e.g. ref_sales — the wa.me link text that starts the flow" />
+            <label className="text-[11px] font-semibold text-muted-foreground">{t("ai_chat_assistants_section.label_trigger_keyword")}</label>
+            <Input value={triggerText} onChange={(e) => setTriggerText(e.target.value)} placeholder={t("ai_chat_assistants_section.placeholder_trigger_keyword")} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-muted-foreground">Knowledge feed</label>
-            <Textarea value={feed} onChange={(e) => setFeed(e.target.value)} placeholder="Paste the knowledge the agent should answer from…" className="min-h-24" />
+            <label className="text-[11px] font-semibold text-muted-foreground">{t("ai_chat_assistants_section.label_knowledge_feed")}</label>
+            <Textarea value={feed} onChange={(e) => setFeed(e.target.value)} placeholder={t("ai_chat_assistants_section.placeholder_knowledge_feed")} className="min-h-24" />
           </div>
           <div className="flex justify-end gap-2 pt-1">
-            <button onClick={close} className="h-9 px-4 rounded-lg border text-[11px] font-semibold">Cancel</button>
+            <button onClick={close} className="h-9 px-4 rounded-lg border text-[11px] font-semibold">{t("ai_chat_assistants_section.cancel")}</button>
             <button
               onClick={() => mutation.mutate()}
               disabled={!valid || mutation.isPending}
               className="h-9 px-4 rounded-lg text-[11px] font-semibold bg-primary text-white disabled:opacity-40"
             >
-              {mutation.isPending ? "Creating…" : "Create feeder"}
+              {mutation.isPending ? t("ai_chat_assistants_section.creating_feeder") : t("ai_chat_assistants_section.create_feeder_button")}
             </button>
           </div>
         </div>

@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import { formatInWorkspaceTz } from "@/contexts/WorkspaceTimezoneContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import CreateWorkspaceForm from "./CreateWorkspaceForm";
 import WorkspaceUsageView from "./WorkspaceUsageView";
 import AgencyVoiceWallet from "./AgencyVoiceWallet";
@@ -59,6 +60,7 @@ const AgencyWorkspaces = () => {
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const dark = mode === "dark";
   const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
@@ -142,7 +144,7 @@ const AgencyWorkspaces = () => {
     onSuccess: (_, workspace) => {
       const newStatus = workspace.status === 'Active' ? 'Suspended' : 'Active';
       setLocalWorkspaces(prev => prev.map(ws => ws.id === workspace.id ? { ...ws, status: newStatus } : ws));
-      toast({ title: `Workspace ${newStatus}` });
+      toast({ title: t(newStatus === 'Active' ? "agency_workspaces.workspace_active" : "agency_workspaces.workspace_suspended") });
       queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
     },
   });
@@ -161,8 +163,8 @@ const AgencyWorkspaces = () => {
           window.open(`${data.workspace_url}/login`, '_blank', 'noopener');
         } else {
           toast({
-            title: "This workspace has its own login",
-            description: "It's assigned to a specific agent — ask them to log in, or use its login page directly.",
+            title: t("agency_workspaces.own_login_title"),
+            description: t("agency_workspaces.own_login_desc"),
           });
         }
         return;
@@ -184,8 +186,8 @@ const AgencyWorkspaces = () => {
     },
     onError: (error: any) => {
       toast({
-        title: "Login failed",
-        description: error?.message || "Could not log into this workspace",
+        title: t("agency_workspaces.login_failed_title"),
+        description: error?.message || t("agency_workspaces.login_failed_desc"),
         variant: "destructive",
       });
     },
@@ -198,12 +200,12 @@ const AgencyWorkspaces = () => {
     },
     onSuccess: (_, workspace) => {
       setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
-      toast({ title: "Workspace permanently deleted" });
+      toast({ title: t("agency_workspaces.deleted_title") });
       queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
       setConfirmDeleteId(null);
     },
     onError: (error: any) => {
-      toast({ title: "Delete failed", description: error.message || "Please try again.", variant: "destructive" });
+      toast({ title: t("agency_workspaces.delete_failed_title"), description: error.message || t("agency_workspaces.delete_failed_desc"), variant: "destructive" });
       setConfirmDeleteId(null);
     },
   });
@@ -228,17 +230,17 @@ const AgencyWorkspaces = () => {
             <Network className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn("text-[15px] font-bold tracking-tight", text)}>Workspaces</h1>
+            <h1 className={cn("text-[15px] font-bold tracking-tight", text)}>{t("agency_workspaces.title")}</h1>
             <p className={cn("text-[11px] mt-0.5", sub)}>
-              {filteredWorkspaces.length} total · {filteredWorkspaces.filter((ws: any) => ws.status === 'Active').length} active
+              {t("agency_workspaces.count_summary", { total: filteredWorkspaces.length, active: filteredWorkspaces.filter((ws: any) => ws.status === 'Active').length })}
             </p>
           </div>
         </div>
-        <button 
+        <button
           onClick={() => setViewMode('CREATE')}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
         >
-          <Plus size={14} /> Add Workspace
+          <Plus size={14} /> {t("agency_workspaces.add_workspace")}
         </button>
       </div>
 
@@ -247,7 +249,7 @@ const AgencyWorkspaces = () => {
         <div className="relative w-full max-w-xs group">
           <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors", sub)} />
           <input
-            placeholder="Search workspaces..."
+            placeholder={t("agency_workspaces.search_placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
@@ -262,15 +264,15 @@ const AgencyWorkspaces = () => {
         <div className="flex items-center gap-4">
             <label className={cn("flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest cursor-pointer transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
               <Checkbox checked={showInactive} onCheckedChange={(v) => setShowInactive(v === true)} className="border-slate-300 w-3.5 h-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
-              Show Inactive
+              {t("agency_workspaces.show_inactive")}
             </label>
             <DropdownMenu>
               <DropdownMenuTrigger className={cn("flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest outline-none transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
-                {sortOrder === 'newest' ? 'Newest first' : 'Oldest first'} <ChevronDown size={12} />
+                {sortOrder === 'newest' ? t("agency_workspaces.newest_first") : t("agency_workspaces.oldest_first")} <ChevronDown size={12} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className={cn("w-40 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Newest first</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Oldest first</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t("agency_workspaces.newest_first")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t("agency_workspaces.oldest_first")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -298,8 +300,8 @@ const AgencyWorkspaces = () => {
               <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4", dark ? "bg-slate-800" : "bg-slate-100")}>
                 <Network className="w-8 h-8 text-slate-400" />
               </div>
-              <p className={cn("text-[15px] font-bold mb-1", text)}>No Workspaces Found</p>
-              <p className={cn("text-[12px]", sub)}>Try adjusting your search query or add a new workspace</p>
+              <p className={cn("text-[15px] font-bold mb-1", text)}>{t("agency_workspaces.no_workspaces_found")}</p>
+              <p className={cn("text-[12px]", sub)}>{t("agency_workspaces.no_workspaces_desc")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -322,25 +324,25 @@ const AgencyWorkspaces = () => {
                         <>
                           <div className="w-6 h-6 border-2 border-rose-300 border-t-rose-500 rounded-full animate-spin" />
                           <p className={cn("text-[12px] font-bold text-center leading-snug", text)}>
-                            Deleting "{ws.name}"…
+                            {t("agency_workspaces.deleting", { name: ws.name })}
                           </p>
                           <p className={cn("text-[10.5px] text-center leading-snug px-2", sub)}>
-                            This can take up to a minute for larger workspaces. Please don't close or refresh this page.
+                            {t("agency_workspaces.deleting_desc")}
                           </p>
                         </>
                       ) : (
                         <>
                           <p className={cn("text-[12.5px] font-bold text-center leading-snug", text)}>
-                            Permanently delete "{ws.name}"?
+                            {t("agency_workspaces.confirm_delete_title", { name: ws.name })}
                           </p>
                           <p className={cn("text-[10.5px] text-center leading-snug px-2", sub)}>
-                            This deletes all of this workspace's data — contacts, conversations, connected channels, AI agents — forever. This cannot be undone.
+                            {t("agency_workspaces.confirm_delete_desc")}
                           </p>
                           <input
                             autoFocus
                             value={deleteConfirmText}
                             onChange={(e) => setDeleteConfirmText(e.target.value)}
-                            placeholder={`Type "${ws.name}" to confirm`}
+                            placeholder={t("agency_workspaces.confirm_delete_placeholder", { name: ws.name })}
                             className={cn(
                               "w-full max-w-[220px] px-3 py-1.5 rounded-lg border text-[11px] text-center outline-none",
                               dark ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600" : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
@@ -352,13 +354,13 @@ const AgencyWorkspaces = () => {
                               disabled={deleteConfirmText !== ws.name}
                               className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold bg-rose-500 text-white hover:bg-rose-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                              Delete
+                              {t("agency_workspaces.delete_btn")}
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
                             >
-                              Cancel
+                              {t("agency_workspaces.cancel_btn")}
                             </button>
                           </div>
                         </>
@@ -375,7 +377,7 @@ const AgencyWorkspaces = () => {
                         : "text-rose-500 bg-rose-500/5 border-rose-500/20"
                     )}>
                       <span className={cn("w-1 h-1 rounded-full", ws.status === 'Active' ? "bg-emerald-500" : "bg-rose-500")} />
-                      {ws.status}
+                      {t(ws.status === 'Active' ? "agency_workspaces.status_active" : "agency_workspaces.status_suspended")}
                     </span>
                   </div>
 
@@ -392,10 +394,10 @@ const AgencyWorkspaces = () => {
                     <h3 className={cn("text-[15px] font-bold tracking-tight mb-2 truncate px-2", text)}>{ws.name}</h3>
                     <div className="flex flex-col items-center">
                       <span className={cn("text-[10px] font-bold uppercase tracking-widest opacity-40", sub)}>
-                        ID: {ws.id}
+                        {t("agency_workspaces.id_label", { id: ws.id })}
                       </span>
                       <p className={cn("text-[11px] font-medium mt-0.5", sub)}>
-                        Created on {ws.createdAt}
+                        {t("agency_workspaces.created_on", { date: ws.createdAt })}
                       </p>
                     </div>
                   </div>
@@ -411,7 +413,7 @@ const AgencyWorkspaces = () => {
                           : "bg-slate-100 hover:bg-primary text-slate-600 hover:text-white"
                       )}
                     >
-                      <Monitor size={13} /> Manage
+                      <Monitor size={13} /> {t("agency_workspaces.manage_btn")}
                     </button>
 
                     <button
@@ -424,7 +426,7 @@ const AgencyWorkspaces = () => {
                           : "bg-slate-100 hover:bg-emerald-600 text-slate-600 hover:text-white"
                       )}
                     >
-                      <LogIn size={13} /> {loginToWorkspaceMutation.isPending ? 'Logging in…' : 'Login'}
+                      <LogIn size={13} /> {loginToWorkspaceMutation.isPending ? t("agency_workspaces.logging_in") : t("agency_workspaces.login_btn")}
                     </button>
 
                     <DropdownMenu>
@@ -440,20 +442,20 @@ const AgencyWorkspaces = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className={cn("w-52 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
                         <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('USAGE'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
-                          <BarChart3 size={14} className="text-primary" /> Usage Reports
+                          <BarChart3 size={14} className="text-primary" /> {t("agency_workspaces.usage_reports")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('VOICE_WALLET'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
-                          <Wallet size={14} className="text-primary" /> Voice Wallet
+                          <Wallet size={14} className="text-primary" /> {t("agency_workspaces.voice_wallet")}
                         </DropdownMenuItem>
                         <div className={cn("my-1 h-px", dark ? "bg-slate-800" : "bg-slate-100")} />
                         <DropdownMenuItem onClick={() => toggleStatusMutation.mutate(ws)} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
-                          <Ban size={14} /> {ws.status === 'Active' ? 'Suspend Access' : 'Activate Access'}
+                          <Ban size={14} /> {ws.status === 'Active' ? t("agency_workspaces.suspend_access") : t("agency_workspaces.activate_access")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => { setConfirmDeleteId(ws.id); setDeleteConfirmText(''); }}
                           className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
                         >
-                          <Trash2 size={14} /> Delete
+                          <Trash2 size={14} /> {t("agency_workspaces.delete_btn")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -470,7 +472,7 @@ const AgencyWorkspaces = () => {
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all hover:scale-105 active:scale-95 shadow-sm"
               >
-                <ChevronDown size={14} /> Show more
+                <ChevronDown size={14} /> {t("agency_workspaces.show_more")}
               </button>
             </div>
           )}

@@ -4,8 +4,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Phone, Clock, DollarSign } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function CallsSubTab() {
+  const { t } = useTranslation();
   // WhatsApp Business Calling API isn't yet wired in EZCONN, so the backend
   // returns honest zeros with zero-filled trends. Once Meta's Calling API is
   // integrated, the same endpoint will start returning real numbers without
@@ -47,24 +49,24 @@ export default function CallsSubTab() {
 
   const kpiCards = [
     {
-      title: "All Calls", icon: <Phone size={14} className="text-primary" />,
+      title: t("calls_sub_tab.all_calls"), icon: <Phone size={14} className="text-primary" />,
       rows: [
-        { l: "Business-initiated", v: k.allCalls?.businessInitiated ?? 0 },
-        { l: "User-initiated", v: k.allCalls?.userInitiated ?? 0 },
+        { l: t("calls_sub_tab.business_initiated"), v: k.allCalls?.businessInitiated ?? 0 },
+        { l: t("calls_sub_tab.user_initiated"), v: k.allCalls?.userInitiated ?? 0 },
       ]
     },
     {
-      title: "Avg Billable Duration (sec)", icon: <Clock size={14} className="text-primary" />,
+      title: t("calls_sub_tab.avg_billable_duration"), icon: <Clock size={14} className="text-primary" />,
       rows: [
-        { l: "Business-initiated", v: k.avgDuration?.businessInitiated ?? 0 },
-        { l: "User-initiated", v: k.avgDuration?.userInitiated ?? 0 },
+        { l: t("calls_sub_tab.business_initiated"), v: k.avgDuration?.businessInitiated ?? 0 },
+        { l: t("calls_sub_tab.user_initiated"), v: k.avgDuration?.userInitiated ?? 0 },
       ]
     },
     {
-      title: "Approx. Total Charges", icon: <DollarSign size={14} className="text-primary" />,
+      title: t("calls_sub_tab.approx_total_charges"), icon: <DollarSign size={14} className="text-primary" />,
       rows: [
-        { l: "Business-initiated", v: k.approxCharges?.businessInitiated ?? "$0" },
-        { l: "User-initiated", v: k.approxCharges?.userInitiated ?? "$0" },
+        { l: t("calls_sub_tab.business_initiated"), v: k.approxCharges?.businessInitiated ?? "$0" },
+        { l: t("calls_sub_tab.user_initiated"), v: k.approxCharges?.userInitiated ?? "$0" },
       ]
     },
   ];
@@ -76,18 +78,18 @@ export default function CallsSubTab() {
   const chargesData: Array<{ date: string; calls: number; charges: number }> = data?.chargesTrend ?? [];
 
   const CALL_LINES = [
-    { key: "businessInitiated", name: "Business-initiated", stroke: "#22c55e" },
-    { key: "userInitiated", name: "User-initiated", stroke: "#3b82f6" },
+    { key: "businessInitiated", name: t("calls_sub_tab.business_initiated"), stroke: "#22c55e" },
+    { key: "userInitiated", name: t("calls_sub_tab.user_initiated"), stroke: "#3b82f6" },
   ];
   const CHARGE_LINES = [
-    { key: "calls", name: "Calls", stroke: "#22c55e" },
-    { key: "charges", name: "Charges ($)", stroke: "#ec4899" },
+    { key: "calls", name: t("calls_sub_tab.calls_label"), stroke: "#22c55e" },
+    { key: "charges", name: t("calls_sub_tab.charges_label"), stroke: "#ec4899" },
   ];
 
   const charts = [
-    { title: "All Calls", sub: "Call volume over time", data: allCallsData, lines: CALL_LINES },
-    { title: "Average Billable Call Duration (sec)", sub: "Duration trends", data: durationData, lines: CALL_LINES },
-    { title: "Calls & Approximate Charges", sub: "Cost analysis over time", data: chargesData, lines: CHARGE_LINES },
+    { title: t("calls_sub_tab.all_calls"), sub: t("calls_sub_tab.call_volume_over_time"), data: allCallsData, lines: CALL_LINES },
+    { title: t("calls_sub_tab.avg_billable_call_duration"), sub: t("calls_sub_tab.duration_trends"), data: durationData, lines: CALL_LINES },
+    { title: t("calls_sub_tab.calls_and_approx_charges"), sub: t("calls_sub_tab.cost_analysis_over_time"), data: chargesData, lines: CHARGE_LINES },
   ];
 
   return (

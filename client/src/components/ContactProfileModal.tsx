@@ -91,6 +91,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 // apiRequest returns a raw Response; these wrappers parse JSON so callers can
 // read fields directly. Mirrors the pattern used across ContactsSection.tsx /
@@ -187,22 +188,23 @@ interface Contact {
 }
 
 // Localized source label — mirrors replyagent's $t("contact.source_<source>").
-const SOURCE_LABELS: Record<string, string> = {
-  manual: "Manual",
-  whatsapp: "WhatsApp",
-  imported_file: "Imported file",
-  import: "Imported",
-  api: "API",
-  instagram: "Instagram",
-  messenger: "Messenger",
-  facebook: "Facebook",
-  telegram: "Telegram",
-  webchat: "Webchat",
-  sms: "SMS",
-  zapi: "WhatsApp",
-};
-function sourceLabel(s?: string | null): string {
+// Brand names (WhatsApp, Instagram, Messenger, Facebook, Telegram) stay as-is.
+function sourceLabel(t: (key: string) => string, s?: string | null): string {
   const k = String(s ?? "manual").toLowerCase();
+  const SOURCE_LABELS: Record<string, string> = {
+    manual: t("contact_profile_modal.source.manual"),
+    whatsapp: "WhatsApp",
+    imported_file: t("contact_profile_modal.source.imported_file"),
+    import: t("contact_profile_modal.source.imported"),
+    api: "API",
+    instagram: "Instagram",
+    messenger: "Messenger",
+    facebook: "Facebook",
+    telegram: "Telegram",
+    webchat: t("contact_profile_modal.source.webchat"),
+    sms: "SMS",
+    zapi: "WhatsApp",
+  };
   return SOURCE_LABELS[k] ?? k.charAt(0).toUpperCase() + k.slice(1);
 }
 
@@ -213,17 +215,17 @@ interface ContactProfileModalProps {
 }
 
 // Replyagent system field catalog — mirrors `Lead.contact_types` (line 7633).
-const GENDER_OPTIONS = [
-  { value: "not_specified", label: "Not specified" },
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
+const genderOptions = (t: (key: string) => string) => [
+  { value: "not_specified", label: t("contact_profile_modal.gender_options.not_specified") },
+  { value: "male", label: t("contact_profile_modal.gender_options.male") },
+  { value: "female", label: t("contact_profile_modal.gender_options.female") },
+  { value: "other", label: t("contact_profile_modal.gender_options.other") },
 ];
 
-const PHONE_TYPE_OPTIONS = [
-  { value: "work", label: "Work" },
-  { value: "personal", label: "Personal" },
-  { value: "other", label: "Other" },
+const phoneTypeOptions = (t: (key: string) => string) => [
+  { value: "work", label: t("contact_profile_modal.phone_type_options.work") },
+  { value: "personal", label: t("contact_profile_modal.phone_type_options.personal") },
+  { value: "other", label: t("contact_profile_modal.phone_type_options.other") },
 ];
 
 // ─── Sub-component: editable single-line field with edit-in-place ─────
@@ -241,12 +243,14 @@ interface EditableFieldProps {
 function EditableField({
   label,
   value,
-  placeholder = "Click to add",
+  placeholder,
   onSave,
   multiline = false,
   saving = false,
   disabled = false,
 }: EditableFieldProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("contact_profile_modal.fields.click_to_add");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
 
@@ -261,7 +265,7 @@ function EditableField({
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             className="min-w-0 flex-1"
             autoFocus
           />
@@ -269,7 +273,7 @@ function EditableField({
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             className="min-w-0 flex-1"
             autoFocus
           />
@@ -315,7 +319,7 @@ function EditableField({
       {value ? (
         <span>{value}</span>
       ) : (
-        <span className="text-muted-foreground italic">{placeholder}</span>
+        <span className="text-muted-foreground italic">{resolvedPlaceholder}</span>
       )}
     </button>
   );
@@ -348,6 +352,7 @@ function SidebarSectionHeader({
   addLabel,
   showAdd = true,
 }: SidebarSectionHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center border-b">
       <div className="flex-1 flex items-center gap-2 px-3 py-2">
@@ -355,7 +360,7 @@ function SidebarSectionHeader({
           <Input
             value={searchValue ?? ""}
             onChange={(e) => onSearchChange?.(e.target.value)}
-            placeholder="Search..."
+            placeholder={t("contact_profile_modal.sidebar.search_placeholder")}
             className="h-7 text-xs"
             autoFocus
           />
@@ -375,7 +380,7 @@ function SidebarSectionHeader({
             className="px-3 py-2 border-l hover:bg-muted/50"
             onClick={onSearchToggle}
             type="button"
-            aria-label={searching ? "Cancel search" : "Search"}
+            aria-label={searching ? t("contact_profile_modal.sidebar.cancel_search") : t("contact_profile_modal.sidebar.search")}
           >
             {searching ? (
               <X className="h-3.5 w-3.5" />
@@ -389,7 +394,7 @@ function SidebarSectionHeader({
             className="px-3 py-2 border-l hover:bg-muted/50"
             onClick={onAdd}
             type="button"
-            aria-label={addLabel ?? `Add ${label}`}
+            aria-label={addLabel ?? t("contact_profile_modal.sidebar.add_label", { label })}
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
@@ -407,6 +412,7 @@ export default function ContactProfileModal({
   contact,
 }: ContactProfileModalProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const workspaceTz = useWorkspaceTimezone();
@@ -600,12 +606,12 @@ export default function ContactProfileModal({
       apiPatch(`/api/contacts/${contactId}`, payload),
     onSuccess: () => {
       invalidateProfile();
-      toast({ title: "Contact updated" });
+      toast({ title: t("contact_profile_modal.toasts.contact_updated") });
     },
     onError: (err: any) => {
       toast({
-        title: "Update failed",
-        description: err?.message ?? "Could not save",
+        title: t("contact_profile_modal.toasts.update_failed"),
+        description: err?.message ?? t("contact_profile_modal.toasts.could_not_save"),
         variant: "destructive",
       });
     },
@@ -614,7 +620,7 @@ export default function ContactProfileModal({
   const deleteContactMutation = useMutation({
     mutationFn: () => apiDelete(`/api/contacts/${contactId}`),
     onSuccess: () => {
-      toast({ title: "Contact deleted" });
+      toast({ title: t("contact_profile_modal.toasts.contact_deleted") });
       // The contact is gone — DROP its profile query (don't invalidate, which
       // would refetch a 404 and leave the modal stuck on "Contact not found").
       queryClient.removeQueries({ queryKey: ["/api/contacts", contactId, "profile"] });
@@ -634,7 +640,7 @@ export default function ContactProfileModal({
       setLocation("/conversations/inbox");
     },
     onError: (err: any) => {
-      toast({ title: "Delete failed", description: err?.message ?? "", variant: "destructive" });
+      toast({ title: t("contact_profile_modal.toasts.delete_failed"), description: err?.message ?? "", variant: "destructive" });
     },
   });
 
@@ -642,7 +648,7 @@ export default function ContactProfileModal({
     mutationFn: (action: string) =>
       apiPost(`/api/contacts/${contactId}/change-status`, { action }),
     onSuccess: () => {
-      toast({ title: "Status updated" });
+      toast({ title: t("contact_profile_modal.toasts.status_updated") });
       invalidateProfile();
       setConfirmStatusOpen(false);
       setPendingStatus(null);
@@ -653,7 +659,7 @@ export default function ContactProfileModal({
     mutationFn: (payload: { field: any; type: string }) =>
       apiPost(`/api/contacts/${contactId}/remove-field`, payload),
     onSuccess: () => {
-      toast({ title: "Field removed" });
+      toast({ title: t("contact_profile_modal.toasts.field_removed") });
       invalidateProfile();
     },
   });
@@ -666,7 +672,7 @@ export default function ContactProfileModal({
     }) => apiPost(`/api/contacts/${contactId}/primary`, payload),
     onSuccess: (_, vars) => {
       toast({
-        title: vars.mark_primary ? "Marked as primary" : "Removed primary",
+        title: vars.mark_primary ? t("contact_profile_modal.toasts.marked_primary") : t("contact_profile_modal.toasts.removed_primary"),
       });
       invalidateProfile();
     },
@@ -676,7 +682,7 @@ export default function ContactProfileModal({
     mutationFn: (optin_id: string) =>
       apiPost(`/api/contacts/${contactId}/unsubscribe`, { optin_id }),
     onSuccess: () => {
-      toast({ title: "Unsubscribed" });
+      toast({ title: t("contact_profile_modal.toasts.unsubscribed") });
       invalidateProfile();
     },
   });
@@ -692,11 +698,11 @@ export default function ContactProfileModal({
       action: "optin" | "optout";
     }) => apiPost(`/api/contacts/${contactId}/optin`, payload),
     onSuccess: (_, vars) => {
-      toast({ title: vars.action === "optin" ? "Opted in" : "Opted out" });
+      toast({ title: vars.action === "optin" ? t("contact_profile_modal.toasts.opted_in") : t("contact_profile_modal.toasts.opted_out") });
       invalidateProfile();
     },
     onError: (err: any) =>
-      toast({ title: "Couldn't update opt-in", description: err?.message ?? "", variant: "destructive" }),
+      toast({ title: t("contact_profile_modal.toasts.optin_failed"), description: err?.message ?? "", variant: "destructive" }),
   });
 
   // Save an inline edit to an existing phone/whatsapp number's value/type
@@ -705,12 +711,12 @@ export default function ContactProfileModal({
     mutationFn: (payload: { id: string; value: string; type: string }) =>
       apiPatch(`/api/contacts/${contactId}`, { update_mobile: payload }),
     onSuccess: () => {
-      toast({ title: "Number updated" });
+      toast({ title: t("contact_profile_modal.toasts.number_updated") });
       setEditMobile(null);
       invalidateProfile();
     },
     onError: (err: any) =>
-      toast({ title: "Update failed", description: err?.message ?? "", variant: "destructive" }),
+      toast({ title: t("contact_profile_modal.toasts.update_failed"), description: err?.message ?? "", variant: "destructive" }),
   });
 
   // Is this contact-mobile opted in for a given workspace WhatsApp number?
@@ -736,7 +742,7 @@ export default function ContactProfileModal({
     mutationFn: (company_id: string | null) =>
       apiPost(`/api/contacts/${contactId}/change-company`, { company_id }),
     onSuccess: () => {
-      toast({ title: "Company updated" });
+      toast({ title: t("contact_profile_modal.toasts.company_updated") });
       invalidateProfile();
       setChangeCompanyOpen(false);
     },
@@ -745,14 +751,14 @@ export default function ContactProfileModal({
   const createCustomFieldMutation = useMutation({
     mutationFn: (payload: any) => apiPost(`/api/custom-fields/field`, payload),
     onSuccess: () => {
-      toast({ title: "Custom field created" });
+      toast({ title: t("contact_profile_modal.toasts.custom_field_created") });
       queryClient.invalidateQueries({ queryKey: ["/api/custom-fields"] });
       setNewCustomFieldOpen(false);
     },
     onError: (err: any) => {
       toast({
-        title: "Create failed",
-        description: err?.message ?? "Could not create",
+        title: t("contact_profile_modal.toasts.create_failed"),
+        description: err?.message ?? t("contact_profile_modal.toasts.could_not_create"),
         variant: "destructive",
       });
     },
@@ -761,7 +767,7 @@ export default function ContactProfileModal({
   const createTagMutation = useMutation({
     mutationFn: (payload: any) => apiPost(`/api/tags`, payload),
     onSuccess: () => {
-      toast({ title: "Tag created" });
+      toast({ title: t("contact_profile_modal.toasts.tag_created") });
       queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
       setNewTagOpen(false);
     },
@@ -774,7 +780,7 @@ export default function ContactProfileModal({
       return apiPatch(`/api/contacts/${contactId}`, { tags: next });
     },
     onSuccess: () => {
-      toast({ title: "Tag added" });
+      toast({ title: t("contact_profile_modal.toasts.tag_added") });
       invalidateProfile();
       setTagPickerOpen(false);
     },
@@ -783,11 +789,11 @@ export default function ContactProfileModal({
   const removeTagMutation = useMutation({
     mutationFn: (tagName: string) => {
       const currentTags = (enriched?.tags ?? []) as string[];
-      const next = currentTags.filter((t) => t !== tagName);
+      const next = currentTags.filter((tg) => tg !== tagName);
       return apiPatch(`/api/contacts/${contactId}`, { tags: next });
     },
     onSuccess: () => {
-      toast({ title: "Tag removed" });
+      toast({ title: t("contact_profile_modal.toasts.tag_removed") });
       invalidateProfile();
     },
   });
@@ -797,37 +803,37 @@ export default function ContactProfileModal({
   const deleteCustomFieldMutation = useMutation({
     mutationFn: (slug: string) => apiDelete(`/api/custom-fields/field/${slug}`),
     onSuccess: () => {
-      toast({ title: "Custom field deleted" });
+      toast({ title: t("contact_profile_modal.toasts.custom_field_deleted") });
       queryClient.invalidateQueries({ queryKey: ["/api/custom-fields"] });
       invalidateProfile();
     },
     onError: (err: any) =>
-      toast({ title: "Delete failed", description: err?.message, variant: "destructive" }),
+      toast({ title: t("contact_profile_modal.toasts.delete_failed"), description: err?.message, variant: "destructive" }),
   });
 
   const deleteTagMutation = useMutation({
     mutationFn: (id: string) => apiDelete(`/api/tags/${id}`),
     onSuccess: () => {
-      toast({ title: "Tag deleted" });
+      toast({ title: t("contact_profile_modal.toasts.tag_deleted") });
       queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
       invalidateProfile();
     },
     onError: (err: any) =>
-      toast({ title: "Delete failed", description: err?.message, variant: "destructive" }),
+      toast({ title: t("contact_profile_modal.toasts.delete_failed"), description: err?.message, variant: "destructive" }),
   });
 
   const updateTagMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) =>
       apiPatch(`/api/tags/${id}`, payload),
     onSuccess: () => {
-      toast({ title: "Tag updated" });
+      toast({ title: t("contact_profile_modal.toasts.tag_updated") });
       queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
       invalidateProfile();
       setNewTagOpen(false);
       setEditingTag(null);
     },
     onError: (err: any) =>
-      toast({ title: "Update failed", description: err?.message, variant: "destructive" }),
+      toast({ title: t("contact_profile_modal.toasts.update_failed"), description: err?.message, variant: "destructive" }),
   });
 
   const createTaskMutation = useMutation({
@@ -846,7 +852,7 @@ export default function ContactProfileModal({
       });
     },
     onSuccess: () => {
-      toast({ title: "Task created" });
+      toast({ title: t("contact_profile_modal.toasts.task_created") });
       invalidateProfile();
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setNewTaskOpen(false);
@@ -857,14 +863,14 @@ export default function ContactProfileModal({
     mutationFn: (payload: any) =>
       apiPost(`/api/opportunities`, { ...payload, contact_id: contactId }),
     onSuccess: () => {
-      toast({ title: "Opportunity created" });
+      toast({ title: t("contact_profile_modal.toasts.opportunity_created") });
       invalidateProfile();
       setNewOpportunityOpen(false);
     },
     onError: (err: any) => {
       toast({
-        title: "Create failed",
-        description: err?.message ?? "Could not create opportunity",
+        title: t("contact_profile_modal.toasts.create_failed"),
+        description: err?.message ?? t("contact_profile_modal.toasts.could_not_create_opportunity"),
         variant: "destructive",
       });
       setNewOpportunityOpen(false);
@@ -916,7 +922,7 @@ export default function ContactProfileModal({
   const fullName = enriched?.full_name
     ? enriched.full_name
     : `${enriched?.first_name ?? ""} ${enriched?.last_name ?? ""}`.trim() ||
-      "Unnamed";
+      t("contact_profile_modal.contact_summary.unnamed");
   const initials = fullName
     .split(/\s+/)
     .map((p: string) => p[0])
@@ -948,7 +954,7 @@ export default function ContactProfileModal({
     a.download = `contact-${contactId}-data.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Download started" });
+    toast({ title: t("contact_profile_modal.toasts.download_started") });
   };
 
   const handleDownloadConversation = async () => {
@@ -964,10 +970,10 @@ export default function ContactProfileModal({
       a.download = resp.filename ?? `contact-${contactId}-conversation.txt`;
       a.click();
       URL.revokeObjectURL(url);
-      toast({ title: "Conversation downloaded" });
+      toast({ title: t("contact_profile_modal.toasts.conversation_downloaded") });
     } catch (err: any) {
       toast({
-        title: "Download failed",
+        title: t("contact_profile_modal.toasts.download_failed"),
         description: err?.message ?? "",
         variant: "destructive",
       });
@@ -999,9 +1005,9 @@ export default function ContactProfileModal({
       a.download = `contact-${id}-data.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast({ title: "Download started" });
+      toast({ title: t("contact_profile_modal.toasts.download_started") });
     } catch (err: any) {
-      toast({ title: "Download failed", description: err?.message ?? "", variant: "destructive" });
+      toast({ title: t("contact_profile_modal.toasts.download_failed"), description: err?.message ?? "", variant: "destructive" });
     }
   };
 
@@ -1015,20 +1021,20 @@ export default function ContactProfileModal({
       a.download = resp.filename ?? `contact-${id}-conversation.txt`;
       a.click();
       URL.revokeObjectURL(url);
-      toast({ title: "Conversation downloaded" });
+      toast({ title: t("contact_profile_modal.toasts.conversation_downloaded") });
     } catch (err: any) {
-      toast({ title: "Download failed", description: err?.message ?? "", variant: "destructive" });
+      toast({ title: t("contact_profile_modal.toasts.download_failed"), description: err?.message ?? "", variant: "destructive" });
     }
   };
 
   const deleteCompanyContactById = async (id: string, name: string) => {
-    if (!window.confirm(`Delete contact "${name}"? This cannot be undone.`)) return;
+    if (!window.confirm(t("contact_profile_modal.dialogs.delete_contact_confirm", { name }))) return;
     try {
       await apiDelete(`/api/contacts/${id}`);
       invalidateProfile();
-      toast({ title: "Contact deleted" });
+      toast({ title: t("contact_profile_modal.toasts.contact_deleted") });
     } catch (err: any) {
-      toast({ title: "Delete failed", description: err?.message ?? "", variant: "destructive" });
+      toast({ title: t("contact_profile_modal.toasts.delete_failed"), description: err?.message ?? "", variant: "destructive" });
     }
   };
 
@@ -1044,9 +1050,9 @@ export default function ContactProfileModal({
       onOpenChange(false);
       const inboxId = resp?.inbox_id;
       setLocation(inboxId ? `/conversations/inbox?inbox=${inboxId}` : "/conversations/inbox");
-      toast({ title: "Chat opened" });
+      toast({ title: t("contact_profile_modal.toasts.chat_opened") });
     } catch (err: any) {
-      toast({ title: "Couldn't start chat", description: err?.message ?? "", variant: "destructive" });
+      toast({ title: t("contact_profile_modal.toasts.chat_start_failed"), description: err?.message ?? "", variant: "destructive" });
     }
   };
 
@@ -1068,7 +1074,7 @@ export default function ContactProfileModal({
           aria-describedby={undefined}
           hideClose
         >
-          <DialogTitle className="sr-only">Contact Profile</DialogTitle>
+          <DialogTitle className="sr-only">{t("contact_profile_modal.dialog_title")}</DialogTitle>
 
           {/* ───── Header (replyagent CompanyProfile top bar) ───── */}
           <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0">
@@ -1080,7 +1086,7 @@ export default function ContactProfileModal({
                     <TooltipTrigger asChild>
                       <span className="flex items-center gap-1 font-semibold text-foreground cursor-default">
                         <Magnet className="h-4 w-4" />
-                        {sourceLabel(enriched?.source)}
+                        {sourceLabel(t, enriched?.source)}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>{enriched.source_name}</TooltipContent>
@@ -1089,12 +1095,12 @@ export default function ContactProfileModal({
               ) : (
                 <span className="flex items-center gap-1 font-semibold text-foreground">
                   <Magnet className="h-4 w-4" />
-                  {sourceLabel(enriched?.source)}
+                  {sourceLabel(t, enriched?.source)}
                 </span>
               )}
               {enriched?.created_at && (
                 <span className="text-xs">
-                  on {formatInWorkspaceTz(enriched.created_at, "yyyy-MM-dd HH:mm", workspaceTz)}
+                  {t("contact_profile_modal.header.on_date", { date: formatInWorkspaceTz(enriched.created_at, "yyyy-MM-dd HH:mm", workspaceTz) })}
                 </span>
               )}
             </div>
@@ -1107,10 +1113,10 @@ export default function ContactProfileModal({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="rounded-md bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 text-[11px] font-bold px-2.5 py-0.5 cursor-default">
-                      Pending
+                      {t("contact_profile_modal.header.pending")}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>This contact is pending</TooltipContent>
+                  <TooltipContent>{t("contact_profile_modal.header.pending_tooltip")}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
@@ -1119,7 +1125,7 @@ export default function ContactProfileModal({
                 onClick={() => setConfirmDeleteOpen(true)}
                 className="rounded-md bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400 text-[11px] font-bold px-3 py-0.5 hover:bg-rose-200 dark:hover:bg-rose-500/25 transition-colors"
               >
-                Delete contact
+                {t("contact_profile_modal.header.delete_contact")}
               </button>
             )}
             {contactId && (
@@ -1131,7 +1137,7 @@ export default function ContactProfileModal({
                       {contactId}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>Contact ID</TooltipContent>
+                  <TooltipContent>{t("contact_profile_modal.header.contact_id_tooltip")}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
@@ -1168,7 +1174,7 @@ export default function ContactProfileModal({
                               onClick={() => setChangeCompanyOpen(true)}
                             >
                               <Repeat className="h-4 w-4 mr-2" />
-                              Change company
+                              {t("contact_profile_modal.menu.change_company")}
                             </DropdownMenuItem>
                           )}
                           {canMergeContacts && (
@@ -1176,12 +1182,12 @@ export default function ContactProfileModal({
                               onClick={() => setMergeContactsOpen(true)}
                             >
                               <GitMerge className="h-4 w-4 mr-2" />
-                              Merge Contacts
+                              {t("contact_profile_modal.menu.merge_contacts")}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={handleDownloadContactData}>
                             <Download className="h-4 w-4 mr-2" />
-                            Contact data
+                            {t("contact_profile_modal.menu.contact_data")}
                           </DropdownMenuItem>
                           {canDeleteContacts && (
                             <>
@@ -1191,20 +1197,20 @@ export default function ContactProfileModal({
                                 className="text-destructive"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
+                                {t("contact_profile_modal.menu.delete")}
                               </DropdownMenuItem>
                             </>
                           )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={handleDownloadConversation}>
                             <MessageSquare className="h-4 w-4 mr-2" />
-                            Conversation history
+                            {t("contact_profile_modal.menu.conversation_history")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {enriched?.title ?? "Add description, URL,"}
+                      {enriched?.title ?? t("contact_profile_modal.summary.add_description")}
                     </p>
                     {enriched?.support_number_task && (
                       <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
@@ -1227,7 +1233,7 @@ export default function ContactProfileModal({
                 {/* CONTACTS */}
                 <SidebarSectionHeader
                   icon={<UserIcon className="h-3.5 w-3.5" />}
-                  label="Contacts"
+                  label={t("contact_profile_modal.sidebar.contacts.label")}
                   count={1 + companyContacts.length}
                   searching={searchingContacts}
                   onSearchToggle={() => setSearchingContacts((v) => !v)}
@@ -1257,7 +1263,7 @@ export default function ContactProfileModal({
                       (c.full_name ?? "").toLowerCase().includes(searchContacts.toLowerCase())
                     )
                     .map((c: any) => {
-                      const n = c.full_name || "Unnamed";
+                      const n = c.full_name || t("contact_profile_modal.contact_summary.unnamed");
                       const ini = n.split(/\s+/).map((p: string) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
                       return (
                         <div
@@ -1273,7 +1279,7 @@ export default function ContactProfileModal({
                           </Avatar>
                           <button
                             type="button"
-                            title="Open contact"
+                            title={t("contact_profile_modal.sidebar.open_contact")}
                             onClick={() => openCompanyContact(String(c.id))}
                             className="text-xs flex-1 truncate text-left"
                           >
@@ -1281,7 +1287,7 @@ export default function ContactProfileModal({
                           </button>
                           <button
                             type="button"
-                            title="Open contact"
+                            title={t("contact_profile_modal.sidebar.open_contact")}
                             onClick={() => openCompanyContact(String(c.id))}
                             className="hover:text-primary shrink-0"
                           >
@@ -1296,15 +1302,15 @@ export default function ContactProfileModal({
                             <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuItem onClick={() => openCompanyContact(String(c.id))}>
                                 <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                                Open contact
+                                {t("contact_profile_modal.sidebar.open_contact")}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => downloadContactDataById(String(c.id))}>
                                 <Download className="h-3.5 w-3.5 mr-2" />
-                                Contact data
+                                {t("contact_profile_modal.menu.contact_data")}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => downloadConversationById(String(c.id))}>
                                 <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                                Conversation history
+                                {t("contact_profile_modal.menu.conversation_history")}
                               </DropdownMenuItem>
                               {canDeleteContacts && (
                                 <>
@@ -1314,7 +1320,7 @@ export default function ContactProfileModal({
                                     onClick={() => deleteCompanyContactById(String(c.id), n)}
                                   >
                                     <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                    Delete
+                                    {t("contact_profile_modal.menu.delete")}
                                   </DropdownMenuItem>
                                 </>
                               )}
@@ -1328,7 +1334,7 @@ export default function ContactProfileModal({
                 {/* TASKS */}
                 <SidebarSectionHeader
                   icon={<ClipboardList className="h-3.5 w-3.5" />}
-                  label="Tasks"
+                  label={t("contact_profile_modal.sidebar.tasks.label")}
                   count={counts.tasks ?? 0}
                   searching={searchingTasks}
                   onSearchToggle={() => setSearchingTasks((v) => !v)}
@@ -1339,50 +1345,50 @@ export default function ContactProfileModal({
                 <div className="px-3 py-2 space-y-1">
                   {filteredTasks.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">
-                      No tasks
+                      {t("contact_profile_modal.sidebar.tasks.empty")}
                     </p>
                   ) : (
-                    filteredTasks.map((t) => (
+                    filteredTasks.map((tk) => (
                       <div
-                        key={String(t.id)}
+                        key={String(tk.id)}
                         className="flex items-center gap-2 text-xs px-2 py-1.5 hover:bg-muted/50 rounded"
                       >
-                        {t.assignee_initials && (
+                        {tk.assignee_initials && (
                           <Avatar className="h-5 w-5">
                             <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
-                              {t.assignee_initials}
+                              {tk.assignee_initials}
                             </AvatarFallback>
                           </Avatar>
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="truncate font-medium">
-                            {t.description ?? "Task"}
+                            {tk.description ?? t("contact_profile_modal.sidebar.tasks.task_fallback")}
                           </p>
-                          {t.datetime && (
+                          {tk.datetime && (
                             <p className="text-muted-foreground">
-                              {formatInWorkspaceTz(t.datetime, "MMM d, HH:mm", workspaceTz)}
+                              {formatInWorkspaceTz(tk.datetime, "MMM d, HH:mm", workspaceTz)}
                             </p>
                           )}
                         </div>
                         <button
                           type="button"
-                          title="Mark complete"
+                          title={t("contact_profile_modal.sidebar.tasks.mark_complete")}
                           className="hover:text-emerald-600"
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
-                              await apiPost(`/api/tasks/${t.id}/complete`, {
+                              await apiPost(`/api/tasks/${tk.id}/complete`, {
                                 status: "COMPLETED",
                               }).catch(() =>
-                                apiPatch(`/api/tasks/${t.id}`, {
+                                apiPatch(`/api/tasks/${tk.id}`, {
                                   status: "COMPLETED",
                                 }),
                               );
                               invalidateProfile();
-                              toast({ title: "Task completed" });
+                              toast({ title: t("contact_profile_modal.toasts.task_completed") });
                             } catch (err: any) {
                               toast({
-                                title: "Failed",
+                                title: t("contact_profile_modal.toasts.failed"),
                                 description: err?.message,
                                 variant: "destructive",
                               });
@@ -1393,21 +1399,21 @@ export default function ContactProfileModal({
                         </button>
                         <button
                           type="button"
-                          title="Snooze"
+                          title={t("contact_profile_modal.sidebar.tasks.snooze")}
                           className="hover:text-amber-600"
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
                               const next = new Date();
                               next.setHours(next.getHours() + 1);
-                              await apiPatch(`/api/tasks/${t.id}`, {
+                              await apiPatch(`/api/tasks/${tk.id}`, {
                                 datetime: next.toISOString(),
                               });
                               invalidateProfile();
-                              toast({ title: "Snoozed 1h" });
+                              toast({ title: t("contact_profile_modal.toasts.snoozed") });
                             } catch (err: any) {
                               toast({
-                                title: "Failed",
+                                title: t("contact_profile_modal.toasts.failed"),
                                 description: err?.message,
                                 variant: "destructive",
                               });
@@ -1424,7 +1430,7 @@ export default function ContactProfileModal({
                 {/* OPPORTUNITIES */}
                 <SidebarSectionHeader
                   icon={<BarChart3 className="h-3.5 w-3.5" />}
-                  label="Opportunities"
+                  label={t("contact_profile_modal.sidebar.opportunities.label")}
                   count={counts.opportunities ?? 0}
                   searching={searchingOpp}
                   onSearchToggle={() => setSearchingOpp((v) => !v)}
@@ -1435,7 +1441,7 @@ export default function ContactProfileModal({
                 <div className="px-3 py-2 space-y-1">
                   {filteredOpps.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">
-                      No opportunities
+                      {t("contact_profile_modal.sidebar.opportunities.empty")}
                     </p>
                   ) : (
                     filteredOpps.map((o: any) => (
@@ -1445,7 +1451,7 @@ export default function ContactProfileModal({
                       >
                         <div className="flex-1 min-w-0">
                           <p className="truncate font-medium">
-                            {o.name ?? o.title ?? `Opportunity #${o.id}`}
+                            {o.name ?? o.title ?? t("contact_profile_modal.sidebar.opportunities.opportunity_fallback", { id: o.id })}
                           </p>
                           <p className="text-muted-foreground">
                             {o.currency ?? ""} {o.amount ?? o.value ?? 0}
@@ -1456,7 +1462,7 @@ export default function ContactProfileModal({
                         </div>
                         <button
                           type="button"
-                          title="Open"
+                          title={t("contact_profile_modal.sidebar.open")}
                           className="hover:text-primary"
                           onClick={() => setFullOpportunityOpen(true)}
                         >
@@ -1480,10 +1486,10 @@ export default function ContactProfileModal({
                                     `/api/pipelines/opportunities/${o.id}`,
                                   );
                                   invalidateProfile();
-                                  toast({ title: "Opportunity deleted" });
+                                  toast({ title: t("contact_profile_modal.toasts.opportunity_deleted") });
                                 } catch (err: any) {
                                   toast({
-                                    title: "Delete failed",
+                                    title: t("contact_profile_modal.toasts.delete_failed"),
                                     description: err?.message,
                                     variant: "destructive",
                                   });
@@ -1491,7 +1497,7 @@ export default function ContactProfileModal({
                               }}
                             >
                               <Trash2 className="h-3.5 w-3.5 mr-2" />
-                              Delete
+                              {t("contact_profile_modal.menu.delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1503,14 +1509,14 @@ export default function ContactProfileModal({
                 {/* BOOKINGS */}
                 <SidebarSectionHeader
                   icon={<Calendar className="h-3.5 w-3.5" />}
-                  label="Bookings"
+                  label={t("contact_profile_modal.sidebar.bookings.label")}
                   count={counts.bookings ?? 0}
                   showAdd={false}
                 />
                 <div className="px-3 py-2 space-y-1">
                   {bookings.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">
-                      No bookings
+                      {t("contact_profile_modal.sidebar.bookings.empty")}
                     </p>
                   ) : (
                     bookings.map((b) => (
@@ -1532,14 +1538,14 @@ export default function ContactProfileModal({
                 {/* CALLS */}
                 <SidebarSectionHeader
                   icon={<PhoneIcon className="h-3.5 w-3.5" />}
-                  label="Calls"
+                  label={t("contact_profile_modal.sidebar.calls.label")}
                   count={counts.calls ?? 0}
                   showAdd={false}
                 />
                 <div className="px-3 py-2 space-y-1">
                   {calls.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">
-                      No call logs
+                      {t("contact_profile_modal.sidebar.calls.empty")}
                     </p>
                   ) : (
                     calls.map((c: any) => (
@@ -1551,7 +1557,9 @@ export default function ContactProfileModal({
                           <PhoneIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="truncate font-medium">
-                              {c.call_type === "outbound" ? `To: ${c.to_number}` : `From: ${c.from_number}`}
+                              {c.call_type === "outbound"
+                                ? t("contact_profile_modal.sidebar.calls.to", { number: c.to_number })
+                                : t("contact_profile_modal.sidebar.calls.from", { number: c.from_number })}
                             </p>
                             <p className="text-muted-foreground">
                               {c.call_duration ? `${c.call_duration}s` : "—"}
@@ -1561,7 +1569,7 @@ export default function ContactProfileModal({
                           {c.transcription && (
                             <button
                               type="button"
-                              title="Show transcription"
+                              title={t("contact_profile_modal.sidebar.calls.show_transcription")}
                               className="hover:text-primary shrink-0"
                               onClick={() =>
                                 setOpenTranscriptId((id) =>
@@ -1595,14 +1603,14 @@ export default function ContactProfileModal({
                 {/* AD CLICKS */}
                 <SidebarSectionHeader
                   icon={<MousePointerClick className="h-3.5 w-3.5" />}
-                  label="Ad Clicks"
+                  label={t("contact_profile_modal.sidebar.ad_clicks.label")}
                   count={counts.ad_clicks ?? 0}
                   showAdd={false}
                 />
                 <div className="px-3 py-2 space-y-1">
                   {adClicks.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">
-                      No ad clicks
+                      {t("contact_profile_modal.sidebar.ad_clicks.empty")}
                     </p>
                   ) : (
                     adClicks.map((r: any) => (
@@ -1611,7 +1619,7 @@ export default function ContactProfileModal({
                         className="text-xs px-2 py-1.5 hover:bg-muted/50 rounded border border-border"
                       >
                         <p className="font-medium truncate">
-                          {r.title || r.ad_id || "Ad click"}
+                          {r.title || r.ad_id || t("contact_profile_modal.sidebar.ad_clicks.fallback")}
                           {r.ad_id && r.title ? (
                             <span className="text-muted-foreground ml-1">#{r.ad_id}</span>
                           ) : null}
@@ -1632,13 +1640,13 @@ export default function ContactProfileModal({
                 {/* GROUPS */}
                 <SidebarSectionHeader
                   icon={<Users className="h-3.5 w-3.5" />}
-                  label="Groups"
+                  label={t("contact_profile_modal.sidebar.groups.label")}
                   count={counts.groups ?? 0}
                   showAdd={false}
                 />
                 <div className="px-3 py-2">
                   <p className="text-xs text-muted-foreground italic">
-                    Not in any groups
+                    {t("contact_profile_modal.sidebar.groups.empty")}
                   </p>
                 </div>
               </ScrollArea>
@@ -1654,7 +1662,7 @@ export default function ContactProfileModal({
                 ) : (
                   <div className="space-y-6 max-w-2xl">
                     {/* Contact picture */}
-                    <FieldRow label="Contact picture">
+                    <FieldRow label={t("contact_profile_modal.fields.contact_picture")}>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
                           <AvatarFallback
@@ -1674,7 +1682,7 @@ export default function ContactProfileModal({
                                 <ImageIcon className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Open gallery</TooltipContent>
+                            <TooltipContent>{t("contact_profile_modal.fields.open_gallery")}</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </div>
@@ -1683,11 +1691,11 @@ export default function ContactProfileModal({
                     <Separator />
 
                     {/* First Name */}
-                    <FieldRow label="First Name">
+                    <FieldRow label={t("contact_profile_modal.fields.first_name.label")}>
                       <EditableField
-                        label="First Name"
+                        label={t("contact_profile_modal.fields.first_name.label")}
                         value={enriched.first_name}
-                        placeholder="Add first name"
+                        placeholder={t("contact_profile_modal.fields.first_name.placeholder")}
                         saving={savingField === "first_name"}
                         disabled={!canManageContacts}
                         onSave={(v) =>
@@ -1699,11 +1707,11 @@ export default function ContactProfileModal({
                     <Separator />
 
                     {/* Last Name */}
-                    <FieldRow label="Last Name">
+                    <FieldRow label={t("contact_profile_modal.fields.last_name.label")}>
                       <EditableField
-                        label="Last Name"
+                        label={t("contact_profile_modal.fields.last_name.label")}
                         value={enriched.last_name}
-                        placeholder="Add last name"
+                        placeholder={t("contact_profile_modal.fields.last_name.placeholder")}
                         saving={savingField === "last_name"}
                         disabled={!canManageContacts}
                         onSave={(v) =>
@@ -1715,7 +1723,7 @@ export default function ContactProfileModal({
                     <Separator />
 
                     {/* Gender */}
-                    <FieldRow label="Gender">
+                    <FieldRow label={t("contact_profile_modal.fields.gender_label")}>
                       <Select
                         value={enriched.gender ?? "not_specified"}
                         disabled={!canManageContacts}
@@ -1730,7 +1738,7 @@ export default function ContactProfileModal({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {GENDER_OPTIONS.map((opt) => (
+                          {genderOptions(t).map((opt) => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
@@ -1742,11 +1750,11 @@ export default function ContactProfileModal({
                     <Separator />
 
                     {/* Title */}
-                    <FieldRow label="Title">
+                    <FieldRow label={t("contact_profile_modal.fields.title_label")}>
                       <EditableField
-                        label="Title"
+                        label={t("contact_profile_modal.fields.title_label")}
                         value={enriched.title}
-                        placeholder="Add title"
+                        placeholder={t("contact_profile_modal.fields.title_placeholder")}
                         saving={savingField === "title"}
                         disabled={!canManageContacts}
                         onSave={(v) =>
@@ -1763,7 +1771,7 @@ export default function ContactProfileModal({
                       <>
                     {/* Phone numbers */}
                     <FieldRow
-                      label="Phone"
+                      label={t("contact_profile_modal.fields.phone.label")}
                       icon={<PhoneIcon className="h-4 w-4 text-emerald-600" />}
                       actionRight={
                         canManageContacts ? (
@@ -1780,7 +1788,7 @@ export default function ContactProfileModal({
                       <div className="space-y-2">
                         {phones.length === 0 ? (
                           <span className="text-sm text-muted-foreground italic">
-                            No phone numbers
+                            {t("contact_profile_modal.fields.phone.empty")}
                           </span>
                         ) : (
                           phones.map((p) => (
@@ -1796,12 +1804,12 @@ export default function ContactProfileModal({
                               )}
                               {p.is_primary && (
                                 <span className="rounded-full border border-green-600/30 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-3 py-[2px]">
-                                  Primary
+                                  {t("contact_profile_modal.fields.primary")}
                                 </span>
                               )}
                               {p.opted_in && (
                                 <span className="rounded-full border border-green-600/30 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-3 py-[2px]">
-                                  Opted In
+                                  {t("contact_profile_modal.fields.opted_in")}
                                 </span>
                               )}
                               {p.opted_in && p.optin_id && (
@@ -1809,7 +1817,7 @@ export default function ContactProfileModal({
                                   onClick={() => unsubscribeMutation.mutate(String(p.optin_id))}
                                   className="rounded-full border border-red-600/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] px-3 py-[2px] hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                                 >
-                                  Unsubscribe
+                                  {t("contact_profile_modal.fields.unsubscribe")}
                                 </button>
                               )}
                               {canManageContacts && (
@@ -1835,7 +1843,7 @@ export default function ContactProfileModal({
                                       }
                                     >
                                       <Check className="h-4 w-4 mr-2" />
-                                      Mark primary
+                                      {t("contact_profile_modal.fields.mark_primary")}
                                     </DropdownMenuItem>
                                   )}
                                   {p.is_primary && (
@@ -1849,7 +1857,7 @@ export default function ContactProfileModal({
                                       }
                                     >
                                       <X className="h-4 w-4 mr-2" />
-                                      Unmark primary
+                                      {t("contact_profile_modal.fields.unmark_primary")}
                                     </DropdownMenuItem>
                                   )}
                                   {p.opted_in && p.optin_id && (
@@ -1857,7 +1865,7 @@ export default function ContactProfileModal({
                                       onClick={() => unsubscribeMutation.mutate(String(p.optin_id))}
                                     >
                                       <X className="h-4 w-4 mr-2" />
-                                      Unsubscribe
+                                      {t("contact_profile_modal.fields.unsubscribe")}
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem
@@ -1870,7 +1878,7 @@ export default function ContactProfileModal({
                                     className="text-destructive"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Remove
+                                    {t("contact_profile_modal.fields.remove")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1901,7 +1909,7 @@ export default function ContactProfileModal({
                     >
                       {whatsapps.length === 0 ? (
                         <span className="text-sm text-muted-foreground italic">
-                          No WhatsApp number
+                          {t("contact_profile_modal.fields.whatsapp.empty")}
                         </span>
                       ) : (
                         <div className="space-y-1">
@@ -1926,9 +1934,9 @@ export default function ContactProfileModal({
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="work">Work</SelectItem>
-                                    <SelectItem value="personal">Personal</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="work">{t("contact_profile_modal.phone_type_options.work")}</SelectItem>
+                                    <SelectItem value="personal">{t("contact_profile_modal.phone_type_options.personal")}</SelectItem>
+                                    <SelectItem value="other">{t("contact_profile_modal.phone_type_options.other")}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <DropdownMenu>
@@ -1949,7 +1957,7 @@ export default function ContactProfileModal({
                                         }
                                       >
                                         <Check className="h-4 w-4 mr-2" />
-                                        Mark primary
+                                        {t("contact_profile_modal.fields.mark_primary")}
                                       </DropdownMenuItem>
                                     ) : (
                                       <DropdownMenuItem
@@ -1962,7 +1970,7 @@ export default function ContactProfileModal({
                                         }
                                       >
                                         <X className="h-4 w-4 mr-2" />
-                                        Unmark primary
+                                        {t("contact_profile_modal.fields.unmark_primary")}
                                       </DropdownMenuItem>
                                     )}
                                   </DropdownMenuContent>
@@ -1970,7 +1978,7 @@ export default function ContactProfileModal({
                                 <button
                                   type="button"
                                   className="px-1.5 text-muted-foreground hover:text-destructive"
-                                  title="Remove"
+                                  title={t("contact_profile_modal.fields.remove")}
                                   onClick={() => {
                                     removeFieldMutation.mutate({
                                       field: { slug: "whatsapp", object_id: w.id },
@@ -1984,7 +1992,7 @@ export default function ContactProfileModal({
                                 <button
                                   type="button"
                                   className="px-1.5 text-muted-foreground hover:text-foreground"
-                                  title="Cancel"
+                                  title={t("contact_profile_modal.dialogs.cancel")}
                                   onClick={() => setEditMobile(null)}
                                 >
                                   <X className="h-4 w-4" />
@@ -1992,7 +2000,7 @@ export default function ContactProfileModal({
                                 <button
                                   type="button"
                                   className="px-1.5 text-emerald-600 hover:text-emerald-700"
-                                  title="Save"
+                                  title={t("contact_profile_modal.dialogs.save")}
                                   onClick={() =>
                                     updateMobileMutation.mutate({
                                       id: String(w.id),
@@ -2017,7 +2025,7 @@ export default function ContactProfileModal({
                                       ? "text-sm cursor-pointer hover:underline"
                                       : "text-sm"
                                   }
-                                  title={canManageContacts ? "Click to edit" : undefined}
+                                  title={canManageContacts ? t("contact_profile_modal.fields.whatsapp.click_to_edit") : undefined}
                                   onClick={() =>
                                     canManageContacts &&
                                     setEditMobile({
@@ -2033,7 +2041,7 @@ export default function ContactProfileModal({
                                 </span>
                                 {w.is_primary && (
                                   <span className="rounded-full border border-green-600/30 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-3 py-[2px]">
-                                    Primary
+                                    {t("contact_profile_modal.fields.primary")}
                                   </span>
                                 )}
                                 <Popover>
@@ -2048,7 +2056,7 @@ export default function ContactProfileModal({
                                     </div>
                                     {waChannels.length === 0 ? (
                                       <p className="px-3 py-3 text-xs text-muted-foreground">
-                                        No WhatsApp channel connected.
+                                        {t("contact_profile_modal.fields.whatsapp.no_channel")}
                                       </p>
                                     ) : (
                                       <div className="divide-y">
@@ -2077,7 +2085,7 @@ export default function ContactProfileModal({
                                               <div className="flex items-center gap-1 shrink-0">
                                                 <span
                                                   className="flex flex-col items-center"
-                                                  title="Meta (WhatsApp Cloud API)"
+                                                  title={t("contact_profile_modal.fields.whatsapp.meta_tooltip")}
                                                 >
                                                   <img
                                                     src="/images/integrations/metadas.png"
@@ -2092,7 +2100,7 @@ export default function ContactProfileModal({
                                                   <button
                                                     type="button"
                                                     className="p-1 text-muted-foreground hover:text-foreground"
-                                                    title="Send message"
+                                                    title={t("contact_profile_modal.fields.whatsapp.send_message")}
                                                     onClick={() => startWhatsappChat(String(ch.id))}
                                                   >
                                                     <Send className="h-3.5 w-3.5" />
@@ -2100,7 +2108,7 @@ export default function ContactProfileModal({
                                                 ) : (
                                                   <span
                                                     className="p-1 text-muted-foreground/40"
-                                                    title="This number is not opted-in to send message."
+                                                    title={t("contact_profile_modal.fields.whatsapp.not_opted_tooltip")}
                                                   >
                                                     <Send className="h-3.5 w-3.5" />
                                                   </span>
@@ -2124,7 +2132,7 @@ export default function ContactProfileModal({
 
                     {/* Email */}
                     <FieldRow
-                      label="Email"
+                      label={t("contact_profile_modal.fields.email.label")}
                       icon={<Mail className="h-4 w-4 text-blue-600" />}
                       actionRight={
                         canManageContacts ? (
@@ -2141,7 +2149,7 @@ export default function ContactProfileModal({
                       <div className="space-y-2">
                         {emails.length === 0 ? (
                           <span className="text-sm text-muted-foreground italic">
-                            No email addresses
+                            {t("contact_profile_modal.fields.email.empty")}
                           </span>
                         ) : (
                           emails.map((e) => (
@@ -2157,12 +2165,12 @@ export default function ContactProfileModal({
                               )}
                               {e.is_primary && (
                                 <span className="rounded-full border border-green-600/30 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-3 py-[2px]">
-                                  Primary
+                                  {t("contact_profile_modal.fields.primary")}
                                 </span>
                               )}
                               {e.opted_in && (
                                 <span className="rounded-full border border-green-600/30 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-3 py-[2px]">
-                                  Opted In
+                                  {t("contact_profile_modal.fields.opted_in")}
                                 </span>
                               )}
                               {e.opted_in && e.optin_id && (
@@ -2170,7 +2178,7 @@ export default function ContactProfileModal({
                                   onClick={() => unsubscribeMutation.mutate(String(e.optin_id))}
                                   className="rounded-full border border-red-600/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] px-3 py-[2px] hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                                 >
-                                  Unsubscribe
+                                  {t("contact_profile_modal.fields.unsubscribe")}
                                 </button>
                               )}
                               {canManageContacts && (
@@ -2196,7 +2204,7 @@ export default function ContactProfileModal({
                                       }
                                     >
                                       <Check className="h-4 w-4 mr-2" />
-                                      Mark primary
+                                      {t("contact_profile_modal.fields.mark_primary")}
                                     </DropdownMenuItem>
                                   )}
                                   {e.opted_in && e.optin_id && (
@@ -2204,7 +2212,7 @@ export default function ContactProfileModal({
                                       onClick={() => unsubscribeMutation.mutate(String(e.optin_id))}
                                     >
                                       <X className="h-4 w-4 mr-2" />
-                                      Unsubscribe
+                                      {t("contact_profile_modal.fields.unsubscribe")}
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem
@@ -2217,7 +2225,7 @@ export default function ContactProfileModal({
                                     className="text-destructive"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Remove
+                                    {t("contact_profile_modal.fields.remove")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -2234,7 +2242,7 @@ export default function ContactProfileModal({
 
                     {/* Address (replyagent parity) */}
                     <FieldRow
-                      label="Address"
+                      label={t("contact_profile_modal.fields.address_label")}
                       icon={<MapPin className="h-4 w-4 text-rose-600" />}
                     >
                       <AddressEditor
@@ -2258,7 +2266,7 @@ export default function ContactProfileModal({
 
                     {/* Language */}
                     <FieldRow
-                      label="Language"
+                      label={t("contact_profile_modal.fields.language_label")}
                       icon={<Languages className="h-4 w-4 text-indigo-600" />}
                     >
                       <LanguagePicker
@@ -2277,7 +2285,7 @@ export default function ContactProfileModal({
 
                     {/* Locale */}
                     <FieldRow
-                      label="Locale"
+                      label={t("contact_profile_modal.fields.locale_label")}
                       icon={<Globe className="h-4 w-4 text-teal-600" />}
                     >
                       <LocalePicker
@@ -2296,7 +2304,7 @@ export default function ContactProfileModal({
 
                     {/* Timezone */}
                     <FieldRow
-                      label="Timezone"
+                      label={t("contact_profile_modal.fields.timezone_label")}
                       icon={<Clock className="h-4 w-4 text-amber-600" />}
                     >
                       <TimezonePicker
@@ -2328,7 +2336,7 @@ export default function ContactProfileModal({
                         String(cf.value) !== "";
                       return (
                         <div key={cf.id ?? cf.label}>
-                          <FieldRow label={cf.label ?? meta?.label ?? meta?.name ?? "Field"}>
+                          <FieldRow label={cf.label ?? meta?.label ?? meta?.name ?? t("contact_profile_modal.fields.custom_field_fallback_label")}>
                             <button
                               className="text-sm text-left hover:underline disabled:no-underline disabled:cursor-default"
                               disabled={!canManageContacts}
@@ -2342,7 +2350,7 @@ export default function ContactProfileModal({
                                 String(cf.value)
                               ) : (
                                 <span className="text-muted-foreground italic">
-                                  Click to set value
+                                  {t("contact_profile_modal.fields.click_to_set_value")}
                                 </span>
                               )}
                             </button>
@@ -2353,11 +2361,11 @@ export default function ContactProfileModal({
                     })}
 
                     {/* Tags inline */}
-                    <FieldRow label="Tags">
+                    <FieldRow label={t("contact_profile_modal.fields.tags_label")}>
                       <div className="flex flex-wrap gap-2">
                         {tags.length === 0 ? (
                           <span className="text-sm text-muted-foreground italic">
-                            No tags
+                            {t("contact_profile_modal.fields.no_tags")}
                           </span>
                         ) : (
                           tags.map((tg) => (
@@ -2395,14 +2403,14 @@ export default function ContactProfileModal({
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  View contact history
+                  {t("contact_profile_modal.right_panel.view_history")}
                 </button>
                 <button
                   onClick={() => onOpenChange(false)}
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="h-4 w-4" />
-                  Close
+                  {t("contact_profile_modal.right_panel.close")}
                 </button>
               </div>
               <ScrollArea className="flex-1 p-4">
@@ -2411,12 +2419,12 @@ export default function ContactProfileModal({
                 {canManageContacts && (
                 <>
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                  System Fields
+                  {t("contact_profile_modal.right_panel.system_fields.header")}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 mb-6">
                   <SystemFieldChip
                     icon={<PhoneIcon className="h-3.5 w-3.5 text-emerald-600" />}
-                    label="Phone"
+                    label={t("contact_profile_modal.fields.phone.label")}
                     onClick={() => setAddPhoneOpen(true)}
                   />
                   <SystemFieldChip
@@ -2428,12 +2436,12 @@ export default function ContactProfileModal({
                   />
                   <SystemFieldChip
                     icon={<Mail className="h-3.5 w-3.5 text-blue-600" />}
-                    label="Email"
+                    label={t("contact_profile_modal.fields.email.label")}
                     onClick={() => setAddEmailOpen(true)}
                   />
                   <SystemFieldChip
                     icon={<MapPin className="h-3.5 w-3.5 text-rose-600" />}
-                    label="Address"
+                    label={t("contact_profile_modal.fields.address_label")}
                     onClick={() => {
                       setMidView("form");
                       setAddressEditOpen(true);
@@ -2441,27 +2449,27 @@ export default function ContactProfileModal({
                   />
                   <SystemFieldChip
                     icon={<UserIcon className="h-3.5 w-3.5 text-violet-600" />}
-                    label="Gender"
+                    label={t("contact_profile_modal.fields.gender_label")}
                     onClick={() => setMidView("form")}
                   />
                   <SystemFieldChip
                     icon={<TypeIcon className="h-3.5 w-3.5 text-orange-600" />}
-                    label="Title"
+                    label={t("contact_profile_modal.fields.title_label")}
                     onClick={() => setMidView("form")}
                   />
                   <SystemFieldChip
                     icon={<Languages className="h-3.5 w-3.5 text-indigo-600" />}
-                    label="Language"
+                    label={t("contact_profile_modal.fields.language_label")}
                     onClick={() => setMidView("form")}
                   />
                   <SystemFieldChip
                     icon={<Globe className="h-3.5 w-3.5 text-teal-600" />}
-                    label="Locale"
+                    label={t("contact_profile_modal.fields.locale_label")}
                     onClick={() => setMidView("form")}
                   />
                   <SystemFieldChip
                     icon={<Clock className="h-3.5 w-3.5 text-amber-600" />}
-                    label="Timezone"
+                    label={t("contact_profile_modal.fields.timezone_label")}
                     onClick={() => setMidView("form")}
                   />
                 </div>
@@ -2472,7 +2480,7 @@ export default function ContactProfileModal({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Custom Fields
+                      {t("contact_profile_modal.right_panel.custom_fields.header")}
                     </h4>
                     <span className="text-xs text-muted-foreground">
                       {allCustomFields.length}
@@ -2504,7 +2512,7 @@ export default function ContactProfileModal({
                 <div className="mb-6">
                   {allCustomFields.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">
-                      No custom fields configured.
+                      {t("contact_profile_modal.right_panel.custom_fields.none")}
                     </p>
                   ) : (
                     <div className="space-y-1">
@@ -2538,14 +2546,14 @@ export default function ContactProfileModal({
                                 }}
                               >
                                 <ChevronRight className="h-3.5 w-3.5 mr-2" />
-                                Edit value
+                                {t("contact_profile_modal.right_panel.custom_fields.edit_value")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => {
                                   if (
                                     window.confirm(
-                                      `Delete custom field "${cf.label ?? cf.name}" from the whole workspace?`,
+                                      t("contact_profile_modal.dialogs.delete_custom_field_confirm", { name: cf.label ?? cf.name }),
                                     )
                                   ) {
                                     deleteCustomFieldMutation.mutate(String(cf.slug));
@@ -2553,7 +2561,7 @@ export default function ContactProfileModal({
                                 }}
                               >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                Delete field
+                                {t("contact_profile_modal.right_panel.custom_fields.delete_field")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -2567,7 +2575,7 @@ export default function ContactProfileModal({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Tags
+                      {t("contact_profile_modal.right_panel.tags.header")}
                     </h4>
                     <span className="text-xs text-muted-foreground">
                       {allTags.length}
@@ -2600,7 +2608,7 @@ export default function ContactProfileModal({
                 <div className="grid grid-cols-2 gap-1.5">
                   {allTags.length === 0 ? (
                     <p className="col-span-2 text-xs text-muted-foreground italic">
-                      No tags created
+                      {t("contact_profile_modal.right_panel.tags.none")}
                     </p>
                   ) : (
                     allTags.map((tg: any) => {
@@ -2649,14 +2657,14 @@ export default function ContactProfileModal({
                                   }}
                                 >
                                   <TypeIcon className="h-3.5 w-3.5 mr-2" />
-                                  Edit tag
+                                  {t("contact_profile_modal.right_panel.tags.edit_tag")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive"
                                   onClick={() => {
                                     if (
                                       window.confirm(
-                                        `Delete tag "${tagName}" from the whole workspace?`,
+                                        t("contact_profile_modal.dialogs.delete_tag_confirm", { name: tagName }),
                                       )
                                     ) {
                                       deleteTagMutation.mutate(String(tg.id));
@@ -2664,7 +2672,7 @@ export default function ContactProfileModal({
                                   }}
                                 >
                                   <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                  Delete tag
+                                  {t("contact_profile_modal.right_panel.tags.delete_tag")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -2714,7 +2722,7 @@ export default function ContactProfileModal({
           });
           invalidateProfile();
           setFullGalleryOpen(false);
-          toast({ title: "Picture updated" });
+          toast({ title: t("contact_profile_modal.toasts.picture_updated") });
         }}
         mediaType="image"
       />
@@ -2743,9 +2751,9 @@ export default function ContactProfileModal({
       {/* Address editor dialog — opened from the right-panel Address chip */}
       <Dialog open={addressEditOpen} onOpenChange={setAddressEditOpen}>
         <DialogContent className="max-w-md">
-          <DialogTitle>Address</DialogTitle>
+          <DialogTitle>{t("contact_profile_modal.fields.address_label")}</DialogTitle>
           <DialogDescription>
-            Edit this contact's primary address.
+            {t("contact_profile_modal.dialogs.address.description")}
           </DialogDescription>
           <AddressEditor
             initial={(enriched as any)?.address ?? {}}
@@ -2774,7 +2782,7 @@ export default function ContactProfileModal({
       >
         <DialogContent className="max-w-md">
           <DialogTitle>
-            {activeCustomField?.label ?? activeCustomField?.name ?? "Custom field"}
+            {activeCustomField?.label ?? activeCustomField?.name ?? t("contact_profile_modal.dialogs.custom_field.title_fallback")}
           </DialogTitle>
           {activeCustomField?.description && (
             <DialogDescription>
@@ -2793,7 +2801,7 @@ export default function ContactProfileModal({
               variant="outline"
               onClick={() => setActiveCustomField(null)}
             >
-              Cancel
+              {t("contact_profile_modal.dialogs.cancel")}
             </Button>
             {canManageContacts && (
               <Button
@@ -2810,7 +2818,7 @@ export default function ContactProfileModal({
                   setActiveCustomFieldDraft("");
                 }}
               >
-                Save
+                {t("contact_profile_modal.dialogs.save")}
               </Button>
             )}
           </div>
@@ -2820,9 +2828,9 @@ export default function ContactProfileModal({
       {/* Change Company */}
       <Dialog open={changeCompanyOpen} onOpenChange={setChangeCompanyOpen}>
         <DialogContent className="max-w-md">
-          <DialogTitle>Change company</DialogTitle>
+          <DialogTitle>{t("contact_profile_modal.dialogs.change_company.title")}</DialogTitle>
           <DialogDescription>
-            Move {fullName} to a different company.
+            {t("contact_profile_modal.dialogs.change_company.description", { name: fullName })}
           </DialogDescription>
           <div className="space-y-3 py-2">
             <Select
@@ -2832,10 +2840,10 @@ export default function ContactProfileModal({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a company" />
+                <SelectValue placeholder={t("contact_profile_modal.dialogs.change_company.placeholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">— No company —</SelectItem>
+                <SelectItem value="__none__">{t("contact_profile_modal.dialogs.change_company.none_option")}</SelectItem>
                 {allCompanies.map((c: any) => (
                   <SelectItem key={c.id} value={String(c.id)}>
                     {c.name}
@@ -2849,7 +2857,7 @@ export default function ContactProfileModal({
               variant="outline"
               onClick={() => setChangeCompanyOpen(false)}
             >
-              Cancel
+              {t("contact_profile_modal.dialogs.cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -2912,7 +2920,7 @@ export default function ContactProfileModal({
       <AddContactFieldDialog
         open={addPhoneOpen}
         onOpenChange={setAddPhoneOpen}
-        title="Add phone number"
+        title={t("contact_profile_modal.dialogs.add_field.add_phone_title")}
         fieldType="phone"
         onSave={async (value, primary, type) => {
           if (!contactId) return;
@@ -2923,7 +2931,7 @@ export default function ContactProfileModal({
           });
           invalidateProfile();
           setAddPhoneOpen(false);
-          toast({ title: "Phone added" });
+          toast({ title: t("contact_profile_modal.toasts.phone_added") });
         }}
       />
 
@@ -2931,7 +2939,7 @@ export default function ContactProfileModal({
       <AddContactFieldDialog
         open={addEmailOpen}
         onOpenChange={setAddEmailOpen}
-        title="Add email address"
+        title={t("contact_profile_modal.dialogs.add_field.add_email_title")}
         fieldType="email"
         onSave={async (value, primary, type) => {
           if (!contactId) return;
@@ -2942,17 +2950,17 @@ export default function ContactProfileModal({
           });
           invalidateProfile();
           setAddEmailOpen(false);
-          toast({ title: "Email added" });
+          toast({ title: t("contact_profile_modal.toasts.email_added") });
         }}
       />
 
       {/* Custom field picker (search existing) */}
       <Dialog open={customFieldPickerOpen} onOpenChange={setCustomFieldPickerOpen}>
         <DialogContent className="max-w-md">
-          <DialogTitle>Custom fields</DialogTitle>
-          <DialogDescription>Browse or filter custom fields.</DialogDescription>
+          <DialogTitle>{t("contact_profile_modal.dialogs.custom_field_picker.title")}</DialogTitle>
+          <DialogDescription>{t("contact_profile_modal.dialogs.custom_field_picker.description")}</DialogDescription>
           <Input
-            placeholder="Search..."
+            placeholder={t("contact_profile_modal.sidebar.search_placeholder")}
             value={customFieldFilter}
             onChange={(e) => setCustomFieldFilter(e.target.value)}
           />
@@ -2982,27 +2990,27 @@ export default function ContactProfileModal({
       {/* Tag picker (search existing) */}
       <Dialog open={tagPickerOpen} onOpenChange={setTagPickerOpen}>
         <DialogContent className="max-w-md">
-          <DialogTitle>Apply tag</DialogTitle>
-          <DialogDescription>Search and apply an existing tag.</DialogDescription>
+          <DialogTitle>{t("contact_profile_modal.dialogs.tag_picker.title")}</DialogTitle>
+          <DialogDescription>{t("contact_profile_modal.dialogs.tag_picker.description")}</DialogDescription>
           <Input
-            placeholder="Search..."
+            placeholder={t("contact_profile_modal.sidebar.search_placeholder")}
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
           />
           <ScrollArea className="h-72">
             <div className="space-y-1">
               {allTags
-                .filter((t: any) =>
+                .filter((tgv: any) =>
                   tagFilter
-                    ? (t.name ?? t).toLowerCase().includes(tagFilter.toLowerCase())
+                    ? (tgv.name ?? tgv).toLowerCase().includes(tagFilter.toLowerCase())
                     : true,
                 )
-                .map((t: any) => {
-                  const tagName = t.name ?? t;
+                .map((tgv: any) => {
+                  const tagName = tgv.name ?? tgv;
                   const applied = tags.includes(tagName);
                   return (
                     <button
-                      key={t.id ?? tagName}
+                      key={tgv.id ?? tagName}
                       className="w-full flex items-center gap-2 text-sm px-2 py-1.5 hover:bg-muted/50 rounded text-left"
                       onClick={() =>
                         applied
@@ -3082,6 +3090,7 @@ function NewCustomFieldDialog({
   onSave: (payload: any) => void;
   saving: boolean;
 }) {
+  const { t } = useTranslation();
   const [label, setLabel] = useState("");
   const [contentType, setContentType] = useState("TEXT");
 
@@ -3095,40 +3104,40 @@ function NewCustomFieldDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>New custom field</DialogTitle>
+        <DialogTitle>{t("contact_profile_modal.dialogs.new_custom_field.title")}</DialogTitle>
         <DialogDescription>
-          Create a new custom field for this workspace.
+          {t("contact_profile_modal.dialogs.new_custom_field.description")}
         </DialogDescription>
         <div className="space-y-3 py-2">
           <div>
-            <Label>Label</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_custom_field.label")}</Label>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. Birthday"
+              placeholder={t("contact_profile_modal.dialogs.new_custom_field.label_placeholder")}
             />
           </div>
           <div>
-            <Label>Type</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_custom_field.type")}</Label>
             <Select value={contentType} onValueChange={setContentType}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="TEXT">Text</SelectItem>
-                <SelectItem value="NUMBER">Number</SelectItem>
-                <SelectItem value="DATE">Date</SelectItem>
-                <SelectItem value="DATETIME">Date &amp; time</SelectItem>
-                <SelectItem value="PHONE">Phone</SelectItem>
-                <SelectItem value="URL">URL</SelectItem>
-                <SelectItem value="CURRENCY">Currency</SelectItem>
+                <SelectItem value="TEXT">{t("contact_profile_modal.dialogs.new_custom_field.types.text")}</SelectItem>
+                <SelectItem value="NUMBER">{t("contact_profile_modal.dialogs.new_custom_field.types.number")}</SelectItem>
+                <SelectItem value="DATE">{t("contact_profile_modal.dialogs.new_custom_field.types.date")}</SelectItem>
+                <SelectItem value="DATETIME">{t("contact_profile_modal.dialogs.new_custom_field.types.datetime")}</SelectItem>
+                <SelectItem value="PHONE">{t("contact_profile_modal.dialogs.new_custom_field.types.phone")}</SelectItem>
+                <SelectItem value="URL">{t("contact_profile_modal.dialogs.new_custom_field.types.url")}</SelectItem>
+                <SelectItem value="CURRENCY">{t("contact_profile_modal.dialogs.new_custom_field.types.currency")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_modal.dialogs.cancel")}
           </Button>
           <Button
             disabled={!label || saving}
@@ -3143,7 +3152,7 @@ function NewCustomFieldDialog({
             }
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Create
+            {t("contact_profile_modal.dialogs.create")}
           </Button>
         </div>
       </DialogContent>
@@ -3164,6 +3173,7 @@ function NewTagDialog({
   saving: boolean;
   initial?: any;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#3b82f6");
   const isEdit = !!initial?.id;
@@ -3181,21 +3191,21 @@ function NewTagDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>{isEdit ? "Edit tag" : "New tag"}</DialogTitle>
+        <DialogTitle>{isEdit ? t("contact_profile_modal.dialogs.new_tag.title_edit") : t("contact_profile_modal.dialogs.new_tag.title_new")}</DialogTitle>
         <DialogDescription>
-          {isEdit ? "Update this tag's name or color." : "Create a tag you can apply to contacts."}
+          {isEdit ? t("contact_profile_modal.dialogs.new_tag.desc_edit") : t("contact_profile_modal.dialogs.new_tag.desc_new")}
         </DialogDescription>
         <div className="space-y-3 py-2">
           <div>
-            <Label>Name</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_tag.name")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. VIP"
+              placeholder={t("contact_profile_modal.dialogs.new_tag.name_placeholder")}
             />
           </div>
           <div>
-            <Label>Color</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_tag.color")}</Label>
             <Input
               type="color"
               value={color}
@@ -3206,14 +3216,14 @@ function NewTagDialog({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_modal.dialogs.cancel")}
           </Button>
           <Button
             disabled={!name || saving}
             onClick={() => onSave({ name, bg_color: color })}
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Create
+            {t("contact_profile_modal.dialogs.create")}
           </Button>
         </div>
       </DialogContent>
@@ -3235,6 +3245,7 @@ function NewTaskDialog({
   // Agents eligible to receive tasks (replyagent: getUsers() filtered by receive_tasks).
   assignees?: { id: string; name: string }[];
 }) {
+  const { t } = useTranslation();
   const [description, setDescription] = useState("");
   const [datetime, setDatetime] = useState("");
   const [assigneeId, setAssigneeId] = useState("none");
@@ -3250,21 +3261,21 @@ function NewTaskDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>New task</DialogTitle>
+        <DialogTitle>{t("contact_profile_modal.dialogs.new_task.title")}</DialogTitle>
         <DialogDescription>
-          Schedule a task linked to this contact.
+          {t("contact_profile_modal.dialogs.new_task.description")}
         </DialogDescription>
         <div className="space-y-3 py-2">
           <div>
-            <Label>Description</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_task.description_label")}</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What needs to be done?"
+              placeholder={t("contact_profile_modal.dialogs.new_task.description_placeholder")}
             />
           </div>
           <div>
-            <Label>Date &amp; time</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_task.date_time")}</Label>
             <Input
               type="datetime-local"
               value={datetime}
@@ -3272,13 +3283,13 @@ function NewTaskDialog({
             />
           </div>
           <div>
-            <Label>Assign to</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_task.assign_to")}</Label>
             <Select value={assigneeId} onValueChange={setAssigneeId}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Unassigned" />
+                <SelectValue placeholder={t("contact_profile_modal.dialogs.new_task.unassigned")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Unassigned</SelectItem>
+                <SelectItem value="none">{t("contact_profile_modal.dialogs.new_task.unassigned")}</SelectItem>
                 {assignees.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.name}
@@ -3290,7 +3301,7 @@ function NewTaskDialog({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_modal.dialogs.cancel")}
           </Button>
           <Button
             disabled={!description || saving}
@@ -3303,7 +3314,7 @@ function NewTaskDialog({
             }
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Create
+            {t("contact_profile_modal.dialogs.create")}
           </Button>
         </div>
       </DialogContent>
@@ -3322,6 +3333,7 @@ function NewOpportunityDialog({
   onSave: (payload: any) => void;
   saving: boolean;
 }) {
+  const { t } = useTranslation();
   const [value, setValue] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [closingDate, setClosingDate] = useState("");
@@ -3339,14 +3351,14 @@ function NewOpportunityDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>New opportunity</DialogTitle>
+        <DialogTitle>{t("contact_profile_modal.dialogs.new_opportunity.title")}</DialogTitle>
         <DialogDescription>
-          Create a sales opportunity for this contact.
+          {t("contact_profile_modal.dialogs.new_opportunity.description")}
         </DialogDescription>
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-2">
-              <Label>Value</Label>
+              <Label>{t("contact_profile_modal.dialogs.new_opportunity.value")}</Label>
               <Input
                 type="number"
                 value={value}
@@ -3355,7 +3367,7 @@ function NewOpportunityDialog({
               />
             </div>
             <div>
-              <Label>Currency</Label>
+              <Label>{t("contact_profile_modal.dialogs.new_opportunity.currency")}</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger>
                   <SelectValue />
@@ -3371,7 +3383,7 @@ function NewOpportunityDialog({
             </div>
           </div>
           <div>
-            <Label>Closing date</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_opportunity.closing_date")}</Label>
             <Input
               type="date"
               value={closingDate}
@@ -3379,17 +3391,17 @@ function NewOpportunityDialog({
             />
           </div>
           <div>
-            <Label>Note</Label>
+            <Label>{t("contact_profile_modal.dialogs.new_opportunity.note")}</Label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note (optional)"
+              placeholder={t("contact_profile_modal.dialogs.new_opportunity.note_placeholder")}
             />
           </div>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_modal.dialogs.cancel")}
           </Button>
           <Button
             disabled={!value || saving}
@@ -3403,7 +3415,7 @@ function NewOpportunityDialog({
             }
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Create
+            {t("contact_profile_modal.dialogs.create")}
           </Button>
         </div>
       </DialogContent>
@@ -3424,6 +3436,7 @@ function AddContactFieldDialog({
   fieldType: "phone" | "email";
   onSave: (value: string, primary: boolean, type: string) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [value, setValue] = useState("");
   const [primary, setPrimary] = useState(false);
   const [type, setType] = useState("work");
@@ -3443,7 +3456,7 @@ function AddContactFieldDialog({
       <DialogContent className="max-w-md">
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription>
-          Enter the value and mark as primary if applicable.
+          {t("contact_profile_modal.dialogs.add_field.description")}
         </DialogDescription>
         <div className="space-y-3 py-2">
           <Input
@@ -3455,15 +3468,15 @@ function AddContactFieldDialog({
             }
           />
           <div>
-            <label className="text-xs text-muted-foreground">Type</label>
+            <label className="text-xs text-muted-foreground">{t("contact_profile_modal.dialogs.add_field.type_label")}</label>
             <Select value={type} onValueChange={setType}>
               <SelectTrigger className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="work">Work</SelectItem>
-                <SelectItem value="personal">Personal</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="work">{t("contact_profile_modal.phone_type_options.work")}</SelectItem>
+                <SelectItem value="personal">{t("contact_profile_modal.phone_type_options.personal")}</SelectItem>
+                <SelectItem value="other">{t("contact_profile_modal.phone_type_options.other")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -3473,12 +3486,12 @@ function AddContactFieldDialog({
               checked={primary}
               onChange={(e) => setPrimary(e.target.checked)}
             />
-            Mark as primary
+            {t("contact_profile_modal.dialogs.add_field.mark_as_primary")}
           </label>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_modal.dialogs.cancel")}
           </Button>
           <Button
             disabled={!value || saving}
@@ -3492,7 +3505,7 @@ function AddContactFieldDialog({
             }}
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Save
+            {t("contact_profile_modal.dialogs.save")}
           </Button>
         </div>
       </DialogContent>
@@ -3514,6 +3527,7 @@ function MergeContactsDialog({
   onMerged: () => void;
 }) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
   const [destination, setDestination] = useState<any | null>(null);
@@ -3618,7 +3632,7 @@ function MergeContactsDialog({
       setDestination(resp);
     } catch (err: any) {
       toast({
-        title: "Could not load contact",
+        title: t("contact_profile_modal.toasts.could_not_load_contact"),
         description: err?.message ?? "",
         variant: "destructive",
       });
@@ -3634,11 +3648,11 @@ function MergeContactsDialog({
         current_contact: String(currentContact.id),
         destination_contact: String(destination.id),
       });
-      toast({ title: "Contacts merged" });
+      toast({ title: t("contact_profile_modal.toasts.contacts_merged") });
       onMerged();
     } catch (err: any) {
       toast({
-        title: "Merge failed",
+        title: t("contact_profile_modal.toasts.merge_failed"),
         description: err?.message ?? "",
         variant: "destructive",
       });
@@ -3650,37 +3664,35 @@ function MergeContactsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl">
-        <DialogTitle>Merge contacts</DialogTitle>
+        <DialogTitle>{t("contact_profile_modal.dialogs.merge.title")}</DialogTitle>
         <DialogDescription>
-          Combine two contacts. The destination contact will inherit all phones,
-          emails, tags and conversations from the current contact. The current
-          contact will be archived.
+          {t("contact_profile_modal.dialogs.merge.description")}
         </DialogDescription>
 
         <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm">
-          <p className="font-semibold mb-1">Note:</p>
+          <p className="font-semibold mb-1">{t("contact_profile_modal.dialogs.merge.note_title")}</p>
           <ul className="list-decimal list-inside space-y-0.5 text-xs">
-            <li>All phones, emails, tags and chats move to the destination.</li>
-            <li>The destination keeps the earlier subscription date.</li>
-            <li>The source contact is archived (soft-deleted).</li>
+            <li>{t("contact_profile_modal.dialogs.merge.note_item_1")}</li>
+            <li>{t("contact_profile_modal.dialogs.merge.note_item_2")}</li>
+            <li>{t("contact_profile_modal.dialogs.merge.note_item_3")}</li>
           </ul>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-3 min-h-[300px]">
           <div className="border-r pr-3">
-            <h6 className="font-semibold mb-2 text-sm">Current contact</h6>
+            <h6 className="font-semibold mb-2 text-sm">{t("contact_profile_modal.dialogs.merge.current_contact")}</h6>
             {currentNormalized || currentContact ? (
               <ContactSummary c={currentNormalized ?? currentContact} />
             ) : (
-              <p className="text-xs text-muted-foreground">No contact loaded</p>
+              <p className="text-xs text-muted-foreground">{t("contact_profile_modal.dialogs.merge.no_contact_loaded")}</p>
             )}
           </div>
           <div className="border-r pr-3">
-            <h6 className="font-semibold mb-2 text-sm">Destination</h6>
+            <h6 className="font-semibold mb-2 text-sm">{t("contact_profile_modal.dialogs.merge.destination")}</h6>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name…"
+              placeholder={t("contact_profile_modal.dialogs.merge.search_placeholder")}
             />
             {candidates.length > 0 && (
               <div className="border rounded mt-2 max-h-40 overflow-auto">
@@ -3708,12 +3720,12 @@ function MergeContactsDialog({
             {destination && <ContactSummary c={destination} className="mt-3" />}
           </div>
           <div>
-            <h6 className="font-semibold mb-2 text-sm">Preview</h6>
+            <h6 className="font-semibold mb-2 text-sm">{t("contact_profile_modal.dialogs.merge.preview")}</h6>
             {previewContact ? (
               <ContactSummary c={previewContact} />
             ) : (
               <p className="text-xs text-muted-foreground">
-                Select a destination to preview the merge result.
+                {t("contact_profile_modal.dialogs.merge.select_destination_hint")}
               </p>
             )}
           </div>
@@ -3723,30 +3735,30 @@ function MergeContactsDialog({
           {confirming ? (
             <>
               <span className="text-orange-500 text-sm self-center mr-2">
-                Are you sure?
+                {t("contact_profile_modal.dialogs.merge.are_you_sure")}
               </span>
               <Button
                 variant="outline"
                 onClick={() => setConfirming(false)}
                 disabled={merging}
               >
-                No
+                {t("contact_profile_modal.dialogs.merge.no")}
               </Button>
               <Button onClick={handleMerge} disabled={merging}>
                 {merging ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Yes, merge
+                {t("contact_profile_modal.dialogs.merge.yes_merge")}
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t("contact_profile_modal.dialogs.cancel")}
               </Button>
               <Button
                 disabled={!destination}
                 onClick={() => setConfirming(true)}
               >
-                Merge contacts
+                {t("contact_profile_modal.dialogs.merge.merge_button")}
               </Button>
             </>
           )}
@@ -3758,6 +3770,7 @@ function MergeContactsDialog({
 
 function ContactSummary({ c, className = "" }: { c: any; className?: string }) {
   const workspaceTz = useWorkspaceTimezone();
+  const { t } = useTranslation();
   return (
     <div className={`space-y-1 text-xs ${className}`}>
       <div className="flex items-center gap-2">
@@ -3772,21 +3785,21 @@ function ContactSummary({ c, className = "" }: { c: any; className?: string }) {
           </AvatarFallback>
         </Avatar>
         <h6 className="font-semibold flex-1 truncate">
-          {c.full_name ?? "Unnamed"}
+          {c.full_name ?? t("contact_profile_modal.contact_summary.unnamed")}
         </h6>
       </div>
       <div>
-        <span className="text-muted-foreground">ID:</span> {c.slug ?? c.id}
+        <span className="text-muted-foreground">{t("contact_profile_modal.contact_summary.id_label")}</span> {c.slug ?? c.id}
       </div>
       {c.created_at && (
         <div>
-          <span className="text-muted-foreground">Subscribed:</span>{" "}
+          <span className="text-muted-foreground">{t("contact_profile_modal.contact_summary.subscribed_label")}</span>{" "}
           {formatInWorkspaceTz(c.created_at, "yyyy-MM-dd", workspaceTz)}
         </div>
       )}
       {c.mobile_contacts?.length > 0 && (
         <div>
-          <span className="text-muted-foreground">Phones:</span>{" "}
+          <span className="text-muted-foreground">{t("contact_profile_modal.contact_summary.phones_label")}</span>{" "}
           {c.mobile_contacts
             .map((m: any) => m.full_mobile_number ?? m.national_mobile_number)
             .join(", ")}
@@ -3794,7 +3807,7 @@ function ContactSummary({ c, className = "" }: { c: any; className?: string }) {
       )}
       {c.email_contacts?.length > 0 && (
         <div>
-          <span className="text-muted-foreground">Emails:</span>{" "}
+          <span className="text-muted-foreground">{t("contact_profile_modal.contact_summary.emails_label")}</span>{" "}
           {c.email_contacts.map((e: any) => e.email).join(", ")}
         </div>
       )}
@@ -3825,7 +3838,7 @@ function ContactSummary({ c, className = "" }: { c: any; className?: string }) {
         if (c.instagram_chats?.length) channels.push("Instagram");
         return channels.length > 0 ? (
           <div>
-            <span className="text-muted-foreground">Channels:</span>{" "}
+            <span className="text-muted-foreground">{t("contact_profile_modal.contact_summary.channels_label")}</span>{" "}
             {channels.join(", ")}
           </div>
         ) : null;

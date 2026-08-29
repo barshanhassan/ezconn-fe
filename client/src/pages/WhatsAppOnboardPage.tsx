@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
  * piece the user wanted ready before testing.
  */
 export default function WhatsAppOnboardPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { mode } = useTheme();
@@ -68,8 +70,8 @@ export default function WhatsAppOnboardPage() {
     } else {
       // No usable params — likely the user cancelled the popup.
       toast({
-        title: "Sign-up cancelled",
-        description: "WhatsApp embedded signup was cancelled or returned no data.",
+        title: t("whats_app_onboard_page.signup_cancelled_title"),
+        description: t("whats_app_onboard_page.signup_cancelled_description"),
         variant: "destructive",
       });
       redirectBack(src);
@@ -97,26 +99,26 @@ export default function WhatsAppOnboardPage() {
       const data = await res.json();
       if (data?.success) {
         toast({
-          title: "WhatsApp connected",
-          description: data?.message ?? "Your WhatsApp account is being configured.",
+          title: t("whats_app_onboard_page.connected_title"),
+          description: data?.message ?? t("whats_app_onboard_page.connected_description"),
         });
         redirectBack(args.src);
         return;
       }
       // Backend returned success=false (unusual)
-      setError(data?.message ?? "We couldn't complete sign-up. Please try again.");
+      setError(data?.message ?? t("whats_app_onboard_page.signup_incomplete_error"));
     } catch (e: any) {
       const code = e?.error_code ?? e?.response?.data?.error_code;
       if (code === "error_1001") {
         toast({
-          title: "Account already exists",
-          description: "This WhatsApp account is already connected to a workspace.",
+          title: t("whats_app_onboard_page.already_connected_title"),
+          description: t("whats_app_onboard_page.already_connected_description"),
           variant: "destructive",
         });
         redirectBack(args.src);
         return;
       }
-      setError(e?.message ?? "Something went wrong");
+      setError(e?.message ?? t("whats_app_onboard_page.generic_error"));
     }
   };
 
@@ -134,14 +136,12 @@ export default function WhatsAppOnboardPage() {
       } else if (data?.profiles?.length) {
         // Future: render a profile picker. For now, surface as error so the
         // user knows they need to retry through Embedded Signup.
-        setError(
-          "Multiple WhatsApp business profiles found. Please complete sign-up from the WhatsApp settings page.",
-        );
+        setError(t("whats_app_onboard_page.multiple_profiles_error"));
       } else {
-        setError(data?.message ?? "We couldn't find any business profiles for your account.");
+        setError(data?.message ?? t("whats_app_onboard_page.no_profiles_error"));
       }
     } catch (e: any) {
-      setError(e?.message ?? "Something went wrong");
+      setError(e?.message ?? t("whats_app_onboard_page.generic_error"));
     }
   };
 
@@ -178,9 +178,9 @@ export default function WhatsAppOnboardPage() {
 
         {error === null && supportCode === null && (
           <>
-            <h1 className={cn("font-bold text-2xl mt-5", dark ? "text-white" : "text-slate-900")}>Please wait…</h1>
+            <h1 className={cn("font-bold text-2xl mt-5", dark ? "text-white" : "text-slate-900")}>{t("whats_app_onboard_page.please_wait")}</h1>
             <p className={cn("mt-3 text-sm leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>
-              We are checking your WhatsApp business number.
+              {t("whats_app_onboard_page.checking_number")}
             </p>
             <div className="mt-6 flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
@@ -191,11 +191,10 @@ export default function WhatsAppOnboardPage() {
         {supportCode && (
           <div className="space-y-4">
             <div className={cn("font-bold text-lg mt-5", dark ? "text-white" : "text-slate-900")}>
-              Sign-up not finished
+              {t("whats_app_onboard_page.signup_not_finished")}
             </div>
             <p className={cn("text-sm leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>
-              However, you can send this code to our team to help you onboard. Do not share this code with anyone
-              except the support team.
+              {t("whats_app_onboard_page.support_code_description")}
             </p>
             <div className="space-y-3">
               <input
@@ -211,7 +210,7 @@ export default function WhatsAppOnboardPage() {
                 onClick={() => setShowCode((s) => !s)}
                 className="h-10 px-5 rounded-lg border text-[10px] font-black uppercase tracking-widest border-primary text-primary hover:bg-primary hover:text-white transition-all"
               >
-                {showCode ? "Hide Code" : "Show Code"}
+                {showCode ? t("whats_app_onboard_page.hide_code") : t("whats_app_onboard_page.show_code")}
               </button>
             </div>
             <button
@@ -221,7 +220,7 @@ export default function WhatsAppOnboardPage() {
                 dark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900",
               )}
             >
-              Back to settings
+              {t("whats_app_onboard_page.back_to_settings")}
             </button>
           </div>
         )}
@@ -229,14 +228,14 @@ export default function WhatsAppOnboardPage() {
         {error && (
           <div className="space-y-4">
             <div className={cn("font-bold text-lg mt-5", dark ? "text-white" : "text-slate-900")}>
-              Sign-up failed
+              {t("whats_app_onboard_page.signup_failed")}
             </div>
             <p className={cn("text-sm leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>{error}</p>
             <button
               onClick={() => redirectBack()}
               className="h-10 px-5 rounded-lg border text-[10px] font-black uppercase tracking-widest border-primary text-primary hover:bg-primary hover:text-white transition-all"
             >
-              Back to settings
+              {t("whats_app_onboard_page.back_to_settings")}
             </button>
           </div>
         )}

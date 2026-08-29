@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Code2,
   Copy,
@@ -31,6 +32,7 @@ export default function APISection() {
   const dark = mode === "dark";
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [showKey, setShowKey] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -71,7 +73,7 @@ export default function APISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-keys"] });
-      toast({ title: "Authorized", description: "Your API key has been created." });
+      toast({ title: t("api_section.authorized"), description: t("api_section.key_created") });
     },
   });
 
@@ -81,13 +83,13 @@ export default function APISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-keys"] });
-      toast({ title: "Revoked", description: "The API key has been removed." });
+      toast({ title: t("api_section.revoked"), description: t("api_section.key_removed") });
     },
   });
 
   const handleCopy = (val: string) => {
     navigator.clipboard.writeText(val);
-    toast({ title: "Copied", description: "Token copied to clipboard." });
+    toast({ title: t("api_section.copied"), description: t("api_section.token_copied") });
   };
 
   const currentKey = apiKeys?.[0];
@@ -111,9 +113,9 @@ export default function APISection() {
                 <Code2 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>API</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("api_section.title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Manage your API credentials to integrate external applications.
+                  {t("api_section.subtitle")}
                 </p>
               </div>
             </div>
@@ -121,7 +123,7 @@ export default function APISection() {
             <div className="flex items-center gap-2 shrink-0">
               <div className={cn("px-3 py-1.5 rounded-lg border flex items-center gap-2", softBorder, dark ? "bg-slate-900/50" : "bg-white")}>
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className={cn("text-[11px] font-semibold", sub)}>Production Active</span>
+                <span className={cn("text-[11px] font-semibold", sub)}>{t("api_section.production_active")}</span>
               </div>
             </div>
           </div>
@@ -136,13 +138,13 @@ export default function APISection() {
                     <ShieldCheck size={22} />
                   </div>
                   <div className="flex-1">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Active Gateway</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("api_section.active_gateway")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                      Use this token for Digital Connect authentication.
+                      {t("api_section.active_gateway_description")}
                     </p>
                   </div>
                   <Badge variant="outline" className="h-6 px-2 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                    Active
+                    {t("api_section.active")}
                   </Badge>
                 </div>
 
@@ -151,7 +153,7 @@ export default function APISection() {
                   <div className="flex items-center gap-2">
                     <Lock size={12} className="text-primary" />
                     <span className={cn("text-[11px] font-semibold", sub)}>
-                      Private Token
+                      {t("api_section.private_token")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -175,14 +177,14 @@ export default function APISection() {
                     <button
                       onClick={() => handleCopy(currentKey.token)}
                       className={cn("w-11 h-11 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 text-primary" : "border-slate-200 hover:border-primary/40 text-primary")}
-                      title="Copy"
+                      title={t("api_section.copy")}
                     >
                       <Copy size={15} />
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(true)}
                       className={cn("w-11 h-11 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
-                      title="Revoke"
+                      title={t("api_section.revoke")}
                     >
                       <Trash2 size={15} />
                     </button>
@@ -195,8 +197,8 @@ export default function APISection() {
                     <Key size={13} />
                   </div>
                   <p className={cn("text-[11px] font-medium leading-relaxed", sub)}>
-                    <span className={cn("font-semibold", text)}>Security Notice:</span>{" "}
-                    Never expose this token in client-side code or public repositories.
+                    <span className={cn("font-semibold", text)}>{t("api_section.security_notice_label")}</span>{" "}
+                    {t("api_section.security_notice_description")}
                   </p>
                 </div>
 
@@ -208,7 +210,7 @@ export default function APISection() {
                     className={outlineBtn}
                   >
                     <RefreshCw size={12} className={cn(generateMutation.isPending && "animate-spin")} />
-                    Renew Token
+                    {t("api_section.renew_token")}
                   </button>
                 </div>
               </div>
@@ -218,9 +220,9 @@ export default function APISection() {
                   <Key className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-1.5 max-w-sm">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Authentication Required</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("api_section.auth_required")}</h3>
                   <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                    Initialize your secure API gateway to integrate external applications.
+                    {t("api_section.auth_required_description")}
                   </p>
                 </div>
                 <button
@@ -229,7 +231,7 @@ export default function APISection() {
                   className={primaryBtn}
                 >
                   {generateMutation.isPending ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
-                  {generateMutation.isPending ? "Generating..." : "Generate API Key"}
+                  {generateMutation.isPending ? t("api_section.generating") : t("api_section.generate_api_key")}
                 </button>
               </div>
             )}
@@ -246,19 +248,19 @@ export default function APISection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Revoke API Key?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("api_section.revoke_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  This token will be permanently removed and any integrations using it will stop working.
+                  {t("api_section.revoke_dialog_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("api_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => { deleteMutation.mutate(currentKey.id); setShowDeleteConfirm(false); }}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Revoke
+                <Trash2 size={12} /> {t("api_section.revoke")}
               </AlertDialogAction>
             </div>
           </div>

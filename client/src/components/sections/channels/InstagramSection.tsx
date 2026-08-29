@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   MoreVertical,
@@ -78,16 +79,16 @@ function buildFbAuthUrl(appId: string, version: string): string {
   return `https://www.facebook.com/${version}/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(FB_SCOPES)}&response_type=token`;
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, t: (key: string) => string) {
   const map: Record<string, { label: string; color: string }> = {
-    ACTIVE:       { label: "Active",        color: "text-emerald-600 dark:text-emerald-400" },
-    PENDING:      { label: "Pending",       color: "text-amber-600 dark:text-amber-400" },
-    FAILED:       { label: "Failed",        color: "text-rose-600 dark:text-rose-400" },
-    DISCONNECTED: { label: "Disconnected",  color: "text-slate-500" },
-    ERROR:        { label: "Error",         color: "text-rose-600 dark:text-rose-400" },
-    NOT_CONNECTED:{ label: "Not connected", color: "text-slate-500" },
-    DELETING:     { label: "Deleting…",     color: "text-slate-400" },
-    DELETED:      { label: "Deleted",       color: "text-slate-400" },
+    ACTIVE:       { label: t("instagram_section.status_active"),        color: "text-emerald-600 dark:text-emerald-400" },
+    PENDING:      { label: t("instagram_section.status_pending"),       color: "text-amber-600 dark:text-amber-400" },
+    FAILED:       { label: t("instagram_section.status_failed"),        color: "text-rose-600 dark:text-rose-400" },
+    DISCONNECTED: { label: t("instagram_section.status_disconnected"),  color: "text-slate-500" },
+    ERROR:        { label: t("instagram_section.status_error"),         color: "text-rose-600 dark:text-rose-400" },
+    NOT_CONNECTED:{ label: t("instagram_section.status_not_connected"), color: "text-slate-500" },
+    DELETING:     { label: t("instagram_section.status_deleting"),      color: "text-slate-400" },
+    DELETED:      { label: t("instagram_section.status_deleted"),       color: "text-slate-400" },
   };
   const info = map[status] ?? { label: status, color: "text-slate-500" };
   const dot: Record<string, string> = {
@@ -106,6 +107,7 @@ function statusBadge(status: string) {
 }
 
 export default function InstagramSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -169,9 +171,9 @@ export default function InstagramSection() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Deleted", description: "Instagram account removed." });
+      toast({ title: t("instagram_section.toast_deleted_title"), description: t("instagram_section.toast_deleted_desc") });
     },
-    onError: () => toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }),
+    onError: () => toast({ title: t("instagram_section.toast_error_title"), description: t("instagram_section.toast_delete_error_desc"), variant: "destructive" }),
   });
 
   const feederMutation = useMutation({
@@ -180,9 +182,12 @@ export default function InstagramSection() {
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Updated", description: `AI Feeder ${vars.enabled ? "enabled" : "disabled"}.` });
+      toast({
+        title: t("instagram_section.toast_updated_title"),
+        description: vars.enabled ? t("instagram_section.toast_feeder_enabled_desc") : t("instagram_section.toast_feeder_disabled_desc"),
+      });
     },
-    onError: () => toast({ title: "Error", description: "Failed to update feeder.", variant: "destructive" }),
+    onError: () => toast({ title: t("instagram_section.toast_error_title"), description: t("instagram_section.toast_feeder_error_desc"), variant: "destructive" }),
   });
 
   const syncMutation = useMutation({
@@ -191,9 +196,9 @@ export default function InstagramSection() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Synced", description: "Account stats refreshed from Instagram." });
+      toast({ title: t("instagram_section.toast_synced_title"), description: t("instagram_section.toast_synced_desc") });
     },
-    onError: () => toast({ title: "Sync failed", description: "Could not refresh stats.", variant: "destructive" }),
+    onError: () => toast({ title: t("instagram_section.toast_sync_failed_title"), description: t("instagram_section.toast_sync_failed_desc"), variant: "destructive" }),
   });
 
   function handleAddNew() {
@@ -230,7 +235,7 @@ export default function InstagramSection() {
 
   function copyId(id: string | number) {
     navigator.clipboard?.writeText(String(id)).then(
-      () => toast({ title: "Copied", description: "Instagram Page ID copied to clipboard." }),
+      () => toast({ title: t("instagram_section.toast_copied_title"), description: t("instagram_section.toast_copied_desc") }),
       () => {},
     );
   }
@@ -258,21 +263,21 @@ export default function InstagramSection() {
                 </div>
                 <div>
                   <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                    Instagram{isPreferred ? "" : " — Facebook Managed"}
+                    {isPreferred ? "Instagram" : t("instagram_section.title_facebook_managed")}
                   </h1>
                   <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
                     {isPreferred
-                      ? "Instagram Business accounts using the new Instagram API."
-                      : "Instagram accounts linked through a Facebook Business Page."}
+                      ? t("instagram_section.subtitle_preferred")
+                      : t("instagram_section.subtitle_old")}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={handleAddNew} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add New
+                  <Plus size={12} /> {t("instagram_section.btn_add_new")}
                 </button>
                 <button onClick={() => setView("list")} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("instagram_section.btn_back")}
                 </button>
               </div>
             </div>
@@ -286,16 +291,16 @@ export default function InstagramSection() {
                   </div>
                   <div className="space-y-1.5 max-w-sm">
                     <h3 className={cn("text-[14px] font-black tracking-tight", text)}>
-                      {isPreferred ? "No integration found" : "Instagram account is not connected yet"}
+                      {isPreferred ? t("instagram_section.empty_title_preferred") : t("instagram_section.empty_title_old")}
                     </h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
                       {isPreferred
-                        ? "Connect an Instagram Business account to start automating conversations."
-                        : "Connect an Instagram account linked through a Facebook Business Page to manage it here."}
+                        ? t("instagram_section.empty_desc_preferred")
+                        : t("instagram_section.empty_desc_old")}
                     </p>
                   </div>
                   <button onClick={handleAddNew} className={primaryOutlineBtn}>
-                    Connect now
+                    {t("instagram_section.btn_connect_now")}
                   </button>
                 </div>
               ) : (
@@ -315,14 +320,14 @@ export default function InstagramSection() {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className={cn("text-[13px] font-black truncate", text)}>{account.name || "Instagram Account"}</p>
+                            <p className={cn("text-[13px] font-black truncate", text)}>{account.name || t("instagram_section.default_account_name")}</p>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                               {account.username && (
                                 <Badge variant="outline" className="h-5 px-2 rounded-md border-pink-500/20 bg-pink-500/5 text-pink-600 dark:text-pink-400 text-[10px] font-semibold">
                                   @{account.username}
                                 </Badge>
                               )}
-                              {statusBadge(account.status ?? "ACTIVE")}
+                              {statusBadge(account.status ?? "ACTIVE", t)}
                               {account.fail_reason && (
                                 <span className={cn("text-[9px] font-medium truncate max-w-[200px]", sub)}>{account.fail_reason}</span>
                               )}
@@ -335,7 +340,7 @@ export default function InstagramSection() {
                                 <button
                                   onClick={() => copyId(account.ig_user_id)}
                                   className={cn("opacity-50 hover:opacity-100 transition-opacity", sub)}
-                                  title="Copy Instagram Page ID"
+                                  title={t("instagram_section.tooltip_copy_page_id")}
                                 >
                                   <Copy size={10} />
                                 </button>
@@ -348,16 +353,16 @@ export default function InstagramSection() {
                           <button
                             onClick={() => (isPreferred ? handleReconnect(account) : handleReconnectOld())}
                             className={cn(outlineBtn, "h-9 px-4")}
-                            title="Re-authorize this account and refresh its access token"
+                            title={t("instagram_section.tooltip_reconnect")}
                           >
-                            <RotateCw size={11} /> Reconnect
+                            <RotateCw size={11} /> {t("instagram_section.btn_reconnect")}
                           </button>
                           <button
                             onClick={() => syncMutation.mutate(account.id)}
                             disabled={syncMutation.isPending}
                             className={cn(outlineBtn, "h-9 px-4")}
                           >
-                            <RefreshCw size={11} className={syncMutation.isPending ? "animate-spin" : ""} /> Sync
+                            <RefreshCw size={11} className={syncMutation.isPending ? "animate-spin" : ""} /> {t("instagram_section.btn_sync")}
                           </button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -371,7 +376,7 @@ export default function InstagramSection() {
                                 className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] flex justify-between"
                               >
                                 <span className="flex items-center gap-2">
-                                  <Bot size={12} className="text-primary" /> AI Feeder
+                                  <Bot size={12} className="text-primary" /> {t("instagram_section.label_ai_feeder")}
                                 </span>
                                 <Switch
                                   checked={!!account.allow_in_feeder}
@@ -383,7 +388,7 @@ export default function InstagramSection() {
                                 onClick={() => { setAccountToDelete(account); setDeleteMedia(false); setShowDeleteConfirm(true); }}
                                 className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                               >
-                                <Trash2 size={12} /> Delete
+                                <Trash2 size={12} /> {t("instagram_section.btn_delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -393,9 +398,9 @@ export default function InstagramSection() {
                       {/* Stats — only render those > 0 (replyagent show-if->0) */}
                       {(() => {
                         const visibleStats = [
-                          { label: "Posts",     value: account.media_count },
-                          { label: "Followers", value: account.followers_count },
-                          { label: "Following", value: account.follows_count },
+                          { label: t("instagram_section.stat_posts"),     value: account.media_count },
+                          { label: t("instagram_section.stat_followers"), value: account.followers_count },
+                          { label: t("instagram_section.stat_following"), value: account.follows_count },
                         ].filter((s) => s.value != null && Number(s.value) > 0);
                         if (visibleStats.length === 0) return null;
                         return (
@@ -414,21 +419,21 @@ export default function InstagramSection() {
                       {(account.status ?? "ACTIVE") === "ACTIVE" && (
                         <div className={cn("px-6 py-4 border-t flex flex-wrap gap-2", softBorder)}>
                           <button onClick={() => setDefaultReplyAccount(account)} className={cn(outlineBtn, "h-9 px-4")}>
-                            <Reply size={11} /> Default reply
+                            <Reply size={11} /> {t("instagram_section.btn_default_reply")}
                           </button>
                           <button onClick={() => setIceBreakersAccount(account)} className={cn(outlineBtn, "h-9 px-4")}>
-                            <MessageSquare size={11} /> Quick starter
+                            <MessageSquare size={11} /> {t("instagram_section.btn_quick_starter")}
                           </button>
                           <button onClick={() => setMainMenuAccount(account)} className={cn(outlineBtn, "h-9 px-4")}>
-                            <BookOpen size={11} /> Main menu
+                            <BookOpen size={11} /> {t("instagram_section.btn_main_menu")}
                           </button>
                           {account.platform !== "facebook" && (
                             <button onClick={() => setStoryMentionAccount(account)} className={cn(outlineBtn, "h-9 px-4")}>
-                              <ImageIcon size={11} /> Story mention
+                              <ImageIcon size={11} /> {t("instagram_section.btn_story_mention")}
                             </button>
                           )}
                           <button onClick={() => setPageUsersAccount(account)} className={cn(outlineBtn, "h-9 px-4")}>
-                            <UserCog size={11} /> Page users
+                            <UserCog size={11} /> {t("instagram_section.btn_page_users")}
                           </button>
                         </div>
                       )}
@@ -449,9 +454,9 @@ export default function InstagramSection() {
                   <AlertCircle size={18} />
                 </div>
                 <div>
-                  <h2 className={cn("text-[14px] font-semibold", text)}>Delete Instagram Account?</h2>
+                  <h2 className={cn("text-[14px] font-semibold", text)}>{t("instagram_section.delete_dialog_title")}</h2>
                   <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                    <span className="text-rose-500 font-black">{accountToDelete?.name}</span> will be permanently disconnected.
+                    <span className="text-rose-500 font-black">{accountToDelete?.name}</span> {t("instagram_section.delete_dialog_desc_suffix")}
                   </p>
                 </div>
               </div>
@@ -463,16 +468,16 @@ export default function InstagramSection() {
                   className="mt-0.5 w-4 h-4 accent-rose-500 cursor-pointer"
                 />
                 <span className={cn("text-[11px] font-medium leading-relaxed", sub)}>
-                  Also delete all stored media (avatar &amp; message attachments) for this account from storage. This cannot be undone.
+                  {t("instagram_section.delete_media_checkbox_label")}
                 </span>
               </label>
               <div className="flex justify-end gap-2">
-                <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("instagram_section.btn_cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => { deleteMutation.mutate({ id: accountToDelete.id, deleteMedia }); setShowDeleteConfirm(false); }}
                   className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
                 >
-                  <Trash2 size={12} /> Delete
+                  <Trash2 size={12} /> {t("instagram_section.btn_delete")}
                 </AlertDialogAction>
               </div>
             </div>
@@ -518,17 +523,16 @@ export default function InstagramSection() {
                   <AlertCircle size={22} />
                 </div>
                 <div>
-                  <h2 className={cn("text-[14px] font-semibold", text)}>Limit reached</h2>
+                  <h2 className={cn("text-[14px] font-semibold", text)}>{t("instagram_section.limit_reached_title")}</h2>
                   <p className={cn("text-[11px] font-medium opacity-60 mt-1.5 leading-relaxed", sub)}>
-                    You have reached the maximum limit of{" "}
-                    <span className="font-black text-amber-500">{igLimit}</span> Instagram{" "}
-                    {igLimit === 1 ? "account" : "accounts"}. Please contact your administrator to increase the limit.
+                    {t("instagram_section.limit_reached_desc_prefix")}{" "}
+                    <span className="font-black text-amber-500">{igLimit}</span> {t("instagram_section.limit_reached_desc_suffix")}
                   </p>
                 </div>
               </div>
               <div className="flex justify-center">
                 <AlertDialogAction className="h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all">
-                  OK
+                  {t("instagram_section.btn_ok")}
                 </AlertDialogAction>
               </div>
             </div>
@@ -550,7 +554,7 @@ export default function InstagramSection() {
           <div>
             <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Instagram</h1>
             <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-              Connect your Instagram Business account to automate conversations.
+              {t("instagram_section.list_subtitle")}
             </p>
           </div>
         </div>
@@ -567,19 +571,19 @@ export default function InstagramSection() {
                 <div>
                   <h3 className={cn("text-[13px] font-black tracking-tight", text)}>Instagram</h3>
                   {preferredAccounts.length > 0 && (
-                    <span className={cn("text-[10px] font-black", sub)}>{preferredAccounts.length} connected</span>
+                    <span className={cn("text-[10px] font-black", sub)}>{t("instagram_section.connected_count", { count: preferredAccounts.length })}</span>
                   )}
                 </div>
               </div>
               <Badge className="h-5 px-2.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-semibold border">
-                Preferred
+                {t("instagram_section.badge_preferred")}
               </Badge>
             </div>
             <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
-              Our Preferred integration method is the new Instagram API, which is easier to setup since it doesn't require linking a Facebook Page.
+              {t("instagram_section.preferred_card_desc")}
             </p>
             <button onClick={() => setView("preferred")} className={cn(primaryOutlineBtn, "self-end")}>
-              Manage
+              {t("instagram_section.btn_manage")}
             </button>
           </div>
 
@@ -593,17 +597,17 @@ export default function InstagramSection() {
                 <div>
                   <h3 className={cn("text-[13px] font-black tracking-tight", text)}>Instagram</h3>
                   {oldAccounts.length > 0 && (
-                    <span className={cn("text-[10px] font-black", sub)}>{oldAccounts.length} connected</span>
+                    <span className={cn("text-[10px] font-black", sub)}>{t("instagram_section.connected_count", { count: oldAccounts.length })}</span>
                   )}
                 </div>
               </div>
-              <span className={cn("text-[11px] font-black", sub)}>Old</span>
+              <span className={cn("text-[11px] font-black", sub)}>{t("instagram_section.badge_old")}</span>
             </div>
             <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
-              Users with an existing integration through the previous Instagram method will retain full management access.
+              {t("instagram_section.old_card_desc")}
             </p>
             <button onClick={() => setView("old")} className={cn(primaryOutlineBtn, "self-end")}>
-              Manage
+              {t("instagram_section.btn_manage")}
             </button>
           </div>
         </div>

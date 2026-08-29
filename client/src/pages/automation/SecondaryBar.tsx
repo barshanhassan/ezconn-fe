@@ -18,6 +18,7 @@
  * stays mounted behind the SecondaryBar so toggling preserves state.
  */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
@@ -41,6 +42,7 @@ export function SecondaryBar({
   children,
   footer,
 }: SecondaryBarProps) {
+  const { t } = useTranslation();
   if (!open) return null;
   // Positioned `fixed` over the right 384px of the viewport so it covers
   // the SidebarPanel regardless of which scroll container or flex layer
@@ -60,7 +62,7 @@ export function SecondaryBar({
           type="button"
           onClick={onClose}
           className="h-8 w-8 inline-flex items-center justify-center rounded text-white hover:bg-white/15"
-          title="Close"
+          title={t("secondary_bar.close")}
         >
           <X className="h-4 w-4" />
         </button>

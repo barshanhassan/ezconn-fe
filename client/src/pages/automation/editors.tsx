@@ -18,6 +18,7 @@
  *   InputChoicesEditor    — quick-reply list editor (max 10 choices)
  */
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +86,7 @@ interface PrimitiveProps {
 }
 
 export function PrimitiveField({ field, value, onChange, contextual }: PrimitiveProps) {
+  const { t } = useTranslation();
   const ft = String(field.type);
   switch (ft) {
     case "text":
@@ -142,7 +144,7 @@ export function PrimitiveField({ field, value, onChange, contextual }: Primitive
       return (
         <Select value={String(value ?? "")} onValueChange={(v) => onChange(v)}>
           <SelectTrigger>
-            <SelectValue placeholder={(field as any).placeholder ?? "Choose"} />
+            <SelectValue placeholder={(field as any).placeholder ?? t("automation_editors.common.choose")} />
           </SelectTrigger>
           <SelectContent>
             {((field as any).options ?? []).map((o: any) => (
@@ -280,12 +282,12 @@ export function PrimitiveField({ field, value, onChange, contextual }: Primitive
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="is">Is exact</SelectItem>
-            <SelectItem value="contains">Contains</SelectItem>
-            <SelectItem value="begins_with">Begins with</SelectItem>
-            <SelectItem value="ends_with">Ends with</SelectItem>
-            <SelectItem value="word">Exact word</SelectItem>
-            <SelectItem value="doesnot_contains">Does not contain</SelectItem>
+            <SelectItem value="is">{t("automation_editors.match_type.is_exact")}</SelectItem>
+            <SelectItem value="contains">{t("automation_editors.match_type.contains")}</SelectItem>
+            <SelectItem value="begins_with">{t("automation_editors.match_type.begins_with")}</SelectItem>
+            <SelectItem value="ends_with">{t("automation_editors.match_type.ends_with")}</SelectItem>
+            <SelectItem value="word">{t("automation_editors.match_type.exact_word")}</SelectItem>
+            <SelectItem value="doesnot_contains">{t("automation_editors.match_type.does_not_contain")}</SelectItem>
           </SelectContent>
         </Select>
       );
@@ -349,15 +351,16 @@ function StartUrlField({
   value: string | undefined;
   contextual?: PrimitiveProps["contextual"];
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   // Synthesize a URL from the contextual slug if the backend hasn't
-  // computed it yet (new flow before first save). Replyagent shows a
-  // placeholder until publish.
+  // computed it yet (new flow before first save). A placeholder is shown
+  // until publish.
   const computed =
     value ??
     (contextual?.automationActivitySlug
       ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/trigger-automation/${contextual.automationActivitySlug}`
-      : "Not generated yet — save the flow first.");
+      : t("automation_editors.start_url.not_generated_yet"));
 
   return (
     <div className="flex items-stretch gap-1">
@@ -366,11 +369,11 @@ function StartUrlField({
         type="button"
         variant="outline"
         size="icon"
-        title="Copy URL"
+        title={t("automation_editors.start_url.copy_url")}
         onClick={() => {
           if (typeof navigator !== "undefined" && navigator.clipboard) {
             navigator.clipboard.writeText(computed);
-            toast({ title: "Copied" });
+            toast({ title: t("automation_editors.start_url.copied") });
           }
         }}
       >
@@ -395,6 +398,7 @@ function RemoteSelector({
   listKey: string;
   labelKey: string;
 }) {
+  const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: [url],
     queryFn: async () => {
@@ -419,12 +423,12 @@ function RemoteSelector({
   return (
     <Select value={String(value ?? "")} onValueChange={onChange}>
       <SelectTrigger>
-        <SelectValue placeholder="Choose…" />
+        <SelectValue placeholder={t("automation_editors.common.choose_ellipsis")} />
       </SelectTrigger>
       <SelectContent>
         {list.length === 0 && (
           <SelectItem value="__none__" disabled>
-            (no options)
+            {t("automation_editors.common.no_options")}
           </SelectItem>
         )}
         {list.map((item: any) => (
@@ -462,6 +466,7 @@ function CustomFieldSelector({
   value: any;
   onChange: (v: any) => void;
 }) {
+  const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: ["/api/custom-fields"],
     queryFn: () => apiGet("/api/custom-fields"),
@@ -478,7 +483,7 @@ function CustomFieldSelector({
   return (
     <Select value={String(value ?? "")} onValueChange={onChange}>
       <SelectTrigger>
-        <SelectValue placeholder="Pick a field" />
+        <SelectValue placeholder={t("automation_editors.common.pick_a_field")} />
       </SelectTrigger>
       <SelectContent>
         {list.map((f: any) => (
@@ -498,6 +503,7 @@ function SystemFieldSelector({
   value: any;
   onChange: (v: any) => void;
 }) {
+  const { t } = useTranslation();
   const opts = [
     "first_name",
     "last_name",
@@ -514,7 +520,7 @@ function SystemFieldSelector({
   return (
     <Select value={String(value ?? "")} onValueChange={onChange}>
       <SelectTrigger>
-        <SelectValue placeholder="Pick a system field" />
+        <SelectValue placeholder={t("automation_editors.common.pick_a_system_field")} />
       </SelectTrigger>
       <SelectContent>
         {opts.map((s) => (
@@ -641,11 +647,12 @@ export function TriggerEditor({
   onChange: (next: Record<string, any>) => void;
   contextual?: PrimitiveProps["contextual"];
 }) {
+  const { t } = useTranslation();
   const schema = getTriggerSchema(event);
   if (!schema) {
     return (
       <p className="text-sm text-muted-foreground p-4">
-        Unknown trigger: {event}
+        {t("automation_editors.trigger_editor.unknown_trigger", { event })}
       </p>
     );
   }
@@ -669,7 +676,7 @@ export function TriggerEditor({
       {payloadFields.length > 0 && showPayload && (
         <div className="border-t pt-3">
           <h6 className="text-xs font-semibold uppercase tracking-wider mb-2">
-            Payload
+            {t("automation_editors.trigger_editor.payload_heading")}
           </h6>
           <SchemaForm
             fields={payloadFields}
@@ -731,14 +738,17 @@ const TYPE_ICON_MAP: Record<string, React.ReactNode> = {
   call: <PhoneIcon className="h-4 w-4" />,
 };
 
-// WhatsApp-specific "send window" options. Replyagent shows this as a
-// dropdown at the very top of the channel sidebar so users explicitly pick
-// when this node should fire vs the contact's 24-hour window.
-const WA_SEND_WINDOW_OPTIONS = [
-  { value: "in_24", label: "Send Within 24 hours window" },
-  { value: "template_after_24", label: "Send Template only after 24 hours window" },
-  { value: "custom_after_24", label: "Send Custom Message after 24 hours window" },
-];
+// WhatsApp-specific "send window" options. Shown as a dropdown at the very
+// top of the channel sidebar so users explicitly pick when this node should
+// fire vs the contact's 24-hour window.
+function useWaSendWindowOptions() {
+  const { t } = useTranslation();
+  return [
+    { value: "in_24", label: t("automation_editors.channel_editor.send_window_in_24") },
+    { value: "template_after_24", label: t("automation_editors.channel_editor.send_window_template_after_24") },
+    { value: "custom_after_24", label: t("automation_editors.channel_editor.send_window_custom_after_24") },
+  ];
+}
 
 export function ChannelEditor({
   channel,
@@ -749,6 +759,8 @@ export function ChannelEditor({
   value: Record<string, any>;
   onChange: (next: Record<string, any>) => void;
 }) {
+  const { t } = useTranslation();
+  const waSendWindowOptions = useWaSendWindowOptions();
   const types = getMessageTypes(channel);
   const activeType: string | undefined = value?.type;
   const activeTypeSchema = activeType ? getMessageType(channel, activeType) : null;
@@ -766,7 +778,7 @@ export function ChannelEditor({
           onClick={() => onChange({ ...(value ?? {}), type: undefined })}
         >
           <ArrowLeftIcon className="h-3 w-3" />
-          Back to message types
+          {t("automation_editors.channel_editor.back_to_message_types")}
         </button>
         <div className="flex items-center gap-2">
           {TYPE_ICON_MAP[activeTypeSchema.type]}
@@ -799,7 +811,7 @@ export function ChannelEditor({
             </div>
           </SelectTrigger>
           <SelectContent>
-            {WA_SEND_WINDOW_OPTIONS.map((o) => (
+            {waSendWindowOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>
                 {o.label}
               </SelectItem>
@@ -810,21 +822,21 @@ export function ChannelEditor({
 
       {/* 3-col grid of message-type cards */}
       <div className="grid grid-cols-2 gap-2">
-        {types.map((t) => (
+        {types.map((mt) => (
           <button
-            key={t.type}
+            key={mt.type}
             type="button"
             className="border rounded-md p-3 hover:bg-muted/40 flex items-center gap-2 text-sm text-left"
-            onClick={() => onChange({ ...(value ?? {}), type: t.type })}
+            onClick={() => onChange({ ...(value ?? {}), type: mt.type })}
           >
-            <span className="text-slate-600">{TYPE_ICON_MAP[t.type] ?? <TypeIcon className="h-4 w-4" />}</span>
-            <span>{t.label}</span>
+            <span className="text-slate-600">{TYPE_ICON_MAP[mt.type] ?? <TypeIcon className="h-4 w-4" />}</span>
+            <span>{mt.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Channel account footer (replyagent shows the connected channel
-          name + number at the bottom of the sidebar) */}
+      {/* Channel account footer (shows the connected channel name + number
+          at the bottom of the sidebar) */}
       <ChannelAccountFooter
         channel={channel}
         accountId={value?.channel_account_id}
@@ -843,10 +855,11 @@ function ChannelAccountFooter({
   accountId?: string;
   onChange: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="border-t pt-3 mt-4">
       <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-        Channel account
+        {t("automation_editors.channel_editor.channel_account_label")}
       </Label>
       <ChannelAccountSelector
         value={accountId}
@@ -859,11 +872,14 @@ function ChannelAccountFooter({
 
 // ─── ConditionStepEditor (24 condition types in match/all/any/none) ────
 
-const MATCH_MODES = [
-  { value: "all", label: "All conditions must match" },
-  { value: "any", label: "Any condition must match" },
-  { value: "none", label: "None must match" },
-];
+function useMatchModes() {
+  const { t } = useTranslation();
+  return [
+    { value: "all", label: t("automation_editors.condition_editor.match_mode_all") },
+    { value: "any", label: t("automation_editors.condition_editor.match_mode_any") },
+    { value: "none", label: t("automation_editors.condition_editor.match_mode_none") },
+  ];
+}
 
 export function ConditionStepEditor({
   value,
@@ -874,6 +890,8 @@ export function ConditionStepEditor({
   onChange: (next: { match_mode?: string; conditions?: any[] }) => void;
   maxConditions?: number;
 }) {
+  const { t } = useTranslation();
+  const matchModes = useMatchModes();
   const conditions: any[] = value?.conditions ?? [];
   const matchMode = value?.match_mode ?? "all";
 
@@ -899,7 +917,7 @@ export function ConditionStepEditor({
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs">Match mode</Label>
+        <Label className="text-xs">{t("automation_editors.condition_editor.match_mode_label")}</Label>
         <Select
           value={matchMode}
           onValueChange={(v) => onChange({ ...value, match_mode: v })}
@@ -908,7 +926,7 @@ export function ConditionStepEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {MATCH_MODES.map((m) => (
+            {matchModes.map((m) => (
               <SelectItem key={m.value} value={m.value}>
                 {m.label}
               </SelectItem>
@@ -936,7 +954,9 @@ export function ConditionStepEditor({
         onClick={add}
       >
         <Plus className="h-3.5 w-3.5 mr-1" />
-        Add condition {conditions.length >= maxConditions && `(max ${maxConditions})`}
+        {t("automation_editors.condition_editor.add_condition")}{" "}
+        {conditions.length >= maxConditions &&
+          t("automation_editors.condition_editor.max_conditions", { maxConditions })}
       </Button>
     </div>
   );
@@ -1025,6 +1045,7 @@ export function DelayEditor({
   value: any;
   onChange: (next: any) => void;
 }) {
+  const { t } = useTranslation();
   const mode = value?.mode ?? "duration";
   const unit = value?.unit ?? "minutes";
   const days: string[] = value?.days ?? [];
@@ -1033,14 +1054,14 @@ export function DelayEditor({
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs">Wait by</Label>
+        <Label className="text-xs">{t("automation_editors.delay_editor.wait_by_label")}</Label>
         <Select value={mode} onValueChange={(v) => onChange({ ...value, mode: v })}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="duration">Duration</SelectItem>
-            <SelectItem value="date">Specific date</SelectItem>
+            <SelectItem value="duration">{t("automation_editors.delay_editor.mode_duration")}</SelectItem>
+            <SelectItem value="date">{t("automation_editors.delay_editor.mode_specific_date")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1049,7 +1070,7 @@ export function DelayEditor({
         <>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Amount</Label>
+              <Label className="text-xs">{t("automation_editors.delay_editor.amount_label")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -1060,7 +1081,7 @@ export function DelayEditor({
               />
             </div>
             <div>
-              <Label className="text-xs">Unit</Label>
+              <Label className="text-xs">{t("automation_editors.delay_editor.unit_label")}</Label>
               <Select
                 value={unit}
                 onValueChange={(v) => onChange({ ...value, unit: v })}
@@ -1069,10 +1090,10 @@ export function DelayEditor({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="seconds">Seconds</SelectItem>
-                  <SelectItem value="minutes">Minutes</SelectItem>
-                  <SelectItem value="hours">Hours</SelectItem>
-                  <SelectItem value="days">Days</SelectItem>
+                  <SelectItem value="seconds">{t("automation_editors.delay_editor.unit_seconds")}</SelectItem>
+                  <SelectItem value="minutes">{t("automation_editors.delay_editor.unit_minutes")}</SelectItem>
+                  <SelectItem value="hours">{t("automation_editors.delay_editor.unit_hours")}</SelectItem>
+                  <SelectItem value="days">{t("automation_editors.delay_editor.unit_days")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1086,12 +1107,12 @@ export function DelayEditor({
                   onChange({ ...value, time_window_enabled: v })
                 }
               />
-              Only send within a time window
+              {t("automation_editors.delay_editor.time_window_toggle")}
             </label>
             {timeWindowEnabled && (
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div>
-                  <Label className="text-xs">From (HH:MM)</Label>
+                  <Label className="text-xs">{t("automation_editors.delay_editor.from_label")}</Label>
                   <Input
                     placeholder="09:00"
                     value={value?.window_from ?? ""}
@@ -1101,7 +1122,7 @@ export function DelayEditor({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">To (HH:MM)</Label>
+                  <Label className="text-xs">{t("automation_editors.delay_editor.to_label")}</Label>
                   <Input
                     placeholder="17:00"
                     value={value?.window_to ?? ""}
@@ -1111,7 +1132,7 @@ export function DelayEditor({
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-xs">Days</Label>
+                  <Label className="text-xs">{t("automation_editors.delay_editor.days_label")}</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {DAY_KEYS.map((d) => {
                       const on = days.includes(d);
@@ -1146,7 +1167,7 @@ export function DelayEditor({
       ) : (
         <>
           <div>
-            <Label className="text-xs">Wait until</Label>
+            <Label className="text-xs">{t("automation_editors.delay_editor.wait_until_label")}</Label>
             <Input
               type="datetime-local"
               value={value?.until ?? ""}
@@ -1156,7 +1177,7 @@ export function DelayEditor({
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Stored as UTC. Earlier-than-now means fire immediately.
+            {t("automation_editors.delay_editor.utc_hint")}
           </p>
         </>
       )}
@@ -1175,6 +1196,7 @@ export function RandomizerEditor({
   value: any;
   onChange: (next: any) => void;
 }) {
+  const { t } = useTranslation();
   const branches: number[] = useMemo(() => {
     const list = value?.weights;
     if (Array.isArray(list) && list.length > 0) return list.map(Number);
@@ -1209,8 +1231,7 @@ export function RandomizerEditor({
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Random split. Each branch's percentage decides how often contacts go
-        that way.
+        {t("automation_editors.randomizer_editor.description")}
       </p>
       <div className="space-y-2">
         {branches.map((w, idx) => (
@@ -1256,7 +1277,8 @@ export function RandomizerEditor({
             isValid ? "text-emerald-600" : "text-destructive"
           }`}
         >
-          Total: {total}%{!isValid && " — must equal 100"}
+          {t("automation_editors.randomizer_editor.total_label", { total })}
+          {!isValid && t("automation_editors.randomizer_editor.must_equal_100")}
         </span>
         <div className="flex gap-1">
           <Button
@@ -1265,7 +1287,7 @@ export function RandomizerEditor({
             variant="outline"
             onClick={distributeEqually}
           >
-            Distribute
+            {t("automation_editors.randomizer_editor.distribute")}
           </Button>
           <Button
             type="button"
@@ -1275,7 +1297,7 @@ export function RandomizerEditor({
             onClick={addBranch}
           >
             <Plus className="h-3 w-3 mr-1" />
-            Branch
+            {t("automation_editors.randomizer_editor.branch")}
           </Button>
         </div>
       </div>
@@ -1292,26 +1314,27 @@ export function InputChoicesEditor({
   value: any;
   onChange: (next: any) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs">Prompt message</Label>
+        <Label className="text-xs">{t("automation_editors.input_choices_editor.prompt_label")}</Label>
         <Textarea
           value={value?.prompt ?? ""}
           onChange={(e) => onChange({ ...value, prompt: e.target.value })}
           rows={3}
-          placeholder="What should we ask the contact?"
+          placeholder={t("automation_editors.input_choices_editor.prompt_placeholder")}
         />
         <TextActions
           value={value?.prompt ?? ""}
           maxLength={1024}
-          onInsert={(t) =>
-            onChange({ ...value, prompt: (value?.prompt ?? "") + t })
+          onInsert={(insert) =>
+            onChange({ ...value, prompt: (value?.prompt ?? "") + insert })
           }
         />
       </div>
       <div>
-        <Label className="text-xs">Choices</Label>
+        <Label className="text-xs">{t("automation_editors.input_choices_editor.choices_label")}</Label>
         <ChoicesBuilder
           value={Array.isArray(value?.choices) ? value.choices : []}
           onChange={(choices) => onChange({ ...value, choices })}

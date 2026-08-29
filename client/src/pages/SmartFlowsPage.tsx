@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { getUserInfo } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import {
@@ -80,6 +81,7 @@ const formatDateTime = (d?: string | Date | null): string => {
 };
 
 export default function SmartFlowsPage() {
+    const { t } = useTranslation();
     const [, setLocation] = useLocation();
     const workspaceTz = useWorkspaceTimezone();
     const [searchText, setSearchText] = useState("");
@@ -125,10 +127,11 @@ export default function SmartFlowsPage() {
 
     const runBulk = async (action: "publish" | "unpublish" | "delete") => {
         if (selectedIds.size === 0) return;
-        const verb =
-            action === "publish" ? "publish" :
-            action === "unpublish" ? "unpublish" : "delete";
-        if (!window.confirm(`${verb.charAt(0).toUpperCase() + verb.slice(1)} ${selectedIds.size} automation${selectedIds.size === 1 ? "" : "s"}?`)) return;
+        const confirmMsg =
+            action === "publish" ? t("smart_flows_page.confirm_bulk_publish", { count: selectedIds.size }) :
+            action === "unpublish" ? t("smart_flows_page.confirm_bulk_unpublish", { count: selectedIds.size }) :
+            t("smart_flows_page.confirm_bulk_delete", { count: selectedIds.size });
+        if (!window.confirm(confirmMsg)) return;
         setBulkRunning(action);
         try {
             const ids = Array.from(selectedIds);
@@ -140,11 +143,15 @@ export default function SmartFlowsPage() {
                     return apiRequest("POST", `/api/automations/${id}/${action}`, {});
                 }),
             );
-            toast({ title: `${verb.charAt(0).toUpperCase() + verb.slice(1)}ed ${ids.length}` });
+            const doneTitle =
+                action === "publish" ? t("smart_flows_page.bulk_published", { count: ids.length }) :
+                action === "unpublish" ? t("smart_flows_page.bulk_unpublished", { count: ids.length }) :
+                t("smart_flows_page.bulk_deleted", { count: ids.length });
+            toast({ title: doneTitle });
             clearSelection();
             queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
         } catch (e: any) {
-            toast({ title: "Bulk action failed", description: e?.message, variant: "destructive" });
+            toast({ title: t("smart_flows_page.bulk_action_failed"), description: e?.message, variant: "destructive" });
         } finally {
             setBulkRunning(null);
         }
@@ -243,16 +250,16 @@ export default function SmartFlowsPage() {
             setNewFlowName("");
             
             toast({
-                title: "Automation created",
-                description: "Opening builder...",
+                title: t("smart_flows_page.toast_automation_created"),
+                description: t("smart_flows_page.toast_opening_builder"),
             });
-            
+
             // Redirect to builder
             setLocation(`/automations/${data.automation.id}`);
         },
         onError: (err: Error) => {
             toast({
-                title: "Creation failed",
+                title: t("smart_flows_page.toast_creation_failed"),
                 description: err.message,
                 variant: "destructive"
             });
@@ -280,11 +287,11 @@ export default function SmartFlowsPage() {
             queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             setShowFolderModal(false);
             setNewFolderName("");
-            toast({ title: "Folder created" });
+            toast({ title: t("smart_flows_page.toast_folder_created") });
         },
         onError: (err: Error) => {
             toast({
-                title: "Failed to create folder",
+                title: t("smart_flows_page.toast_folder_create_failed"),
                 description: err.message,
                 variant: "destructive",
             });
@@ -312,10 +319,10 @@ export default function SmartFlowsPage() {
             queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             setRenameTarget(null);
             setRenameValue("");
-            toast({ title: "Flow renamed" });
+            toast({ title: t("smart_flows_page.toast_flow_renamed") });
         },
         onError: (err: Error) => {
-            toast({ title: "Rename failed", description: err.message, variant: "destructive" });
+            toast({ title: t("smart_flows_page.toast_rename_failed"), description: err.message, variant: "destructive" });
         },
     });
 
@@ -332,10 +339,10 @@ export default function SmartFlowsPage() {
             queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             setChangeFolderTarget(null);
             setChangeFolderTargetId("");
-            toast({ title: "Folder updated" });
+            toast({ title: t("smart_flows_page.toast_folder_updated") });
         },
         onError: (err: Error) => {
-            toast({ title: "Folder change failed", description: err.message, variant: "destructive" });
+            toast({ title: t("smart_flows_page.toast_folder_change_failed"), description: err.message, variant: "destructive" });
         },
     });
 
@@ -348,10 +355,10 @@ export default function SmartFlowsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             setDeleteTarget(null);
-            toast({ title: "Flow deleted" });
+            toast({ title: t("smart_flows_page.toast_flow_deleted") });
         },
         onError: (err: Error) => {
-            toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+            toast({ title: t("smart_flows_page.toast_delete_failed"), description: err.message, variant: "destructive" });
         },
     });
 
@@ -360,7 +367,7 @@ export default function SmartFlowsPage() {
     // Prepare dropdown options. Each filter dropdown is single-select with an "all"
     // sentinel at the top so the user can return to "no filter" without clearing state.
     const userOptions = [
-        { id: "all", name: "All Users" },
+        { id: "all", name: t("smart_flows_page.all_users") },
         ...mockUsers.map((u: any) => ({
             id: u.id.toString(),
             name: u.name,
@@ -369,7 +376,7 @@ export default function SmartFlowsPage() {
     ];
 
     const folderOptions = [
-        { id: "all", name: "All Folders" },
+        { id: "all", name: t("smart_flows_page.all_folders") },
         ...folders.map((f: any) => ({ id: f.id.toString(), name: f.name }))
     ];
 
@@ -395,10 +402,10 @@ export default function SmartFlowsPage() {
     }, [flows, selectedFolders, searchText, selectedUsers]);
 
     const statusPills: Array<{ id: string; label: string; count: number }> = [
-        { id: "all", label: "All", count: statusCounts.all },
-        { id: "active", label: "Active", count: statusCounts.active },
-        { id: "draft", label: "Drafts", count: statusCounts.draft },
-        { id: "unpublished", label: "Unpublished", count: statusCounts.unpublished },
+        { id: "all", label: t("smart_flows_page.status_all"), count: statusCounts.all },
+        { id: "active", label: t("smart_flows_page.status_active"), count: statusCounts.active },
+        { id: "draft", label: t("smart_flows_page.status_drafts"), count: statusCounts.draft },
+        { id: "unpublished", label: t("smart_flows_page.status_unpublished"), count: statusCounts.unpublished },
     ];
 
     // Folder name per flow, for the row badge.
@@ -427,10 +434,10 @@ export default function SmartFlowsPage() {
                         </div>
                         <div className="space-y-0.5">
                             <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-                                Smart Flows
+                                {t("smart_flows_page.title")}
                             </h1>
                             <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                                Build, manage and automate your multi-channel communication workflows
+                                {t("smart_flows_page.subtitle")}
                             </p>
                         </div>
                     </div>
@@ -440,7 +447,7 @@ export default function SmartFlowsPage() {
                         className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[10px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90 uppercase tracking-widest"
                     >
                         <Plus size={14} strokeWidth={3} />
-                        <span>Create Flow</span>
+                        <span>{t("smart_flows_page.create_flow")}</span>
                     </Button>
                 </div>
             </div>
@@ -457,7 +464,7 @@ export default function SmartFlowsPage() {
                             options={folderOptions}
                             selected={selectedFolders}
                             onChange={setSelectedFolders}
-                            placeholder="All Folders"
+                            placeholder={t("smart_flows_page.all_folders")}
                             width="160px"
                             showSearch={true}
                             showSelectedOption={true}
@@ -467,7 +474,7 @@ export default function SmartFlowsPage() {
                         <button
                             className="flex items-center justify-center h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm shrink-0"
                             onClick={() => setShowFolderModal(true)}
-                            title="Create New Folder"
+                            title={t("smart_flows_page.create_folder_tooltip")}
                         >
                             <FolderPlus size={16} />
                         </button>
@@ -513,7 +520,7 @@ export default function SmartFlowsPage() {
                                 type="text"
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
-                                placeholder="Search flows..."
+                                placeholder={t("smart_flows_page.search_placeholder")}
                                 className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
                             />
                         </div>
@@ -523,7 +530,7 @@ export default function SmartFlowsPage() {
                             options={userOptions}
                             selected={selectedUsers}
                             onChange={setSelectedUsers}
-                            placeholder="All Users"
+                            placeholder={t("smart_flows_page.all_users")}
                             width="170px"
                             showSearch={true}
                             showSelectedOption={true}
@@ -539,7 +546,7 @@ export default function SmartFlowsPage() {
                                 ) : (
                                     <ArrowUpWideNarrow size={14} className="text-slate-500" />
                                 )}
-                                <span>{sortOrder === 'desc' ? 'From newest' : 'From oldest'}</span>
+                                <span>{sortOrder === 'desc' ? t("smart_flows_page.sort_newest") : t("smart_flows_page.sort_oldest")}</span>
                                 <ChevronDown size={12} className="text-slate-400" />
                             </button>
                         </DropdownMenuTrigger>
@@ -549,14 +556,14 @@ export default function SmartFlowsPage() {
                                 className="rounded-lg px-3 py-2 text-[12px] font-medium cursor-pointer hover:bg-primary/10 hover:text-primary transition-all gap-2"
                             >
                                 <ArrowDownWideNarrow size={14} className="text-slate-400" />
-                                From newest
+                                {t("smart_flows_page.sort_newest")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => setSortOrder('asc')}
                                 className="rounded-lg px-3 py-2 text-[12px] font-medium cursor-pointer hover:bg-primary/10 hover:text-primary transition-all gap-2"
                             >
                                 <ArrowUpWideNarrow size={14} className="text-slate-400" />
-                                From oldest
+                                {t("smart_flows_page.sort_oldest")}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -566,7 +573,7 @@ export default function SmartFlowsPage() {
                 {selectedIds.size > 0 && (
                     <div className="flex items-center justify-between bg-primary/[0.08] border-y border-primary/20 px-5 py-2">
                         <span className="text-[12px] font-semibold text-primary">
-                            {selectedIds.size} selected
+                            {t("smart_flows_page.selected_count", { count: selectedIds.size })}
                         </span>
                         <div className="flex items-center gap-2">
                             <Button
@@ -577,7 +584,7 @@ export default function SmartFlowsPage() {
                                 onClick={() => runBulk("publish")}
                             >
                                 {bulkRunning === "publish" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                                Publish
+                                {t("smart_flows_page.publish")}
                             </Button>
                             <Button
                                 size="sm"
@@ -587,7 +594,7 @@ export default function SmartFlowsPage() {
                                 onClick={() => runBulk("unpublish")}
                             >
                                 {bulkRunning === "unpublish" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                                Unpublish
+                                {t("smart_flows_page.unpublish")}
                             </Button>
                             <Button
                                 size="sm"
@@ -597,7 +604,7 @@ export default function SmartFlowsPage() {
                                 onClick={() => runBulk("delete")}
                             >
                                 {bulkRunning === "delete" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                                Delete
+                                {t("smart_flows_page.delete")}
                             </Button>
                             <Button
                                 size="sm"
@@ -605,7 +612,7 @@ export default function SmartFlowsPage() {
                                 className="h-7 text-[11px]"
                                 onClick={clearSelection}
                             >
-                                Clear
+                                {t("smart_flows_page.clear")}
                             </Button>
                         </div>
                     </div>
@@ -637,11 +644,11 @@ export default function SmartFlowsPage() {
                                 {/* Flow takes every spare pixel so Runs / Created by /
                                     Updated at collapse to their content and sit over on
                                     the right, as in the reference. */}
-                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest w-full">Flow</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-left whitespace-nowrap">Runs</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-left whitespace-nowrap">Created By</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-left whitespace-nowrap">Updated At</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest w-full">{t("smart_flows_page.col_flow")}</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-left whitespace-nowrap">{t("smart_flows_page.col_runs")}</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-left whitespace-nowrap">{t("smart_flows_page.col_created_by")}</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-left whitespace-nowrap">{t("smart_flows_page.col_updated_at")}</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-right">{t("smart_flows_page.col_actions")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
@@ -653,15 +660,15 @@ export default function SmartFlowsPage() {
                                                 <FolderOpen size={32} strokeWidth={1} />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">No Smart Flows found</p>
-                                                <p className="text-[11px] font-normal text-slate-400 tracking-wide">Create your first automation workflow</p>
+                                                <p className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">{t("smart_flows_page.empty_title")}</p>
+                                                <p className="text-[11px] font-normal text-slate-400 tracking-wide">{t("smart_flows_page.empty_subtitle")}</p>
                                             </div>
-                                            <Button 
-                                                variant="outline" 
-                                                onClick={() => setShowCreateModal(true)} 
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setShowCreateModal(true)}
                                                 className="mt-1 h-7.5 px-5 rounded-lg text-[9px] font-semibold border-primary/30 text-primary hover:bg-primary/10 transition-all shadow-sm"
                                             >
-                                                CREATE ONE NOW
+                                                {t("smart_flows_page.empty_cta")}
                                             </Button>
                                         </div>
                                     </td>
@@ -708,12 +715,12 @@ export default function SmartFlowsPage() {
                                                                 "h-1.5 w-1.5 rounded-full",
                                                                 flow.status === "active" ? "bg-emerald-500" : "bg-amber-500"
                                                             )} />
-                                                            {flow.status === "active" ? "Active" : flow.status === "unpublished" ? "Unpublished" : "Draft"}
+                                                            {flow.status === "active" ? t("smart_flows_page.status_badge_active") : flow.status === "unpublished" ? t("smart_flows_page.status_badge_unpublished") : t("smart_flows_page.status_badge_draft")}
                                                         </span>
                                                         {/* Folder badge */}
                                                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
                                                             <FolderOpen size={10} />
-                                                            {folderNameById.get(String(flow.folder_id)) ?? "No folder"}
+                                                            {folderNameById.get(String(flow.folder_id)) ?? t("smart_flows_page.no_folder")}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -740,8 +747,8 @@ export default function SmartFlowsPage() {
                                                 </div>
                                                 <span className="text-[11.5px] font-medium text-slate-700 dark:text-slate-300 truncate">
                                                     {flow.created_by
-                                                        ? `${flow.created_by.first_name || ''} ${flow.created_by.last_name || ''}`.trim() || flow.created_by.email || 'User'
-                                                        : 'Unknown'}
+                                                        ? `${flow.created_by.first_name || ''} ${flow.created_by.last_name || ''}`.trim() || flow.created_by.email || t("smart_flows_page.user_fallback")
+                                                        : t("smart_flows_page.unknown")}
                                                 </span>
                                             </div>
                                         </td>
@@ -768,14 +775,14 @@ export default function SmartFlowsPage() {
                                                 <DropdownMenuContent align="end" className="w-56 p-2 rounded-[16px] border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900">
                                                     <DropdownMenuItem onClick={() => handleOpenFlow(flow.id)} className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
                                                         <Pencil size={15} className="text-slate-400" />
-                                                        Edit flow
+                                                        {t("smart_flows_page.edit_flow")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => { setRenameTarget(flow); setRenameValue(flow.name || ""); }}
                                                         className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
                                                     >
                                                         <ClipboardCopy size={15} className="text-slate-400" />
-                                                        Rename
+                                                        {t("smart_flows_page.rename")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
                                                     <DropdownMenuItem
@@ -783,7 +790,7 @@ export default function SmartFlowsPage() {
                                                         className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
                                                     >
                                                         <FolderOpen size={15} className="text-slate-400" />
-                                                        Change Folder
+                                                        {t("smart_flows_page.change_folder")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
                                                     <DropdownMenuItem
@@ -791,7 +798,7 @@ export default function SmartFlowsPage() {
                                                         className="rounded-xl px-3 py-2 text-[12px] font-semibold text-rose-600 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all gap-3"
                                                     >
                                                         <Trash2 size={15} />
-                                                        Delete Flow
+                                                        {t("smart_flows_page.delete_flow")}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -806,10 +813,10 @@ export default function SmartFlowsPage() {
                 {/* 4. Modern Pagination Footer */}
                 <div className="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">{filteredFlows.length} Results</span>
+                        <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">{t("smart_flows_page.results_label", { count: filteredFlows.length })}</span>
                         <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Rows:</span>
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{t("smart_flows_page.rows_label")}</span>
                             <Select
                                 value={rowsPerPage.toString()}
                                 onValueChange={(value) => {
@@ -833,7 +840,7 @@ export default function SmartFlowsPage() {
 
                     <div className="flex items-center gap-6">
                         <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">
-                            Page <span className="text-primary font-semibold">{currentPage}</span> / {Math.max(1, totalPages)}
+                            {t("smart_flows_page.page_label")} <span className="text-primary font-semibold">{currentPage}</span> / {Math.max(1, totalPages)}
                         </span>
 
                         <div className="flex items-center gap-1">
@@ -875,26 +882,26 @@ export default function SmartFlowsPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white dark:bg-background rounded-lg shadow-xl max-w-lg w-full transform transition-all">
                         <div className="px-6 pt-6 pb-4">
-                            <h3 className="text-lg font-medium leading-6 mb-1">Create a Smart Flow</h3>
+                            <h3 className="text-lg font-medium leading-6 mb-1">{t("smart_flows_page.create_flow_modal_title")}</h3>
                         </div>
                         <form onSubmit={(e) => { e.preventDefault(); handleCreateFlow(); }}>
                             <div className="px-6 space-y-5">
                                 <div>
-                                    <label className="block text-sm font-semibold mb-2">Flow Name</label>
+                                    <label className="block text-sm font-semibold mb-2">{t("smart_flows_page.flow_name_label")}</label>
                                     <Input
                                         type="text"
                                         value={newFlowName}
                                         onChange={(e) => setNewFlowName(e.target.value)}
-                                        placeholder="Enter flow name..."
+                                        placeholder={t("smart_flows_page.flow_name_placeholder")}
                                         className="w-full"
                                         maxLength={250}
                                         autoFocus
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold mb-2">Select Folder</label>
+                                    <label className="block text-sm font-semibold mb-2">{t("smart_flows_page.select_folder_label")}</label>
                                     <select className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                                        <option value="">Root Folder</option>
+                                        <option value="">{t("smart_flows_page.root_folder")}</option>
                                         {folders.map((folder: any) => (
                                             <option key={folder.id} value={folder.id}>{folder.name}</option>
                                         ))}
@@ -912,7 +919,7 @@ export default function SmartFlowsPage() {
                                     }}
                                     disabled={isCreating}
                                 >
-                                    Cancel
+                                    {t("smart_flows_page.cancel")}
                                 </Button>
                                 <Button
                                     type="submit"
@@ -925,10 +932,10 @@ export default function SmartFlowsPage() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Creating...
+                                            {t("smart_flows_page.creating")}
                                         </>
                                     ) : (
-                                        "Create"
+                                        t("smart_flows_page.create")
                                     )}
                                 </Button>
                             </div>
@@ -942,17 +949,17 @@ export default function SmartFlowsPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
                     <div className="bg-white dark:bg-background rounded-lg shadow-xl max-w-lg w-full transform transition-all">
                         <div className="px-6 pt-6 pb-4">
-                            <h3 className="text-lg font-medium leading-6 mb-1">Create New Folder</h3>
+                            <h3 className="text-lg font-medium leading-6 mb-1">{t("smart_flows_page.create_folder_modal_title")}</h3>
                         </div>
                         <form onSubmit={(e) => { e.preventDefault(); handleCreateFolder(); }}>
                             <div className="px-6">
                                 <div>
-                                    <label className="block text-sm font-semibold mb-2">Folder Name</label>
+                                    <label className="block text-sm font-semibold mb-2">{t("smart_flows_page.folder_name_label")}</label>
                                     <Input
                                         type="text"
                                         value={newFolderName}
                                         onChange={(e) => setNewFolderName(e.target.value)}
-                                        placeholder="Enter folder name..."
+                                        placeholder={t("smart_flows_page.folder_name_placeholder")}
                                         className="w-full"
                                         autoFocus
                                     />
@@ -968,7 +975,7 @@ export default function SmartFlowsPage() {
                                     }}
                                     disabled={createFolderMutation.isPending}
                                 >
-                                    Cancel
+                                    {t("smart_flows_page.cancel")}
                                 </Button>
                                 <Button
                                     type="submit"
@@ -981,10 +988,10 @@ export default function SmartFlowsPage() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Creating...
+                                            {t("smart_flows_page.creating")}
                                         </>
                                     ) : (
-                                        "Create"
+                                        t("smart_flows_page.create")
                                     )}
                                 </Button>
                             </div>
@@ -998,7 +1005,7 @@ export default function SmartFlowsPage() {
                 <Dialog open={!!renameTarget} onOpenChange={(open) => { if (!open) { setRenameTarget(null); setRenameValue(""); } }}>
                     <DialogContent className="sm:max-w-[440px]">
                         <DialogHeader>
-                            <DialogTitle>Rename Flow</DialogTitle>
+                            <DialogTitle>{t("smart_flows_page.rename_modal_title")}</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={(e) => {
                             e.preventDefault();
@@ -1007,12 +1014,12 @@ export default function SmartFlowsPage() {
                             renameMutation.mutate({ id: renameTarget.id, name });
                         }}>
                             <div className="py-2">
-                                <label className="block text-sm font-semibold mb-2">Flow Name</label>
+                                <label className="block text-sm font-semibold mb-2">{t("smart_flows_page.flow_name_label")}</label>
                                 <Input
                                     type="text"
                                     value={renameValue}
                                     onChange={(e) => setRenameValue(e.target.value)}
-                                    placeholder="Enter new name..."
+                                    placeholder={t("smart_flows_page.new_name_placeholder")}
                                     autoFocus
                                 />
                             </div>
@@ -1023,14 +1030,14 @@ export default function SmartFlowsPage() {
                                     onClick={() => { setRenameTarget(null); setRenameValue(""); }}
                                     disabled={renameMutation.isPending}
                                 >
-                                    Cancel
+                                    {t("smart_flows_page.cancel")}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={!renameValue.trim() || renameValue.trim() === renameTarget.name || renameMutation.isPending}
                                     className="min-w-[100px]"
                                 >
-                                    {renameMutation.isPending ? "Saving..." : "Save"}
+                                    {renameMutation.isPending ? t("smart_flows_page.saving") : t("smart_flows_page.save")}
                                 </Button>
                             </div>
                         </form>
@@ -1043,17 +1050,17 @@ export default function SmartFlowsPage() {
                 <Dialog open={!!changeFolderTarget} onOpenChange={(open) => { if (!open) { setChangeFolderTarget(null); setChangeFolderTargetId(""); } }}>
                     <DialogContent className="sm:max-w-[440px]">
                         <DialogHeader>
-                            <DialogTitle>Change Folder</DialogTitle>
+                            <DialogTitle>{t("smart_flows_page.change_folder_modal_title")}</DialogTitle>
                         </DialogHeader>
                         <div className="py-2">
-                            <label className="block text-sm font-semibold mb-2">Select Folder</label>
+                            <label className="block text-sm font-semibold mb-2">{t("smart_flows_page.select_folder_label")}</label>
                             <Select value={changeFolderTargetId} onValueChange={setChangeFolderTargetId}>
                                 <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Choose a folder..." />
+                                    <SelectValue placeholder={t("smart_flows_page.choose_folder_placeholder")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {folders.length === 0 ? (
-                                        <div className="px-3 py-2 text-sm text-slate-500">No folders yet — create one first.</div>
+                                        <div className="px-3 py-2 text-sm text-slate-500">{t("smart_flows_page.no_folders_yet")}</div>
                                     ) : folders.map((f: any) => (
                                         <SelectItem key={f.id.toString()} value={f.id.toString()}>
                                             {f.name}
@@ -1062,8 +1069,8 @@ export default function SmartFlowsPage() {
                                 </SelectContent>
                             </Select>
                             <p className="text-[11px] text-slate-500 mt-2">
-                                Currently in: <span className="font-semibold">
-                                    {folders.find((f: any) => f.id?.toString() === changeFolderTarget?.folder_id?.toString())?.name || 'No folder'}
+                                {t("smart_flows_page.currently_in")} <span className="font-semibold">
+                                    {folders.find((f: any) => f.id?.toString() === changeFolderTarget?.folder_id?.toString())?.name || t("smart_flows_page.no_folder")}
                                 </span>
                             </p>
                         </div>
@@ -1074,7 +1081,7 @@ export default function SmartFlowsPage() {
                                 onClick={() => { setChangeFolderTarget(null); setChangeFolderTargetId(""); }}
                                 disabled={changeFolderMutation.isPending}
                             >
-                                Cancel
+                                {t("smart_flows_page.cancel")}
                             </Button>
                             <Button
                                 type="button"
@@ -1088,7 +1095,7 @@ export default function SmartFlowsPage() {
                                 disabled={!changeFolderTargetId || changeFolderTargetId === changeFolderTarget?.folder_id?.toString() || changeFolderMutation.isPending}
                                 className="min-w-[100px]"
                             >
-                                {changeFolderMutation.isPending ? "Moving..." : "Move"}
+                                {changeFolderMutation.isPending ? t("smart_flows_page.moving") : t("smart_flows_page.move")}
                             </Button>
                         </div>
                     </DialogContent>
@@ -1100,12 +1107,11 @@ export default function SmartFlowsPage() {
                 <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
                     <DialogContent className="sm:max-w-[440px]">
                         <DialogHeader>
-                            <DialogTitle>Delete Flow?</DialogTitle>
+                            <DialogTitle>{t("smart_flows_page.delete_modal_title")}</DialogTitle>
                         </DialogHeader>
                         <div className="py-2">
                             <p className="text-sm text-slate-600 dark:text-slate-400">
-                                <span className="font-semibold text-slate-900 dark:text-white">"{deleteTarget.name}"</span> will be removed and any channel auto-replies linked to it will be unlinked.
-                                This action cannot be undone.
+                                {t("smart_flows_page.delete_confirm_text", { name: deleteTarget.name })}
                             </p>
                         </div>
                         <div className="flex gap-3 justify-end mt-5">
@@ -1115,7 +1121,7 @@ export default function SmartFlowsPage() {
                                 onClick={() => setDeleteTarget(null)}
                                 disabled={deleteFlowMutation.isPending}
                             >
-                                Cancel
+                                {t("smart_flows_page.cancel")}
                             </Button>
                             <Button
                                 type="button"
@@ -1124,7 +1130,7 @@ export default function SmartFlowsPage() {
                                 disabled={deleteFlowMutation.isPending}
                                 className="min-w-[100px]"
                             >
-                                {deleteFlowMutation.isPending ? "Deleting..." : "Delete"}
+                                {deleteFlowMutation.isPending ? t("smart_flows_page.deleting") : t("smart_flows_page.delete")}
                             </Button>
                         </div>
                     </DialogContent>

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 interface AITheme {
   id: string;
@@ -97,6 +98,7 @@ export default function AIProductsSection() {
   const dark = mode === "dark";
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedTheme, setSelectedTheme] = useState<AITheme | null>(null);
@@ -281,14 +283,17 @@ export default function AIProductsSection() {
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-themes"] });
-      toast({ title: "Saved", description: "Theme saved successfully." });
+      toast({
+        title: t("ai_products_section.saved_title"),
+        description: t("ai_products_section.theme_saved_description"),
+      });
       const saved = data?.theme ?? data;
       if (saved?.id) setSelectedTheme(saved);
       setViewMode(editingTheme?.id ? "manage_theme" : "list");
       setEditingTheme({});
       setPayloadEnabled(false);
     },
-    onError: (err: any) => errorToast(err, "Save failed"),
+    onError: (err: any) => errorToast(err, t("ai_products_section.save_failed_title")),
   });
 
   const deleteThemeMutation = useMutation({
@@ -297,12 +302,15 @@ export default function AIProductsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-themes"] });
-      toast({ title: "Deleted", description: "Theme removed." });
+      toast({
+        title: t("ai_products_section.deleted_title"),
+        description: t("ai_products_section.theme_deleted_description"),
+      });
       setDeleteThemeOpen(false);
       setSelectedTheme(null);
       setViewMode("list");
     },
-    onError: (err: any) => errorToast(err, "Delete failed"),
+    onError: (err: any) => errorToast(err, t("ai_products_section.delete_failed_title")),
   });
 
   const saveProductMutation = useMutation({
@@ -320,11 +328,14 @@ export default function AIProductsSection() {
       queryClient.invalidateQueries({
         queryKey: ["/api/ai-themes", selectedTheme?.id, "products"],
       });
-      toast({ title: "Saved", description: "Product saved successfully." });
+      toast({
+        title: t("ai_products_section.saved_title"),
+        description: t("ai_products_section.product_saved_description"),
+      });
       setViewMode("manage_theme");
       setEditingProduct(null);
     },
-    onError: (err: any) => errorToast(err, "Save failed"),
+    onError: (err: any) => errorToast(err, t("ai_products_section.save_failed_title")),
   });
 
   const deleteProductMutation = useMutation({
@@ -339,10 +350,13 @@ export default function AIProductsSection() {
       queryClient.invalidateQueries({
         queryKey: ["/api/ai-themes", selectedTheme?.id, "products"],
       });
-      toast({ title: "Deleted", description: "Product removed." });
+      toast({
+        title: t("ai_products_section.deleted_title"),
+        description: t("ai_products_section.product_deleted_description"),
+      });
       setProductToDelete(null);
     },
-    onError: (err: any) => errorToast(err, "Delete failed"),
+    onError: (err: any) => errorToast(err, t("ai_products_section.delete_failed_title")),
   });
 
   const toggleAccessMutation = useMutation({
@@ -358,21 +372,21 @@ export default function AIProductsSection() {
     onSuccess: () => {
       refetchAccess();
     },
-    onError: (err: any) => errorToast(err, "Failed to update access"),
+    onError: (err: any) => errorToast(err, t("ai_products_section.access_update_failed_title")),
   });
 
   // ─── Helpers ──────────────────────────────────────────────────────
-  function errorToast(err: any, fallbackTitle = "Error") {
+  function errorToast(err: any, fallbackTitle?: string) {
     const body = err?.body ?? null;
     const inner = body?.message && typeof body.message === "object" ? body.message : body;
-    const msg = inner?.message ?? body?.message ?? err?.message ?? "Something went wrong.";
+    const msg = inner?.message ?? body?.message ?? err?.message ?? t("ai_products_section.something_went_wrong");
     const code = inner?.code ?? body?.code;
     const titleByCode: Record<string, string> = {
-      NOT_FOUND: "Not found",
-      VALIDATION: "Validation error",
+      NOT_FOUND: t("ai_products_section.error_title_not_found"),
+      VALIDATION: t("ai_products_section.error_title_validation"),
     };
     toast({
-      title: code && titleByCode[code] ? titleByCode[code] : fallbackTitle,
+      title: code && titleByCode[code] ? titleByCode[code] : (fallbackTitle ?? t("ai_products_section.error_title_default")),
       description: msg,
       variant: "destructive",
     });
@@ -424,24 +438,24 @@ export default function AIProductsSection() {
   }
 
   function handleSaveTheme() {
-    const t = editingTheme;
-    if (!t?.name || !t?.subtitle || !t?.type || !t?.channel || !t?.automation_id) {
+    const theme = editingTheme;
+    if (!theme?.name || !theme?.subtitle || !theme?.type || !theme?.channel || !theme?.automation_id) {
       toast({
-        title: "Missing fields",
-        description: "Name, subtitle, type, automation and channel are required.",
+        title: t("ai_products_section.missing_fields_title"),
+        description: t("ai_products_section.missing_fields_theme_description"),
         variant: "destructive",
       });
       return;
     }
     saveThemeMutation.mutate({
-      name: t.name,
-      subtitle: t.subtitle,
-      type: t.type,
-      automation_id: t.automation_id,
-      channel: t.channel,
-      payload: payloadEnabled ? (t.payload ?? null) : null,
+      name: theme.name,
+      subtitle: theme.subtitle,
+      type: theme.type,
+      automation_id: theme.automation_id,
+      channel: theme.channel,
+      payload: payloadEnabled ? (theme.payload ?? null) : null,
       payload_enabled: payloadEnabled,
-      properties: t.properties ?? {},
+      properties: theme.properties ?? {},
     });
   }
 
@@ -449,8 +463,8 @@ export default function AIProductsSection() {
     const p = editingProduct;
     if (!p?.name) {
       toast({
-        title: "Missing fields",
-        description: "Product name is required.",
+        title: t("ai_products_section.missing_fields_title"),
+        description: t("ai_products_section.missing_fields_product_description"),
         variant: "destructive",
       });
       return;
@@ -464,51 +478,58 @@ export default function AIProductsSection() {
     });
   }
 
-  function copyToClipboard(value: string | null | undefined, label = "URL") {
+  function copyToClipboard(value: string | null | undefined, label?: string) {
     if (!value) return;
     navigator.clipboard.writeText(value);
-    toast({ title: "Copied", description: `${label} copied to clipboard.` });
+    toast({
+      title: t("ai_products_section.copied_title"),
+      description: t("ai_products_section.copied_description", {
+        label: label ?? t("ai_products_section.copy_label_default"),
+      }),
+    });
   }
 
-  // Header copy per view (matches replyagent's verbatim labels).
+  // Header copy per view.
   const headerTitle =
     viewMode === "edit_product"
       ? editingProduct?.id
-        ? "Edit Product"
-        : "New Product"
+        ? t("ai_products_section.header_title_edit_product")
+        : t("ai_products_section.header_title_new_product")
       : viewMode === "edit_theme"
         ? editingTheme?.id
-          ? "Edit Theme"
-          : "New Theme"
+          ? t("ai_products_section.header_title_edit_theme")
+          : t("ai_products_section.header_title_new_theme")
         : viewMode === "user_access"
-          ? "Theme Access"
+          ? t("ai_products_section.header_title_theme_access")
           : viewMode === "manage_theme"
-            ? selectedTheme?.name || "Manage Theme"
-            : "AI Products";
+            ? selectedTheme?.name || t("ai_products_section.header_title_manage_theme")
+            : t("ai_products_section.header_title_list");
   const headerSub =
     viewMode === "edit_product"
-      ? selectedTheme?.name || "Configure your product"
+      ? selectedTheme?.name || t("ai_products_section.header_sub_configure_product")
       : viewMode === "edit_theme"
-        ? "Bind a data source to an automation"
+        ? t("ai_products_section.header_sub_edit_theme")
         : viewMode === "user_access"
-          ? `Grant agents access to ${selectedTheme?.name ?? "this theme"}`
+          ? t("ai_products_section.header_sub_user_access", {
+              theme: selectedTheme?.name ?? t("ai_products_section.this_theme"),
+            })
           : viewMode === "manage_theme"
-            ? selectedTheme?.subtitle || "Manage products in this theme"
-            : "Organize and manage your AI Products";
+            ? selectedTheme?.subtitle || t("ai_products_section.header_sub_manage_theme")
+            : t("ai_products_section.header_sub_list");
 
   // ─── Provider icon (Baserow has a logo asset; everything else falls
   //     back to the Cpu glyph). Memoised per type so img-load failures
   //     stick. ─────────────────────────────────────────────────────────
   const ProviderIcon = ({ type, className = "w-7 h-7" }: { type?: string; className?: string }) => {
     const [errored, setErrored] = useState(false);
-    const t = (type ?? "").toLowerCase();
-    if (!t || errored || !["baserow", "supabase"].includes(t)) {
+    const providerType = (type ?? "").toLowerCase();
+    if (!providerType || errored || !["baserow", "supabase"].includes(providerType)) {
       return <Database className={cn(className, "text-primary")} />;
     }
     return (
       <img
-        src={`/images/integrations/${t}.png`}
-        alt={t}
+        src={`/images/integrations/${providerType}.png`}
+        alt={providerType}
         className={cn(className, "object-contain")}
         onError={() => setErrored(true)}
       />
@@ -545,7 +566,7 @@ export default function AIProductsSection() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className={primaryOutlineBtn}>
-                      <Plus size={12} /> Add Theme <ChevronDown size={12} className="opacity-60" />
+                      <Plus size={12} /> {t("ai_products_section.add_theme")} <ChevronDown size={12} className="opacity-60" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-52", card, border)}>
@@ -570,7 +591,7 @@ export default function AIProductsSection() {
               )}
               {viewMode === "list" && isPrivileged && !hasBaserow && !hasSupabase && (
                 <p className={cn("text-[10px] font-bold opacity-60", sub)}>
-                  Connect Baserow or Supabase first
+                  {t("ai_products_section.connect_integration_first")}
                 </p>
               )}
 
@@ -589,17 +610,17 @@ export default function AIProductsSection() {
                     }}
                     className={primaryOutlineBtn}
                   >
-                    <Plus size={12} /> Add Product
+                    <Plus size={12} /> {t("ai_products_section.add_product")}
                   </button>
                   <button onClick={backToList} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Back
+                    <ChevronLeft size={12} /> {t("ai_products_section.back")}
                   </button>
                 </>
               )}
 
               {viewMode === "edit_product" && (
                 <button onClick={backToManage} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("ai_products_section.back")}
                 </button>
               )}
 
@@ -615,7 +636,7 @@ export default function AIProductsSection() {
                   }}
                   className={outlineBtn}
                 >
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("ai_products_section.back")}
                 </button>
               )}
 
@@ -624,7 +645,7 @@ export default function AIProductsSection() {
                   onClick={() => setViewMode("manage_theme")}
                   className={outlineBtn}
                 >
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("ai_products_section.back")}
                 </button>
               )}
             </div>
@@ -633,11 +654,10 @@ export default function AIProductsSection() {
           {/* ─── LIST VIEW (Themes grid + stats) ─── */}
           {viewMode === "list" && (
             <div className="p-8 space-y-6">
-              {/* Stats panel — replyagent shows a single counter; keep it
-                  minimal but real (sources from the actual list length). */}
+              {/* Stats panel — a single counter, sourced from the actual list length. */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className={cn("rounded-[1.5rem] border p-5", softBg, softBorder)}>
-                  <p className={cn("text-[11px] font-semibold", sub)}>Total databases</p>
+                  <p className={cn("text-[11px] font-semibold", sub)}>{t("ai_products_section.total_databases")}</p>
                   <p className={cn("text-[28px] font-black mt-2", text)}>{themes.length}</p>
                 </div>
               </div>
@@ -681,13 +701,13 @@ export default function AIProductsSection() {
                                 className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                                 onClick={() => openUserAccess(theme)}
                               >
-                                <UserCog size={13} /> Access
+                                <UserCog size={13} /> {t("ai_products_section.access")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                                 onClick={() => startEditTheme(theme)}
                               >
-                                <Edit2 size={13} /> Edit
+                                <Edit2 size={13} /> {t("ai_products_section.edit")}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="my-1" />
                               <DropdownMenuItem
@@ -697,7 +717,7 @@ export default function AIProductsSection() {
                                   setDeleteThemeOpen(true);
                                 }}
                               >
-                                <Trash2 size={13} /> Delete
+                                <Trash2 size={13} /> {t("ai_products_section.delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -713,7 +733,7 @@ export default function AIProductsSection() {
                         {theme.subtitle}
                       </p>
                       <button onClick={() => openManageTheme(theme)} className={cn(primaryOutlineBtn, "self-end")}>
-                        Manage
+                        {t("ai_products_section.manage")}
                       </button>
                     </div>
                   ))}
@@ -730,11 +750,11 @@ export default function AIProductsSection() {
                     <Database className="w-8 h-8 text-primary" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No themes yet</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_products_section.no_themes_yet")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
                       {hasBaserow || hasSupabase
-                        ? "Create your first AI theme to bind a Baserow / Supabase table to an automation."
-                        : "Connect a Baserow or Supabase integration first, then come back to create themes."}
+                        ? t("ai_products_section.no_themes_empty_can_create")
+                        : t("ai_products_section.no_themes_empty_need_integration")}
                     </p>
                   </div>
                 </div>
@@ -755,10 +775,10 @@ export default function AIProductsSection() {
                     <table className="w-full">
                       <thead>
                         <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Name</th>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>External ID</th>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Trigger URL</th>
-                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_name")}</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_external_id")}</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_trigger_url")}</th>
+                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -790,9 +810,9 @@ export default function AIProductsSection() {
                                 <code className={cn("px-2 py-1 rounded-md text-[10px] font-bold border truncate", softBorder, dark ? "bg-slate-900/50" : "bg-slate-50")}>{product.trigger_url || "—"}</code>
                                 {product.trigger_url && (
                                   <button
-                                    onClick={() => copyToClipboard(product.trigger_url!, "Trigger URL")}
+                                    onClick={() => copyToClipboard(product.trigger_url!, t("ai_products_section.trigger_url_label"))}
                                     className={cn("w-7 h-7 rounded-md flex items-center justify-center", dark ? "hover:bg-slate-800 text-primary" : "hover:bg-slate-100 text-primary")}
-                                    title="Copy trigger URL"
+                                    title={t("ai_products_section.copy_trigger_url_title")}
                                   >
                                     <CopyIcon size={11} />
                                   </button>
@@ -812,7 +832,7 @@ export default function AIProductsSection() {
                                       ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400"
                                       : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500",
                                   )}
-                                  title="Edit"
+                                  title={t("ai_products_section.edit")}
                                 >
                                   <Edit2 size={13} />
                                 </button>
@@ -824,7 +844,7 @@ export default function AIProductsSection() {
                                       ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400"
                                       : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500",
                                   )}
-                                  title="Delete"
+                                  title={t("ai_products_section.delete")}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -843,7 +863,10 @@ export default function AIProductsSection() {
                       dark ? "bg-slate-900/40" : "bg-white/60",
                     )}
                   >
-                    Showing {products.length} of {products.length} products
+                    {t("ai_products_section.showing_products_count", {
+                      count: products.length,
+                      total: products.length,
+                    })}
                   </div>
                 </div>
               ) : (
@@ -858,9 +881,9 @@ export default function AIProductsSection() {
                     <Cpu className="w-8 h-8 text-primary" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No products yet</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("ai_products_section.no_products_yet")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Add your first product to make it discoverable through this theme.
+                      {t("ai_products_section.no_products_empty_description")}
                     </p>
                   </div>
                   <button
@@ -876,7 +899,7 @@ export default function AIProductsSection() {
                     }}
                     className={primaryOutlineBtn}
                   >
-                    <Plus size={12} /> Add Product
+                    <Plus size={12} /> {t("ai_products_section.add_product")}
                   </button>
                 </div>
               )}
@@ -891,7 +914,7 @@ export default function AIProductsSection() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className={labelCls}>
-                        Name <span className="text-rose-500">*</span>
+                        {t("ai_products_section.field_name")} <span className="text-rose-500">*</span>
                       </label>
                       <input
                         value={editingTheme?.name ?? ""}
@@ -899,13 +922,13 @@ export default function AIProductsSection() {
                           setEditingTheme((prev) => ({ ...prev, name: e.target.value.slice(0, 255) }))
                         }
                         maxLength={255}
-                        placeholder="Theme name"
+                        placeholder={t("ai_products_section.theme_name_placeholder")}
                         className={inputCls}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className={labelCls}>
-                        Subtitle <span className="text-rose-500">*</span>
+                        {t("ai_products_section.field_subtitle")} <span className="text-rose-500">*</span>
                       </label>
                       <input
                         value={editingTheme?.subtitle ?? ""}
@@ -913,7 +936,7 @@ export default function AIProductsSection() {
                           setEditingTheme((prev) => ({ ...prev, subtitle: e.target.value.slice(0, 1024) }))
                         }
                         maxLength={1024}
-                        placeholder="Short description"
+                        placeholder={t("ai_products_section.short_description_placeholder")}
                         className={inputCls}
                       />
                     </div>
@@ -922,7 +945,7 @@ export default function AIProductsSection() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className={labelCls}>
-                        Smart flow <span className="text-rose-500">*</span>
+                        {t("ai_products_section.field_smart_flow")} <span className="text-rose-500">*</span>
                       </label>
                       <select
                         value={editingTheme?.automation_id ?? ""}
@@ -934,17 +957,17 @@ export default function AIProductsSection() {
                         }
                         className={inputCls}
                       >
-                        <option value="">— Select an automation —</option>
+                        <option value="">{t("ai_products_section.select_automation_option")}</option>
                         {automations.map((a: any) => (
                           <option key={a.id} value={String(a.id)}>
-                            {a.name ?? `Automation #${a.id}`}
+                            {a.name ?? t("ai_products_section.automation_fallback_label", { id: a.id })}
                           </option>
                         ))}
                       </select>
                     </div>
                     <div className="space-y-2">
                       <label className={labelCls}>
-                        Channel <span className="text-rose-500">*</span>
+                        {t("ai_products_section.field_channel")} <span className="text-rose-500">*</span>
                       </label>
                       <select
                         value={
@@ -959,7 +982,7 @@ export default function AIProductsSection() {
                         <option value="TELEGRAM">Telegram</option>
                         <option value="INSTAGRAM">Instagram</option>
                         <option value="MESSENGER">Messenger</option>
-                        <option value="WEBCHAT">Webchat</option>
+                        <option value="WEBCHAT">{t("ai_products_section.channel_webchat")}</option>
                         <option value="ZAPI">Z-API</option>
                       </select>
                     </div>
@@ -967,7 +990,7 @@ export default function AIProductsSection() {
 
                   <div className="space-y-2">
                     <label className={labelCls}>
-                      Type <span className="text-rose-500">*</span>
+                      {t("ai_products_section.field_type")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       value={editingTheme?.type ?? ""}
@@ -975,7 +998,7 @@ export default function AIProductsSection() {
                       className={cn(inputCls, "opacity-60 cursor-not-allowed")}
                     />
                     <p className={cn("text-[10px] font-medium opacity-60", sub)}>
-                      Provider is locked once the theme is created. Delete and re-add to switch providers.
+                      {t("ai_products_section.provider_locked_hint")}
                     </p>
                   </div>
 
@@ -983,7 +1006,7 @@ export default function AIProductsSection() {
                       can fetch column metadata. */}
                   {(editingTheme?.type ?? "").toLowerCase() === "baserow" && (
                     <div className="space-y-2">
-                      <label className={labelCls}>Baserow table ID</label>
+                      <label className={labelCls}>{t("ai_products_section.field_baserow_table_id")}</label>
                       <input
                         value={editingTheme?.properties?.spreadsheet_id ?? ""}
                         onChange={(e) =>
@@ -995,20 +1018,19 @@ export default function AIProductsSection() {
                             },
                           }))
                         }
-                        placeholder="e.g. 123456"
+                        placeholder={t("ai_products_section.baserow_table_id_placeholder")}
                         className={inputCls}
                       />
                     </div>
                   )}
 
-                  {/* Payload toggle + textarea — matches replyagent's
-                      payload_enabled UX. */}
+                  {/* Payload toggle + textarea. */}
                   <div className={cn("rounded-[1rem] border p-5 space-y-3", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className={cn("text-[12px] font-black", text)}>Static payload</p>
+                        <p className={cn("text-[12px] font-black", text)}>{t("ai_products_section.static_payload_title")}</p>
                         <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                          A JSON template the agent merges into every reply for this theme.
+                          {t("ai_products_section.static_payload_description")}
                         </p>
                       </div>
                       <Switch
@@ -1042,7 +1064,7 @@ export default function AIProductsSection() {
                     }}
                     className={outlineBtn}
                   >
-                    Cancel
+                    {t("ai_products_section.cancel")}
                   </button>
                   <button
                     onClick={handleSaveTheme}
@@ -1050,7 +1072,7 @@ export default function AIProductsSection() {
                     className={primaryBtn}
                   >
                     {saveThemeMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                    {editingTheme?.id ? "Update theme" : "Create theme"}
+                    {editingTheme?.id ? t("ai_products_section.update_theme") : t("ai_products_section.create_theme")}
                   </button>
                 </div>
               </div>
@@ -1064,7 +1086,7 @@ export default function AIProductsSection() {
                 <div className="max-w-2xl space-y-6">
                   <div className="space-y-2">
                     <label className={labelCls}>
-                      Name <span className="text-rose-500">*</span>
+                      {t("ai_products_section.field_name")} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       value={editingProduct?.name ?? ""}
@@ -1072,14 +1094,14 @@ export default function AIProductsSection() {
                         setEditingProduct((prev) => (prev ? { ...prev, name: e.target.value.slice(0, 255) } : null))
                       }
                       maxLength={255}
-                      placeholder="Product name"
+                      placeholder={t("ai_products_section.product_name_placeholder")}
                       className={inputCls}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className={labelCls}>External ID</label>
+                      <label className={labelCls}>{t("ai_products_section.field_external_id")}</label>
                       <input
                         value={editingProduct?.external_id ?? ""}
                         onChange={(e) =>
@@ -1088,12 +1110,12 @@ export default function AIProductsSection() {
                           )
                         }
                         maxLength={255}
-                        placeholder="Baserow row id / Supabase pk"
+                        placeholder={t("ai_products_section.external_id_placeholder")}
                         className={inputCls}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={labelCls}>Link text</label>
+                      <label className={labelCls}>{t("ai_products_section.field_link_text")}</label>
                       <input
                         value={editingProduct?.link_text ?? ""}
                         onChange={(e) =>
@@ -1102,14 +1124,14 @@ export default function AIProductsSection() {
                           )
                         }
                         maxLength={255}
-                        placeholder="Override label for the trigger URL"
+                        placeholder={t("ai_products_section.link_text_placeholder")}
                         className={inputCls}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className={labelCls}>Payload (optional)</label>
+                    <label className={labelCls}>{t("ai_products_section.field_payload_optional")}</label>
                     <input
                       value={editingProduct?.payload ?? ""}
                       onChange={(e) =>
@@ -1121,21 +1143,21 @@ export default function AIProductsSection() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className={labelCls}>Trigger URL</label>
+                    <label className={labelCls}>{t("ai_products_section.field_trigger_url")}</label>
                     <input
                       readOnly
-                      value={editingProduct?.trigger_url ?? "Generated after save"}
+                      value={editingProduct?.trigger_url ?? t("ai_products_section.generated_after_save")}
                       className={cn(inputCls, "font-mono text-[12px] opacity-60")}
                     />
                     <p className={cn("text-[10px] font-medium opacity-60", sub)}>
-                      Auto-generated on save. Share this link in messages to deep-link to the product.
+                      {t("ai_products_section.trigger_url_hint")}
                     </p>
                   </div>
                 </div>
 
                 <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
                   <button onClick={backToManage} className={outlineBtn}>
-                    Cancel
+                    {t("ai_products_section.cancel")}
                   </button>
                   <button
                     onClick={handleSaveProduct}
@@ -1143,7 +1165,7 @@ export default function AIProductsSection() {
                     className={primaryBtn}
                   >
                     {saveProductMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                    {editingProduct?.id ? "Update product" : "Create product"}
+                    {editingProduct?.id ? t("ai_products_section.update_product") : t("ai_products_section.create_product")}
                   </button>
                 </div>
               </div>
@@ -1155,9 +1177,9 @@ export default function AIProductsSection() {
             <div className="p-8 space-y-5">
               <div className={cn("rounded-[1.5rem] border p-6", softBg, softBorder)}>
                 <p className={cn("text-[12px] font-medium leading-relaxed", sub)}>
-                  Toggle which workspace members can manage products under{" "}
-                  <span className={cn("font-black", text)}>{selectedTheme.name}</span>. Owners and
-                  super-users always have access.
+                  {t("ai_products_section.access_toggle_prefix")}{" "}
+                  <span className={cn("font-black", text)}>{selectedTheme.name}</span>
+                  {t("ai_products_section.access_toggle_suffix")}
                 </p>
               </div>
 
@@ -1167,7 +1189,7 @@ export default function AIProductsSection() {
                 <input
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
-                  placeholder="Search by name or email…"
+                  placeholder={t("ai_products_section.search_members_placeholder")}
                   className={cn(inputCls, "pl-10")}
                 />
               </div>
@@ -1176,16 +1198,16 @@ export default function AIProductsSection() {
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
                 {members.length === 0 ? (
                   <div className="p-8 text-center">
-                    <p className={cn("text-[12px] font-medium", sub)}>No workspace members found.</p>
+                    <p className={cn("text-[12px] font-medium", sub)}>{t("ai_products_section.no_members_found")}</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Member</th>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Role</th>
-                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Access</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_member")}</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_role")}</th>
+                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("ai_products_section.table_header_access")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1210,7 +1232,7 @@ export default function AIProductsSection() {
                               member?.roleable?.role?.name ??
                               member?.role?.name ??
                               member?.role?.slug ??
-                              "Agent";
+                              t("ai_products_section.role_fallback_agent");
                             return (
                               <tr
                                 key={member.id}
@@ -1229,7 +1251,7 @@ export default function AIProductsSection() {
                                     </div>
                                     <div>
                                       <p className={cn("text-[13px] font-black", text)}>
-                                        {member.name ?? member.full_name ?? member.email ?? "Unknown"}
+                                        {member.name ?? member.full_name ?? member.email ?? t("ai_products_section.unknown_member")}
                                       </p>
                                       {member.email && (
                                         <p className={cn("text-[11px] font-medium opacity-60", sub)}>
@@ -1245,7 +1267,7 @@ export default function AIProductsSection() {
                                 <td className="px-6 py-4 text-right">
                                   {isAlwaysOn ? (
                                     <span className={cn("text-[11px] font-semibold", "text-emerald-500")}>
-                                      Always on
+                                      {t("ai_products_section.always_on")}
                                     </span>
                                   ) : (
                                     <Switch
@@ -1278,20 +1300,20 @@ export default function AIProductsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete theme?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_products_section.delete_theme_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{selectedTheme?.name ?? "This theme"}</span> and all
-                  associated products + user access entries will be permanently removed.
+                  <span className="text-rose-500 font-black">{selectedTheme?.name ?? t("ai_products_section.this_theme")}</span>{" "}
+                  {t("ai_products_section.delete_theme_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_products_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => selectedTheme && deleteThemeMutation.mutate(selectedTheme.id)}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("ai_products_section.delete")}
               </AlertDialogAction>
             </div>
           </div>
@@ -1307,20 +1329,20 @@ export default function AIProductsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete product?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("ai_products_section.delete_product_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{productToDelete?.name ?? "This product"}</span> will be
-                  permanently removed.
+                  <span className="text-rose-500 font-black">{productToDelete?.name ?? t("ai_products_section.this_product")}</span>{" "}
+                  {t("ai_products_section.delete_product_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("ai_products_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => productToDelete?.id && deleteProductMutation.mutate(productToDelete.id)}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("ai_products_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

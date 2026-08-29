@@ -11,6 +11,7 @@
  *   - ConfirmDeleteStep + ConfirmFlushQueue: simple confirm prompts
  */
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -279,6 +280,7 @@ export function TriggersModal({
   onOpenChange: (o: boolean) => void;
   onPick: (event: string, schema: TriggerSchema, prefill?: Record<string, any>) => void;
 }) {
+  const { t } = useTranslation();
   const [category, setCategory] = useState<string>("All");
   const [search, setSearch] = useState("");
   const accounts = useConnectedAccounts(open);
@@ -302,7 +304,7 @@ export function TriggersModal({
         return { event: ev, label: schema.label, schema };
       })
       .filter(Boolean) as PickerCard[];
-    out.push({ title: "Events", icon: <Bell className="h-4 w-4 text-slate-500" />, cards: eventsCards });
+    out.push({ title: t("automation_modals.events_section"), icon: <Bell className="h-4 w-4 text-slate-500" />, cards: eventsCards });
 
     // 2. Per-channel-account sections.
     for (const acc of accounts) {
@@ -311,13 +313,13 @@ export function TriggersModal({
       const cards: PickerCard[] = [];
       const prefill = { channel_account_id: String(acc.id) };
       if (template.startUrl && TRIGGER_SCHEMAS[template.startUrl])
-        cards.push({ event: template.startUrl, label: "Start URL", schema: TRIGGER_SCHEMAS[template.startUrl], prefill });
+        cards.push({ event: template.startUrl, label: t("automation_modals.start_url_label"), schema: TRIGGER_SCHEMAS[template.startUrl], prefill });
       if (template.refStart && TRIGGER_SCHEMAS[template.refStart])
-        cards.push({ event: template.refStart, label: "Start URL", schema: TRIGGER_SCHEMAS[template.refStart], prefill });
+        cards.push({ event: template.refStart, label: t("automation_modals.start_url_label"), schema: TRIGGER_SCHEMAS[template.refStart], prefill });
       if (template.keyword && TRIGGER_SCHEMAS[template.keyword])
-        cards.push({ event: template.keyword, label: "Keywords", schema: TRIGGER_SCHEMAS[template.keyword], prefill });
+        cards.push({ event: template.keyword, label: t("automation_modals.keywords_label"), schema: TRIGGER_SCHEMAS[template.keyword], prefill });
       if (template.adClicked && TRIGGER_SCHEMAS[template.adClicked])
-        cards.push({ event: template.adClicked, label: "Ad clicked", schema: TRIGGER_SCHEMAS[template.adClicked], prefill });
+        cards.push({ event: template.adClicked, label: t("automation_modals.ad_clicked_label"), schema: TRIGGER_SCHEMAS[template.adClicked], prefill });
       out.push({
         title: acc.name,
         icon: channelEmojiIcon(acc.channel),
@@ -356,7 +358,7 @@ export function TriggersModal({
       <DialogContent className="max-w-3xl">
         {/* Replyagent has no visible title / subtitle — just the controls
             row. We keep an sr-only DialogTitle for a11y. */}
-        <DialogTitle className="sr-only">Select trigger</DialogTitle>
+        <DialogTitle className="sr-only">{t("automation_modals.select_trigger_title")}</DialogTitle>
 
         <div className="flex gap-2 items-center">
           <Select value={category} onValueChange={setCategory}>
@@ -364,7 +366,7 @@ export function TriggersModal({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="All">{t("automation_modals.category_all")}</SelectItem>
               {TRIGGER_CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
@@ -377,7 +379,7 @@ export function TriggersModal({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search…"
+              placeholder={t("automation_modals.search_placeholder")}
               className="pl-7 h-9"
             />
           </div>
@@ -386,7 +388,7 @@ export function TriggersModal({
         <ScrollArea className="h-[28rem] mt-2 -mx-2 px-2">
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground p-6 text-center">
-              No triggers match.
+              {t("automation_modals.no_triggers_match")}
             </p>
           ) : (
             filtered.map((sec) => (
@@ -435,6 +437,7 @@ export function SelectAutomationPopup({
   excludeAutomationId?: string;
   statusFilter?: string;
 }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -463,27 +466,27 @@ export function SelectAutomationPopup({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogTitle>Select automation</DialogTitle>
+        <DialogTitle>{t("automation_modals.select_automation_title")}</DialogTitle>
         <DialogDescription>
-          Pick an automation to reference from this step.
+          {t("automation_modals.select_automation_desc")}
         </DialogDescription>
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name…"
+          placeholder={t("automation_modals.search_by_name_placeholder")}
         />
         <ScrollArea className="h-80">
           {automations.length === 0 ? (
             <p className="text-sm text-muted-foreground p-6 text-center">
-              Nothing found.
+              {t("automation_modals.nothing_found")}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
-                  <th className="px-2 py-1">Name</th>
-                  <th className="px-2 py-1">Runs</th>
-                  <th className="px-2 py-1">Status</th>
+                  <th className="px-2 py-1">{t("automation_modals.table_name")}</th>
+                  <th className="px-2 py-1">{t("automation_modals.table_runs")}</th>
+                  <th className="px-2 py-1">{t("automation_modals.table_status")}</th>
                   <th className="px-2 py-1"></th>
                 </tr>
               </thead>
@@ -507,7 +510,7 @@ export function SelectAutomationPopup({
                           onOpenChange(false);
                         }}
                       >
-                        Select
+                        {t("automation_modals.select_button")}
                       </Button>
                     </td>
                   </tr>
@@ -538,6 +541,7 @@ export function CommentModal({
   onDelete?: () => void;
   readOnly?: boolean;
 }) {
+  const { t } = useTranslation();
   const [text, setText] = useState(initialComment ?? "");
   useEffect(() => {
     if (open) setText(initialComment ?? "");
@@ -546,21 +550,20 @@ export function CommentModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>Step comment</DialogTitle>
+        <DialogTitle>{t("automation_modals.comment_modal_title")}</DialogTitle>
         <DialogDescription>
-          Notes are visible to anyone editing this flow. Comments don't affect
-          execution.
+          {t("automation_modals.comment_modal_desc")}
         </DialogDescription>
         <Textarea
           value={text}
           readOnly={readOnly}
           onChange={(e) => setText(e.target.value)}
           rows={5}
-          placeholder="Add a comment…"
+          placeholder={t("automation_modals.comment_placeholder")}
         />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("automation_modals.cancel")}
           </Button>
           {!readOnly && onDelete && initialComment && (
             <Button
@@ -571,7 +574,7 @@ export function CommentModal({
                 onOpenChange(false);
               }}
             >
-              Delete
+              {t("automation_modals.delete")}
             </Button>
           )}
           {!readOnly && (
@@ -581,7 +584,7 @@ export function CommentModal({
                 onOpenChange(false);
               }}
             >
-              Save
+              {t("automation_modals.save")}
             </Button>
           )}
         </div>
@@ -605,6 +608,7 @@ export function LoopRectificationDialog({
   onConfirm: () => void;
   loading?: boolean;
 }) {
+  const { t } = useTranslation();
   const [acknowledged, setAcknowledged] = useState(false);
   useEffect(() => {
     if (!open) setAcknowledged(false);
@@ -615,16 +619,15 @@ export function LoopRectificationDialog({
       <DialogContent className="max-w-md">
         <DialogTitle className="flex items-center gap-2 text-amber-700">
           <AlertTriangle className="h-4 w-4" />
-          Possible loop detected
+          {t("automation_modals.loop_title")}
         </DialogTitle>
         <DialogDescription>
-          This flow has connections that could cause an infinite loop. Review
-          them below and acknowledge before publishing.
+          {t("automation_modals.loop_desc")}
         </DialogDescription>
         <div className="border rounded bg-amber-50 dark:bg-amber-950/30 p-3 max-h-40 overflow-auto">
           {loops.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              No specific loop edges identified.
+              {t("automation_modals.loop_no_edges")}
             </p>
           ) : (
             <ul className="space-y-1 text-xs font-mono">
@@ -643,13 +646,12 @@ export function LoopRectificationDialog({
             onChange={(e) => setAcknowledged(e.target.checked)}
           />
           <span>
-            I understand the loop risk and accept responsibility for monitoring
-            this automation.
+            {t("automation_modals.loop_ack_label")}
           </span>
         </label>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("automation_modals.cancel")}
           </Button>
           <Button
             disabled={!acknowledged || loading}
@@ -657,7 +659,7 @@ export function LoopRectificationDialog({
             className="bg-amber-600 hover:bg-amber-700 text-white"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Publish anyway
+            {t("automation_modals.publish_anyway")}
           </Button>
         </div>
       </DialogContent>
@@ -682,6 +684,7 @@ export function QueueContactsModal({
   onConfirm: (action: QueueAction, tagName?: string) => void;
   loading?: boolean;
 }) {
+  const { t } = useTranslation();
   const [action, setAction] = useState<QueueAction>("requeue");
   const [tagName, setTagName] = useState("");
 
@@ -695,29 +698,27 @@ export function QueueContactsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>Contacts in flight</DialogTitle>
+        <DialogTitle>{t("automation_modals.queue_modal_title")}</DialogTitle>
         <DialogDescription>
-          {inFlightCount} contact{inFlightCount === 1 ? "" : "s"} are currently
-          running this automation. Choose what to do with them before
-          publishing.
+          {t("automation_modals.queue_modal_desc", { count: inFlightCount })}
         </DialogDescription>
         <div className="space-y-2">
           {(
             [
               {
                 value: "requeue" as const,
-                title: "Requeue contacts at the start",
-                desc: "Existing runs are reset to the trigger step.",
+                title: t("automation_modals.queue_requeue_title"),
+                desc: t("automation_modals.queue_requeue_desc"),
               },
               {
                 value: "clear" as const,
-                title: "Clear in-flight runs",
-                desc: "Contacts mid-flow are removed from this automation.",
+                title: t("automation_modals.queue_clear_title"),
+                desc: t("automation_modals.queue_clear_desc"),
               },
               {
                 value: "tag" as const,
-                title: "Tag and clear",
-                desc: "Apply a tag to in-flight contacts, then clear them.",
+                title: t("automation_modals.queue_tag_title"),
+                desc: t("automation_modals.queue_tag_desc"),
               },
             ]
           ).map((opt) => (
@@ -745,19 +746,19 @@ export function QueueContactsModal({
           <Input
             value={tagName}
             onChange={(e) => setTagName(e.target.value)}
-            placeholder="Tag name (created if new)"
+            placeholder={t("automation_modals.tag_name_placeholder")}
           />
         )}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("automation_modals.cancel")}
           </Button>
           <Button
             disabled={loading || (action === "tag" && !tagName)}
             onClick={() => onConfirm(action, tagName || undefined)}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Publish
+            {t("automation_modals.publish")}
           </Button>
         </div>
       </DialogContent>
@@ -780,24 +781,24 @@ export function ConfirmDeleteStep({
   onConfirm: () => void;
   loading?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete step?</AlertDialogTitle>
+          <AlertDialogTitle>{t("automation_modals.delete_step_title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            "{stepTitle}" and any connections going through it will be removed.
-            You can undo with Ctrl+Z until you save.
+            {t("automation_modals.delete_step_desc", { stepTitle })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("automation_modals.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground"
             onClick={onConfirm}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Delete
+            {t("automation_modals.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -818,25 +819,24 @@ export function ConfirmFlushQueue({
   onConfirm: () => void;
   loading?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Clear automation queue?</AlertDialogTitle>
+          <AlertDialogTitle>{t("automation_modals.flush_queue_title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            All in-flight contact runs for this automation will be removed.
-            This is intended for resetting a broken flow — don't run it during
-            normal operation.
+            {t("automation_modals.flush_queue_desc")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("automation_modals.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground"
             onClick={onConfirm}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Clear queue
+            {t("automation_modals.clear_queue_button")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

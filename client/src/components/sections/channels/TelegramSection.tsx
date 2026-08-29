@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   MoreVertical,
@@ -34,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function TelegramSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -74,7 +76,7 @@ export default function TelegramSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Deleted", description: "Telegram bot disconnected." });
+      toast({ title: t("telegram_section.toast_deleted_title"), description: t("telegram_section.toast_deleted_description") });
     },
   });
 
@@ -83,7 +85,7 @@ export default function TelegramSection() {
   const [botToDelete, setBotToDelete] = useState<any>(null);
 
   const handleConnect = () => {
-    toast({ title: "Connecting...", description: "Starting Telegram bot setup." });
+    toast({ title: t("telegram_section.toast_connecting_title"), description: t("telegram_section.toast_connecting_description") });
   };
 
   const toggleTokenVisibility = (id: number) => {
@@ -92,7 +94,7 @@ export default function TelegramSection() {
 
   const copyToken = (token: string) => {
     navigator.clipboard.writeText(token);
-    toast({ title: "Copied", description: "Bot token copied to clipboard." });
+    toast({ title: t("telegram_section.toast_copied_title"), description: t("telegram_section.toast_copied_description") });
   };
 
   if (isLoading) {
@@ -114,11 +116,11 @@ export default function TelegramSection() {
                 <img src="/images/automations/telegram.svg" alt="Telegram" className="w-5 h-5" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Telegram</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("telegram_section.title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
                   {view === "list"
-                    ? "Connect your Telegram Bot to automate conversations."
-                    : "Integrate your Telegram Bot to unlock 2-Way interactive dynamic conversations"}
+                    ? t("telegram_section.subtitle_list")
+                    : t("telegram_section.subtitle_manage")}
                 </p>
               </div>
             </div>
@@ -127,10 +129,10 @@ export default function TelegramSection() {
               {view === "manage" && (
                 <>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add New
+                    <Plus size={12} /> {t("telegram_section.add_new")}
                   </button>
                   <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Back
+                    <ChevronLeft size={12} /> {t("telegram_section.back")}
                   </button>
                 </>
               )}
@@ -146,7 +148,7 @@ export default function TelegramSection() {
                     <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
                       <img src="/images/automations/telegram.svg" alt="Telegram" className="w-5 h-5" />
                     </div>
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Telegram</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("telegram_section.title")}</h3>
                   </div>
                   <a
                     href="https://core.telegram.org/bots"
@@ -159,11 +161,11 @@ export default function TelegramSection() {
                 </div>
 
                 <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
-                  The Telegram integration allows you to automate conversations on your Telegram Bot.
+                  {t("telegram_section.list_description")}
                 </p>
 
                 <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
-                  Manage
+                  {t("telegram_section.manage")}
                 </button>
               </div>
             </div>
@@ -178,13 +180,13 @@ export default function TelegramSection() {
                     <img src="/images/automations/telegram.svg" alt="Telegram" className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Telegram is not integrated yet</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("telegram_section.empty_title")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Integrate this communication channel to automate conversations.
+                      {t("telegram_section.empty_description")}
                     </p>
                   </div>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    Connect now
+                    {t("telegram_section.connect_now")}
                   </button>
                 </div>
               ) : (
@@ -202,7 +204,7 @@ export default function TelegramSection() {
                               <Bot className="w-5 h-5 text-sky-500" />
                             </div>
                             <div className="min-w-0">
-                              <p className={cn("text-[13px] font-black truncate", text)}>{bot.name || bot.username || "Telegram Bot"}</p>
+                              <p className={cn("text-[13px] font-black truncate", text)}>{bot.name || bot.username || t("telegram_section.telegram_bot_fallback")}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 {bot.username && (
                                   <Badge variant="outline" className="h-5 px-2 rounded-md border-sky-500/20 bg-sky-500/5 text-sky-600 dark:text-sky-400 text-[10px] font-semibold">
@@ -210,7 +212,7 @@ export default function TelegramSection() {
                                   </Badge>
                                 )}
                                 <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("telegram_section.active")}
                                 </span>
                               </div>
                             </div>
@@ -218,10 +220,10 @@ export default function TelegramSection() {
 
                           <div className="flex items-center gap-2 shrink-0">
                             <button
-                              onClick={() => toast({ title: "Syncing...", description: "Bot data refreshed." })}
+                              onClick={() => toast({ title: t("telegram_section.toast_syncing_title"), description: t("telegram_section.toast_syncing_description") })}
                               className={outlineBtn}
                             >
-                              <RefreshCw size={12} /> Sync
+                              <RefreshCw size={12} /> {t("telegram_section.sync")}
                             </button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -235,11 +237,11 @@ export default function TelegramSection() {
                                   className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] flex justify-between"
                                 >
                                   <span className="flex items-center gap-2">
-                                    <Bot size={12} className="text-primary" /> AI Feeder
+                                    <Bot size={12} className="text-primary" /> {t("telegram_section.ai_feeder")}
                                   </span>
                                   <Switch
                                     checked={bot.allow_in_feeder}
-                                    onCheckedChange={() => toast({ title: "Updated", description: "AI Feeder setting saved." })}
+                                    onCheckedChange={() => toast({ title: t("telegram_section.toast_updated_title"), description: t("telegram_section.toast_ai_feeder_description") })}
                                     className="data-[state=checked]:bg-primary"
                                   />
                                 </DropdownMenuItem>
@@ -247,7 +249,7 @@ export default function TelegramSection() {
                                   onClick={() => { setBotToDelete(bot); setShowDeleteConfirm(true); }}
                                   className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                                 >
-                                  <Trash2 size={12} /> Delete
+                                  <Trash2 size={12} /> {t("telegram_section.delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -257,7 +259,7 @@ export default function TelegramSection() {
                         {/* Bot Token */}
                         <div className="px-6 py-4">
                           <div className="space-y-2">
-                            <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>Bot Token</label>
+                            <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>{t("telegram_section.bot_token")}</label>
                             <div className={cn("flex items-center gap-2 px-3 h-11 rounded-xl border", card, border)}>
                               <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>
                                 {tokenVisible ? token : maskedToken}
@@ -265,14 +267,14 @@ export default function TelegramSection() {
                               <button
                                 onClick={() => toggleTokenVisibility(bot.id)}
                                 className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
-                                title={tokenVisible ? "Hide token" : "Show token"}
+                                title={tokenVisible ? t("telegram_section.hide_token") : t("telegram_section.show_token")}
                               >
                                 {tokenVisible ? <EyeOff size={14} /> : <Eye size={14} />}
                               </button>
                               <button
                                 onClick={() => copyToken(token)}
                                 className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
-                                title="Copy token"
+                                title={t("telegram_section.copy_token")}
                               >
                                 <Copy size={14} />
                               </button>
@@ -298,19 +300,19 @@ export default function TelegramSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Telegram Bot?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("telegram_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{botToDelete?.name || botToDelete?.username}</span> will be permanently disconnected.
+                  <span className="text-rose-500 font-black">{botToDelete?.name || botToDelete?.username}</span> {t("telegram_section.delete_dialog_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("telegram_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => { deleteMutation.mutate(botToDelete.id); setShowDeleteConfirm(false); }}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("telegram_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

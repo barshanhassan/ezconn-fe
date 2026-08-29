@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, ArrowRight, Mail, KeyRound, LogIn } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { apiRequest } from '../lib/queryClient';
@@ -86,10 +87,10 @@ const FLOATING_ICONS = [
   { Icon: MessengerIcon, left: 469, top: 165, delay: '.5s', dur: '5.1s' },
 ];
 
-const RECOVERY_STEPS = [
-  { label: 'STEP 1', icon: Mail, title: 'Enter your email', subtitle: "We'll send a one-time code to verify it's you.", dark: false },
-  { label: 'STEP 2', icon: KeyRound, title: 'Enter the code & new password', subtitle: 'Choose a strong password to secure your account.', dark: false },
-  { label: "YOU'RE BACK IN", icon: LogIn, title: 'Log in and pick up right where you left off', subtitle: 'Your conversations, contacts and AI settings are all waiting.', dark: true },
+const useRecoverySteps = (t: (key: string) => string) => [
+  { label: t('forgot_password_page.step1_label'), icon: Mail, title: t('forgot_password_page.step1_title'), subtitle: t('forgot_password_page.step1_subtitle'), dark: false },
+  { label: t('forgot_password_page.step2_label'), icon: KeyRound, title: t('forgot_password_page.step2_title'), subtitle: t('forgot_password_page.step2_subtitle'), dark: false },
+  { label: t('forgot_password_page.step3_label'), icon: LogIn, title: t('forgot_password_page.step3_title'), subtitle: t('forgot_password_page.step3_subtitle'), dark: true },
 ];
 
 const BotMark: React.FC<{ className?: string; fill?: string }> = ({ className, fill = '#25d366' }) => (
@@ -101,6 +102,8 @@ const BotMark: React.FC<{ className?: string; fill?: string }> = ({ className, f
 );
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation();
+  const RECOVERY_STEPS = useRecoverySteps(t);
   const [step, setStep] = useState<'email' | 'reset'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -116,7 +119,7 @@ const ForgotPasswordPage: React.FC = () => {
     e.preventDefault();
     setErrorMessage('');
     if (!email) {
-      setErrorMessage('Please enter your email');
+      setErrorMessage(t('forgot_password_page.please_enter_email'));
       return;
     }
 
@@ -124,12 +127,12 @@ const ForgotPasswordPage: React.FC = () => {
     try {
       await apiRequest('POST', '/auth/forgot-password', { email });
       toast({
-        title: 'Code sent',
-        description: `A password reset code was sent to ${email}.`,
+        title: t('forgot_password_page.toast_code_sent_title'),
+        description: t('forgot_password_page.toast_code_sent_desc', { email }),
       });
       setStep('reset');
     } catch (error: any) {
-      setErrorMessage(error?.message || 'Failed to send reset code');
+      setErrorMessage(error?.message || t('forgot_password_page.send_code_failed'));
     } finally {
       setIsSending(false);
     }
@@ -140,11 +143,11 @@ const ForgotPasswordPage: React.FC = () => {
     setErrorMessage('');
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('Passwords do not match');
+      setErrorMessage(t('forgot_password_page.passwords_no_match'));
       return;
     }
     if (newPassword.length < 8) {
-      setErrorMessage('Password must be at least 8 characters');
+      setErrorMessage(t('forgot_password_page.password_min_length'));
       return;
     }
 
@@ -157,12 +160,12 @@ const ForgotPasswordPage: React.FC = () => {
         confirm_password: confirmPassword,
       });
       toast({
-        title: 'Password updated',
-        description: 'You can now log in with your new password.',
+        title: t('forgot_password_page.toast_password_updated_title'),
+        description: t('forgot_password_page.toast_password_updated_desc'),
       });
       navigate('/login');
     } catch (error: any) {
-      setErrorMessage(error?.message || 'Failed to reset password');
+      setErrorMessage(error?.message || t('forgot_password_page.reset_password_failed'));
     } finally {
       setIsResetting(false);
     }
@@ -190,21 +193,21 @@ const ForgotPasswordPage: React.FC = () => {
         <div className="w-full lg:w-[600px] shrink-0 flex flex-col justify-center px-6 sm:px-10 lg:px-16 py-10 z-10 overflow-y-auto">
           <div className="w-full max-w-md mx-auto">
             <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
-              Account recovery
+              {t('forgot_password_page.account_recovery')}
             </div>
 
             {step === 'email' ? (
               <>
                 <h2 className="mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 32, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-                  Forgot Password?
+                  {t('forgot_password_page.title_forgot')}
                 </h2>
                 <p className="mb-8" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
-                  Enter your business email and we'll send you a code to reset your password.
+                  {t('forgot_password_page.desc_forgot')}
                 </p>
 
                 <form onSubmit={handleSendResetLink} className="flex flex-col gap-8">
                   <label className="block relative">
-                    <span className={inputLabelCls} style={inputLabelStyle}>Email</span>
+                    <span className={inputLabelCls} style={inputLabelStyle}>{t('forgot_password_page.email_label')}</span>
                     <input
                       id="email"
                       type="email"
@@ -226,26 +229,26 @@ const ForgotPasswordPage: React.FC = () => {
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#1ea34e')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '#22B257')}
                   >
-                    {isSending ? 'Sending…' : (<>Send reset code <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} /></>)}
+                    {isSending ? t('forgot_password_page.sending') : (<>{t('forgot_password_page.send_reset_code')} <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} /></>)}
                   </button>
                 </form>
               </>
             ) : (
               <>
                 <h2 className="mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 32, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-                  Reset Password
+                  {t('forgot_password_page.title_reset')}
                 </h2>
                 <p className="mb-8" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
-                  Enter the code sent to <span style={{ fontWeight: 700, color: '#0B1020' }}>{email}</span> and choose a new password.
+                  {t('forgot_password_page.desc_reset_prefix')} <span style={{ fontWeight: 700, color: '#0B1020' }}>{email}</span> {t('forgot_password_page.desc_reset_suffix')}
                 </p>
 
                 <form onSubmit={handleResetPassword} className="flex flex-col gap-8">
                   <label className="block relative">
-                    <span className={inputLabelCls} style={inputLabelStyle}>Reset code</span>
+                    <span className={inputLabelCls} style={inputLabelStyle}>{t('forgot_password_page.reset_code_label')}</span>
                     <input
                       id="code"
                       type="text"
-                      placeholder="Enter code"
+                      placeholder={t('forgot_password_page.reset_code_placeholder')}
                       value={code}
                       onChange={(e) => setCode(e.target.value.toUpperCase())}
                       required
@@ -255,12 +258,12 @@ const ForgotPasswordPage: React.FC = () => {
                   </label>
 
                   <label className="block relative">
-                    <span className={inputLabelCls} style={inputLabelStyle}>New Password</span>
+                    <span className={inputLabelCls} style={inputLabelStyle}>{t('forgot_password_page.new_password_label')}</span>
                     <div className="relative">
                       <input
                         id="newPassword"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="At least 8 characters"
+                        placeholder={t('forgot_password_page.password_placeholder')}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
@@ -279,11 +282,11 @@ const ForgotPasswordPage: React.FC = () => {
                   </label>
 
                   <label className="block relative">
-                    <span className={inputLabelCls} style={inputLabelStyle}>Confirm Password</span>
+                    <span className={inputLabelCls} style={inputLabelStyle}>{t('forgot_password_page.confirm_password_label')}</span>
                     <input
                       id="confirmPassword"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Re-enter your password"
+                      placeholder={t('forgot_password_page.confirm_password_placeholder')}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -302,13 +305,13 @@ const ForgotPasswordPage: React.FC = () => {
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#1ea34e')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '#22B257')}
                   >
-                    {isResetting ? 'Resetting…' : (<>Reset password <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} /></>)}
+                    {isResetting ? t('forgot_password_page.resetting') : (<>{t('forgot_password_page.reset_password_button')} <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} /></>)}
                   </button>
                 </form>
 
                 <p className="text-center mt-6" style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, color: '#6b7482' }}>
                   <button type="button" onClick={() => setStep('email')} style={{ color: '#1eb955', fontWeight: 600 }}>
-                    &lt; Use a different email
+                    &lt; {t('forgot_password_page.use_different_email')}
                   </button>
                 </p>
               </>
@@ -316,7 +319,7 @@ const ForgotPasswordPage: React.FC = () => {
 
             <p className="text-center mt-6" style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, color: '#6b7482' }}>
               <button type="button" onClick={() => navigate('/login')} style={{ color: '#1eb955', fontWeight: 600 }}>
-                &lt; Back to login
+                &lt; {t('forgot_password_page.back_to_login')}
               </button>
             </p>
 
@@ -331,7 +334,7 @@ const ForgotPasswordPage: React.FC = () => {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#25d366" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
-                  Verified Tech Partner
+                  {t('forgot_password_page.verified_tech_partner')}
                 </span>
               </div>
             </div>
@@ -355,7 +358,7 @@ const ForgotPasswordPage: React.FC = () => {
           {/* headline */}
           <div className="absolute" style={{ left: 41, top: 63, width: 340 }}>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-              Get back in, in a few clicks
+              {t('forgot_password_page.headline')}
             </div>
           </div>
 

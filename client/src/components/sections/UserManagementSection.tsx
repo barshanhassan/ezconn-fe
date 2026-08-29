@@ -25,6 +25,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 
 type UserRole = "Administrator" | "Agent" | "Chatbot User" | "Marketer" | "Team Supervisor" | "Viewer" | "WABA Manager";
@@ -236,6 +237,7 @@ const initialUsers: User[] = [
 ];
 
 export default function UserManagementSection() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -255,8 +257,8 @@ export default function UserManagementSection() {
     },
     onSuccess: () => {
       toast({
-        title: "User Invited",
-        description: "Invitation sent successfully.",
+        title: t("user_management_section.toast_user_invited_title"),
+        description: t("user_management_section.toast_invite_sent_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
       setShowCreateUserModal(false);
@@ -269,7 +271,7 @@ export default function UserManagementSection() {
     },
     onError: (err: Error) => {
       toast({
-        title: "Invite failed",
+        title: t("user_management_section.toast_invite_failed_title"),
         description: err.message,
         variant: "destructive",
       });
@@ -282,8 +284,8 @@ export default function UserManagementSection() {
     },
     onSuccess: () => {
       toast({
-        title: "User removed",
-        description: "User has been removed from workspace.",
+        title: t("user_management_section.toast_user_removed_title"),
+        description: t("user_management_section.toast_user_removed_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
       setShowDeleteUserModal(false);
@@ -291,7 +293,7 @@ export default function UserManagementSection() {
     },
     onError: (err: Error) => {
       toast({
-        title: "Remove failed",
+        title: t("user_management_section.toast_remove_failed_title"),
         description: err.message,
         variant: "destructive",
       });
@@ -472,7 +474,7 @@ export default function UserManagementSection() {
     const userText = `${user.firstName} ${user.lastName} - ${user.email} - ${user.phoneNumber}`;
     navigator.clipboard.writeText(userText);
     toast({
-      title: "Copied to clipboard",
+      title: t("user_management_section.toast_copied_title"),
       description: userText,
     });
   };
@@ -495,8 +497,8 @@ export default function UserManagementSection() {
   const handleInviteUser = () => {
     if (!newFirstName.trim() || !newLastName.trim() || !newEmail.trim()) {
       toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields",
+        title: t("user_management_section.toast_missing_fields_title"),
+        description: t("user_management_section.toast_missing_fields_desc"),
         variant: "destructive",
       });
       return;
@@ -512,8 +514,8 @@ export default function UserManagementSection() {
   const handleSaveEditUser = () => {
     if (!editRole || !editStatus || !editPhoneNumber.trim()) {
       toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields",
+        title: t("user_management_section.toast_missing_fields_title"),
+        description: t("user_management_section.toast_missing_fields_desc"),
         variant: "destructive",
       });
       return;
@@ -532,8 +534,8 @@ export default function UserManagementSection() {
       //   )
       // );
       toast({
-        title: "User Updated",
-        description: `${editingUser.firstName} ${editingUser.lastName} has been updated successfully`,
+        title: t("user_management_section.toast_user_updated_title"),
+        description: t("user_management_section.toast_user_updated_desc", { name: `${editingUser.firstName} ${editingUser.lastName}` }),
       });
       setShowEditUserModal(false);
       setEditingUser(null);
@@ -560,14 +562,14 @@ export default function UserManagementSection() {
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <h1 className="text-3xl font-bold">{t("user_management_section.page_title")}</h1>
         <Button
           onClick={() => setShowCreateUserModal(true)}
           className="btn-outline-primary gap-2 h-9 font-normal"
           variant="outline"
         >
           <Plus size={16} />
-          Create User
+          {t("user_management_section.create_user_button")}
         </Button>
       </div>
 
@@ -577,7 +579,7 @@ export default function UserManagementSection() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder={t("user_management_section.search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
@@ -587,14 +589,14 @@ export default function UserManagementSection() {
           options={roleOptions}
           selected={filterRole}
           onChange={(selectedIds) => setFilterRole(selectedIds as UserRole[])}
-          placeholder="Role"
+          placeholder={t("user_management_section.filter_role_placeholder")}
           width="190px"
         />
         <CustomDropdown
           options={statusOptions}
           selected={filterStatus}
           onChange={(selectedIds) => setFilterStatus(selectedIds as UserStatus[])}
-          placeholder="Status"
+          placeholder={t("user_management_section.filter_status_placeholder")}
           width="120px"
         />
       </div>
@@ -615,7 +617,7 @@ export default function UserManagementSection() {
                     onClick={() => handleColumnSort("firstName")}
                   >
                     <div className="flex items-center gap-2">
-                      Name
+                      {t("user_management_section.column_name")}
                       {renderSortIcon("firstName")}
                     </div>
                   </th>
@@ -624,7 +626,7 @@ export default function UserManagementSection() {
                     onClick={() => handleColumnSort("email")}
                   >
                     <div className="flex items-center gap-2">
-                      Email
+                      {t("user_management_section.column_email")}
                       {renderSortIcon("email")}
                     </div>
                   </th>
@@ -633,7 +635,7 @@ export default function UserManagementSection() {
                     onClick={() => handleColumnSort("role")}
                   >
                     <div className="flex items-center gap-2">
-                      Role
+                      {t("user_management_section.column_role")}
                       {renderSortIcon("role")}
                     </div>
                   </th>
@@ -642,11 +644,11 @@ export default function UserManagementSection() {
                     onClick={() => handleColumnSort("status")}
                   >
                     <div className="flex items-center gap-2">
-                      Status
+                      {t("user_management_section.column_status")}
                       {renderSortIcon("status")}
                     </div>
                   </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
+                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">{t("user_management_section.column_actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -659,7 +661,7 @@ export default function UserManagementSection() {
                 ) : getFilteredAndSortedData().length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No users found.
+                      {t("user_management_section.no_users_found")}
                     </td>
                   </tr>
                 ) : (
@@ -688,15 +690,15 @@ export default function UserManagementSection() {
                             <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                               <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                 <Edit2 size={14} className="mr-2" />
-                                Edit
+                                {t("user_management_section.action_edit")}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleCopyUser(user)}>
                                 <Copy size={14} className="mr-2" />
-                                Copy
+                                {t("user_management_section.action_copy")}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-destructive">
                                 <Trash2 size={14} className="mr-2" />
-                                Delete
+                                {t("user_management_section.action_delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -710,9 +712,9 @@ export default function UserManagementSection() {
 
           {/* Pagination */}
           <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{totalFilteredUsers()} results</span>
+            <span className="text-muted-foreground">{t("user_management_section.results_count", { count: totalFilteredUsers() })}</span>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
+              <span className="text-muted-foreground">{t("user_management_section.rows_per_page_label")}</span>
               <div className="relative w-15" ref={dropdownRef}>
                 <button
                   type="button"
@@ -742,7 +744,7 @@ export default function UserManagementSection() {
                   </div>
                 )}
               </div>
-              <span className="text-muted-foreground">Page {page} of {Math.ceil(totalFilteredUsers() / rowsPerPage)}</span>
+              <span className="text-muted-foreground">{t("user_management_section.page_of_label", { page, totalPages: Math.ceil(totalFilteredUsers() / rowsPerPage) })}</span>
               <div className="flex gap-1">
                 <button
                   className="p-1 hover:bg-muted rounded disabled:opacity-50"
@@ -782,15 +784,15 @@ export default function UserManagementSection() {
       <Dialog open={showCreateUserModal} onOpenChange={setShowCreateUserModal}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-2">
-            <DialogTitle>Create User</DialogTitle>
+            <DialogTitle>{t("user_management_section.create_user_modal_title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* First Name Input */}
             <div>
-              <label className="text-sm font-medium text-foreground">First Name<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.first_name_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <Input
-                placeholder="Enter first name"
+                placeholder={t("user_management_section.first_name_placeholder")}
                 value={newFirstName}
                 onChange={(e) => setNewFirstName(e.target.value)}
               />
@@ -798,9 +800,9 @@ export default function UserManagementSection() {
 
             {/* Last Name Input */}
             <div>
-              <label className="text-sm font-medium text-foreground">Last Name<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.last_name_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <Input
-                placeholder="Enter last name"
+                placeholder={t("user_management_section.last_name_placeholder")}
                 value={newLastName}
                 onChange={(e) => setNewLastName(e.target.value)}
               />
@@ -808,10 +810,10 @@ export default function UserManagementSection() {
 
             {/* Email Input */}
             <div>
-              <label className="text-sm font-medium text-foreground">Email Address<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.email_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <Input
                 type="email"
-                placeholder="Enter email address"
+                placeholder={t("user_management_section.email_placeholder")}
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
               />
@@ -819,10 +821,10 @@ export default function UserManagementSection() {
 
             {/* Role Select */}
             <div>
-              <label className="text-sm font-medium text-foreground">Role<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.role_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <Select value={newRole} onValueChange={(value: UserRole) => setNewRole(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t("user_management_section.role_select_placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Administrator">Administrator</SelectItem>
@@ -838,7 +840,7 @@ export default function UserManagementSection() {
 
             {/* Phone Number Input with Country Code */}
             <div>
-              <label className="text-sm font-medium text-foreground">Phone Number<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.phone_number_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <div className="flex gap-2">
                 <Select value={newCountryCode} onValueChange={setNewCountryCode}>
                   <SelectTrigger className="w-[100px]">
@@ -860,7 +862,7 @@ export default function UserManagementSection() {
                 </Select>
                 <Input
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder={t("user_management_section.phone_number_placeholder")}
                   value={newPhoneNumber}
                   onChange={(e) => setNewPhoneNumber(e.target.value)}
                   className="flex-1"
@@ -876,14 +878,14 @@ export default function UserManagementSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))] font-normal"
             >
-              Cancel
+              {t("user_management_section.cancel_button")}
             </Button>
             <Button
               onClick={handleInviteUser}
               className="btn-outline-primary font-normal"
               variant="outline"
             >
-              Invite User
+              {t("user_management_section.invite_user_button")}
             </Button>
           </div>
         </DialogContent>
@@ -892,28 +894,28 @@ export default function UserManagementSection() {
       <Dialog open={showEditUserModal} onOpenChange={setShowEditUserModal}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-2">
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>{t("user_management_section.edit_user_modal_title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Full Name Input (Uneditable) */}
             <div>
-              <label className="text-sm font-medium text-foreground">Full Name</label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.full_name_label")}</label>
               <Input value={editFullName} disabled />
             </div>
 
             {/* Email Input (Uneditable) */}
             <div>
-              <label className="text-sm font-medium text-foreground">Email Address</label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.email_label")}</label>
               <Input value={editEmail} disabled />
             </div>
 
             {/* Role Select */}
             <div>
-              <label className="text-sm font-medium text-foreground">Role<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.role_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <Select value={editRole} onValueChange={(value: UserRole) => setEditRole(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t("user_management_section.role_select_placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Administrator">Administrator</SelectItem>
@@ -929,10 +931,10 @@ export default function UserManagementSection() {
 
             {/* Status Select */}
             <div>
-              <label className="text-sm font-medium text-foreground">Status{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.status_label")}{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
               <Select value={editStatus} onValueChange={(value: UserStatus) => setEditStatus(value)} disabled={isInvitedUserEditing}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t("user_management_section.status_select_placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Active">Active</SelectItem>
@@ -944,7 +946,7 @@ export default function UserManagementSection() {
 
             {/* Phone Number Input with Country Code */}
             <div>
-              <label className="text-sm font-medium text-foreground">Phone Number{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
+              <label className="text-sm font-medium text-foreground">{t("user_management_section.phone_number_label")}{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
               <div className="flex gap-2">
                 <Select value={editCountryCode} onValueChange={setEditCountryCode} disabled={isInvitedUserEditing}>
                   <SelectTrigger className="w-[100px]">
@@ -966,7 +968,7 @@ export default function UserManagementSection() {
                 </Select>
                 <Input
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder={t("user_management_section.phone_number_placeholder")}
                   value={editPhoneNumber}
                   onChange={(e) => setEditPhoneNumber(e.target.value)}
                   className="flex-1"
@@ -983,14 +985,14 @@ export default function UserManagementSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))] font-normal"
             >
-              Cancel
+              {t("user_management_section.cancel_button")}
             </Button>
             <Button
               onClick={handleSaveEditUser}
               className="btn-outline-primary font-normal"
               variant="outline"
             >
-              Save
+              {t("user_management_section.save_button")}
             </Button>
           </div>
         </DialogContent>
@@ -999,12 +1001,12 @@ export default function UserManagementSection() {
       <Dialog open={showDeleteUserModal} onOpenChange={setShowDeleteUserModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader className="mb-2">
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{t("user_management_section.delete_user_modal_title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold break-all">{userToDelete?.firstName} {userToDelete?.lastName}</span>? This action cannot be undone.
+              {t("user_management_section.delete_confirm_prefix")} <span className="font-semibold break-all">{userToDelete?.firstName} {userToDelete?.lastName}</span>{t("user_management_section.delete_confirm_suffix")}
             </p>
           </div>
 
@@ -1015,14 +1017,14 @@ export default function UserManagementSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("user_management_section.cancel_button")}
             </Button>
             <Button
               onClick={handleConfirmDelete}
               className="btn-outline-destructive"
               variant="outline"
             >
-              Delete
+              {t("user_management_section.action_delete")}
             </Button>
           </div>
         </DialogContent>

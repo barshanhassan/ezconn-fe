@@ -48,6 +48,7 @@ import AgencyLegal from "@/pages/Agency/AgencyLegal";
 import AgencyHelp from "@/pages/Agency/AgencyHelp";
 import AgencyGeneralSettings from "@/pages/Agency/AgencyGeneralSettings";
 import AgencyChangePassword from "@/pages/Agency/AgencyChangePassword";
+import AgencyProfile from "@/pages/Agency/AgencyProfile";
 import AgencyNotificationsSettings from "@/pages/Agency/AgencyNotificationsSettings";
 import AgencyNotificationsPage from "@/pages/Agency/AgencyNotificationsPage";
 import AgencyWhiteLabelSettings from "@/pages/Agency/AgencyWhiteLabelSettings";
@@ -184,6 +185,10 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
 
       <Route path="/org/settings/change-password">
         <ProtectedRoute permissions={["agency.*"]}><AgencyChangePassword /></ProtectedRoute>
+      </Route>
+
+      <Route path="/org/settings/profile">
+        <ProtectedRoute><AgencyProfile /></ProtectedRoute>
       </Route>
 
       <Route path="/org/help">

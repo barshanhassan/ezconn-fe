@@ -18,6 +18,7 @@
 // search state, TextActions viewport measure ref, ChoicesBuilder popover
 // state, etc.) — keep the import single-line.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Popover,
@@ -75,7 +76,7 @@ export function FieldPicker({
   onInsert,
   hideContentTypes,
   buttonVariant = "ghost",
-  buttonLabel = "+ var",
+  buttonLabel,
 }: {
   onInsert: (token: string) => void;
   /** Hide tokens whose contentType matches any of these (e.g. ['DATE','DATETIME']). */
@@ -83,9 +84,11 @@ export function FieldPicker({
   buttonVariant?: "ghost" | "outline";
   buttonLabel?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("system");
+  const resolvedButtonLabel = buttonLabel ?? t("automation_pickers.field_picker_button");
 
   const { data: customFieldsResp } = useQuery({
     queryKey: ["/api/custom-fields"],
@@ -100,18 +103,18 @@ export function FieldPicker({
 
   const categories: FieldPickerCategory[] = useMemo(() => {
     const systemFields: FieldPickerField[] = [
-      { token: "{{contact.first_name}}", label: "First name", contentType: "TEXT" },
-      { token: "{{contact.last_name}}", label: "Last name", contentType: "TEXT" },
-      { token: "{{contact.full_name}}", label: "Full name", contentType: "TEXT" },
-      { token: "{{contact.email}}", label: "Email", contentType: "EMAIL" },
-      { token: "{{contact.mobile_number}}", label: "Mobile number", contentType: "PHONE" },
-      { token: "{{contact.gender}}", label: "Gender", contentType: "TEXT" },
-      { token: "{{contact.language}}", label: "Language", contentType: "TEXT" },
-      { token: "{{contact.locale}}", label: "Locale", contentType: "TEXT" },
-      { token: "{{contact.timezone}}", label: "Timezone", contentType: "TEXT" },
-      { token: "{{contact.source}}", label: "Contact source", contentType: "TEXT" },
-      { token: "{{contact.id}}", label: "Contact ID", contentType: "NUMBER" },
-      { token: "{{contact.created_at}}", label: "Subscribed on", contentType: "DATETIME" },
+      { token: "{{contact.first_name}}", label: t("automation_pickers.field_first_name"), contentType: "TEXT" },
+      { token: "{{contact.last_name}}", label: t("automation_pickers.field_last_name"), contentType: "TEXT" },
+      { token: "{{contact.full_name}}", label: t("automation_pickers.field_full_name"), contentType: "TEXT" },
+      { token: "{{contact.email}}", label: t("automation_pickers.field_email"), contentType: "EMAIL" },
+      { token: "{{contact.mobile_number}}", label: t("automation_pickers.field_mobile_number"), contentType: "PHONE" },
+      { token: "{{contact.gender}}", label: t("automation_pickers.field_gender"), contentType: "TEXT" },
+      { token: "{{contact.language}}", label: t("automation_pickers.field_language"), contentType: "TEXT" },
+      { token: "{{contact.locale}}", label: t("automation_pickers.field_locale"), contentType: "TEXT" },
+      { token: "{{contact.timezone}}", label: t("automation_pickers.field_timezone"), contentType: "TEXT" },
+      { token: "{{contact.source}}", label: t("automation_pickers.field_contact_source"), contentType: "TEXT" },
+      { token: "{{contact.id}}", label: t("automation_pickers.field_contact_id"), contentType: "NUMBER" },
+      { token: "{{contact.created_at}}", label: t("automation_pickers.field_subscribed_on"), contentType: "DATETIME" },
     ];
     // Coerce-to-array so non-array shapes from these endpoints (e.g. an
     // object response, an error fallback) don't blow up the picker.
@@ -131,26 +134,26 @@ export function FieldPicker({
         ? pipelinesResp
         : [];
     const pipelineFields: FieldPickerField[] = plList.flatMap((p: any) => [
-      { token: `{{pipeline.${p.id}.opportunity_value}}`, label: `${p.name} — opportunity value`, contentType: "NUMBER" },
-      { token: `{{pipeline.${p.id}.opportunity_stage}}`, label: `${p.name} — stage`, contentType: "TEXT" },
-      { token: `{{pipeline.${p.id}.opportunity_probability}}`, label: `${p.name} — probability`, contentType: "NUMBER" },
+      { token: `{{pipeline.${p.id}.opportunity_value}}`, label: `${p.name} — ${t("automation_pickers.field_opportunity_value")}`, contentType: "NUMBER" },
+      { token: `{{pipeline.${p.id}.opportunity_stage}}`, label: `${p.name} — ${t("automation_pickers.field_stage")}`, contentType: "TEXT" },
+      { token: `{{pipeline.${p.id}.opportunity_probability}}`, label: `${p.name} — ${t("automation_pickers.field_probability")}`, contentType: "NUMBER" },
     ]);
     const timeFields: FieldPickerField[] = [
-      { token: "{{now.iso}}", label: "Now (ISO)", contentType: "DATETIME" },
-      { token: "{{now.epoch}}", label: "Now (epoch sec)", contentType: "NUMBER" },
-      { token: "{{now.date}}", label: "Today (YYYY-MM-DD)", contentType: "DATE" },
+      { token: "{{now.iso}}", label: t("automation_pickers.field_now_iso"), contentType: "DATETIME" },
+      { token: "{{now.epoch}}", label: t("automation_pickers.field_now_epoch"), contentType: "NUMBER" },
+      { token: "{{now.date}}", label: t("automation_pickers.field_today_date"), contentType: "DATE" },
     ];
     const workspaceFields: FieldPickerField[] = [
-      { token: "{{workspace.id}}", label: "Workspace ID", contentType: "NUMBER" },
-      { token: "{{workspace.name}}", label: "Workspace name", contentType: "TEXT" },
+      { token: "{{workspace.id}}", label: t("automation_pickers.field_workspace_id"), contentType: "NUMBER" },
+      { token: "{{workspace.name}}", label: t("automation_pickers.field_workspace_name"), contentType: "TEXT" },
     ];
 
     const cats: FieldPickerCategory[] = [
-      { key: "system", label: "System", icon: <UserIcon className="h-3.5 w-3.5" />, fields: systemFields },
-      { key: "custom", label: "Custom", icon: <Database className="h-3.5 w-3.5" />, fields: customFields },
-      { key: "pipeline", label: "Pipeline", icon: <Hash className="h-3.5 w-3.5" />, fields: pipelineFields },
-      { key: "time", label: "Time", icon: <Clock className="h-3.5 w-3.5" />, fields: timeFields },
-      { key: "workspace", label: "Workspace", icon: <Hash className="h-3.5 w-3.5" />, fields: workspaceFields },
+      { key: "system", label: t("automation_pickers.category_system"), icon: <UserIcon className="h-3.5 w-3.5" />, fields: systemFields },
+      { key: "custom", label: t("automation_pickers.category_custom"), icon: <Database className="h-3.5 w-3.5" />, fields: customFields },
+      { key: "pipeline", label: t("automation_pickers.category_pipeline"), icon: <Hash className="h-3.5 w-3.5" />, fields: pipelineFields },
+      { key: "time", label: t("automation_pickers.category_time"), icon: <Clock className="h-3.5 w-3.5" />, fields: timeFields },
+      { key: "workspace", label: t("automation_pickers.category_workspace"), icon: <Hash className="h-3.5 w-3.5" />, fields: workspaceFields },
     ];
 
     if (hideContentTypes?.length) {
@@ -158,7 +161,7 @@ export function FieldPicker({
         ...c,
         fields: c.fields.map((f) =>
           f.contentType && hideContentTypes.includes(f.contentType)
-            ? { ...f, disabled: true, hint: `${f.contentType} not allowed here` }
+            ? { ...f, disabled: true, hint: t("automation_pickers.field_not_allowed_here", { contentType: f.contentType }) }
             : f,
         ),
       }));
@@ -194,7 +197,7 @@ export function FieldPicker({
           size="sm"
           className="h-7 text-xs"
         >
-          {buttonLabel}
+          {resolvedButtonLabel}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[560px]" align="start">
@@ -226,7 +229,7 @@ export function FieldPicker({
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search fields…"
+                  placeholder={t("automation_pickers.search_fields_placeholder")}
                   className="h-7 pl-7 text-xs"
                 />
               </div>
@@ -234,7 +237,7 @@ export function FieldPicker({
             <ScrollArea className="flex-1">
               {activeFields.length === 0 ? (
                 <p className="text-xs text-muted-foreground p-4 text-center">
-                  No fields match.
+                  {t("automation_pickers.no_fields_match")}
                 </p>
               ) : (
                 activeFields.map((f) => (
@@ -283,6 +286,7 @@ export function WhatsAppTemplatePicker({
   onChange: (templateId: string, template: any) => void;
   waAccountId?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -330,25 +334,25 @@ export function WhatsAppTemplatePicker({
         <span className="truncate">
           {selected
             ? `${selected.name} (${selected.language ?? "?"})`
-            : "Pick a template"}
+            : t("automation_pickers.pick_a_template")}
         </span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0" />
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogTitle>WhatsApp templates</DialogTitle>
+          <DialogTitle>{t("automation_pickers.whatsapp_templates_title")}</DialogTitle>
           <DialogDescription>
-            Pick an approved template. The body / header is previewed below.
+            {t("automation_pickers.whatsapp_templates_desc")}
           </DialogDescription>
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search templates…"
+            placeholder={t("automation_pickers.search_templates_placeholder")}
           />
           <ScrollArea className="h-96">
             {filtered.length === 0 ? (
               <p className="text-sm text-muted-foreground p-6 text-center">
-                No templates found.
+                {t("automation_pickers.no_templates_found")}
               </p>
             ) : (
               filtered.map((t: any) => (
@@ -534,13 +538,15 @@ export function GalleryPickButton({
   value,
   onChange,
   mediaType = "image",
-  label = "Pick from gallery",
+  label,
 }: {
   value: { id?: string; url?: string; object_name?: string } | null;
   onChange: (media: { id: string; url: string; object_name: string }) => void;
   mediaType?: "image" | "audio" | "video" | "document";
   label?: string;
 }) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t("automation_pickers.pick_from_gallery");
   const [open, setOpen] = useState(false);
 
   // After selection, show the actual asset preview instead of just a
@@ -583,7 +589,7 @@ export function GalleryPickButton({
           <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
-              title="Replace"
+              title={t("automation_pickers.replace")}
               onClick={() => setOpen(true)}
               className="h-6 w-6 rounded bg-white/90 border shadow-sm flex items-center justify-center text-slate-600 hover:bg-white"
             >
@@ -591,7 +597,7 @@ export function GalleryPickButton({
             </button>
             <button
               type="button"
-              title="Remove"
+              title={t("automation_pickers.remove")}
               onClick={() =>
                 onChange({ id: "", url: "", object_name: "" })
               }
@@ -630,7 +636,7 @@ export function GalleryPickButton({
         onClick={() => setOpen(true)}
       >
         <ImageIcon className="h-3.5 w-3.5" />
-        <span className="truncate">{label}</span>
+        <span className="truncate">{resolvedLabel}</span>
       </Button>
       <GalleryPickerDialog
         open={open}
@@ -668,6 +674,7 @@ export function ChoicesBuilder({
   labelMaxLength?: number;
   valueMaxLength?: number;
 }) {
+  const { t } = useTranslation();
   const list = value ?? [];
 
   // Replyagent's InputChoices.vue allows only ONE choice to be marked as
@@ -707,7 +714,9 @@ export function ChoicesBuilder({
         disabled={list.length >= maxChoices}
         onClick={add}
       >
-        + Add choice{list.length >= maxChoices && ` (max ${maxChoices})`}
+        {list.length >= maxChoices
+          ? t("automation_pickers.add_choice_max", { maxChoices })
+          : t("automation_pickers.add_choice")}
       </Button>
     </div>
   );
@@ -726,6 +735,7 @@ function ChoiceRow({
   onChange: (partial: Partial<Choice>) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <div className="border rounded p-2 space-y-1">
@@ -733,25 +743,25 @@ function ChoiceRow({
         <Input
           value={choice.label}
           onChange={(e) => onChange({ label: e.target.value })}
-          placeholder="Label"
+          placeholder={t("automation_pickers.choice_label_placeholder")}
           maxLength={labelMaxLength}
           className="flex-1 h-7 text-xs"
         />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]">
-              Options
+              {t("automation_pickers.options")}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64 p-3 space-y-2">
             <div>
               <label className="text-[10px] text-muted-foreground">
-                Save reply as (custom field slug)
+                {t("automation_pickers.save_reply_as_label")}
               </label>
               <Input
                 value={choice.save_reply_as ?? ""}
                 onChange={(e) => onChange({ save_reply_as: e.target.value })}
-                placeholder="e.g. preferred_color"
+                placeholder={t("automation_pickers.save_reply_as_placeholder")}
                 className="h-7 text-xs"
               />
             </div>
@@ -761,16 +771,16 @@ function ChoiceRow({
                 checked={!!choice.mark_as_skip}
                 onChange={(e) => onChange({ mark_as_skip: e.target.checked })}
               />
-              Mark as skip
+              {t("automation_pickers.mark_as_skip")}
             </label>
             <div>
               <label className="text-[10px] text-muted-foreground">
-                Value (sent on click)
+                {t("automation_pickers.value_sent_on_click_label")}
               </label>
               <Input
                 value={choice.value ?? ""}
                 onChange={(e) => onChange({ value: e.target.value })}
-                placeholder="Optional value"
+                placeholder={t("automation_pickers.optional_value_placeholder")}
                 maxLength={valueMaxLength}
                 className="h-7 text-xs"
               />
@@ -789,11 +799,11 @@ function ChoiceRow({
       </div>
       <div className="flex justify-between text-[10px] text-muted-foreground">
         <span>
-          {choice.label.length}/{labelMaxLength} label
+          {t("automation_pickers.label_char_count", { length: choice.label.length, max: labelMaxLength })}
         </span>
         {choice.mark_as_skip && (
           <Badge variant="outline" className="text-[9px]">
-            skip
+            {t("automation_pickers.skip")}
           </Badge>
         )}
       </div>
@@ -819,6 +829,7 @@ export function ListSectionsBuilder({
   maxSections?: number;
   maxOptions?: number;
 }) {
+  const { t } = useTranslation();
   const list = value ?? [];
   const update = (idx: number, partial: Partial<ListSection>) =>
     onChange(list.map((s, i) => (i === idx ? { ...s, ...partial } : s)));
@@ -835,7 +846,7 @@ export function ListSectionsBuilder({
             <Input
               value={s.title}
               onChange={(e) => update(idx, { title: e.target.value })}
-              placeholder="Section title (24 chars)"
+              placeholder={t("automation_pickers.section_title_placeholder")}
               maxLength={24}
               className="flex-1 h-7 text-xs"
             />
@@ -859,7 +870,7 @@ export function ListSectionsBuilder({
                     opts[oIdx] = { ...opts[oIdx], title: e.target.value };
                     update(idx, { options: opts });
                   }}
-                  placeholder="Option title"
+                  placeholder={t("automation_pickers.option_title_placeholder")}
                   maxLength={24}
                   className="h-6 text-xs"
                 />
@@ -870,7 +881,7 @@ export function ListSectionsBuilder({
                     opts[oIdx] = { ...opts[oIdx], description: e.target.value };
                     update(idx, { options: opts });
                   }}
-                  placeholder="Description"
+                  placeholder={t("automation_pickers.option_description_placeholder")}
                   maxLength={72}
                   className="h-6 text-xs"
                 />
@@ -899,7 +910,7 @@ export function ListSectionsBuilder({
                 update(idx, { options: [...s.options, { title: "" }] })
               }
             >
-              + Option
+              {t("automation_pickers.add_option")}
             </Button>
           </div>
         </div>
@@ -911,7 +922,7 @@ export function ListSectionsBuilder({
         disabled={list.length >= maxSections}
         onClick={add}
       >
-        + Add section
+        {t("automation_pickers.add_section")}
       </Button>
     </div>
   );

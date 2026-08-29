@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { COUNTRIES as countries } from "@/lib/countries";
 import { COUNTRY_PLACEHOLDERS } from "@/lib/countryPlaceholders";
 import { onlyDigits } from "@/lib/phone";
+import { useTranslation } from "react-i18next";
 
 /**
  * Example phone-number placeholder for a country code. Uses the exact match
@@ -16,7 +17,7 @@ import { onlyDigits } from "@/lib/phone";
  * Lifted from pages/Agency/AddAgentForm.tsx so the agency and workspace forms
  * share one implementation.
  */
-export function phonePlaceholder(code: string): string {
+export function phonePlaceholder(code: string, fallback: string = "Phone number"): string {
   if (COUNTRY_PLACEHOLDERS[code]) return COUNTRY_PLACEHOLDERS[code];
   const dial = countries.find((c) => c.code === code)?.dial;
   if (dial) {
@@ -25,7 +26,7 @@ export function phonePlaceholder(code: string): string {
     );
     if (sameDial) return COUNTRY_PLACEHOLDERS[sameDial.code];
   }
-  return "Phone number";
+  return fallback;
 }
 
 /**
@@ -45,6 +46,7 @@ function CountrySelector({
   onChange: (country: { code: string; dial: string; name: string }) => void;
   isDark: boolean;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const selected =
@@ -111,7 +113,7 @@ function CountrySelector({
         <div className="p-2">
           <input
             autoFocus
-            placeholder="Search"
+            placeholder={t("phone_input_with_flag.search_placeholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className={cn(
@@ -126,7 +128,7 @@ function CountrySelector({
         <div className="max-h-60 overflow-y-auto pb-2">
           {filtered.length === 0 ? (
             <div className="text-[12px] px-3 py-3 text-slate-400">
-              No countries found.
+              {t("phone_input_with_flag.no_countries_found")}
             </div>
           ) : (
             filtered.map((country, idx) => {
@@ -221,6 +223,7 @@ export function PhoneInputWithFlag({
   disabled,
   isDark = false,
 }: PhoneInputWithFlagProps) {
+  const { t } = useTranslation();
   const effectiveCountry = country || "US";
   return (
     <div className="relative w-full">
@@ -233,7 +236,7 @@ export function PhoneInputWithFlag({
         inputMode="numeric"
         value={value}
         onChange={(e) => onChange(onlyDigits(e.target.value))}
-        placeholder={placeholder ?? phonePlaceholder(effectiveCountry)}
+        placeholder={placeholder ?? phonePlaceholder(effectiveCountry, t("phone_input_with_flag.phone_number_fallback"))}
         disabled={disabled}
         // pl-[84px] MUST come after inputClassName so it wins tailwind-merge
         // when the caller passes its own px-* class.

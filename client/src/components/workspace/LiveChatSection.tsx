@@ -37,8 +37,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 
 export default function LiveChatSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const dark = mode === "dark";
@@ -81,7 +83,7 @@ export default function LiveChatSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/live-chat-settings"] });
-      toast({ title: "Saved", description: "Live chat configuration updated." });
+      toast({ title: t("live_chat_section.toasts.saved_title"), description: t("live_chat_section.toasts.settings_updated_description") });
     },
   });
 
@@ -136,8 +138,8 @@ export default function LiveChatSection() {
   const { data: teamsData } = useQuery<any>({ queryKey: ["/api/teams/get-all"] });
   const teams: { id: string; label: string }[] = Array.isArray(teamsData)
     ? teamsData
-        .map((t: any) => ({ id: t.id != null ? String(t.id) : "", label: t.name || `Team #${t.id}` }))
-        .filter((t: any) => t.id !== "")
+        .map((tm: any) => ({ id: tm.id != null ? String(tm.id) : "", label: tm.name || `Team #${tm.id}` }))
+        .filter((tm: any) => tm.id !== "")
     : [];
 
   const [folderFormOpen, setFolderFormOpen] = useState(false);
@@ -150,15 +152,15 @@ export default function LiveChatSection() {
   const invalidateFolders = () => queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
   const createFolderMut = useMutation({
     mutationFn: async (payload: any) => (await apiRequest("POST", "/api/inbox/folders", payload)).json(),
-    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: "Saved", description: "Folder created." }); },
+    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: t("live_chat_section.toasts.saved_title"), description: t("live_chat_section.toasts.folder_created_description") }); },
   });
   const updateFolderMut = useMutation({
     mutationFn: async ({ id, ...payload }: any) => (await apiRequest("PATCH", `/api/inbox/folders/${id}`, payload)).json(),
-    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: "Saved", description: "Folder updated." }); },
+    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: t("live_chat_section.toasts.saved_title"), description: t("live_chat_section.toasts.folder_updated_description") }); },
   });
   const deleteFolderMut = useMutation({
     mutationFn: async (id: string) => (await apiRequest("DELETE", `/api/inbox/folders/${id}`)).json(),
-    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: "Deleted", description: "Folder removed." }); },
+    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: t("live_chat_section.toasts.deleted_title"), description: t("live_chat_section.toasts.folder_removed_description") }); },
   });
 
   const openAddFolder = () => {
@@ -237,12 +239,12 @@ export default function LiveChatSection() {
   }
 
   const tabs = [
-    { value: "agents", label: "Agents", icon: UserCheck },
-    { value: "completion", label: "Completion", icon: History },
-    { value: "signature", label: "Signature", icon: PenTool },
-    { value: "correction", label: "Correction", icon: Wand2 },
-    { value: "folders", label: "Folders", icon: FolderSearch },
-    { value: "pause", label: "Pause", icon: PauseCircle },
+    { value: "agents", label: t("live_chat_section.tabs.agents"), icon: UserCheck },
+    { value: "completion", label: t("live_chat_section.tabs.completion"), icon: History },
+    { value: "signature", label: t("live_chat_section.tabs.signature"), icon: PenTool },
+    { value: "correction", label: t("live_chat_section.tabs.correction"), icon: Wand2 },
+    { value: "folders", label: t("live_chat_section.tabs.folders"), icon: FolderSearch },
+    { value: "pause", label: t("live_chat_section.tabs.pause"), icon: PauseCircle },
   ];
 
   return (
@@ -255,14 +257,14 @@ export default function LiveChatSection() {
               <MessageSquare className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Live chat</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("live_chat_section.title")}</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
-                Manage your live chat settings
+                {t("live_chat_section.subtitle")}
               </p>
             </div>
           </div>
           <div className={cn("px-3 py-1.5 rounded-lg border text-[10px] font-semibold flex items-center gap-1.5", dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600")}>
-            <Sparkles size={11} className="text-primary" /> v2.4 Optimized
+            <Sparkles size={11} className="text-primary" /> {t("live_chat_section.version_badge")}
           </div>
         </div>
 
@@ -293,9 +295,9 @@ export default function LiveChatSection() {
             <TabsContent value="agents" className="p-6 outline-none space-y-6">
               <SectionHeading
                 dark={dark}
-                title="When conversation is marked DONE"
-                badge="Applies to Live Chat & Smart Flow"
-                description="Choose how to handle the assigned agent when conversations are closed."
+                title={t("live_chat_section.agents.heading_title")}
+                badge={t("live_chat_section.agents.heading_badge")}
+                description={t("live_chat_section.agents.heading_description")}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -304,17 +306,18 @@ export default function LiveChatSection() {
                   active={agentAction === "keep"}
                   onClick={() => setAgentAction("keep")}
                   icon={<UserCheck size={18} />}
-                  title="Keep Agent"
-                  description="Keep the assigned agent attached to the conversation."
+                  title={t("live_chat_section.agents.keep_agent_title")}
+                  description={t("live_chat_section.agents.keep_agent_description")}
                   recommended
+                  recommendedLabel={t("live_chat_section.agents.recommended")}
                 />
                 <OptionCard
                   dark={dark}
                   active={agentAction === "remove"}
                   onClick={() => setAgentAction("remove")}
                   icon={<Trash2 size={18} />}
-                  title="Remove Agent"
-                  description="Unassign the agent when conversation is completed."
+                  title={t("live_chat_section.agents.remove_agent_title")}
+                  description={t("live_chat_section.agents.remove_agent_description")}
                 />
               </div>
 
@@ -324,9 +327,9 @@ export default function LiveChatSection() {
                     <Settings size={16} />
                   </div>
                   <div>
-                    <p className={cn("text-[13px] font-black tracking-tight", text)}>Save Agent Details</p>
+                    <p className={cn("text-[13px] font-black tracking-tight", text)}>{t("live_chat_section.agents.save_agent_details_title")}</p>
                     <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                      Store the details of the agent who closed the conversation into a custom field.
+                      {t("live_chat_section.agents.save_agent_details_description")}
                     </p>
                   </div>
                 </div>
@@ -336,27 +339,27 @@ export default function LiveChatSection() {
               {saveAgentDetails && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in slide-in-from-top-2 duration-300">
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Data Format</FieldLabel>
+                    <FieldLabel dark={dark}>{t("live_chat_section.agents.data_format_label")}</FieldLabel>
                     <Select value={agentDataFormat} onValueChange={setAgentDataFormat}>
                       <SelectTrigger className={inputCls}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                        <SelectItem value="full_name" className="text-[12px] font-bold">Full Name</SelectItem>
-                        <SelectItem value="json" className="text-[12px] font-bold">JSON</SelectItem>
+                        <SelectItem value="full_name" className="text-[12px] font-bold">{t("live_chat_section.agents.full_name_option")}</SelectItem>
+                        <SelectItem value="json" className="text-[12px] font-bold">{t("live_chat_section.agents.json_option")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Custom Field</FieldLabel>
+                    <FieldLabel dark={dark}>{t("live_chat_section.agents.custom_field_label")}</FieldLabel>
                     <div className="flex gap-2">
                       <Select value={customField} onValueChange={setCustomField}>
                         <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="Select custom field" />
+                          <SelectValue placeholder={t("live_chat_section.agents.select_custom_field_placeholder")} />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                           {customFields.length === 0 ? (
-                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">No custom fields yet</div>
+                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">{t("live_chat_section.agents.no_custom_fields")}</div>
                           ) : (
                             customFields.map((f) => (
                               <SelectItem key={f.id} value={f.name} className="text-[12px] font-bold">{f.name}</SelectItem>
@@ -364,7 +367,7 @@ export default function LiveChatSection() {
                           )}
                         </SelectContent>
                       </Select>
-                      <button onClick={goToCustomFields} title="Create custom field" className={outlineBtn}><Plus size={16} /></button>
+                      <button onClick={goToCustomFields} title={t("live_chat_section.agents.create_custom_field_title")} className={outlineBtn}><Plus size={16} /></button>
                     </div>
                   </div>
                 </div>
@@ -375,6 +378,7 @@ export default function LiveChatSection() {
                 onClick={() => updateMutation.mutate({ agentAction, saveAgentDetails, agentDataFormat, customField })}
                 loading={updateMutation.isPending}
                 primaryBtn={primaryBtn}
+                t={t}
               />
             </TabsContent>
 
@@ -382,8 +386,8 @@ export default function LiveChatSection() {
             <TabsContent value="completion" className="p-6 outline-none space-y-6">
               <SectionHeading
                 dark={dark}
-                title="Conversation Archive"
-                description="Save the conversation transcript as JSON in a custom field once it's marked DONE."
+                title={t("live_chat_section.completion.heading_title")}
+                description={t("live_chat_section.completion.heading_description")}
               />
 
               <div className={cn("p-6 rounded-[1.5rem] border", softBg, softBorder)}>
@@ -393,9 +397,9 @@ export default function LiveChatSection() {
                       <History size={16} />
                     </div>
                     <div>
-                      <p className={cn("text-[13px] font-black tracking-tight", text)}>Save as JSON</p>
+                      <p className={cn("text-[13px] font-black tracking-tight", text)}>{t("live_chat_section.completion.save_as_json_title")}</p>
                       <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                        When a conversation is marked DONE in Live Chat or Smart Flow, the entire transcript will be stored in your chosen custom field.
+                        {t("live_chat_section.completion.save_as_json_description")}
                       </p>
                     </div>
                   </div>
@@ -405,14 +409,14 @@ export default function LiveChatSection() {
                 {saveConversationJson && (
                   <div className="pt-5 mt-5 border-t flex items-end gap-3 animate-in slide-in-from-top-2 duration-300" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
                     <div className="flex-1 space-y-2">
-                      <FieldLabel dark={dark}>Target Custom Field</FieldLabel>
+                      <FieldLabel dark={dark}>{t("live_chat_section.completion.target_custom_field_label")}</FieldLabel>
                       <Select value={jsonCustomField} onValueChange={setJsonCustomField}>
                         <SelectTrigger className={inputCls}>
-                          <SelectValue placeholder="Select custom field" />
+                          <SelectValue placeholder={t("live_chat_section.agents.select_custom_field_placeholder")} />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                           {customFields.length === 0 ? (
-                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">No custom fields yet</div>
+                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">{t("live_chat_section.agents.no_custom_fields")}</div>
                           ) : (
                             customFields.map((f) => (
                               <SelectItem key={f.id} value={f.name} className="text-[12px] font-bold">{f.name}</SelectItem>
@@ -421,7 +425,7 @@ export default function LiveChatSection() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <button onClick={goToCustomFields} title="Create custom field" className={outlineBtn}><Plus size={16} /></button>
+                    <button onClick={goToCustomFields} title={t("live_chat_section.agents.create_custom_field_title")} className={outlineBtn}><Plus size={16} /></button>
                   </div>
                 )}
               </div>
@@ -431,6 +435,7 @@ export default function LiveChatSection() {
                 onClick={() => updateMutation.mutate({ saveConversationJson, jsonCustomField })}
                 loading={updateMutation.isPending}
                 primaryBtn={primaryBtn}
+                t={t}
               />
             </TabsContent>
 
@@ -448,10 +453,10 @@ export default function LiveChatSection() {
                     />
                     <div>
                       <p className={cn("text-[13px] font-black tracking-tight", text)}>
-                        Include a signature in Agent messages sent through Live Chat
+                        {t("live_chat_section.signature.toggle_title")}
                       </p>
                       <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                        The agent's name will be prepended to every outgoing message.
+                        {t("live_chat_section.signature.toggle_description")}
                       </p>
                     </div>
                   </div>
@@ -461,18 +466,18 @@ export default function LiveChatSection() {
                     {[
                       {
                         icon: <Award size={14} />,
-                        title: "Professionalism",
-                        desc: "Signing messages with a name gives a polished, professional touch.",
+                        title: t("live_chat_section.signature.benefit_professionalism_title"),
+                        desc: t("live_chat_section.signature.benefit_professionalism_description"),
                       },
                       {
                         icon: <Heart size={14} />,
-                        title: "Personalization",
-                        desc: "The conversation feels more human, building trust and rapport.",
+                        title: t("live_chat_section.signature.benefit_personalization_title"),
+                        desc: t("live_chat_section.signature.benefit_personalization_description"),
                       },
                       {
                         icon: <ShieldCheck size={14} />,
-                        title: "Accountability",
-                        desc: "Customers know who they're interacting with at all times.",
+                        title: t("live_chat_section.signature.benefit_accountability_title"),
+                        desc: t("live_chat_section.signature.benefit_accountability_description"),
                       },
                     ].map((b) => (
                       <div key={b.title} className="flex items-start gap-3">
@@ -497,10 +502,10 @@ export default function LiveChatSection() {
                     </div>
                     <div>
                       <p className="text-[12px] font-semibold text-amber-600 dark:text-amber-400">
-                        Attention needed
+                        {t("live_chat_section.signature.attention_needed")}
                       </p>
                       <p className={cn("text-[11px] font-medium leading-relaxed mt-1 text-amber-700/80 dark:text-amber-300/80")}>
-                        The signature feature is exclusively for the WhatsApp channels (Official and QR Code).
+                        {t("live_chat_section.signature.attention_description")}
                       </p>
                     </div>
                   </div>
@@ -508,7 +513,7 @@ export default function LiveChatSection() {
 
                 {/* Right: Phone Preview */}
                 <div className="lg:col-span-2 flex justify-center lg:justify-end">
-                  <SignaturePhonePreview dark={dark} signatureName="Maria" showSignature={includeSignature} />
+                  <SignaturePhonePreview dark={dark} signatureName="Maria" showSignature={includeSignature} t={t} />
                 </div>
               </div>
 
@@ -517,6 +522,7 @@ export default function LiveChatSection() {
                 onClick={() => updateMutation.mutate({ includeSignature })}
                 loading={updateMutation.isPending}
                 primaryBtn={primaryBtn}
+                t={t}
               />
             </TabsContent>
 
@@ -524,14 +530,14 @@ export default function LiveChatSection() {
             <TabsContent value="correction" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
-                title="AI Correction"
-                description="Configure the AI model and prompt used to refine agent responses before sending."
+                title={t("live_chat_section.correction.heading_title")}
+                description={t("live_chat_section.correction.heading_description")}
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-4">
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>AI Model</FieldLabel>
+                    <FieldLabel dark={dark}>{t("live_chat_section.correction.ai_model_label")}</FieldLabel>
                     <Select value={correctionModel} onValueChange={setCorrectionModel}>
                       <SelectTrigger className={inputCls}>
                         <SelectValue />
@@ -547,10 +553,15 @@ export default function LiveChatSection() {
                   <div className={cn("p-4 rounded-[1.25rem] border bg-primary/5 border-primary/20")}>
                     <div className="flex items-center gap-2 mb-2.5">
                       <Sparkles size={14} className="text-primary" />
-                      <h5 className="text-[11px] font-semibold text-primary">Capabilities</h5>
+                      <h5 className="text-[11px] font-semibold text-primary">{t("live_chat_section.correction.capabilities_title")}</h5>
                     </div>
                     <ul className="space-y-1.5">
-                      {["Grammar Fix", "Tone Adjustment", "Translation", "Expansion"].map((f) => (
+                      {[
+                        t("live_chat_section.correction.capability_grammar_fix"),
+                        t("live_chat_section.correction.capability_tone_adjustment"),
+                        t("live_chat_section.correction.capability_translation"),
+                        t("live_chat_section.correction.capability_expansion"),
+                      ].map((f) => (
                         <li key={f} className={cn("flex items-center gap-2 text-[11px] font-bold opacity-80", text)}>
                           <CheckCircle2 size={12} className="text-primary shrink-0" /> {f}
                         </li>
@@ -560,11 +571,11 @@ export default function LiveChatSection() {
                 </div>
 
                 <div className="lg:col-span-2 space-y-2">
-                  <FieldLabel dark={dark}>Custom Correction Prompt</FieldLabel>
+                  <FieldLabel dark={dark}>{t("live_chat_section.correction.custom_prompt_label")}</FieldLabel>
                   <textarea
                     value={correctionPrompt}
                     onChange={(e) => setCorrectionPrompt(e.target.value)}
-                    placeholder="Rewrite my response to be more professional and clear..."
+                    placeholder={t("live_chat_section.correction.custom_prompt_placeholder")}
                     className={cn(
                       "w-full min-h-[170px] rounded-xl border p-4 text-[13px] font-medium leading-relaxed resize-none transition-all",
                       "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 focus:outline-none",
@@ -572,7 +583,7 @@ export default function LiveChatSection() {
                     )}
                   />
                   <div className={cn("flex items-center gap-2 text-[10px] font-bold opacity-50 pl-1", sub)}>
-                    <Info size={11} /> Use natural language to describe how the AI should refine messages.
+                    <Info size={11} /> {t("live_chat_section.correction.custom_prompt_hint")}
                   </div>
                 </div>
               </div>
@@ -582,6 +593,7 @@ export default function LiveChatSection() {
                 onClick={() => updateMutation.mutate({ correctionModel, correctionPrompt })}
                 loading={updateMutation.isPending}
                 primaryBtn={primaryBtn}
+                t={t}
               />
             </TabsContent>
 
@@ -589,8 +601,8 @@ export default function LiveChatSection() {
             <TabsContent value="folders" className="p-6 outline-none space-y-5">
               <SectionHeading
                 dark={dark}
-                title="Conversation Folders"
-                description="Create custom folders to streamline and optimize your Live Chat management."
+                title={t("live_chat_section.folders.heading_title")}
+                description={t("live_chat_section.folders.heading_description")}
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -599,7 +611,7 @@ export default function LiveChatSection() {
                   {folders.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
                       <Folder className="w-8 h-8 text-primary/40 mx-auto mb-3" />
-                      <p className={cn("text-[11px] font-bold opacity-60", sub)}>No folders yet</p>
+                      <p className={cn("text-[11px] font-bold opacity-60", sub)}>{t("live_chat_section.folders.no_folders")}</p>
                     </div>
                   ) : (
                     <ul className="divide-y" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
@@ -644,7 +656,7 @@ export default function LiveChatSection() {
                     <div className="flex flex-col gap-5 flex-1">
                       <div className="flex items-center justify-between">
                         <h4 className={cn("text-[13px] font-semibold", text)}>
-                          {editingFolderId !== null ? "Edit Folder" : "New Folder"}
+                          {editingFolderId !== null ? t("live_chat_section.folders.edit_folder_title") : t("live_chat_section.folders.new_folder_title")}
                         </h4>
                         <button
                           onClick={() => setFolderFormOpen(false)}
@@ -655,19 +667,19 @@ export default function LiveChatSection() {
                       </div>
 
                       <div className="space-y-2">
-                        <FieldLabel dark={dark}>Display Name</FieldLabel>
+                        <FieldLabel dark={dark}>{t("live_chat_section.folders.display_name_label")}</FieldLabel>
                         <Input
                           value={folderName}
                           onChange={(e) => setFolderName(e.target.value)}
-                          placeholder="e.g. Sales, Support, Returns"
+                          placeholder={t("live_chat_section.folders.display_name_placeholder")}
                           className={inputCls}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <FieldLabel dark={dark}>Assign To</FieldLabel>
-                        {/* Agent / Team source toggle — replyagent lets a folder be
-                            assigned to an agent or a whole team. */}
+                        <FieldLabel dark={dark}>{t("live_chat_section.folders.assign_to_label")}</FieldLabel>
+                        {/* Agent / Team source toggle — internal reference product lets a
+                            folder be assigned to an agent or a whole team. */}
                         <div className={cn("inline-flex p-1 rounded-xl border", dark ? "border-slate-800 bg-slate-950/50" : "border-slate-200 bg-slate-50")}>
                           {(["AGENT", "TEAM"] as const).map((src) => (
                             <button
@@ -681,27 +693,27 @@ export default function LiveChatSection() {
                                   : dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700",
                               )}
                             >
-                              {src === "AGENT" ? "Agent" : "Team"}
+                              {src === "AGENT" ? t("live_chat_section.folders.source_agent") : t("live_chat_section.folders.source_team")}
                             </button>
                           ))}
                         </div>
                         <Select value={folderAssignedTo} onValueChange={setFolderAssignedTo}>
                           <SelectTrigger className={inputCls}>
-                            <SelectValue placeholder={folderSource === "TEAM" ? "Select team" : "Select"} />
+                            <SelectValue placeholder={folderSource === "TEAM" ? t("live_chat_section.folders.select_team_placeholder") : t("live_chat_section.folders.select_placeholder")} />
                           </SelectTrigger>
                           <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                             {folderSource === "AGENT" ? (
                               <>
-                                <SelectItem value="all" className="text-[12px] font-bold">All Agents</SelectItem>
+                                <SelectItem value="all" className="text-[12px] font-bold">{t("live_chat_section.folders.all_agents")}</SelectItem>
                                 {agents.map((a) => (
                                   <SelectItem key={a.id} value={a.id} className="text-[12px] font-bold">{a.label}</SelectItem>
                                 ))}
                               </>
                             ) : teams.length === 0 ? (
-                              <div className="px-3 py-2 text-[11px] font-medium opacity-60">No teams yet</div>
+                              <div className="px-3 py-2 text-[11px] font-medium opacity-60">{t("live_chat_section.folders.no_teams")}</div>
                             ) : (
-                              teams.map((t) => (
-                                <SelectItem key={t.id} value={t.id} className="text-[12px] font-bold">{t.label}</SelectItem>
+                              teams.map((tm) => (
+                                <SelectItem key={tm.id} value={tm.id} className="text-[12px] font-bold">{tm.label}</SelectItem>
                               ))
                             )}
                           </SelectContent>
@@ -715,7 +727,7 @@ export default function LiveChatSection() {
                             disabled={deleteFolderMut.isPending}
                             className="h-10 px-5 rounded-xl border border-rose-500/30 text-rose-500 text-[11px] font-semibold transition-all hover:bg-rose-500/10 disabled:opacity-50 flex items-center gap-2"
                           >
-                            <Trash2 size={13} /> Delete
+                            <Trash2 size={13} /> {t("live_chat_section.folders.delete_button")}
                           </button>
                         )}
                         <div className="flex-1" />
@@ -728,7 +740,7 @@ export default function LiveChatSection() {
                               : "border-slate-200 text-slate-700 hover:border-slate-300"
                           )}
                         >
-                          Cancel
+                          {t("live_chat_section.folders.cancel_button")}
                         </button>
                         <button
                           onClick={saveFolder}
@@ -740,7 +752,7 @@ export default function LiveChatSection() {
                           }
                           className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}
                         >
-                          {createFolderMut.isPending || updateFolderMut.isPending ? "Saving..." : "Save"}
+                          {createFolderMut.isPending || updateFolderMut.isPending ? t("live_chat_section.folders.saving_button") : t("live_chat_section.folders.save_button")}
                         </button>
                       </div>
                     </div>
@@ -750,7 +762,7 @@ export default function LiveChatSection() {
                         <Folder className="w-6 h-6 text-primary" />
                       </div>
                       <p className={cn("text-[12px] font-medium opacity-70 max-w-[220px] leading-relaxed", sub)}>
-                        Add folder to organize your conversations.
+                        {t("live_chat_section.folders.empty_state_description")}
                       </p>
                       <button
                         onClick={openAddFolder}
@@ -759,7 +771,7 @@ export default function LiveChatSection() {
                           "border-primary/40 text-primary hover:bg-primary hover:text-white"
                         )}
                       >
-                        <Plus size={12} /> Add Folder
+                        <Plus size={12} /> {t("live_chat_section.folders.add_folder_button")}
                       </button>
                     </div>
                   )}
@@ -770,7 +782,7 @@ export default function LiveChatSection() {
             {/* ── PAUSE TAB ── */}
             <TabsContent value="pause" className="p-6 outline-none space-y-5">
               <h3 className={cn("text-[14px] font-semibold", text)}>
-                Automatically pause the Smart Flow when initiating a conversation?
+                {t("live_chat_section.pause.question")}
               </h3>
 
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBg, softBorder)}>
@@ -778,16 +790,16 @@ export default function LiveChatSection() {
                   dark={dark}
                   active={pauseSmartFlow === "keep"}
                   onClick={() => setPauseSmartFlow("keep")}
-                  label="Manually"
-                  description="Do not pause the Smart Flow when an agent send a message"
+                  label={t("live_chat_section.pause.manually_label")}
+                  description={t("live_chat_section.pause.manually_description")}
                 />
                 <div className="border-t" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }} />
                 <RadioRow
                   dark={dark}
                   active={pauseSmartFlow === "automatically"}
                   onClick={() => setPauseSmartFlow("automatically")}
-                  label="Automatically"
-                  description="Pause the Smart Flow when an agent send a message"
+                  label={t("live_chat_section.pause.automatically_label")}
+                  description={t("live_chat_section.pause.automatically_description")}
                 />
               </div>
 
@@ -796,6 +808,7 @@ export default function LiveChatSection() {
                 onClick={() => updateMutation.mutate({ pauseSmartFlow })}
                 loading={updateMutation.isPending}
                 primaryBtn={primaryBtn}
+                t={t}
               />
             </TabsContent>
           </Tabs>
@@ -845,6 +858,7 @@ function OptionCard({
   title,
   description,
   recommended,
+  recommendedLabel,
 }: {
   dark: boolean;
   active: boolean;
@@ -853,6 +867,7 @@ function OptionCard({
   title: string;
   description: string;
   recommended?: boolean;
+  recommendedLabel?: string;
 }) {
   const text = dark ? "text-white" : "text-slate-900";
   const sub  = dark ? "text-slate-500" : "text-slate-400";
@@ -882,7 +897,7 @@ function OptionCard({
           <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>{description}</p>
           {recommended && (
             <span className="inline-block mt-2.5 text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary">
-              Recommended
+              {recommendedLabel}
             </span>
           )}
         </div>
@@ -946,10 +961,12 @@ function SignaturePhonePreview({
   dark,
   signatureName,
   showSignature,
+  t,
 }: {
   dark: boolean;
   signatureName: string;
   showSignature: boolean;
+  t: (key: string) => string;
 }) {
   return (
     <div className="relative">
@@ -977,7 +994,7 @@ function SignaturePhonePreview({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-bold leading-tight">{signatureName}</p>
-            <p className="text-[9px] opacity-80 leading-tight">online</p>
+            <p className="text-[9px] opacity-80 leading-tight">{t("live_chat_section.signature.preview_online")}</p>
           </div>
         </div>
 
@@ -993,13 +1010,13 @@ function SignaturePhonePreview({
         >
           {/* Today divider */}
           <div className="flex justify-center pb-1">
-            <span className="px-2 py-0.5 rounded-md bg-white/80 text-[9px] font-bold text-slate-600 shadow-sm">Today</span>
+            <span className="px-2 py-0.5 rounded-md bg-white/80 text-[9px] font-bold text-slate-600 shadow-sm">{t("live_chat_section.signature.preview_today")}</span>
           </div>
 
           {/* Customer message */}
           <div className="flex justify-start">
             <div className="bg-white rounded-lg rounded-tl-sm px-2.5 py-1.5 max-w-[80%] shadow-sm">
-              <p className="text-[10px] text-slate-800 leading-snug">Hi, I need help with my order #12345.</p>
+              <p className="text-[10px] text-slate-800 leading-snug">{t("live_chat_section.signature.preview_customer_message")}</p>
               <p className="text-[8px] text-slate-400 text-right mt-0.5">14:30</p>
             </div>
           </div>
@@ -1010,7 +1027,7 @@ function SignaturePhonePreview({
               {showSignature && (
                 <p className="text-[9px] font-bold text-teal-700 leading-snug">~ {signatureName}</p>
               )}
-              <p className="text-[10px] text-slate-800 leading-snug">Hello! I'd be happy to check that for you. One moment please.</p>
+              <p className="text-[10px] text-slate-800 leading-snug">{t("live_chat_section.signature.preview_agent_message")}</p>
               <p className="text-[8px] text-slate-500 text-right mt-0.5">14:32 ✓✓</p>
             </div>
           </div>
@@ -1025,11 +1042,13 @@ function SaveFooter({
   onClick,
   loading,
   primaryBtn,
+  t,
 }: {
   dark: boolean;
   onClick: () => void;
   loading: boolean;
   primaryBtn: string;
+  t: (key: string) => string;
 }) {
   const sub = dark ? "text-slate-500" : "text-slate-400";
   const border = dark ? "border-slate-800" : "border-slate-100";
@@ -1037,10 +1056,10 @@ function SaveFooter({
     <div className={cn("flex items-center justify-end gap-3 pt-6 border-t", border)}>
       <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
         <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
-        Settings apply across the entire Workspace
+        {t("live_chat_section.footer.scope_note")}
       </p>
       <button onClick={onClick} disabled={loading} className={primaryBtn}>
-        {loading ? "Saving..." : "Save Changes"}
+        {loading ? t("live_chat_section.footer.saving") : t("live_chat_section.footer.save_changes")}
       </button>
     </div>
   );

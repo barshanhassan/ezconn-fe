@@ -4,6 +4,7 @@
  * BulkActions, CreateCustomField full, etc.).
  */
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -78,8 +79,9 @@ export function DeleteContactDialog({
   onConfirmDelete: () => void;
   deleting: boolean;
 }) {
-  // Replyagent generates a fresh random 5-digit code each open. We use a
-  // ref-equivalent state initialized when the dialog opens.
+  const { t } = useTranslation();
+  // A fresh random 5-digit code is generated each time the dialog opens. We
+  // use a ref-equivalent state initialized when the dialog opens.
   const [code, setCode] = useState<string>("");
   const [typed, setTyped] = useState("");
 
@@ -98,39 +100,38 @@ export function DeleteContactDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogTitle className="text-base">
-          Deleting:{" "}
+          {t("contact_profile_sub_dialogs.delete_contact.title")}{" "}
           <span className="text-destructive font-semibold">{contactName}</span>
         </DialogTitle>
         <DialogDescription className="text-sm">
-          This will permanently affect the contact's data. Please review the
-          impact below.
+          {t("contact_profile_sub_dialogs.delete_contact.description")}
         </DialogDescription>
         <ul className="list-disc pl-5 text-xs space-y-1">
           <li>
-            <strong>{contactName}</strong>'s profile will be moved to trash.
+            <strong>{contactName}</strong>
+            {t("contact_profile_sub_dialogs.delete_contact.bullet_profile_trash")}
           </li>
-          <li>All linked conversations will be detached from this contact.</li>
+          <li>{t("contact_profile_sub_dialogs.delete_contact.bullet_conversations")}</li>
           <li>
-            Tasks, opportunities and bookings tied to this contact will remain
-            but lose their contact reference.
+            {t("contact_profile_sub_dialogs.delete_contact.bullet_tasks")}
           </li>
-          <li>Automation flows running against this contact will stop.</li>
+          <li>{t("contact_profile_sub_dialogs.delete_contact.bullet_automations")}</li>
           <li className="text-destructive">
-            Deleted contacts cannot be restored from the UI.
+            {t("contact_profile_sub_dialogs.delete_contact.bullet_no_restore")}
           </li>
         </ul>
         <div className="mt-3">
           <Label className="text-xs">
-            Type{" "}
+            {t("contact_profile_sub_dialogs.delete_contact.type_prefix")}{" "}
             <span className="font-mono font-bold bg-muted px-1 py-0.5 rounded">
               {code}
             </span>{" "}
-            to confirm
+            {t("contact_profile_sub_dialogs.delete_contact.type_suffix")}
           </Label>
           <Input
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
-            placeholder="Enter code"
+            placeholder={t("contact_profile_sub_dialogs.delete_contact.enter_code")}
             className="mt-1"
             inputMode="numeric"
             autoFocus
@@ -138,7 +139,7 @@ export function DeleteContactDialog({
         </div>
         <div className="flex justify-end gap-2 mt-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_sub_dialogs.common.cancel")}
           </Button>
           <Button
             disabled={!matches || deleting}
@@ -146,7 +147,7 @@ export function DeleteContactDialog({
             onClick={onConfirmDelete}
           >
             {deleting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Delete
+            {t("contact_profile_sub_dialogs.common.delete")}
           </Button>
         </div>
       </DialogContent>
@@ -169,6 +170,7 @@ export function OpportunityFormDialog({
   initial?: any;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -254,13 +256,13 @@ export function OpportunityFormDialog({
         note: note ? { text: note } : null,
       }),
     onSuccess: () => {
-      toast({ title: "Opportunity saved" });
+      toast({ title: t("contact_profile_sub_dialogs.opportunity_form.saved_toast") });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       onSaved();
     },
     onError: (err: any) => {
       toast({
-        title: "Save failed",
+        title: t("contact_profile_sub_dialogs.opportunity_form.save_failed_toast"),
         description: err?.message ?? "",
         variant: "destructive",
       });
@@ -270,14 +272,18 @@ export function OpportunityFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogTitle>{initial ? "Edit opportunity" : "New opportunity"}</DialogTitle>
+        <DialogTitle>
+          {initial
+            ? t("contact_profile_sub_dialogs.opportunity_form.edit_title")
+            : t("contact_profile_sub_dialogs.opportunity_form.new_title")}
+        </DialogTitle>
         <DialogDescription>
-          Track a deal through your sales pipeline.
+          {t("contact_profile_sub_dialogs.opportunity_form.description")}
         </DialogDescription>
 
         <div className="grid grid-cols-2 gap-4 py-2">
           <div>
-            <Label>Pipeline</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.pipeline_label")}</Label>
             <Select
               value={pipelineId ?? ""}
               onValueChange={(v) => {
@@ -286,7 +292,7 @@ export function OpportunityFormDialog({
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose pipeline" />
+                <SelectValue placeholder={t("contact_profile_sub_dialogs.opportunity_form.choose_pipeline")} />
               </SelectTrigger>
               <SelectContent>
                 {pipelines.map((p: any) => (
@@ -298,14 +304,14 @@ export function OpportunityFormDialog({
             </Select>
           </div>
           <div>
-            <Label>Step</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.step_label")}</Label>
             <Select
               value={stepId ?? ""}
               onValueChange={setStepId}
               disabled={!pipelineId}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose step" />
+                <SelectValue placeholder={t("contact_profile_sub_dialogs.opportunity_form.choose_step")} />
               </SelectTrigger>
               <SelectContent>
                 {steps.map((s: any) => (
@@ -318,12 +324,12 @@ export function OpportunityFormDialog({
           </div>
 
           <div className="col-span-2">
-            <Label>Title</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.title_label")}</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
           <div>
-            <Label>Value</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.value_label")}</Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{currency}</span>
               <Input
@@ -334,7 +340,7 @@ export function OpportunityFormDialog({
             </div>
           </div>
           <div>
-            <Label>Currency</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.currency_label")}</Label>
             <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger>
                 <SelectValue />
@@ -350,7 +356,7 @@ export function OpportunityFormDialog({
           </div>
 
           <div>
-            <Label>Closing date</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.closing_date_label")}</Label>
             <Input
               type="date"
               value={closingDate}
@@ -358,7 +364,9 @@ export function OpportunityFormDialog({
             />
           </div>
           <div>
-            <Label>Probability ({probability}%)</Label>
+            <Label>
+              {t("contact_profile_sub_dialogs.opportunity_form.probability_label", { probability })}
+            </Label>
             <input
               type="range"
               min={0}
@@ -371,13 +379,13 @@ export function OpportunityFormDialog({
           </div>
 
           <div>
-            <Label>Assigned to</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.assigned_to_label")}</Label>
             <Select value={agentId ?? ""} onValueChange={setAgentId}>
               <SelectTrigger>
-                <SelectValue placeholder="Unassigned" />
+                <SelectValue placeholder={t("contact_profile_sub_dialogs.opportunity_form.unassigned")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">Unassigned</SelectItem>
+                <SelectItem value="__none__">{t("contact_profile_sub_dialogs.opportunity_form.unassigned")}</SelectItem>
                 {users.map((u: any) => (
                   <SelectItem key={u.id} value={String(u.id)}>
                     {u.full_name ?? u.name ?? `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() ?? `User ${u.id}`}
@@ -387,36 +395,36 @@ export function OpportunityFormDialog({
             </Select>
           </div>
           <div>
-            <Label>Status</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.status_label")}</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="WON">Won</SelectItem>
-                <SelectItem value="LOST">Lost</SelectItem>
+                <SelectItem value="ACTIVE">{t("contact_profile_sub_dialogs.opportunity_form.status_active")}</SelectItem>
+                <SelectItem value="WON">{t("contact_profile_sub_dialogs.opportunity_form.status_won")}</SelectItem>
+                <SelectItem value="LOST">{t("contact_profile_sub_dialogs.opportunity_form.status_lost")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {status === "LOST" && (
             <div className="col-span-2">
-              <Label>Lost reason</Label>
+              <Label>{t("contact_profile_sub_dialogs.opportunity_form.lost_reason_label")}</Label>
               <Input
                 value={lostReason}
                 onChange={(e) => setLostReason(e.target.value)}
-                placeholder="Why was it lost?"
+                placeholder={t("contact_profile_sub_dialogs.opportunity_form.lost_reason_placeholder")}
               />
             </div>
           )}
 
           <div className="col-span-2">
-            <Label>Note</Label>
+            <Label>{t("contact_profile_sub_dialogs.opportunity_form.note_label")}</Label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note"
+              placeholder={t("contact_profile_sub_dialogs.opportunity_form.note_placeholder")}
               rows={2}
             />
           </div>
@@ -424,7 +432,7 @@ export function OpportunityFormDialog({
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_sub_dialogs.common.cancel")}
           </Button>
           <Button
             disabled={!pipelineId || !stepId || submit.isPending}
@@ -433,7 +441,7 @@ export function OpportunityFormDialog({
             {submit.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             )}
-            Save
+            {t("contact_profile_sub_dialogs.common.save")}
           </Button>
         </div>
       </DialogContent>
@@ -466,6 +474,7 @@ export function GalleryPickerDialog({
   onPick: (media: { id: string; url: string; object_name: string }) => void;
   mediaType?: string;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [urlInput, setUrlInput] = useState("");
@@ -509,12 +518,15 @@ export function GalleryPickerDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
-      toast({ title: "Uploaded", description: "Media added to gallery." });
+      toast({
+        title: t("contact_profile_sub_dialogs.gallery_picker.uploaded_toast"),
+        description: t("contact_profile_sub_dialogs.gallery_picker.uploaded_toast_description"),
+      });
     },
     onError: (err: any) =>
       toast({
-        title: "Upload failed",
-        description: err?.message ?? "Try again",
+        title: t("contact_profile_sub_dialogs.gallery_picker.upload_failed_toast"),
+        description: err?.message ?? t("contact_profile_sub_dialogs.gallery_picker.try_again"),
         variant: "destructive",
       }),
   });
@@ -536,9 +548,9 @@ export function GalleryPickerDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
-        <DialogTitle>Gallery</DialogTitle>
+        <DialogTitle>{t("contact_profile_sub_dialogs.gallery_picker.title")}</DialogTitle>
         <DialogDescription>
-          Pick an image from your gallery, upload a new one, or enter a URL.
+          {t("contact_profile_sub_dialogs.gallery_picker.description")}
         </DialogDescription>
 
         {/* Action bar — upload + URL fallback */}
@@ -553,14 +565,16 @@ export function GalleryPickerDialog({
             />
             <span className="inline-flex items-center gap-2 cursor-pointer text-xs px-3 py-1.5 rounded border bg-white hover:bg-muted">
               <ImageIcon className="h-3.5 w-3.5" />
-              {uploadMutation.isPending ? "Uploading…" : "Add files"}
+              {uploadMutation.isPending
+                ? t("contact_profile_sub_dialogs.gallery_picker.uploading")
+                : t("contact_profile_sub_dialogs.gallery_picker.add_files")}
             </span>
           </label>
 
           <div className="flex-1 flex items-center gap-2">
             <Input
               type="url"
-              placeholder="Or paste a direct URL (https://…)"
+              placeholder={t("contact_profile_sub_dialogs.gallery_picker.url_placeholder")}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               className="h-8 text-xs"
@@ -572,7 +586,7 @@ export function GalleryPickerDialog({
               onClick={handleUrlSubmit}
               disabled={!urlInput.trim()}
             >
-              Use URL
+              {t("contact_profile_sub_dialogs.gallery_picker.use_url")}
             </Button>
           </div>
         </div>
@@ -580,12 +594,11 @@ export function GalleryPickerDialog({
         <ScrollArea className="h-96">
           {isLoading ? (
             <p className="text-sm text-muted-foreground p-6 text-center">
-              Loading…
+              {t("contact_profile_sub_dialogs.gallery_picker.loading")}
             </p>
           ) : filteredItems.length === 0 ? (
             <p className="text-sm text-muted-foreground p-6 text-center">
-              No media yet. Click "Add files" above to upload, or paste a
-              direct URL.
+              {t("contact_profile_sub_dialogs.gallery_picker.no_media")}
             </p>
           ) : (
             <div className="grid grid-cols-4 gap-3 p-2">
@@ -640,6 +653,7 @@ export function CreateCustomFieldDialog({
   onOpenChange: (o: boolean) => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [label, setLabel] = useState("");
@@ -673,7 +687,7 @@ export function CreateCustomFieldDialog({
       return;
     }
     setAvailability("checking");
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         const resp = await apiGet(
           `/api/custom-fields/check-availability?system_name=${encodeURIComponent(systemName)}`,
@@ -683,7 +697,7 @@ export function CreateCustomFieldDialog({
         setAvailability("unknown");
       }
     }, 500);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [systemName, open]);
 
   useEffect(() => {
@@ -723,13 +737,13 @@ export function CreateCustomFieldDialog({
         properties: properties.filter((p) => p.value),
       }),
     onSuccess: () => {
-      toast({ title: "Custom field created" });
+      toast({ title: t("contact_profile_sub_dialogs.custom_field.created_toast") });
       queryClient.invalidateQueries({ queryKey: ["/api/custom-fields"] });
       onSaved();
     },
     onError: (err: any) => {
       toast({
-        title: "Create failed",
+        title: t("contact_profile_sub_dialogs.custom_field.create_failed_toast"),
         description: err?.message ?? "",
         variant: "destructive",
       });
@@ -741,24 +755,23 @@ export function CreateCustomFieldDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
-        <DialogTitle>New custom field</DialogTitle>
+        <DialogTitle>{t("contact_profile_sub_dialogs.custom_field.title")}</DialogTitle>
         <DialogDescription>
-          Add a custom data field for contacts. Choose the content type that
-          matches the value you'll store.
+          {t("contact_profile_sub_dialogs.custom_field.description")}
         </DialogDescription>
 
         <div className="space-y-3 py-2">
           <div>
-            <Label>Label</Label>
+            <Label>{t("contact_profile_sub_dialogs.custom_field.label_label")}</Label>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. Date of Birth"
+              placeholder={t("contact_profile_sub_dialogs.custom_field.label_placeholder")}
               maxLength={60}
             />
           </div>
           <div>
-            <Label>System name (slug)</Label>
+            <Label>{t("contact_profile_sub_dialogs.custom_field.system_name_label")}</Label>
             <div className="relative">
               <Input
                 value={systemName}
@@ -784,12 +797,12 @@ export function CreateCustomFieldDialog({
             </div>
             {availability === "taken" && (
               <p className="text-xs text-destructive mt-1">
-                This system name is already used in this workspace.
+                {t("contact_profile_sub_dialogs.custom_field.system_name_taken")}
               </p>
             )}
           </div>
           <div>
-            <Label>Description (optional)</Label>
+            <Label>{t("contact_profile_sub_dialogs.custom_field.description_label")}</Label>
             <Textarea
               rows={2}
               value={description}
@@ -798,40 +811,40 @@ export function CreateCustomFieldDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Content type</Label>
+              <Label>{t("contact_profile_sub_dialogs.custom_field.content_type_label")}</Label>
               <Select value={contentType} onValueChange={setContentType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TEXT">Text</SelectItem>
-                  <SelectItem value="NUMBER">Number</SelectItem>
-                  <SelectItem value="CURRENCY">Currency</SelectItem>
-                  <SelectItem value="DATE">Date</SelectItem>
-                  <SelectItem value="DATETIME">Date &amp; time</SelectItem>
-                  <SelectItem value="PHONE">Phone</SelectItem>
-                  <SelectItem value="EMAIL">Email</SelectItem>
-                  <SelectItem value="URL">URL</SelectItem>
-                  <SelectItem value="FIXED">Fixed value</SelectItem>
+                  <SelectItem value="TEXT">{t("contact_profile_sub_dialogs.custom_field.content_type_text")}</SelectItem>
+                  <SelectItem value="NUMBER">{t("contact_profile_sub_dialogs.custom_field.content_type_number")}</SelectItem>
+                  <SelectItem value="CURRENCY">{t("contact_profile_sub_dialogs.custom_field.content_type_currency")}</SelectItem>
+                  <SelectItem value="DATE">{t("contact_profile_sub_dialogs.custom_field.content_type_date")}</SelectItem>
+                  <SelectItem value="DATETIME">{t("contact_profile_sub_dialogs.custom_field.content_type_datetime")}</SelectItem>
+                  <SelectItem value="PHONE">{t("contact_profile_sub_dialogs.custom_field.content_type_phone")}</SelectItem>
+                  <SelectItem value="EMAIL">{t("contact_profile_sub_dialogs.custom_field.content_type_email")}</SelectItem>
+                  <SelectItem value="URL">{t("contact_profile_sub_dialogs.custom_field.content_type_url")}</SelectItem>
+                  <SelectItem value="FIXED">{t("contact_profile_sub_dialogs.custom_field.content_type_fixed")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Input type</Label>
+              <Label>{t("contact_profile_sub_dialogs.custom_field.input_type_label")}</Label>
               <Select value={inputType} onValueChange={setInputType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="text">Single line</SelectItem>
-                  <SelectItem value="textarea">Multi line</SelectItem>
-                  <SelectItem value="number">Number</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="date">Date picker</SelectItem>
-                  <SelectItem value="datetime">Date &amp; time</SelectItem>
-                  <SelectItem value="select">Single select</SelectItem>
-                  <SelectItem value="multiselect">Multi select</SelectItem>
-                  <SelectItem value="radio">Radio buttons</SelectItem>
+                  <SelectItem value="text">{t("contact_profile_sub_dialogs.custom_field.input_type_single_line")}</SelectItem>
+                  <SelectItem value="textarea">{t("contact_profile_sub_dialogs.custom_field.input_type_multi_line")}</SelectItem>
+                  <SelectItem value="number">{t("contact_profile_sub_dialogs.custom_field.content_type_number")}</SelectItem>
+                  <SelectItem value="email">{t("contact_profile_sub_dialogs.custom_field.content_type_email")}</SelectItem>
+                  <SelectItem value="date">{t("contact_profile_sub_dialogs.custom_field.input_type_date_picker")}</SelectItem>
+                  <SelectItem value="datetime">{t("contact_profile_sub_dialogs.custom_field.content_type_datetime")}</SelectItem>
+                  <SelectItem value="select">{t("contact_profile_sub_dialogs.custom_field.input_type_single_select")}</SelectItem>
+                  <SelectItem value="multiselect">{t("contact_profile_sub_dialogs.custom_field.input_type_multi_select")}</SelectItem>
+                  <SelectItem value="radio">{t("contact_profile_sub_dialogs.custom_field.input_type_radio")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -840,7 +853,7 @@ export function CreateCustomFieldDialog({
           {showProperties && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <Label>Options</Label>
+                <Label>{t("contact_profile_sub_dialogs.custom_field.options_label")}</Label>
                 <Button
                   variant="outline"
                   size="sm"
@@ -848,7 +861,7 @@ export function CreateCustomFieldDialog({
                     setProperties([...properties, { value: "", label: "" }])
                   }
                 >
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add option
+                  <Plus className="h-3.5 w-3.5 mr-1" /> {t("contact_profile_sub_dialogs.custom_field.add_option")}
                 </Button>
               </div>
               {properties.map((p, idx) => (
@@ -860,7 +873,7 @@ export function CreateCustomFieldDialog({
                       next[idx] = { ...p, value: e.target.value };
                       setProperties(next);
                     }}
-                    placeholder="Value"
+                    placeholder={t("contact_profile_sub_dialogs.custom_field.value_placeholder")}
                   />
                   <Input
                     value={p.label ?? ""}
@@ -869,7 +882,7 @@ export function CreateCustomFieldDialog({
                       next[idx] = { ...p, label: e.target.value };
                       setProperties(next);
                     }}
-                    placeholder="Label (optional)"
+                    placeholder={t("contact_profile_sub_dialogs.custom_field.option_label_placeholder")}
                   />
                   <Button
                     variant="ghost"
@@ -888,7 +901,7 @@ export function CreateCustomFieldDialog({
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_sub_dialogs.common.cancel")}
           </Button>
           <Button
             disabled={
@@ -902,7 +915,7 @@ export function CreateCustomFieldDialog({
             {submit.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             )}
-            Create
+            {t("contact_profile_sub_dialogs.common.create")}
           </Button>
         </div>
       </DialogContent>
@@ -919,6 +932,7 @@ export function NoteAddDropdown({
   contactId: string | null;
   onAdded: () => void;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [channel, setChannel] = useState<string | null>(null);
@@ -933,7 +947,7 @@ export function NoteAddDropdown({
         channel: channel === "internal" ? null : channel,
       }),
     onSuccess: () => {
-      toast({ title: "Note added" });
+      toast({ title: t("contact_profile_sub_dialogs.note_add.added_toast") });
       setOpen(false);
       setText("");
       setChannel(null);
@@ -941,26 +955,28 @@ export function NoteAddDropdown({
     },
   });
 
+  const channelOptions = [
+    { k: "internal", l: t("contact_profile_sub_dialogs.note_add.channel_internal") },
+    { k: "sms", l: t("contact_profile_sub_dialogs.note_add.channel_sms") },
+    { k: "whatsapp", l: "WhatsApp" },
+    { k: "messenger", l: "Messenger" },
+    { k: "instagram", l: "Instagram" },
+    { k: "telegram", l: "Telegram" },
+    { k: "email", l: t("contact_profile_sub_dialogs.note_add.channel_email") },
+  ];
+
   return (
     <>
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm">
             <Plus className="h-3.5 w-3.5 mr-1" />
-            Add note
+            {t("contact_profile_sub_dialogs.note_add.add_note")}
             <ChevronDown className="h-3 w-3 ml-1" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-48 p-0">
-          {[
-            { k: "internal", l: "Internal note" },
-            { k: "sms", l: "SMS" },
-            { k: "whatsapp", l: "WhatsApp" },
-            { k: "messenger", l: "Messenger" },
-            { k: "instagram", l: "Instagram" },
-            { k: "telegram", l: "Telegram" },
-            { k: "email", l: "Email" },
-          ].map((opt) => (
+          {channelOptions.map((opt) => (
             <button
               key={opt.k}
               type="button"
@@ -980,21 +996,23 @@ export function NoteAddDropdown({
         <DialogContent className="max-w-md">
           <DialogTitle>
             {channel === "internal"
-              ? "Internal note"
-              : `${channel?.[0]?.toUpperCase()}${channel?.slice(1)} note`}
+              ? t("contact_profile_sub_dialogs.note_add.channel_internal")
+              : t("contact_profile_sub_dialogs.note_add.channel_note_title", {
+                  channel: `${channel?.[0]?.toUpperCase()}${channel?.slice(1)}`,
+                })}
           </DialogTitle>
           <DialogDescription>
-            This will appear in the activity timeline.
+            {t("contact_profile_sub_dialogs.note_add.timeline_hint")}
           </DialogDescription>
           <Textarea
             rows={4}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Write your note…"
+            placeholder={t("contact_profile_sub_dialogs.note_add.write_note_placeholder")}
           />
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("contact_profile_sub_dialogs.common.cancel")}
             </Button>
             <Button
               disabled={!text || submit.isPending}
@@ -1003,7 +1021,7 @@ export function NoteAddDropdown({
               {submit.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
-              Save
+              {t("contact_profile_sub_dialogs.common.save")}
             </Button>
           </div>
         </DialogContent>
@@ -1033,6 +1051,19 @@ export function BulkActionsPopup({
   selectedIds: string[];
   onAction: (action: BulkAction) => void;
 }) {
+  const { t } = useTranslation();
+  const actionOptions: { k: BulkAction; l: string; icon: any }[] = [
+    { k: "add_tag", l: t("contact_profile_sub_dialogs.bulk_actions.add_tag"), icon: TagIcon },
+    { k: "remove_tag", l: t("contact_profile_sub_dialogs.bulk_actions.remove_tag"), icon: X },
+    { k: "add_cf_value", l: t("contact_profile_sub_dialogs.bulk_actions.set_custom_field"), icon: ListChecks },
+    { k: "remove_cf_value", l: t("contact_profile_sub_dialogs.bulk_actions.clear_custom_field"), icon: ListChecks },
+    { k: "activate", l: t("contact_profile_sub_dialogs.bulk_actions.activate_contacts"), icon: Power },
+    { k: "delete", l: t("contact_profile_sub_dialogs.bulk_actions.delete_contacts"), icon: Trash2 },
+    { k: "delete_all", l: t("contact_profile_sub_dialogs.bulk_actions.delete_all_filtered"), icon: Trash2 },
+    { k: "import", l: t("contact_profile_sub_dialogs.bulk_actions.import_contacts"), icon: Upload },
+    { k: "export", l: t("contact_profile_sub_dialogs.bulk_actions.export_contacts"), icon: Download },
+    { k: "export_psid", l: t("contact_profile_sub_dialogs.bulk_actions.export_psid"), icon: Download },
+  ];
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -1041,25 +1072,12 @@ export function BulkActionsPopup({
           size="sm"
           disabled={selectedIds.length === 0}
         >
-          Bulk actions ({selectedIds.length})
+          {t("contact_profile_sub_dialogs.bulk_actions.button_label", { count: selectedIds.length })}
           <ChevronDown className="h-3 w-3 ml-1" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0">
-        {(
-          [
-            { k: "add_tag", l: "Add tag", icon: TagIcon },
-            { k: "remove_tag", l: "Remove tag", icon: X },
-            { k: "add_cf_value", l: "Set custom field", icon: ListChecks },
-            { k: "remove_cf_value", l: "Clear custom field", icon: ListChecks },
-            { k: "activate", l: "Activate contacts", icon: Power },
-            { k: "delete", l: "Delete contacts", icon: Trash2 },
-            { k: "delete_all", l: "Delete all (filtered)", icon: Trash2 },
-            { k: "import", l: "Import contacts", icon: Upload },
-            { k: "export", l: "Export contacts", icon: Download },
-            { k: "export_psid", l: "Export PSID", icon: Download },
-          ] as { k: BulkAction; l: string; icon: any }[]
-        ).map((opt) => {
+        {actionOptions.map((opt) => {
           const Icon = opt.icon;
           return (
             <button
@@ -1091,6 +1109,7 @@ export function AddLeadDialog({
   companyId: string | null;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [first, setFirst] = useState("");
@@ -1120,13 +1139,13 @@ export function AddLeadDialog({
         company_id: companyId,
       }),
     onSuccess: () => {
-      toast({ title: "Contact created" });
+      toast({ title: t("contact_profile_sub_dialogs.add_lead.created_toast") });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       onSaved();
     },
     onError: (err: any) => {
       toast({
-        title: "Create failed",
+        title: t("contact_profile_sub_dialogs.add_lead.create_failed_toast"),
         description: err?.message ?? "",
         variant: "destructive",
       });
@@ -1136,15 +1155,16 @@ export function AddLeadDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogTitle>Add contact</DialogTitle>
+        <DialogTitle>{t("contact_profile_sub_dialogs.add_lead.title")}</DialogTitle>
         <DialogDescription>
-          Create a new contact{" "}
-          {companyId ? "in this company" : "in this workspace"}.
+          {companyId
+            ? t("contact_profile_sub_dialogs.add_lead.description_company")
+            : t("contact_profile_sub_dialogs.add_lead.description_workspace")}
         </DialogDescription>
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label>First name</Label>
+              <Label>{t("contact_profile_sub_dialogs.add_lead.first_name_label")}</Label>
               <Input
                 value={first}
                 onChange={(e) => setFirst(e.target.value)}
@@ -1152,7 +1172,7 @@ export function AddLeadDialog({
               />
             </div>
             <div>
-              <Label>Last name</Label>
+              <Label>{t("contact_profile_sub_dialogs.add_lead.last_name_label")}</Label>
               <Input
                 value={last}
                 onChange={(e) => setLast(e.target.value)}
@@ -1161,7 +1181,7 @@ export function AddLeadDialog({
             </div>
           </div>
           <div>
-            <Label>Email</Label>
+            <Label>{t("contact_profile_sub_dialogs.add_lead.email_label")}</Label>
             <Input
               type="email"
               value={email}
@@ -1169,13 +1189,13 @@ export function AddLeadDialog({
             />
           </div>
           <div>
-            <Label>Phone</Label>
+            <Label>{t("contact_profile_sub_dialogs.add_lead.phone_label")}</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("contact_profile_sub_dialogs.common.cancel")}
           </Button>
           <Button
             disabled={(!first && !last) || submit.isPending}
@@ -1184,7 +1204,7 @@ export function AddLeadDialog({
             {submit.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             )}
-            Create
+            {t("contact_profile_sub_dialogs.common.create")}
           </Button>
         </div>
       </DialogContent>

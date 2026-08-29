@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 /**
  * Alternative connect page for 360Dialog / FB SDK driven onboarding flows.
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
  * If neither shape is present we bounce back to the settings page.
  */
 export default function WhatsAppConnectPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { mode } = useTheme();
@@ -59,16 +61,16 @@ export default function WhatsAppConnectPage() {
       const data = await res.json();
       if (data?.success) {
         setStatus("success");
-        setMessage(data?.message ?? "Account connected.");
-        toast({ title: "WhatsApp connected" });
+        setMessage(data?.message ?? t("whatsapp_connect_page.account_connected"));
+        toast({ title: t("whatsapp_connect_page.whatsapp_connected") });
         backToSettings();
       } else {
         setStatus("error");
-        setMessage(data?.message ?? "Request failed.");
+        setMessage(data?.message ?? t("whatsapp_connect_page.request_failed"));
       }
     } catch (e: any) {
       setStatus("error");
-      setMessage(e?.message ?? "Something went wrong.");
+      setMessage(e?.message ?? t("whatsapp_connect_page.something_went_wrong"));
     }
   };
 
@@ -78,21 +80,21 @@ export default function WhatsAppConnectPage() {
       const data = await res.json();
       if (data?.success) {
         setStatus("success");
-        toast({ title: "WhatsApp connected" });
+        toast({ title: t("whatsapp_connect_page.whatsapp_connected") });
         backToSettings();
       } else if (data?.error_code === "ACCOUNT_EXISTS") {
         setStatus("error");
-        setMessage("This WhatsApp account is already connected.");
+        setMessage(t("whatsapp_connect_page.account_already_connected"));
       } else if (data?.error_code === "INTERNAL_SERVER_ERROR") {
         setStatus("error");
-        setMessage("Something went wrong on our side. Please try again.");
+        setMessage(t("whatsapp_connect_page.internal_error"));
       } else {
         setStatus("error");
-        setMessage(data?.message ?? "Sign-up did not complete.");
+        setMessage(data?.message ?? t("whatsapp_connect_page.signup_incomplete"));
       }
     } catch (e: any) {
       setStatus("error");
-      setMessage(e?.response?.data?.message ?? e?.message ?? "Something went wrong.");
+      setMessage(e?.response?.data?.message ?? e?.message ?? t("whatsapp_connect_page.something_went_wrong"));
     }
   };
 
@@ -103,7 +105,7 @@ export default function WhatsAppConnectPage() {
         {status === "verifying" && (
           <>
             <h2 className={cn("text-xl font-medium", dark ? "text-white" : "text-slate-900")}>
-              Verifying business…
+              {t("whatsapp_connect_page.verifying_business")}
             </h2>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
@@ -111,11 +113,11 @@ export default function WhatsAppConnectPage() {
           </>
         )}
         {status === "success" && (
-          <p className={cn("text-sm", dark ? "text-slate-300" : "text-slate-700")}>{message ?? "Connected."}</p>
+          <p className={cn("text-sm", dark ? "text-slate-300" : "text-slate-700")}>{message ?? t("whatsapp_connect_page.connected")}</p>
         )}
         {status === "error" && (
           <>
-            <h2 className={cn("text-lg font-bold", dark ? "text-white" : "text-slate-900")}>Could not connect</h2>
+            <h2 className={cn("text-lg font-bold", dark ? "text-white" : "text-slate-900")}>{t("whatsapp_connect_page.could_not_connect")}</h2>
             <p className={cn("text-sm", dark ? "text-slate-400" : "text-slate-600")}>{message}</p>
           </>
         )}
@@ -127,7 +129,7 @@ export default function WhatsAppConnectPage() {
               dark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900",
             )}
           >
-            Go back
+            {t("whatsapp_connect_page.go_back")}
           </button>
         </div>
       </div>

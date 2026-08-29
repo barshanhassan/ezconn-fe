@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +34,7 @@ export default function DeleteAccountDialog({ open, account, onClose }: Props) {
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const [deleteFolder, setDeleteFolder] = useState(false);
   const [deleteTemplates, setDeleteTemplates] = useState(false);
@@ -55,7 +57,7 @@ export default function DeleteAccountDialog({ open, account, onClose }: Props) {
     },
     onSuccess: (data: any) => {
       toast({
-        title: data?.success ? "Deletion requested" : "Could not delete",
+        title: data?.success ? t("delete_account_dialog.deletion_requested") : t("delete_account_dialog.could_not_delete"),
         description: data?.message ?? "",
         variant: data?.success ? "default" : "destructive",
       });
@@ -81,7 +83,7 @@ export default function DeleteAccountDialog({ open, account, onClose }: Props) {
               <AlertTriangle size={32} />
             </div>
             <div className={cn("text-base font-black tracking-tight", dark ? "text-white" : "text-slate-900")}>
-              Delete WhatsApp account?
+              {t("delete_account_dialog.title")}
             </div>
             <div className="flex justify-center items-center gap-3 mt-3">
               <img src="/images/automations/whatsapp.svg" alt="WA" className="w-5 h-5" />
@@ -93,13 +95,13 @@ export default function DeleteAccountDialog({ open, account, onClose }: Props) {
             <div className="flex items-start gap-3">
               <Checkbox id="del_folder" checked={deleteFolder} onCheckedChange={(c) => setDeleteFolder(!!c)} className="mt-1" />
               <label htmlFor="del_folder" className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}>
-                Also delete the workspace Gallery folder bound to this WhatsApp account (media uploaded only via this account will be removed).
+                {t("delete_account_dialog.delete_folder_label")}
               </label>
             </div>
             <div className="flex items-start gap-3">
               <Checkbox id="del_tpl" checked={deleteTemplates} onCheckedChange={(c) => setDeleteTemplates(!!c)} className="mt-1" />
               <label htmlFor="del_tpl" className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}>
-                Also delete message templates we created on Meta for this account (cannot be restored).
+                {t("delete_account_dialog.delete_templates_label")}
               </label>
             </div>
           </div>
@@ -112,14 +114,14 @@ export default function DeleteAccountDialog({ open, account, onClose }: Props) {
                 dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400",
               )}
             >
-              Cancel
+              {t("delete_account_dialog.cancel")}
             </button>
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
               className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-2 bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50"
             >
-              <Trash2 size={12} /> {mutation.isPending ? "Deleting…" : "Delete"}
+              <Trash2 size={12} /> {mutation.isPending ? t("delete_account_dialog.deleting") : t("delete_account_dialog.delete")}
             </button>
           </div>
         </div>

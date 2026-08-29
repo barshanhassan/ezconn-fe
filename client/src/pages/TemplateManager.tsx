@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Search, Filter, Send, FileText, ArrowLeft, ShoppingCart, Bell, Shield, Paperclip, X } from "react-feather";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ interface FilterEntry {
 }
 
 export default function TemplateManager() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const workspaceTz = useWorkspaceTimezone();
 
@@ -396,7 +398,7 @@ export default function TemplateManager() {
 
   // Open edit template handler
   const handleOpenEditTemplate = (templateId: number) => {
-    const templateToEdit = whatsappTemplates.find(t => t.id === templateId);
+    const templateToEdit = whatsappTemplates.find(tpl => tpl.id === templateId);
     if (!templateToEdit) return;
 
     // Save original template for change detection
@@ -484,13 +486,17 @@ export default function TemplateManager() {
     queryClient.invalidateQueries({ queryKey: ["/api/waba/templates/stats"] });
     if (failed === 0) {
       toast({
-        title: "Templates deleted",
-        description: `${ids.length} template${ids.length === 1 ? "" : "s"} deleted successfully.`,
+        title: t("template_manager.toasts.templates_deleted_title"),
+        description: t("template_manager.toasts.templates_deleted_desc", { count: ids.length }),
       });
     } else {
       toast({
-        title: "Some templates could not be deleted",
-        description: `${ids.length - failed} of ${ids.length} deleted; ${failed} failed.`,
+        title: t("template_manager.toasts.templates_delete_partial_title"),
+        description: t("template_manager.toasts.templates_delete_partial_desc", {
+          deleted: ids.length - failed,
+          total: ids.length,
+          failed,
+        }),
         variant: "destructive",
       });
     }
@@ -498,7 +504,7 @@ export default function TemplateManager() {
 
   // Open clone dialog
   const handleOpenCloneDialog = (templateId: number) => {
-    const templateToClone = whatsappTemplates.find(t => t.id === templateId);
+    const templateToClone = whatsappTemplates.find(tpl => tpl.id === templateId);
     if (!templateToClone) return;
 
     setTemplateToCloneId(templateId);
@@ -517,7 +523,7 @@ export default function TemplateManager() {
   const handleCloneTemplate = () => {
     if (!templateToCloneId || !cloneTemplateName.trim()) return;
 
-    const templateToClone = whatsappTemplates.find(t => t.id === templateToCloneId);
+    const templateToClone = whatsappTemplates.find(tpl => tpl.id === templateToCloneId);
     if (!templateToClone) return;
 
     // Clone used to build an object locally and drop it on the floor (the state
@@ -539,15 +545,18 @@ export default function TemplateManager() {
       {
         onSuccess: () => {
           toast({
-            title: "Template cloned",
-            description: `"${templateToClone.name}" was cloned to "${cloneTemplateName}" and submitted for review.`,
+            title: t("template_manager.toasts.template_cloned_title"),
+            description: t("template_manager.toasts.template_cloned_desc", {
+              oldName: templateToClone.name,
+              newName: cloneTemplateName,
+            }),
           });
           handleCancelCloneDialog();
         },
         onError: (err: any) => {
           toast({
-            title: "Clone failed",
-            description: err?.message ?? "Meta rejected the cloned template.",
+            title: t("template_manager.toasts.clone_failed_title"),
+            description: err?.message ?? t("template_manager.toasts.clone_failed_desc"),
             variant: "destructive",
           });
         },
@@ -707,8 +716,8 @@ export default function TemplateManager() {
         );
       }
       toast({
-        title: "Template Created",
-        description: "Your template has been submitted to WhatsApp for review.",
+        title: t("template_manager.toasts.template_created_title"),
+        description: t("template_manager.toasts.template_created_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/waba/templates/stats"] });
@@ -716,7 +725,7 @@ export default function TemplateManager() {
     },
     onError: (err: Error) => {
       toast({
-        title: "Failed to create template",
+        title: t("template_manager.toasts.create_failed_title"),
         description: err.message,
         variant: "destructive",
       });
@@ -731,8 +740,8 @@ export default function TemplateManager() {
     },
     onSuccess: () => {
       toast({
-        title: "Template resubmitted",
-        description: "Your edited template was submitted to WhatsApp for review.",
+        title: t("template_manager.toasts.template_resubmitted_title"),
+        description: t("template_manager.toasts.template_resubmitted_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/waba/templates/stats"] });
@@ -740,7 +749,7 @@ export default function TemplateManager() {
     },
     onError: (err: Error) => {
       toast({
-        title: "Failed to update template",
+        title: t("template_manager.toasts.update_failed_title"),
         description: err.message,
         variant: "destructive",
       });
@@ -775,8 +784,8 @@ export default function TemplateManager() {
     },
     onSuccess: () => {
       toast({
-        title: "Template deleted",
-        description: "The template has been removed successfully.",
+        title: t("template_manager.toasts.template_deleted_title"),
+        description: t("template_manager.toasts.template_deleted_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] });
       setShowDeleteTemplateModal(false);
@@ -784,7 +793,7 @@ export default function TemplateManager() {
     },
     onError: (err: Error) => {
       toast({
-        title: "Delete failed",
+        title: t("template_manager.toasts.delete_failed_title"),
         description: err.message,
         variant: "destructive",
       });
@@ -793,13 +802,13 @@ export default function TemplateManager() {
 
   const whatsappTemplates = useMemo(() => {
     if (!templatesData) return [];
-    return (templatesData as any[]).map((t: any) => {
+    return (templatesData as any[]).map((tpl: any) => {
       let components = [];
-      if (t.components) {
+      if (tpl.components) {
         try {
-          components = typeof t.components === "string" ? JSON.parse(t.components) : t.components;
+          components = typeof tpl.components === "string" ? JSON.parse(tpl.components) : tpl.components;
         } catch (e) {
-          console.error("Failed to parse components for template", t.id, e);
+          console.error("Failed to parse components for template", tpl.id, e);
         }
       }
 
@@ -815,11 +824,11 @@ export default function TemplateManager() {
       // reopen a template intact; previously these were hardcoded to null/{},
       // so editing silently stripped the media and every sample value.
       let structure: any = null;
-      if (t.structure) {
+      if (tpl.structure) {
         try {
-          structure = typeof t.structure === "string" ? JSON.parse(t.structure) : t.structure;
+          structure = typeof tpl.structure === "string" ? JSON.parse(tpl.structure) : tpl.structure;
         } catch (e) {
-          console.error("Failed to parse structure for template", t.id, e);
+          console.error("Failed to parse structure for template", tpl.id, e);
         }
       }
       const structuredHeader = structure?.header_component ?? null;
@@ -842,21 +851,21 @@ export default function TemplateManager() {
       };
 
       return {
-        id: Number(t.id),
-        name: t.name,
-        category: t.category,
-        language: t.language,
-        status: t.status,
-        body: bodyComponent?.text || t.template || "",
+        id: Number(tpl.id),
+        name: tpl.name,
+        category: tpl.category,
+        language: tpl.language,
+        status: tpl.status,
+        body: bodyComponent?.text || tpl.template || "",
         header: headerComponent?.text || "",
         footer: footerComponent?.text || "",
         buttons: buttonsComponent?.buttons || [],
-        lastEdited: t.updated_at ? formatInWorkspaceTz(t.updated_at, "M/d/yyyy", workspaceTz) : (t.created_at ? formatInWorkspaceTz(t.created_at, "M/d/yyyy", workspaceTz) : ""),
-        statusTypeColor: (t.status === "APPROVED" || t.status === "Active - HQ") ? "success" : (t.status === "PENDING" ? "warning" : "danger"),
+        lastEdited: tpl.updated_at ? formatInWorkspaceTz(tpl.updated_at, "M/d/yyyy", workspaceTz) : (tpl.created_at ? formatInWorkspaceTz(tpl.created_at, "M/d/yyyy", workspaceTz) : ""),
+        statusTypeColor: (tpl.status === "APPROVED" || tpl.status === "Active - HQ") ? "success" : (tpl.status === "PENDING" ? "warning" : "danger"),
         // The column is `reason` (written by the Meta status webhook on a
         // rejection); `rejection_reason` never existed, so this always read
         // undefined and every row claimed "No blocks recorded".
-        topBlockReason: t.reason || "",
+        topBlockReason: tpl.reason || "",
         media: headerMedia,
         mediaSample: ["IMAGE", "VIDEO", "DOCUMENT"].includes(headerFormat)
           ? headerFormat.toLowerCase()
@@ -865,12 +874,12 @@ export default function TemplateManager() {
           ...samplesFrom(headerComponent?.text ?? "", structure?.header_component),
           ...samplesFrom(bodyComponent?.text ?? "", structure?.body_component),
         },
-        type: t.type || (t.category === "MARKETING" ? "Marketing" : "Utility"),
+        type: tpl.type || (tpl.category === "MARKETING" ? "Marketing" : "Utility"),
         // The backend's `type` column actually holds the composer MODE
         // ('template' | 'carousel' | 'notification') — kept under a distinct key
         // since `type` above is repurposed for the display Marketing/Utility tag.
-        mode: (["template", "carousel", "notification"].includes(String(t.type))
-          ? t.type
+        mode: (["template", "carousel", "notification"].includes(String(tpl.type))
+          ? tpl.type
           : "template") as "template" | "carousel" | "notification",
         // Carousel cards, reshaped for the preview (PreviewV2 carouselCards prop)
         // and for reopening in the composer's card editor.
@@ -893,16 +902,50 @@ export default function TemplateManager() {
 
   const toggleTemplate = (id: number) => {
     setSelectedTemplates((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id]
     );
   };
 
   const toggleAll = () => {
-    const filteredIds = filteredAndSortedTemplates.map(t => t.id);
+    const filteredIds = filteredAndSortedTemplates.map(tpl => tpl.id);
     if (selectedTemplates.length === filteredIds.length && filteredIds.every(id => selectedTemplates.includes(id))) {
       setSelectedTemplates([]);
     } else {
       setSelectedTemplates(filteredIds);
+    }
+  };
+
+  const statusLabel = (status: string) => {
+    switch (String(status).toUpperCase()) {
+      case "APPROVED": return t("template_manager.filters.status_approved");
+      case "PENDING": return t("template_manager.filters.status_pending");
+      case "REJECTED": return t("template_manager.filters.status_rejected");
+      case "PAUSED": return t("template_manager.filters.status_paused");
+      // Other values (e.g. "Active - HQ", "Quality Pending") come straight from
+      // Meta and don't have a fixed translation set — show them as-is.
+      default: return status;
+    }
+  };
+
+  const operatorLabel = (operator: string) => {
+    switch (operator) {
+      case "contains": return t("template_manager.filter.operator_contains");
+      case "does not contain": return t("template_manager.filter.operator_does_not_contain");
+      case "is": return t("template_manager.filter.operator_is");
+      case "is not": return t("template_manager.filter.operator_is_not");
+      case "is empty": return t("template_manager.filter.operator_is_empty");
+      default: return t("template_manager.filter.operator_is_not_empty");
+    }
+  };
+
+  const columnLabel = (column: string) => {
+    switch (column) {
+      case "name": return t("template_manager.sort.col_template_name");
+      case "category": return t("template_manager.sort.col_category");
+      case "language": return t("template_manager.sort.col_language");
+      case "status": return t("template_manager.sort.col_status");
+      case "topBlockReason": return t("template_manager.sort.col_top_block_reason");
+      default: return t("template_manager.sort.col_last_edited");
     }
   };
 
@@ -1211,10 +1254,10 @@ export default function TemplateManager() {
                         </div>
                         <div className="space-y-0.5">
                             <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                                WhatsApp Templates
+                                {t("template_manager.header.title")}
                             </h1>
                             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                Create, manage and monitor your WhatsApp message templates
+                                {t("template_manager.header.subtitle")}
                             </p>
                         </div>
                     </div>
@@ -1226,7 +1269,7 @@ export default function TemplateManager() {
                             data-testid="button-create-template"
                         >
                             <Plus size={14} strokeWidth={2.5} />
-                            <span>Create Template</span>
+                            <span>{t("template_manager.header.create_button")}</span>
                         </Button>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -1241,7 +1284,7 @@ export default function TemplateManager() {
                                     <RefreshCw size={14} className={syncTemplatesMutation.isPending ? "animate-spin" : ""} />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Sync from WhatsApp</TooltipContent>
+                            <TooltipContent>{t("template_manager.header.sync_tooltip")}</TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
@@ -1251,42 +1294,42 @@ export default function TemplateManager() {
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                            Total Templates
+                            {t("template_manager.stats.total")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.total ?? 0}</p>
                     </div>
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                            Approved
+                            {t("template_manager.stats.approved")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.approved ?? 0}</p>
                     </div>
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
-                            Pending
+                            {t("template_manager.stats.pending")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.pending ?? 0}</p>
                     </div>
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                            Messages Sent
+                            {t("template_manager.stats.messages_sent")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.delivered?.toLocaleString() ?? 0}</p>
                     </div>
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                            Read Rate
+                            {t("template_manager.stats.read_rate")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.readRate ?? '0%'}</p>
                     </div>
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                            Estimated Cost
+                            {t("template_manager.stats.estimated_cost")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.cost ?? '$0.00'}</p>
                     </div>
@@ -1297,7 +1340,7 @@ export default function TemplateManager() {
                     <div className="relative group flex-1 min-w-[280px] max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <Input
-                            placeholder="Search templates..."
+                            placeholder={t("template_manager.filters.search_placeholder")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9 h-8.5 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-lg text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400"
@@ -1310,13 +1353,13 @@ export default function TemplateManager() {
                             compare directly against the rows. */}
                         <CustomDropdown
                             options={[
-                                { id: "MARKETING", name: "Marketing" },
-                                { id: "UTILITY", name: "Utility" },
-                                { id: "AUTHENTICATION", name: "Authentication" },
+                                { id: "MARKETING", name: t("template_manager.filters.category_marketing") },
+                                { id: "UTILITY", name: t("template_manager.filters.category_utility") },
+                                { id: "AUTHENTICATION", name: t("template_manager.filters.category_authentication") },
                             ]}
                             selected={selectedCategories}
                             onChange={setSelectedCategories}
-                            placeholder="Categories"
+                            placeholder={t("template_manager.filters.categories")}
                             width="140px"
                         />
 
@@ -1327,20 +1370,20 @@ export default function TemplateManager() {
                             }))}
                             selected={selectedLanguages}
                             onChange={setSelectedLanguages}
-                            placeholder="Languages"
+                            placeholder={t("template_manager.filters.languages")}
                             width="140px"
                         />
 
                         <CustomDropdown
                             options={[
-                                { id: "APPROVED", name: "Approved" },
-                                { id: "PENDING", name: "Pending" },
-                                { id: "REJECTED", name: "Rejected" },
-                                { id: "PAUSED", name: "Paused" },
+                                { id: "APPROVED", name: t("template_manager.filters.status_approved") },
+                                { id: "PENDING", name: t("template_manager.filters.status_pending") },
+                                { id: "REJECTED", name: t("template_manager.filters.status_rejected") },
+                                { id: "PAUSED", name: t("template_manager.filters.status_paused") },
                             ]}
                             selected={selectedStatuses}
                             onChange={setSelectedStatuses}
-                            placeholder="Status"
+                            placeholder={t("template_manager.filters.status")}
                             width="160px"
                         />
                     </div>
@@ -1356,7 +1399,7 @@ export default function TemplateManager() {
                                 )}
                             >
                                 <ArrowUpDown size={14} />
-                                <span>SORT {sorts.length > 0 && `(${sorts.length})`}</span>
+                                <span>{t("template_manager.sort.button_label")} {sorts.length > 0 && `(${sorts.length})`}</span>
                             </Button>
 
                             {showSort && (
@@ -1366,14 +1409,14 @@ export default function TemplateManager() {
                                             <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
                                                 <ArrowUpDown size={18} className="text-slate-300" />
                                             </div>
-                                            <h3 className="font-black text-[11px] uppercase text-slate-400 mb-4">No sorting applied</h3>
-                                            <Button onClick={addSort} className="h-8 rounded-lg bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">Add sort</Button>
+                                            <h3 className="font-black text-[11px] uppercase text-slate-400 mb-4">{t("template_manager.sort.no_sort_applied")}</h3>
+                                            <Button onClick={addSort} className="h-8 rounded-lg bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">{t("template_manager.sort.add_sort")}</Button>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h3 className="font-black text-[10px] uppercase text-slate-500 tracking-widest">Sort Criteria</h3>
-                                                <Button onClick={() => setSorts([])} variant="ghost" className="h-6 px-2 text-[9px] font-black text-red-500 hover:bg-red-50 hover:text-red-600">RESET ALL</Button>
+                                                <h3 className="font-black text-[10px] uppercase text-slate-500 tracking-widest">{t("template_manager.sort.sort_criteria")}</h3>
+                                                <Button onClick={() => setSorts([])} variant="ghost" className="h-6 px-2 text-[9px] font-black text-red-500 hover:bg-red-50 hover:text-red-600">{t("template_manager.sort.reset_all")}</Button>
                                             </div>
                                             {sorts.map((sort) => (
                                                 <div
@@ -1392,12 +1435,7 @@ export default function TemplateManager() {
                                                             className="w-full flex items-center justify-between px-3 py-1.5 text-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none text-[11px] font-black uppercase tracking-tight"
                                                         >
                                                             <span className="truncate">
-                                                                {sort.column === "name" ? "Template Name" :
-                                                                    sort.column === "category" ? "Category" :
-                                                                        sort.column === "language" ? "Language" :
-                                                                            sort.column === "status" ? "Status" :
-                                                                                sort.column === "topBlockReason" ? "Top Block Reason" :
-                                                                                    "Last Edited"}
+                                                                {columnLabel(sort.column)}
                                                             </span>
                                                             <ChevronDown className="h-3 w-3 ml-2 text-slate-400" />
                                                         </button>
@@ -1418,12 +1456,7 @@ export default function TemplateManager() {
                                                                                     }
                                                                                 }}
                                                                             >
-                                                                                {option === "name" ? "Template Name" :
-                                                                                    option === "category" ? "Category" :
-                                                                                        option === "language" ? "Language" :
-                                                                                            option === "status" ? "Status" :
-                                                                                                option === "topBlockReason" ? "Top Block Reason" :
-                                                                                                    "Last Edited"}
+                                                                                {columnLabel(option)}
                                                                             </li>
                                                                         );
                                                                     })}
@@ -1437,7 +1470,7 @@ export default function TemplateManager() {
                                                             onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
                                                             className="w-[70px] flex items-center justify-between px-3 py-1.5 text-left border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-[11px] font-black uppercase tracking-tight"
                                                         >
-                                                            <span>{sort.direction === "asc" ? "ASC" : "DESC"}</span>
+                                                            <span>{sort.direction === "asc" ? t("template_manager.sort.direction_asc") : t("template_manager.sort.direction_desc")}</span>
                                                             <ChevronDown className="h-3 w-3 ml-1 text-slate-400" />
                                                         </button>
                                                         {openSortDirectionDropdown === sort.id && (
@@ -1452,7 +1485,7 @@ export default function TemplateManager() {
                                                                                 setOpenSortDirectionDropdown(null);
                                                                             }}
                                                                         >
-                                                                            {option === "asc" ? "ASC" : "DESC"}
+                                                                            {option === "asc" ? t("template_manager.sort.direction_asc") : t("template_manager.sort.direction_desc")}
                                                                         </li>
                                                                     ))}
                                                                 </ul>
@@ -1467,7 +1500,7 @@ export default function TemplateManager() {
                                                 disabled={sorts.length >= 6}
                                                 className="w-full h-8 rounded-lg bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
                                             >
-                                                Add Sort Layer
+                                                {t("template_manager.sort.add_sort_layer")}
                                             </Button>
                                         </div>
                                     )}
@@ -1485,7 +1518,7 @@ export default function TemplateManager() {
                                 )}
                             >
                                 <Filter size={14} />
-                                <span>FILTER {filters.length > 0 && `(${filters.length})`}</span>
+                                <span>{t("template_manager.filter.button_label")} {filters.length > 0 && `(${filters.length})`}</span>
                             </Button>
 
                             {showFilter && (
@@ -1495,14 +1528,14 @@ export default function TemplateManager() {
                                             <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
                                                 <Filter size={18} className="text-slate-300" />
                                             </div>
-                                            <h3 className="font-black text-[11px] uppercase text-slate-400 mb-4">No filters applied</h3>
-                                            <Button onClick={addFilter} className="h-8 rounded-lg bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">Add filter</Button>
+                                            <h3 className="font-black text-[11px] uppercase text-slate-400 mb-4">{t("template_manager.filter.no_filters_applied")}</h3>
+                                            <Button onClick={addFilter} className="h-8 rounded-lg bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">{t("template_manager.filter.add_filter")}</Button>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h3 className="font-black text-[10px] uppercase text-slate-500 tracking-widest">Active Filters</h3>
-                                                <Button onClick={() => setFilters([])} variant="ghost" className="h-6 px-2 text-[9px] font-black text-red-500 hover:bg-red-50 hover:text-red-600">CLEAR ALL</Button>
+                                                <h3 className="font-black text-[10px] uppercase text-slate-500 tracking-widest">{t("template_manager.filter.active_filters")}</h3>
+                                                <Button onClick={() => setFilters([])} variant="ghost" className="h-6 px-2 text-[9px] font-black text-red-500 hover:bg-red-50 hover:text-red-600">{t("template_manager.filter.clear_all")}</Button>
                                             </div>
                                             {filters.map((filter) => (
                                                 <div
@@ -1522,12 +1555,7 @@ export default function TemplateManager() {
                                                                 className="w-full flex items-center justify-between px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[11px] font-black uppercase tracking-tight"
                                                             >
                                                                 <span className="truncate">
-                                                                    {filter.column === "name" ? "Template Name" :
-                                                                        filter.column === "category" ? "Category" :
-                                                                            filter.column === "language" ? "Language" :
-                                                                                filter.column === "status" ? "Status" :
-                                                                                    filter.column === "topBlockReason" ? "Top Block Reason" :
-                                                                                        "Last Edited"}
+                                                                    {columnLabel(filter.column)}
                                                                 </span>
                                                                 <ChevronDown className="h-3 w-3 ml-2 text-slate-400" />
                                                             </button>
@@ -1543,12 +1571,7 @@ export default function TemplateManager() {
                                                                                     setOpenFilterColumnDropdown(null);
                                                                                 }}
                                                                             >
-                                                                                {option === "name" ? "Template Name" :
-                                                                                    option === "category" ? "Category" :
-                                                                                        option === "language" ? "Language" :
-                                                                                            option === "status" ? "Status" :
-                                                                                                option === "topBlockReason" ? "Top Block Reason" :
-                                                                                                    "Last Edited"}
+                                                                                {columnLabel(option)}
                                                                             </li>
                                                                         ))}
                                                                     </ul>
@@ -1564,7 +1587,7 @@ export default function TemplateManager() {
                                                                 onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
                                                                 className="w-full flex items-center justify-between px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-[11px] font-semibold"
                                                             >
-                                                                <span className="truncate">{filter.operator}</span>
+                                                                <span className="truncate">{operatorLabel(filter.operator)}</span>
                                                                 <ChevronDown className="h-3 w-3 ml-1 text-slate-400" />
                                                             </button>
                                                             {openFilterOperatorDropdown === filter.id && (
@@ -1579,7 +1602,7 @@ export default function TemplateManager() {
                                                                                     setOpenFilterOperatorDropdown(null);
                                                                                 }}
                                                                             >
-                                                                                {option}
+                                                                                {operatorLabel(option)}
                                                                             </li>
                                                                         ))}
                                                                     </ul>
@@ -1588,7 +1611,7 @@ export default function TemplateManager() {
                                                         </div>
                                                         <input
                                                             type="text"
-                                                            placeholder="Value..."
+                                                            placeholder={t("template_manager.filter.value_placeholder")}
                                                             value={filter.value}
                                                             onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
                                                             className="flex-1 px-3 py-1.5 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
@@ -1596,7 +1619,7 @@ export default function TemplateManager() {
                                                     </div>
                                                 </div>
                                             ))}
-                                            <Button onClick={addFilter} className="w-full h-8 rounded-lg bg-slate-900 text-white font-semibold text-[11px]">Add filter condition</Button>
+                                            <Button onClick={addFilter} className="w-full h-8 rounded-lg bg-slate-900 text-white font-semibold text-[11px]">{t("template_manager.filter.add_filter_condition")}</Button>
                                         </div>
                                     )}
                                 </div>
@@ -1612,17 +1635,17 @@ export default function TemplateManager() {
                             <div className="bg-blue-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
                                 {selectedTemplates.length}
                             </div>
-                            <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">Templates selected</span>
+                            <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">{t("template_manager.bulk.selected")}</span>
                         </div>
                         <div className="flex gap-2">
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={handleOpenBulkDeleteModal}
                                 className="h-7 px-3 rounded-md bg-white dark:bg-slate-900 border-red-200 text-red-500 hover:bg-red-50 text-[10px] font-semibold transition-all"
                             >
                                 <Trash2 size={14} className="mr-2" />
-                                Delete Selected
+                                {t("template_manager.bulk.delete_selected")}
                             </Button>
                         </div>
                     </div>
@@ -1635,14 +1658,14 @@ export default function TemplateManager() {
                             <tr>
                                 <th className="py-2 px-3 w-10">
                                     <Checkbox
-                                        checked={filteredAndSortedTemplates.length > 0 && filteredAndSortedTemplates.every(t => selectedTemplates.includes(t.id))}
+                                        checked={filteredAndSortedTemplates.length > 0 && filteredAndSortedTemplates.every(tpl => selectedTemplates.includes(tpl.id))}
                                         onCheckedChange={toggleAll}
                                         className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
                                     />
                                 </th>
                                 <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
                                     <div className="flex items-center gap-2">
-                                        Template Name
+                                        {t("template_manager.table.col_template_name")}
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                             {renderSortIcon("name")}
                                         </div>
@@ -1650,7 +1673,7 @@ export default function TemplateManager() {
                                 </th>
                                 <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("category")}>
                                     <div className="flex items-center gap-2">
-                                        Category
+                                        {t("template_manager.table.col_category")}
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                             {renderSortIcon("category")}
                                         </div>
@@ -1658,7 +1681,7 @@ export default function TemplateManager() {
                                 </th>
                                 <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("language")}>
                                     <div className="flex items-center gap-2">
-                                        Language
+                                        {t("template_manager.table.col_language")}
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                             {renderSortIcon("language")}
                                         </div>
@@ -1666,7 +1689,7 @@ export default function TemplateManager() {
                                 </th>
                                 <th className="py-3 px-4 font-black text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest cursor-pointer group" onClick={() => handleColumnSort("status")}>
                                     <div className="flex items-center gap-2">
-                                        Status
+                                        {t("template_manager.table.col_status")}
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                             {renderSortIcon("status")}
                                         </div>
@@ -1674,7 +1697,7 @@ export default function TemplateManager() {
                                 </th>
                                 <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("topBlockReason")}>
                                     <div className="flex items-center gap-2">
-                                        Top Block Reason
+                                        {t("template_manager.table.col_top_block_reason")}
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                             {renderSortIcon("topBlockReason")}
                                         </div>
@@ -1682,13 +1705,13 @@ export default function TemplateManager() {
                                 </th>
                                 <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("lastEdited")}>
                                     <div className="flex items-center gap-2">
-                                        Last Edited
+                                        {t("template_manager.table.col_last_edited")}
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                             {renderSortIcon("lastEdited")}
                                         </div>
                                     </div>
                                 </th>
-                                <th className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">Actions</th>
+                                <th className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">{t("template_manager.table.col_actions")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
@@ -1697,7 +1720,7 @@ export default function TemplateManager() {
                                     <td colSpan={8} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3">
                                             <Loader2 size={24} className="animate-spin text-blue-500" />
-                                            <p className="text-[11px] font-semibold text-slate-400">Fetching Templates...</p>
+                                            <p className="text-[11px] font-semibold text-slate-400">{t("template_manager.table.fetching")}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -1709,15 +1732,15 @@ export default function TemplateManager() {
                                                 <FileText size={32} strokeWidth={1} />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[14px] font-bold text-slate-900 dark:text-white">No Templates found</p>
-                                                <p className="text-[11px] font-medium text-slate-400">Create your first WhatsApp template to start engaging with your customers</p>
+                                                <p className="text-[14px] font-bold text-slate-900 dark:text-white">{t("template_manager.table.no_templates_title")}</p>
+                                                <p className="text-[11px] font-medium text-slate-400">{t("template_manager.table.no_templates_desc")}</p>
                                             </div>
-                                            <Button 
-                                                variant="outline" 
-                                                onClick={() => setCreateTemplateOpen(true)} 
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCreateTemplateOpen(true)}
                                                 className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
                                             >
-                                                Create one now
+                                                {t("template_manager.table.create_one_now")}
                                             </Button>
                                         </div>
                                     </td>
@@ -1764,12 +1787,12 @@ export default function TemplateManager() {
                                                 template.statusTypeColor === "danger" ? "bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800/50" :
                                                 "bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                                             )}>
-                                                {template.status}
+                                                {statusLabel(template.status)}
                                             </span>
                                         </td>
                                         <td className="py-2 px-3">
                                             <span className="text-[11px] font-medium text-slate-500 italic dark:text-slate-400 truncate max-w-[180px] block">
-                                                {template.topBlockReason || "No blocks recorded"}
+                                                {template.topBlockReason || t("template_manager.table.no_blocks_recorded")}
                                             </span>
                                         </td>
                                         <td className="py-2.5 px-4 text-[11px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
@@ -1791,10 +1814,10 @@ export default function TemplateManager() {
                                                         className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
                                                     >
                                                         <Edit2 size={14} className="text-blue-500" />
-                                                        Edit Template
+                                                        {t("template_manager.row_menu.edit_template")}
                                                     </DropdownMenuItem>
                                                     )}
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         onClick={() => {
                                                             setPreviewTemplateId(template.id);
                                                             setPreviewOpen(true);
@@ -1802,22 +1825,22 @@ export default function TemplateManager() {
                                                         className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
                                                     >
                                                         <Eye size={14} className="text-blue-500" />
-                                                        Preview
+                                                        {t("template_manager.row_menu.preview")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         onClick={() => handleOpenCloneDialog(template.id)}
                                                         className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
                                                     >
                                                         <Copy size={14} className="text-blue-500" />
-                                                        Clone Kit
+                                                        {t("template_manager.row_menu.clone_kit")}
                                                     </DropdownMenuItem>
                                                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1"></div>
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-red-500 rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
                                                         onClick={() => handleOpenDeleteModal(template)}
                                                     >
                                                         <Trash2 size={14} />
-                                                        Delete template
+                                                        {t("template_manager.row_menu.delete_template")}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -1833,7 +1856,7 @@ export default function TemplateManager() {
                 <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold text-slate-500">Rows per page:</span>
+                            <span className="text-[11px] font-semibold text-slate-500">{t("template_manager.pagination.rows_per_page")}</span>
                             <div className="relative" ref={dropdownRef}>
                                 <button
                                     type="button"
@@ -1869,13 +1892,13 @@ export default function TemplateManager() {
                         </div>
                         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
                         <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                            {filteredAndSortedTemplates.length} results total
+                            {t("template_manager.pagination.results_total", { count: filteredAndSortedTemplates.length })}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                            Page {page} <span className="text-slate-300 mx-1">/</span> {totalPages || 1}
+                            {t("template_manager.pagination.page_of", { page, total: totalPages || 1 })}
                         </span>
                         <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                             <Button
@@ -1923,11 +1946,11 @@ export default function TemplateManager() {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-md" data-testid="dialog-preview">
           <DialogHeader className="mb-2">
-            <DialogTitle>Template Preview</DialogTitle>
+            <DialogTitle>{t("template_manager.preview_dialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="flex justify-center">
             {(() => {
-              const previewTemplate = whatsappTemplates.find(t => t.id === previewTemplateId);
+              const previewTemplate = whatsappTemplates.find(tpl => tpl.id === previewTemplateId);
               if (!previewTemplate) return null;
 
               return (
@@ -1944,7 +1967,7 @@ export default function TemplateManager() {
                     activeCardIndex={previewActiveCard}
                     onCardChange={setPreviewActiveCard}
                   />
-                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
+                  <p className="text-[10px] py-1">{t("template_manager.preview_dialog.disclaimer")}</p>
                 </div>
               );
             })()}
@@ -1961,7 +1984,7 @@ export default function TemplateManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <DialogTitle>{editingTemplateId ? "Edit Template" : "Create Template"}</DialogTitle>
+                  <DialogTitle>{editingTemplateId ? t("template_manager.create_dialog.edit_title") : t("template_manager.create_dialog.create_title")}</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -1975,8 +1998,8 @@ export default function TemplateManager() {
                     ))}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Choose template category</h3>
-                    <p className="text-sm text-muted-foreground">Select the category that best describes your message purpose. Each category has specific types and approval requirements.</p>
+                    <h3 className="font-semibold text-lg mb-1">{t("template_manager.create_dialog.category_step.heading")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("template_manager.create_dialog.category_step.description")}</p>
                   </div>
                 </div>
               </DialogHeader>
@@ -1993,10 +2016,10 @@ export default function TemplateManager() {
                       <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
                         <ShoppingCart size={24} className="text-orange-600" />
                       </div>
-                      <CardTitle className="text-base">Marketing</CardTitle>
+                      <CardTitle className="text-base">{t("template_manager.create_dialog.category_step.marketing_title")}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-center">
-                      <p className="text-sm text-muted-foreground">Send promotional content, product updates, and offers</p>
+                      <p className="text-sm text-muted-foreground">{t("template_manager.create_dialog.category_step.marketing_desc")}</p>
                     </CardContent>
                   </Card>
 
@@ -2009,20 +2032,20 @@ export default function TemplateManager() {
                       <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                         <Bell size={24} className="text-blue-600" />
                       </div>
-                      <CardTitle className="text-base">Utility</CardTitle>
+                      <CardTitle className="text-base">{t("template_manager.create_dialog.category_step.utility_title")}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-center">
-                      <p className="text-sm text-muted-foreground">Send account updates, alerts, and service notifications</p>
+                      <p className="text-sm text-muted-foreground">{t("template_manager.create_dialog.category_step.utility_desc")}</p>
                     </CardContent>
                   </Card>
 
                 </div>
                 {/* Category Guidelines Banner */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
-                  <h4 className="font-semibold text-base text-blue-800 mb-2 dark:text-blue-300">Category Guidelines:</h4>
+                  <h4 className="font-semibold text-base text-blue-800 mb-2 dark:text-blue-300">{t("template_manager.create_dialog.category_step.guidelines_title")}</h4>
                   <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5 dark:text-blue-300">
-                    <li><strong>Marketing:</strong> Requires opt-in from customers and has a 24-hour messaging window</li>
-                    <li><strong>Utility:</strong> For transactional messages like confirmations, alerts, and updates</li>
+                    <li><strong>{t("template_manager.create_dialog.category_step.marketing_title")}:</strong> {t("template_manager.create_dialog.category_step.guideline_marketing_text")}</li>
+                    <li><strong>{t("template_manager.create_dialog.category_step.utility_title")}:</strong> {t("template_manager.create_dialog.category_step.guideline_utility_text")}</li>
                   </ul>
                 </div>
 
@@ -2033,7 +2056,7 @@ export default function TemplateManager() {
                     onClick={handleCancelCreateTemplate}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                   >
-                    Cancel
+                    {t("template_manager.create_dialog.cancel")}
                   </Button>
                   <Button
                     onClick={handleNextFromCategory}
@@ -2041,7 +2064,7 @@ export default function TemplateManager() {
                     className="gap-2 font-normal btn-outline-primary"
                     variant="outline"
                   >
-                    Next
+                    {t("template_manager.create_dialog.next")}
                   </Button>
                 </div>
               </div>
@@ -2053,7 +2076,7 @@ export default function TemplateManager() {
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToCategory} />
-                  <DialogTitle>{editingTemplateId ? "Edit Template" : "Create Template"}</DialogTitle>
+                  <DialogTitle>{editingTemplateId ? t("template_manager.create_dialog.edit_title") : t("template_manager.create_dialog.create_title")}</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -2067,8 +2090,8 @@ export default function TemplateManager() {
                     ))}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Template Details</h3>
-                    <p className="text-sm text-muted-foreground">Fill in the template information and type.</p>
+                    <h3 className="font-semibold text-lg mb-1">{t("template_manager.create_dialog.form_step.heading")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("template_manager.create_dialog.form_step.description")}</p>
                   </div>
                 </div>
               </DialogHeader>
@@ -2083,12 +2106,12 @@ export default function TemplateManager() {
                       {/* Template Name */}
                       <div className="space-y-2 w-full">
                         <label className="text-sm font-medium text-foreground">
-                          Template Name<span className="text-red-500 pl-0.5">*</span>
+                          {t("template_manager.create_dialog.form_step.template_name_label")}<span className="text-red-500 pl-0.5">*</span>
                         </label>
                         <div className="relative">
                           <Input
                             id="template-name"
-                            placeholder="my_template"
+                            placeholder={t("template_manager.create_dialog.form_step.name_placeholder")}
                             value={templateName}
                             onChange={(e) => {
                               // Auto-decapitalize and allow only lowercase, numbers, underscores
@@ -2106,11 +2129,11 @@ export default function TemplateManager() {
                       {/* Language Selection */}
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-foreground">
-                          Language<span className="text-red-500 pl-0.5">*</span>
+                          {t("template_manager.create_dialog.form_step.language_label")}<span className="text-red-500 pl-0.5">*</span>
                         </label>
                         <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                           <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Select language" />
+                            <SelectValue placeholder={t("template_manager.create_dialog.form_step.language_placeholder")} />
                           </SelectTrigger>
                           <SelectContent>
                             {/* Values are Meta locale codes. The old list sent
@@ -2127,14 +2150,14 @@ export default function TemplateManager() {
                     </div>
                     {/* Template Name Guidelines */}
                     <p className="text-xs text-muted-foreground mt-1">
-                      Lowercase letters, numbers and underscores only.
+                      {t("template_manager.create_dialog.form_step.name_hint")}
                     </p>
                   </div>
 
                   {/* Template Type */}
                   <div className="space-y-3">
                     <label className="text-sm font-medium text-foreground">
-                      Template Type<span className="text-red-500 pl-0.5">*</span>
+                      {t("template_manager.create_dialog.form_step.type_label")}<span className="text-red-500 pl-0.5">*</span>
                     </label>
 
                     {/* Template Type Cards */}
@@ -2150,8 +2173,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Default</h4>
-                                <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_default_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_default_desc")}</p>
                               </div>
                             </div>
 
@@ -2163,8 +2186,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Appointment Update</h4>
-                                <p className="text-xs text-muted-foreground">Appointment confirmations and reminders.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_appointment_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_appointment_desc")}</p>
                               </div>
                             </div>
 
@@ -2176,8 +2199,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Issue Resolution</h4>
-                                <p className="text-xs text-muted-foreground">Support and issue updates.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_issue_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_issue_desc")}</p>
                               </div>
                             </div>
 
@@ -2189,8 +2212,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Payment Update</h4>
-                                <p className="text-xs text-muted-foreground">Payment confirmations and receipts.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_payment_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_payment_desc")}</p>
                               </div>
                             </div>
 
@@ -2202,8 +2225,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Shipping Update</h4>
-                                <p className="text-xs text-muted-foreground">Delivery and shipping notifications.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_shipping_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_shipping_desc")}</p>
                               </div>
                             </div>
 
@@ -2215,8 +2238,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Reservation Update</h4>
-                                <p className="text-xs text-muted-foreground">Booking confirmations and changes.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_reservation_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_reservation_desc")}</p>
                               </div>
                             </div>
 
@@ -2228,8 +2251,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Account Update</h4>
-                                <p className="text-xs text-muted-foreground">Account changes and notifications.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.utility_account_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.utility_account_desc")}</p>
                               </div>
                             </div>
                           </>
@@ -2245,8 +2268,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Default</h4>
-                                <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.marketing_default_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.marketing_default_desc")}</p>
                               </div>
                             </div>
 
@@ -2258,8 +2281,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Catalog</h4>
-                                <p className="text-xs text-muted-foreground">Send messages that drive sales by connecting your product catalog.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.marketing_catalog_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.marketing_catalog_desc")}</p>
                               </div>
                             </div>
 
@@ -2271,8 +2294,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Flows</h4>
-                                <p className="text-xs text-muted-foreground">Send a form to capture customer interests, appointment requests, or run surveys.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.marketing_flows_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.marketing_flows_desc")}</p>
                               </div>
                             </div>
 
@@ -2284,8 +2307,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Calling permissions request</h4>
-                                <p className="text-xs text-muted-foreground">Ask customers if you can call them on WhatsApp.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.marketing_calling_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.marketing_calling_desc")}</p>
                               </div>
                             </div>
                           </>
@@ -2301,8 +2324,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Default</h4>
-                                <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.auth_default_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.auth_default_desc")}</p>
                               </div>
                             </div>
 
@@ -2314,8 +2337,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Account Update</h4>
-                                <p className="text-xs text-muted-foreground">Security and account notifications.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.auth_account_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.auth_account_desc")}</p>
                               </div>
                             </div>
 
@@ -2327,8 +2350,8 @@ export default function TemplateManager() {
                                 }`}
                             >
                               <div>
-                                <h4 className="font-semibold text-sm mb-1">Alert Update</h4>
-                                <p className="text-xs text-muted-foreground">Security alerts and warnings.</p>
+                                <h4 className="font-semibold text-sm mb-1">{t("template_manager.create_dialog.form_step.auth_alert_title")}</h4>
+                                <p className="text-xs text-muted-foreground">{t("template_manager.create_dialog.form_step.auth_alert_desc")}</p>
                               </div>
                             </div>
                           </>
@@ -2345,7 +2368,7 @@ export default function TemplateManager() {
                     onClick={handleBackToCategory}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                   >
-                    Back
+                    {t("template_manager.create_dialog.back")}
                   </Button>
                   <Button
                     onClick={handleNextFromForm}
@@ -2353,7 +2376,7 @@ export default function TemplateManager() {
                     className="gap-2 font-normal btn-outline-primary"
                     variant="outline"
                   >
-                    Next
+                    {t("template_manager.create_dialog.next")}
                   </Button>
                 </div>
               </div>
@@ -2365,7 +2388,7 @@ export default function TemplateManager() {
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToForm} />
-                  <DialogTitle>{editingTemplateId ? "Edit Template" : "Create Template"}</DialogTitle>
+                  <DialogTitle>{editingTemplateId ? t("template_manager.create_dialog.edit_title") : t("template_manager.create_dialog.create_title")}</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -2387,19 +2410,19 @@ export default function TemplateManager() {
                   <div className="space-y-6 pl-1 pb-1">
                     {/* Template Content Heading */}
                     <div>
-                      <h3 className="font-semibold text-lg mb-1">Template Content</h3>
-                      <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
+                      <h3 className="font-semibold text-lg mb-1">{t("template_manager.create_dialog.content_step.heading")}</h3>
+                      <p className="text-sm text-muted-foreground">{t("template_manager.create_dialog.content_step.description")}</p>
                     </div>
 
                     {/* Template shape — Meta validates against this, so the
                         sections below change with it rather than all rendering. */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Template structure</label>
+                      <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.structure_label")}</label>
                       <div className="grid grid-cols-3 gap-2">
                         {([
-                          { id: "template", label: "Template", hint: "Single card with header, body and buttons" },
-                          { id: "carousel", label: "Carousel", hint: "Up to 10 cards with image, body and buttons" },
-                          { id: "notification", label: "Agent Notification", hint: "Text only, for agents" },
+                          { id: "template", label: t("template_manager.create_dialog.content_step.structure_template_label"), hint: t("template_manager.create_dialog.content_step.structure_template_hint") },
+                          { id: "carousel", label: t("template_manager.create_dialog.content_step.structure_carousel_label"), hint: t("template_manager.create_dialog.content_step.structure_carousel_hint") },
+                          { id: "notification", label: t("template_manager.create_dialog.content_step.structure_notification_label"), hint: t("template_manager.create_dialog.content_step.structure_notification_hint") },
                         ] as const).map((opt) => (
                           <button
                             key={opt.id}
@@ -2428,8 +2451,8 @@ export default function TemplateManager() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-foreground">Header</label>
-                          <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                          <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.header_label")}</label>
+                          <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">{t("template_manager.create_dialog.content_step.optional")}</span>
                         </div>
                         <Button
                           variant="ghost"
@@ -2438,12 +2461,12 @@ export default function TemplateManager() {
                           onClick={() => setHeaderText(headerText + `{{${getNextVariableNumber()}}}`)}
                         >
                           <Plus size={12} />
-                          Add variable
+                          {t("template_manager.create_dialog.content_step.add_variable")}
                         </Button>
                       </div>
                       <div className="relative">
                         <Input
-                          placeholder="Add header text..."
+                          placeholder={t("template_manager.create_dialog.content_step.header_placeholder")}
                           value={headerText}
                           onChange={(e) => setHeaderText(e.target.value.slice(0, 60))}
                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2461,8 +2484,8 @@ export default function TemplateManager() {
                     {templateMode === "template" && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Media Sample</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.media_sample_label")}</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">{t("template_manager.create_dialog.content_step.optional")}</span>
                       </div>
                       {/* The header media is chosen from the media gallery, not
                           from a local file input. Meta needs the bytes uploaded
@@ -2496,18 +2519,18 @@ export default function TemplateManager() {
                             }}
                           >
                             <SelectTrigger className="w-[160px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                              <SelectValue placeholder="Select media type" />
+                              <SelectValue placeholder={t("template_manager.create_dialog.content_step.media_type_placeholder")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              <SelectItem value="image">Image</SelectItem>
-                              <SelectItem value="video">Video</SelectItem>
-                              <SelectItem value="document">Document</SelectItem>
+                              <SelectItem value="none">{t("template_manager.create_dialog.content_step.media_none")}</SelectItem>
+                              <SelectItem value="image">{t("template_manager.create_dialog.content_step.media_image")}</SelectItem>
+                              <SelectItem value="video">{t("template_manager.create_dialog.content_step.media_video")}</SelectItem>
+                              <SelectItem value="document">{t("template_manager.create_dialog.content_step.media_document")}</SelectItem>
                             </SelectContent>
                           </Select>
                           {(mediaSample === "image" || mediaSample === "video" || mediaSample === "document") && (
                             <Button className="font-normal" onClick={() => setMediaPickerOpen(true)}>
-                              Choose from gallery
+                              {t("template_manager.create_dialog.content_step.choose_from_gallery")}
                             </Button>
                           )}
                         </div>
@@ -2520,7 +2543,7 @@ export default function TemplateManager() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-foreground">
-                          Body<span className="text-red-500 pl-0.5">*</span>
+                          {t("template_manager.create_dialog.content_step.body_label")}<span className="text-red-500 pl-0.5">*</span>
                         </label>
                         <div className="flex gap-1 items-center">
                           <Tooltip>
@@ -2534,7 +2557,7 @@ export default function TemplateManager() {
                                 <Bold size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Bold</TooltipContent>
+                            <TooltipContent>{t("template_manager.create_dialog.content_step.bold_tooltip")}</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -2547,7 +2570,7 @@ export default function TemplateManager() {
                                 <Italic size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Italic</TooltipContent>
+                            <TooltipContent>{t("template_manager.create_dialog.content_step.italic_tooltip")}</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -2560,7 +2583,7 @@ export default function TemplateManager() {
                                 <Strikethrough size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Strikethrough</TooltipContent>
+                            <TooltipContent>{t("template_manager.create_dialog.content_step.strikethrough_tooltip")}</TooltipContent>
                           </Tooltip>
                           <div className="relative">
                             <Tooltip>
@@ -2574,7 +2597,7 @@ export default function TemplateManager() {
                                   <Smile size={14} />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>Add emoji</TooltipContent>
+                              <TooltipContent>{t("template_manager.create_dialog.content_step.add_emoji_tooltip")}</TooltipContent>
                             </Tooltip>
                             {showEmojiPicker && (
                               <div
@@ -2601,14 +2624,14 @@ export default function TemplateManager() {
                             onClick={() => setBodyText(bodyText + `{{${getNextVariableNumber()}}}`)}
                           >
                             <Plus size={12} />
-                            Add variable
+                            {t("template_manager.create_dialog.content_step.add_variable")}
                           </Button>
                         </div>
                       </div>
                       <div className="relative">
                         <textarea
                           ref={bodyTextareaRef}
-                          placeholder="Add body text..."
+                          placeholder={t("template_manager.create_dialog.content_step.body_placeholder")}
                           value={bodyText}
                           onChange={(e) => setBodyText(e.target.value.slice(0, 1024))}
                           className="w-full min-h-[120px] p-3 pr-16 pb-8 border border-input [border-color:hsl(var(--input))] rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-[0.90rem] hover-elevate"
@@ -2624,13 +2647,10 @@ export default function TemplateManager() {
                       <div className="space-y-2">
                         <div>
                           <h4 className="text-sm font-medium text-foreground mb-1">
-                            Variable Samples<span className="text-red-500 pl-0.5">*</span>
+                            {t("template_manager.create_dialog.content_step.variable_samples_label")}<span className="text-red-500 pl-0.5">*</span>
                           </h4>
                           <p className="text-xs text-muted-foreground">
-                            Include samples of all variables in your message to help Meta review your template.
-                            Remember not to include any customer information to protect your customer's privacy.
-                            Map a variable to a field to have it auto-fill with the real value when the
-                            template is sent — or type a one-off sample instead.
+                            {t("template_manager.create_dialog.content_step.variable_samples_desc")}
                           </p>
                         </div>
                         <div className="grid grid-cols-[auto_auto_1fr] gap-x-3 gap-y-3 items-center">
@@ -2653,10 +2673,10 @@ export default function TemplateManager() {
                                   }}
                                 >
                                   <SelectTrigger className="w-[150px] h-9 text-xs border border-input [border-color:hsl(var(--input))]">
-                                    <SelectValue placeholder="Map to a field" />
+                                    <SelectValue placeholder={t("template_manager.create_dialog.content_step.map_to_field_placeholder")} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="__custom__">Custom sample…</SelectItem>
+                                    <SelectItem value="__custom__">{t("template_manager.create_dialog.content_step.custom_sample_option")}</SelectItem>
                                     {templateKeyOptions.map((k) => (
                                       <SelectItem key={k.value} value={k.value}>
                                         {k.label}
@@ -2666,7 +2686,7 @@ export default function TemplateManager() {
                                 </Select>
                                 <Input
                                   key={`${variable}-input`}
-                                  placeholder={`Sample text for ${variable}`}
+                                  placeholder={t("template_manager.create_dialog.content_step.sample_text_placeholder", { variable })}
                                   value={currentValue}
                                   onChange={(e) => setVariableSamples({ ...variableSamples, [variableKey]: e.target.value })}
                                   className="border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2683,11 +2703,11 @@ export default function TemplateManager() {
                     {templateMode === "template" && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Buttons</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.buttons_label")}</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">{t("template_manager.create_dialog.content_step.optional")}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Add up to 10 buttons for customer actions or responses. More than 3 buttons will appear in a list.
+                        {t("template_manager.create_dialog.content_step.buttons_desc")}
                       </p>
                       <Select onValueChange={(value) => {
                         if (value && templateButtons.length < 10) {
@@ -2709,43 +2729,43 @@ export default function TemplateManager() {
                         }
                       }} value="" disabled={templateButtons.length >= 10}>
                         <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                          <SelectValue placeholder={templateButtons.length >= 10 ? "Maximum 10 buttons reached" : "Add button"} />
+                          <SelectValue placeholder={templateButtons.length >= 10 ? t("template_manager.create_dialog.content_step.max_buttons_reached") : t("template_manager.create_dialog.content_step.add_button_placeholder")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="quick-reply" className="pl-4">
                             <div>
-                              <div className="font-medium">Quick reply</div>
-                              <div className="text-xs text-muted-foreground">Simple response buttons for customer replies</div>
+                              <div className="font-medium">{t("template_manager.create_dialog.content_step.button_quick_reply_label")}</div>
+                              <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.button_quick_reply_desc")}</div>
                             </div>
                           </SelectItem>
                           <SelectItem value="visit-website" className="pl-4">
                             <div>
-                              <div className="font-medium">Visit website</div>
-                              <div className="text-xs text-muted-foreground">Direct customers to your website or URL</div>
+                              <div className="font-medium">{t("template_manager.create_dialog.content_step.button_visit_website_label")}</div>
+                              <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.button_visit_website_desc")}</div>
                             </div>
                           </SelectItem>
                           <SelectItem value="call-whatsapp" className="pl-4">
                             <div>
-                              <div className="font-medium">Call on WhatsApp</div>
-                              <div className="text-xs text-muted-foreground">Enable voice calls through WhatsApp</div>
+                              <div className="font-medium">{t("template_manager.create_dialog.content_step.button_call_whatsapp_label")}</div>
+                              <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.button_call_whatsapp_desc")}</div>
                             </div>
                           </SelectItem>
                           <SelectItem value="call-phone" className="pl-4">
                             <div>
-                              <div className="font-medium">Call phone number</div>
-                              <div className="text-xs text-muted-foreground">Direct customers to call a phone number</div>
+                              <div className="font-medium">{t("template_manager.create_dialog.content_step.button_call_phone_label")}</div>
+                              <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.button_call_phone_desc")}</div>
                             </div>
                           </SelectItem>
                           <SelectItem value="complete-flow" className="pl-4">
                             <div>
-                              <div className="font-medium">Complete Flow</div>
-                              <div className="text-xs text-muted-foreground">Trigger a WhatsApp Flow for interactive experiences</div>
+                              <div className="font-medium">{t("template_manager.create_dialog.content_step.button_complete_flow_label")}</div>
+                              <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.button_complete_flow_desc")}</div>
                             </div>
                           </SelectItem>
                           <SelectItem value="copy-offer" className="pl-4">
                             <div>
-                              <div className="font-medium">Copy offer code</div>
-                              <div className="text-xs text-muted-foreground">Allow customers to copy promotional codes</div>
+                              <div className="font-medium">{t("template_manager.create_dialog.content_step.button_copy_offer_label")}</div>
+                              <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.button_copy_offer_desc")}</div>
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -2756,12 +2776,12 @@ export default function TemplateManager() {
                         <div className="space-y-4 mt-4">
                           {templateButtons.map((button) => {
                             const buttonLabels: Record<string, { label: string; description: string }> = {
-                              "quick-reply": { label: "Quick reply", description: "Simple response buttons for customer replies" },
-                              "visit-website": { label: "Visit website", description: "Direct customers to your website or URL" },
-                              "call-whatsapp": { label: "Call on WhatsApp", description: "Enable voice calls through WhatsApp" },
-                              "call-phone": { label: "Call phone number", description: "Direct customers to call a phone number" },
-                              "complete-flow": { label: "Complete Flow", description: "Trigger a WhatsApp Flow for interactive experiences" },
-                              "copy-offer": { label: "Copy offer code", description: "Allow customers to copy promotional codes" }
+                              "quick-reply": { label: t("template_manager.create_dialog.content_step.button_quick_reply_label"), description: t("template_manager.create_dialog.content_step.button_quick_reply_desc") },
+                              "visit-website": { label: t("template_manager.create_dialog.content_step.button_visit_website_label"), description: t("template_manager.create_dialog.content_step.button_visit_website_desc") },
+                              "call-whatsapp": { label: t("template_manager.create_dialog.content_step.button_call_whatsapp_label"), description: t("template_manager.create_dialog.content_step.button_call_whatsapp_desc") },
+                              "call-phone": { label: t("template_manager.create_dialog.content_step.button_call_phone_label"), description: t("template_manager.create_dialog.content_step.button_call_phone_desc") },
+                              "complete-flow": { label: t("template_manager.create_dialog.content_step.button_complete_flow_label"), description: t("template_manager.create_dialog.content_step.button_complete_flow_desc") },
+                              "copy-offer": { label: t("template_manager.create_dialog.content_step.button_copy_offer_label"), description: t("template_manager.create_dialog.content_step.button_copy_offer_desc") }
                             };
                             const buttonInfo = buttonLabels[button.type];
                             return (
@@ -2788,10 +2808,10 @@ export default function TemplateManager() {
                                   {/* Quick Reply */}
                                   {button.type === "quick-reply" && (
                                     <div className="space-y-2">
-                                      <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                      <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.button_text_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                       <div className="relative">
                                         <Input
-                                          placeholder="Enter button text..."
+                                          placeholder={t("template_manager.create_dialog.content_step.enter_button_text")}
                                           value={button.buttonText || ""}
                                           onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
                                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2807,10 +2827,10 @@ export default function TemplateManager() {
                                   {button.type === "visit-website" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.button_text_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter button text..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_button_text")}
                                             value={button.buttonText || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2821,22 +2841,22 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">URL Type<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.url_type_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <Select value={button.urlType || "static"} onValueChange={(value) => updateButtonConfig(button.id, "urlType", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select URL type" />
+                                            <SelectValue placeholder={t("template_manager.create_dialog.content_step.select_url_type")} />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="static">Static</SelectItem>
-                                            <SelectItem value="dynamic">Dynamic</SelectItem>
+                                            <SelectItem value="static">{t("template_manager.create_dialog.content_step.url_type_static")}</SelectItem>
+                                            <SelectItem value="dynamic">{t("template_manager.create_dialog.content_step.url_type_dynamic")}</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Website URL<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.website_url_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter website URL..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_website_url")}
                                             value={button.websiteUrl || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "websiteUrl", e.target.value.slice(0, 2000))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2853,7 +2873,7 @@ export default function TemplateManager() {
                                           onCheckedChange={(checked) => updateButtonConfig(button.id, "trackAppConversion", checked)}
                                         />
                                         <label htmlFor={`track-conversion-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
-                                          Track app conversion (Marketing Messages Lite API only)
+                                          {t("template_manager.create_dialog.content_step.track_conversion_label")}
                                         </label>
                                       </div>
                                       <div className="flex items-center gap-2">
@@ -2863,7 +2883,7 @@ export default function TemplateManager() {
                                           onCheckedChange={(checked) => updateButtonConfig(button.id, "enableMetaTracking", checked)}
                                         />
                                         <label htmlFor={`enable-meta-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
-                                          Enable Meta to track and report website clicks
+                                          {t("template_manager.create_dialog.content_step.enable_meta_tracking_label")}
                                         </label>
                                       </div>
                                     </div>
@@ -2873,10 +2893,10 @@ export default function TemplateManager() {
                                   {button.type === "call-whatsapp" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.button_text_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter button text..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_button_text")}
                                             value={button.buttonText || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2887,15 +2907,17 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Active for</label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.active_for_label")}</label>
                                         <Select value={button.activeFor || "7"} onValueChange={(value) => updateButtonConfig(button.id, "activeFor", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select duration" />
+                                            <SelectValue placeholder={t("template_manager.create_dialog.content_step.select_duration")} />
                                           </SelectTrigger>
                                           <SelectContent className="max-h-[200px]">
                                             {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
                                               <SelectItem key={day} value={`${day}`}>
-                                                {day} day{day > 1 ? "s" : ""}
+                                                {day === 1
+                                                  ? t("template_manager.create_dialog.content_step.day_one", { count: day })
+                                                  : t("template_manager.create_dialog.content_step.day_other", { count: day })}
                                               </SelectItem>
                                             ))}
                                           </SelectContent>
@@ -2908,10 +2930,10 @@ export default function TemplateManager() {
                                   {button.type === "call-phone" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.button_text_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter button text..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_button_text")}
                                             value={button.buttonText || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2922,30 +2944,30 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Country<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.country_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <Select value={button.country || "+1"} onValueChange={(value) => updateButtonConfig(button.id, "country", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select country" />
+                                            <SelectValue placeholder={t("template_manager.create_dialog.content_step.select_country")} />
                                           </SelectTrigger>
                                           <SelectContent className="max-h-[200px]">
-                                            <SelectItem value="+1">+1 (US/Canada)</SelectItem>
-                                            <SelectItem value="+44">+44 (UK)</SelectItem>
-                                            <SelectItem value="+33">+33 (France)</SelectItem>
-                                            <SelectItem value="+49">+49 (Germany)</SelectItem>
-                                            <SelectItem value="+39">+39 (Italy)</SelectItem>
-                                            <SelectItem value="+34">+34 (Spain)</SelectItem>
-                                            <SelectItem value="+91">+91 (India)</SelectItem>
-                                            <SelectItem value="+86">+86 (China)</SelectItem>
-                                            <SelectItem value="+81">+81 (Japan)</SelectItem>
-                                            <SelectItem value="+55">+55 (Brazil)</SelectItem>
+                                            <SelectItem value="+1">{t("template_manager.create_dialog.content_step.country_us_ca")}</SelectItem>
+                                            <SelectItem value="+44">{t("template_manager.create_dialog.content_step.country_uk")}</SelectItem>
+                                            <SelectItem value="+33">{t("template_manager.create_dialog.content_step.country_fr")}</SelectItem>
+                                            <SelectItem value="+49">{t("template_manager.create_dialog.content_step.country_de")}</SelectItem>
+                                            <SelectItem value="+39">{t("template_manager.create_dialog.content_step.country_it")}</SelectItem>
+                                            <SelectItem value="+34">{t("template_manager.create_dialog.content_step.country_es")}</SelectItem>
+                                            <SelectItem value="+91">{t("template_manager.create_dialog.content_step.country_in")}</SelectItem>
+                                            <SelectItem value="+86">{t("template_manager.create_dialog.content_step.country_cn")}</SelectItem>
+                                            <SelectItem value="+81">{t("template_manager.create_dialog.content_step.country_jp")}</SelectItem>
+                                            <SelectItem value="+55">{t("template_manager.create_dialog.content_step.country_br")}</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Phone number<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.phone_number_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter phone number..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_phone_number")}
                                             value={button.phoneNumber || ""}
                                             onChange={(e) => {
                                               const numbersOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 20);
@@ -2965,10 +2987,10 @@ export default function TemplateManager() {
                                   {button.type === "complete-flow" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.button_text_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter button text..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_button_text")}
                                             value={button.buttonText || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2979,30 +3001,30 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.flow_button_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <Select value={button.flowButton || "default"} onValueChange={(value) => updateButtonConfig(button.id, "flowButton", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select button type" />
+                                            <SelectValue placeholder={t("template_manager.create_dialog.content_step.select_button_type")} />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="default">Default</SelectItem>
-                                            <SelectItem value="document">Document</SelectItem>
-                                            <SelectItem value="promotion">Promotion</SelectItem>
-                                            <SelectItem value="review">Review</SelectItem>
+                                            <SelectItem value="default">{t("template_manager.create_dialog.content_step.flow_default")}</SelectItem>
+                                            <SelectItem value="document">{t("template_manager.create_dialog.content_step.flow_document")}</SelectItem>
+                                            <SelectItem value="promotion">{t("template_manager.create_dialog.content_step.flow_promotion")}</SelectItem>
+                                            <SelectItem value="review">{t("template_manager.create_dialog.content_step.flow_review")}</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Flow<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.flow_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <Select value={button.flowId || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowId", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3">
-                                            <SelectValue placeholder="Select flow">
+                                            <SelectValue placeholder={t("template_manager.create_dialog.content_step.select_flow")}>
                                               {button.flowId && (
                                                 <span className="font-normal">
-                                                  {button.flowId === "product-inquiry" && "Product Inquiry Form"}
-                                                  {button.flowId === "support-request" && "Support Request"}
-                                                  {button.flowId === "promotional-survey" && "Promotional Survey"}
-                                                  {button.flowId === "review-collection" && "Review Collection"}
+                                                  {button.flowId === "product-inquiry" && t("template_manager.create_dialog.content_step.flow_product_inquiry_label")}
+                                                  {button.flowId === "support-request" && t("template_manager.create_dialog.content_step.flow_support_request_label")}
+                                                  {button.flowId === "promotional-survey" && t("template_manager.create_dialog.content_step.flow_promotional_survey_label")}
+                                                  {button.flowId === "review-collection" && t("template_manager.create_dialog.content_step.flow_review_collection_label")}
                                                 </span>
                                               )}
                                             </SelectValue>
@@ -3011,37 +3033,37 @@ export default function TemplateManager() {
                                             <SelectItem value="product-inquiry">
                                               <div>
                                                 <div className="font-medium flex items-center gap-2">
-                                                  Product Inquiry Form
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Default</span>
+                                                  {t("template_manager.create_dialog.content_step.flow_product_inquiry_label")}
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{t("template_manager.create_dialog.content_step.flow_default")}</span>
                                                 </div>
-                                                <div className="text-xs text-muted-foreground">Collect customers product inquires</div>
+                                                <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.flow_product_inquiry_desc")}</div>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="support-request">
                                               <div>
                                                 <div className="font-medium flex items-center gap-2">
-                                                  Support Request
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Document</span>
+                                                  {t("template_manager.create_dialog.content_step.flow_support_request_label")}
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{t("template_manager.create_dialog.content_step.flow_document")}</span>
                                                 </div>
-                                                <div className="text-xs text-muted-foreground">Handle customer support requests</div>
+                                                <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.flow_support_request_desc")}</div>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="promotional-survey">
                                               <div>
                                                 <div className="font-medium flex items-center gap-2">
-                                                  Promotional Survey
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Promotion</span>
+                                                  {t("template_manager.create_dialog.content_step.flow_promotional_survey_label")}
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{t("template_manager.create_dialog.content_step.flow_promotion")}</span>
                                                 </div>
-                                                <div className="text-xs text-muted-foreground">Gather feedback on promotions</div>
+                                                <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.flow_promotional_survey_desc")}</div>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="review-collection">
                                               <div>
                                                 <div className="font-medium flex items-center gap-2">
-                                                  Review Collection
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Review</span>
+                                                  {t("template_manager.create_dialog.content_step.flow_review_collection_label")}
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{t("template_manager.create_dialog.content_step.flow_review")}</span>
                                                 </div>
-                                                <div className="text-xs text-muted-foreground">Collect customer reviews</div>
+                                                <div className="text-xs text-muted-foreground">{t("template_manager.create_dialog.content_step.flow_review_collection_desc")}</div>
                                               </div>
                                             </SelectItem>
                                           </SelectContent>
@@ -3054,10 +3076,10 @@ export default function TemplateManager() {
                                   {button.type === "copy-offer" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.button_text_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter button text..."
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_button_text")}
                                             value={button.buttonText || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -3068,10 +3090,10 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Offer code<span className="text-red-500 pl-0.5">*</span></label>
+                                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.offer_code_label")}<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter offer code... e.g. SUMMER50"
+                                            placeholder={t("template_manager.create_dialog.content_step.enter_offer_code")}
                                             value={button.offerCode || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "offerCode", e.target.value.slice(0, 15))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -3099,12 +3121,12 @@ export default function TemplateManager() {
                     {templateMode !== "carousel" && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Footer</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                        <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.footer_label")}</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">{t("template_manager.create_dialog.content_step.optional")}</span>
                       </div>
                       <div className="relative">
                         <Input
-                          placeholder="Add footer text..."
+                          placeholder={t("template_manager.create_dialog.content_step.footer_placeholder")}
                           value={footerText}
                           onChange={(e) => setFooterText(e.target.value.slice(0, 60))}
                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -3121,10 +3143,9 @@ export default function TemplateManager() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <label className="text-sm font-medium text-foreground">Cards</label>
+                            <label className="text-sm font-medium text-foreground">{t("template_manager.create_dialog.content_step.cards_label")}</label>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                              1-10 cards. Every card needs a header image or video, body text, and
-                              1-2 buttons - and all cards must use the same button types.
+                              {t("template_manager.create_dialog.content_step.cards_desc")}
                             </p>
                           </div>
                           {carouselCards.length < 10 && (
@@ -3138,7 +3159,7 @@ export default function TemplateManager() {
                                 ])
                               }
                             >
-                              <Plus size={14} className="mr-1" /> Add card
+                              <Plus size={14} className="mr-1" /> {t("template_manager.create_dialog.content_step.add_card")}
                             </Button>
                           )}
                         </div>
@@ -3150,7 +3171,7 @@ export default function TemplateManager() {
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-[12px] font-semibold text-foreground">
-                                Card {index + 1}
+                                {t("template_manager.create_dialog.content_step.card_number", { number: index + 1 })}
                               </span>
                               {carouselCards.length > 1 && (
                                 <button
@@ -3179,8 +3200,8 @@ export default function TemplateManager() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="IMAGE">Image</SelectItem>
-                                  <SelectItem value="VIDEO">Video</SelectItem>
+                                  <SelectItem value="IMAGE">{t("template_manager.create_dialog.content_step.media_image")}</SelectItem>
+                                  <SelectItem value="VIDEO">{t("template_manager.create_dialog.content_step.media_video")}</SelectItem>
                                 </SelectContent>
                               </Select>
                               {card.media ? (
@@ -3206,14 +3227,14 @@ export default function TemplateManager() {
                                   className="font-normal"
                                   onClick={() => setCardPickerIndex(index)}
                                 >
-                                  Choose from gallery
+                                  {t("template_manager.create_dialog.content_step.choose_from_gallery")}
                                 </Button>
                               )}
                             </div>
 
                             <div className="relative">
                               <Textarea
-                                placeholder="Card body text..."
+                                placeholder={t("template_manager.create_dialog.content_step.card_body_placeholder")}
                                 value={card.body}
                                 onChange={(e) =>
                                   setCarouselCards((prev) =>
@@ -3232,7 +3253,7 @@ export default function TemplateManager() {
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
                                 <span className="text-[11px] font-medium text-muted-foreground">
-                                  Buttons ({(card.buttons ?? []).length}/2)
+                                  {t("template_manager.create_dialog.content_step.card_buttons_count", { count: (card.buttons ?? []).length })}
                                 </span>
                                 {(card.buttons ?? []).length < 2 && (
                                   <Select
@@ -3248,12 +3269,12 @@ export default function TemplateManager() {
                                     }
                                   >
                                     <SelectTrigger className="w-[150px] h-8 text-xs border border-input [border-color:hsl(var(--input))]">
-                                      <SelectValue placeholder="Add a button" />
+                                      <SelectValue placeholder={t("template_manager.create_dialog.content_step.add_a_button")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="quick-reply">Quick reply</SelectItem>
-                                      <SelectItem value="visit-website">Visit website</SelectItem>
-                                      <SelectItem value="call-phone">Call phone number</SelectItem>
+                                      <SelectItem value="quick-reply">{t("template_manager.create_dialog.content_step.button_quick_reply_label")}</SelectItem>
+                                      <SelectItem value="visit-website">{t("template_manager.create_dialog.content_step.button_visit_website_label")}</SelectItem>
+                                      <SelectItem value="call-phone">{t("template_manager.create_dialog.content_step.button_call_phone_label")}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 )}
@@ -3261,7 +3282,7 @@ export default function TemplateManager() {
                               {(card.buttons ?? []).map((btn: any, bi: number) => (
                                 <div key={bi} className="flex gap-2 items-center">
                                   <Input
-                                    placeholder="Button text"
+                                    placeholder={t("template_manager.create_dialog.content_step.button_text_placeholder")}
                                     value={btn.buttonText ?? ""}
                                     onChange={(e) =>
                                       setCarouselCards((prev) =>
@@ -3281,7 +3302,7 @@ export default function TemplateManager() {
                                   />
                                   {btn.type === "visit-website" && (
                                     <Input
-                                      placeholder="https://example.com"
+                                      placeholder={t("template_manager.create_dialog.content_step.website_url_placeholder")}
                                       value={btn.websiteUrl ?? ""}
                                       onChange={(e) =>
                                         setCarouselCards((prev) =>
@@ -3302,7 +3323,7 @@ export default function TemplateManager() {
                                   )}
                                   {btn.type === "call-phone" && (
                                     <Input
-                                      placeholder="+15551112222"
+                                      placeholder={t("template_manager.create_dialog.content_step.phone_placeholder")}
                                       value={btn.phoneNumber ?? ""}
                                       onChange={(e) =>
                                         setCarouselCards((prev) =>
@@ -3347,7 +3368,7 @@ export default function TemplateManager() {
 
                 {/* Right: Template Preview */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                  <h3 className="font-semibold text-lg mb-1">{t("template_manager.create_dialog.content_step.preview_title")}</h3>
                   <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                     <PreviewV2
                       mode="chat"
@@ -3361,7 +3382,7 @@ export default function TemplateManager() {
                       activeCardIndex={composerActiveCard}
                       onCardChange={setComposerActiveCard}
                     />
-                    <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
+                    <p className="text-[10px] py-1">{t("template_manager.create_dialog.content_step.preview_disclaimer")}</p>
                   </div>
                 </div>
               </div>
@@ -3372,7 +3393,7 @@ export default function TemplateManager() {
                   onClick={handleBackToForm}
                   className="border-input [border-color:hsl(var(--input))] font-normal"
                 >
-                  Back
+                  {t("template_manager.create_dialog.back")}
                 </Button>
                 <div className="flex gap-2">
                   <Button
@@ -3391,9 +3412,9 @@ export default function TemplateManager() {
                   >
                     {editingTemplateId === null
                       ? createTemplateMutation.isPending
-                        ? "Creating…"
-                        : "Create Template"
-                      : "Save Template"}
+                        ? t("template_manager.create_dialog.creating")
+                        : t("template_manager.create_dialog.create_template_button")
+                      : t("template_manager.create_dialog.save_template_button")}
                   </Button>
                 </div>
               </div>
@@ -3406,14 +3427,14 @@ export default function TemplateManager() {
       <Dialog open={cloneDialogOpen} onOpenChange={handleCancelCloneDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Clone Template</DialogTitle>
+            <DialogTitle>{t("template_manager.clone_dialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Template Name<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("template_manager.clone_dialog.name_label")}<span className="text-red-500 pl-0.5">*</span></label>
               <div className="relative">
                 <Input
-                  placeholder="Enter template name..."
+                  placeholder={t("template_manager.clone_dialog.name_placeholder")}
                   value={cloneTemplateName}
                   onChange={(e) => setCloneTemplateName(e.target.value.slice(0, 512))}
                   className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -3425,13 +3446,13 @@ export default function TemplateManager() {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={handleCancelCloneDialog}>
-                Cancel
+                {t("template_manager.clone_dialog.cancel")}
               </Button>
               <Button
                 onClick={handleCloneTemplate}
                 disabled={!cloneTemplateName.trim()}
               >
-                Clone Template
+                {t("template_manager.clone_dialog.clone_button")}
               </Button>
             </div>
           </div>
@@ -3441,11 +3462,11 @@ export default function TemplateManager() {
       <Dialog open={showDeleteTemplateModal} onOpenChange={setShowDeleteTemplateModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Template</DialogTitle>
+            <DialogTitle>{t("template_manager.delete_dialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold break-all">{templateToDelete?.name}</span>? This action cannot be undone.
+              {t("template_manager.delete_dialog.confirm", { name: templateToDelete?.name ?? "" })}
             </p>
           </div>
           <div className="flex gap-2 justify-end mt-2">
@@ -3454,13 +3475,13 @@ export default function TemplateManager() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("template_manager.delete_dialog.cancel")}
             </Button>
             <Button
               onClick={handleConfirmDelete}
               className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
             >
-              Delete
+              {t("template_manager.delete_dialog.delete")}
             </Button>
           </div>
         </DialogContent>
@@ -3494,12 +3515,12 @@ export default function TemplateManager() {
       <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader className="mb-2">
-            <DialogTitle>Delete Templates</DialogTitle>
+            <DialogTitle>{t("template_manager.bulk_delete_dialog.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold">{selectedTemplates.length} template(s)</span>? This action cannot be undone.
+              {t("template_manager.bulk_delete_dialog.confirm", { count: selectedTemplates.length })}
             </p>
           </div>
 
@@ -3510,13 +3531,13 @@ export default function TemplateManager() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("template_manager.bulk_delete_dialog.cancel")}
             </Button>
             <Button
               onClick={handleConfirmBulkDelete}
               className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
             >
-              Delete
+              {t("template_manager.bulk_delete_dialog.delete")}
             </Button>
           </div>
         </DialogContent>

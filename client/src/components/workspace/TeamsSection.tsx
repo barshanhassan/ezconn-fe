@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Users2, Users, Pencil, Trash2, Plus, Check, ChevronLeft, Shuffle,
   UserMinus, TriangleAlert, Search, Target, Zap, Activity,
@@ -49,6 +50,7 @@ function MemberAvatar({ name, size = "sm" }: { name: string; size?: "sm" | "md" 
 }
 
 export default function TeamsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -107,11 +109,11 @@ export default function TeamsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams/get-all"] });
-      toast({ title: "Saved", description: "Team updated successfully." });
+      toast({ title: t("teams_section.saved_title"), description: t("teams_section.saved_desc") });
       resetForm();
       setView("list");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: t("teams_section.error_title"), description: err.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -120,11 +122,11 @@ export default function TeamsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams/get-all"] });
-      toast({ title: "Deleted", description: "Team removed." });
+      toast({ title: t("teams_section.deleted_title"), description: t("teams_section.deleted_desc") });
       setDeleteTarget(null);
       setDeleteConfirm("");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: t("teams_section.error_title"), description: err.message, variant: "destructive" }),
   });
 
   const resetForm = () => {
@@ -150,7 +152,7 @@ export default function TeamsSection() {
   const handleSave = () => {
     if (!teamName.trim()) return;
     if (selectedAgents.length === 0) {
-      toast({ title: "Validation", description: "Add at least one member to the team.", variant: "destructive" });
+      toast({ title: t("teams_section.validation_title"), description: t("teams_section.validation_min_member"), variant: "destructive" });
       return;
     }
     if (!isPriorityValid) return;
@@ -186,16 +188,16 @@ export default function TeamsSection() {
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                  {view === "add" ? "Add Team" : "Edit Team"}
+                  {view === "add" ? t("teams_section.add_team_title") : t("teams_section.edit_team_title")}
                 </h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                  Add or edit team details
+                  {t("teams_section.add_edit_subtitle")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => { resetForm(); setView("list"); }} className={outlineBtn}>
-                Cancel
+                {t("teams_section.cancel")}
               </button>
               <button
                 onClick={handleSave}
@@ -203,7 +205,7 @@ export default function TeamsSection() {
                 className={primaryBtn}
               >
                 {saveMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />}
-                Save
+                {t("teams_section.save")}
               </button>
             </div>
           </div>
@@ -215,11 +217,11 @@ export default function TeamsSection() {
 
                 {/* Team Name */}
                 <div className="space-y-2">
-                  <FieldLabel dark={dark}>Team Name</FieldLabel>
+                  <FieldLabel dark={dark}>{t("teams_section.team_name_label")}</FieldLabel>
                   <Input
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
-                    placeholder="e.g. Sales Team"
+                    placeholder={t("teams_section.team_name_placeholder")}
                     maxLength={60}
                     className={inputCls}
                   />
@@ -227,11 +229,11 @@ export default function TeamsSection() {
 
                 {/* Distribution */}
                 <div className="space-y-3">
-                  <FieldLabel dark={dark}>Distribution Method</FieldLabel>
+                  <FieldLabel dark={dark}>{t("teams_section.distribution_method_label")}</FieldLabel>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {([
-                      { key: "EQUAL",    label: "Equal", desc: "Assign conversations evenly across all members.", icon: <Shuffle size={16} /> },
-                      { key: "PRIORITY", label: "Priority", desc: "Allocate by member priority value.", icon: <Target size={16} /> },
+                      { key: "EQUAL",    label: t("teams_section.distribution_equal_label"), desc: t("teams_section.distribution_equal_desc"), icon: <Shuffle size={16} /> },
+                      { key: "PRIORITY", label: t("teams_section.distribution_priority_label"), desc: t("teams_section.distribution_priority_desc"), icon: <Target size={16} /> },
                     ] as const).map((opt) => {
                       const active = distribution === opt.key;
                       return (
@@ -273,9 +275,9 @@ export default function TeamsSection() {
                       <Zap size={16} />
                     </div>
                     <div>
-                      <p className={cn("text-[13px] font-black tracking-tight", text)}>Auto Assign</p>
+                      <p className={cn("text-[13px] font-black tracking-tight", text)}>{t("teams_section.auto_assign_title")}</p>
                       <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                        Automatically assign conversations to active agents
+                        {t("teams_section.auto_assign_desc")}
                       </p>
                     </div>
                   </div>
@@ -289,9 +291,9 @@ export default function TeamsSection() {
                 {/* Members */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <FieldLabel dark={dark}>Members</FieldLabel>
+                    <FieldLabel dark={dark}>{t("teams_section.members_label")}</FieldLabel>
                     <span className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-semibold">
-                      {selectedAgents.length} Added
+                      {t("teams_section.members_added_count", { count: selectedAgents.length })}
                     </span>
                   </div>
 
@@ -306,7 +308,7 @@ export default function TeamsSection() {
                     <SelectTrigger className={inputCls}>
                       <div className="flex items-center gap-2 text-slate-400">
                         <Plus size={14} />
-                        <SelectValue placeholder="Add member to team..." />
+                        <SelectValue placeholder={t("teams_section.add_member_placeholder")} />
                       </div>
                     </SelectTrigger>
                     <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
@@ -329,10 +331,10 @@ export default function TeamsSection() {
                   {distribution === "PRIORITY" && selectedAgents.length > 0 && (
                     <div className="flex items-center justify-between mt-1 px-1">
                       <span className="text-[10px] font-bold text-rose-500">
-                        {totalPriority !== 100 ? "Priority value should be equal to 100" : ""}
+                        {totalPriority !== 100 ? t("teams_section.priority_sum_warning") : ""}
                       </span>
                       <span className={cn("text-[11px] font-semibold", totalPriority === 100 ? "text-emerald-500" : sub)}>
-                        Total: {totalPriority}%
+                        {t("teams_section.priority_total", { count: totalPriority })}
                       </span>
                     </div>
                   )}
@@ -360,7 +362,7 @@ export default function TeamsSection() {
                             <div className="flex items-center gap-2">
                               {distribution === "PRIORITY" && (
                                 <div className={cn("flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border", dark ? "border-slate-800 bg-slate-950/50" : "border-slate-200 bg-white")}>
-                                  <span className={cn("text-[10px] font-semibold", sub)}>Priority</span>
+                                  <span className={cn("text-[10px] font-semibold", sub)}>{t("teams_section.distribution_priority_label")}</span>
                                   {/* Range slider (replyagent) + number box — both clamped 0–100, synced. */}
                                   <input
                                     type="range"
@@ -408,7 +410,7 @@ export default function TeamsSection() {
                   ) : (
                     <div className={cn("flex flex-col items-center justify-center py-8 rounded-[1.25rem] border-2 border-dashed", softBorder, softBg)}>
                       <Users className="w-7 h-7 text-primary/40 mb-2" />
-                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>No members yet</p>
+                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>{t("teams_section.no_members_yet")}</p>
                     </div>
                   )}
                 </div>
@@ -417,7 +419,7 @@ export default function TeamsSection() {
               {/* Right — Preview */}
               <div className={cn("w-full lg:w-80 shrink-0 p-8 space-y-5", softBg)}>
                 <div className="flex items-center gap-2">
-                  <span className={cn("text-[11px] font-semibold", sub)}>Preview</span>
+                  <span className={cn("text-[11px] font-semibold", sub)}>{t("teams_section.preview_label")}</span>
                   <div className="h-px flex-1 bg-slate-500/10" />
                 </div>
 
@@ -428,7 +430,7 @@ export default function TeamsSection() {
                   <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black mb-3 mx-auto shadow-lg", accentCls, "text-white")}>
                     {teamInitial}
                   </div>
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{teamName || "Team Name"}</h3>
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{teamName || t("teams_section.team_name_placeholder_fallback")}</h3>
 
                   <div className="flex justify-center gap-2 mt-3 flex-wrap">
                     <span className={cn(
@@ -436,11 +438,11 @@ export default function TeamsSection() {
                       distribution === "EQUAL" ? "bg-blue-500/10 text-blue-500" : "bg-violet-500/10 text-violet-500"
                     )}>
                       {distribution === "EQUAL" ? <Shuffle size={10} /> : <Target size={10} />}
-                      {distribution === "EQUAL" ? "Equal" : "Priority"}
+                      {distribution === "EQUAL" ? t("teams_section.distribution_equal_label") : t("teams_section.distribution_priority_label")}
                     </span>
                     {autoAssign && (
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-500">
-                        <Zap size={10} /> Auto
+                        <Zap size={10} /> {t("teams_section.auto_badge")}
                       </span>
                     )}
                   </div>
@@ -449,9 +451,9 @@ export default function TeamsSection() {
                 {/* Stats */}
                 <div className="space-y-2">
                   {[
-                    { label: "Members", value: `${selectedAgents.length} Active`, icon: <Users size={12} /> },
-                    { label: "Method", value: distribution === "EQUAL" ? "Equal" : "Priority", icon: <Shuffle size={12} /> },
-                    { label: "Auto", value: autoAssign ? "Enabled" : "Disabled", icon: <Zap size={12} /> },
+                    { label: t("teams_section.members_label"), value: t("teams_section.stat_members_active", { count: selectedAgents.length }), icon: <Users size={12} /> },
+                    { label: t("teams_section.stat_method_label"), value: distribution === "EQUAL" ? t("teams_section.distribution_equal_label") : t("teams_section.distribution_priority_label"), icon: <Shuffle size={12} /> },
+                    { label: t("teams_section.auto_badge"), value: autoAssign ? t("teams_section.auto_enabled") : t("teams_section.auto_disabled"), icon: <Zap size={12} /> },
                   ].map((row) => (
                     <div key={row.label} className={cn("flex items-center justify-between p-3 rounded-xl border", card, border)}>
                       <div className="flex items-center gap-2">
@@ -467,7 +469,7 @@ export default function TeamsSection() {
 
                 {selectedAgents.length > 0 && (
                   <div className="space-y-2">
-                    <span className={cn("text-[11px] font-semibold", sub)}>Members</span>
+                    <span className={cn("text-[11px] font-semibold", sub)}>{t("teams_section.members_label")}</span>
                     <div className="flex flex-wrap gap-2">
                       {selectedAgents.slice(0, 8).map((agent) => {
                         const n = agent.full_name || agent.first_name || "?";
@@ -500,14 +502,14 @@ export default function TeamsSection() {
               <Users2 className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Teams</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("teams_section.page_title")}</h1>
               <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                Add or edit team details
+                {t("teams_section.add_edit_subtitle")}
               </p>
             </div>
           </div>
           <span className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[11px] font-semibold flex items-center gap-1.5">
-            <ShieldCheck size={11} /> {teams.length} Teams
+            <ShieldCheck size={11} /> {t("teams_section.teams_count", { count: teams.length })}
           </span>
         </div>
 
@@ -516,14 +518,14 @@ export default function TeamsSection() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <Input
-                placeholder="Search teams..."
+                placeholder={t("teams_section.search_placeholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={cn(inputCls, "pl-9 h-10")}
               />
             </div>
             <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
-              <Plus size={12} /> Add Team
+              <Plus size={12} /> {t("teams_section.add_team_button")}
             </button>
           </div>
 
@@ -541,9 +543,9 @@ export default function TeamsSection() {
                   <Users2 className="w-6 h-6 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className={cn("text-[14px] font-semibold", text)}>No Teams Yet</p>
+                  <p className={cn("text-[14px] font-semibold", text)}>{t("teams_section.no_teams_title")}</p>
                   <p className={cn("text-[11px] font-medium opacity-60 max-w-xs", sub)}>
-                    Create your first team to start routing conversations.
+                    {t("teams_section.no_teams_desc")}
                   </p>
                 </div>
               </div>
@@ -570,7 +572,7 @@ export default function TeamsSection() {
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEdit(team)}
-                            title="Edit Team"
+                            title={t("teams_section.edit_team_title")}
                             className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
                               dark ? "bg-slate-900 text-slate-400 hover:bg-primary hover:text-white" : "bg-white border border-slate-200 text-slate-500 hover:bg-primary hover:text-white hover:border-primary"
@@ -580,7 +582,7 @@ export default function TeamsSection() {
                           </button>
                           <button
                             onClick={() => { setDeleteTarget(team); setDeleteConfirm(""); }}
-                            title="Delete Team"
+                            title={t("teams_section.delete_title")}
                             className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
                               dark ? "bg-slate-900 text-slate-400 hover:bg-rose-500 hover:text-white" : "bg-white border border-slate-200 text-slate-500 hover:bg-rose-500 hover:text-white hover:border-rose-500"
@@ -603,11 +605,11 @@ export default function TeamsSection() {
                               : "bg-violet-500/10 text-violet-500"
                           )}>
                             {team.distribution === "EQUAL" ? <Shuffle size={9} /> : <Target size={9} />}
-                            {team.distribution === "EQUAL" ? "Equal" : "Priority"}
+                            {team.distribution === "EQUAL" ? t("teams_section.distribution_equal_label") : t("teams_section.distribution_priority_label")}
                           </span>
                           {team.auto_assign === 1 && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500">
-                              <Zap size={9} /> Auto
+                              <Zap size={9} /> {t("teams_section.auto_badge")}
                             </span>
                           )}
                         </div>
@@ -626,7 +628,7 @@ export default function TeamsSection() {
                           )}
                         </div>
                         <span className={cn("text-[11px] font-semibold", sub)}>
-                          {memberCount} {memberCount === 1 ? "Member" : "Members"}
+                          {t("teams_section.member_count", { count: memberCount })}
                         </span>
                       </div>
                     </div>
@@ -648,27 +650,27 @@ export default function TeamsSection() {
                   <TriangleAlert size={20} className="text-rose-500" />
                 </div>
                 <div>
-                  <h2 className={cn("text-[15px] font-semibold", text)}>Delete Team?</h2>
+                  <h2 className={cn("text-[15px] font-semibold", text)}>{t("teams_section.delete_title")}</h2>
                   <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    "{deleteTarget.name}" will be permanently removed.
+                    {t("teams_section.delete_desc", { name: deleteTarget.name })}
                   </p>
                 </div>
               </div>
 
               <div className={cn("p-4 rounded-[1rem] border", "bg-rose-500/5 border-rose-500/20")}>
                 <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 leading-relaxed">
-                  This will unassign {deleteTarget.team_members?.length || 0} members. This action cannot be undone.
+                  {t("teams_section.delete_warning", { count: deleteTarget.team_members?.length || 0 })}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>
-                  Type <span className="text-rose-500">{deleteTarget.name}</span> to confirm
+                  {t("teams_section.delete_confirm_prefix")} <span className="text-rose-500">{deleteTarget.name}</span> {t("teams_section.delete_confirm_suffix")}
                 </label>
                 <Input
                   value={deleteConfirm}
                   onChange={(e) => setDeleteConfirm(e.target.value)}
-                  placeholder="Type team name..."
+                  placeholder={t("teams_section.delete_confirm_placeholder")}
                   className={cn(inputCls, "border-rose-500/20 focus-visible:ring-rose-500/20")}
                 />
               </div>
@@ -678,7 +680,7 @@ export default function TeamsSection() {
                   onClick={() => { setDeleteTarget(null); setDeleteConfirm(""); }}
                   className={outlineBtn}
                 >
-                  Cancel
+                  {t("teams_section.cancel")}
                 </button>
                 <button
                   disabled={deleteConfirm !== deleteTarget.name || deleteMutation.isPending}
@@ -686,7 +688,7 @@ export default function TeamsSection() {
                   className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
                 >
                   {deleteMutation.isPending ? <Activity className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                  Delete
+                  {t("teams_section.delete_button")}
                 </button>
               </div>
             </div>

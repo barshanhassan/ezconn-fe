@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +40,7 @@ const INTEGRATION_PERMS: Record<string, string> = {
 };
 
 export default function IntegrationsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const queryClient = useQueryClient();
@@ -84,12 +86,12 @@ export default function IntegrationsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations"] });
-      toast({ title: "Connected", description: "Integration connected successfully!" });
+      toast({ title: t("integrations_section.toast_connected_title"), description: t("integrations_section.toast_connected_description") });
       setConnectingId(null);
       setFormData({});
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to connect. Please check your credentials.", variant: "destructive" });
+      toast({ title: t("integrations_section.toast_error_title"), description: t("integrations_section.toast_connect_error_description"), variant: "destructive" });
     },
   });
 
@@ -99,10 +101,10 @@ export default function IntegrationsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations"] });
-      toast({ title: "Updated", description: "Integration status updated." });
+      toast({ title: t("integrations_section.toast_updated_title"), description: t("integrations_section.toast_status_updated_description") });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to update integration.", variant: "destructive" });
+      toast({ title: t("integrations_section.toast_error_title"), description: t("integrations_section.toast_update_error_description"), variant: "destructive" });
     },
   });
 
@@ -110,84 +112,84 @@ export default function IntegrationsSection() {
     {
       id: "MICROSOFT",
       name: "Microsoft TTS",
-      category: "Voice & Speech",
-      description: "Harness Azure's lifelike AI voices for high-fidelity audio messages, canned responses, and automated voice interactions.",
+      category: t("integrations_section.items.MICROSOFT.category"),
+      description: t("integrations_section.items.MICROSOFT.description"),
       icon: "/images/integrations/tts.png",
-      actionLabel: "Connect Service",
+      actionLabel: t("integrations_section.items.MICROSOFT.action_label"),
       fields: [
-        { key: "key", label: "Azure API Key", placeholder: "Enter your subscription key" },
-        { key: "region", label: "Region", placeholder: "e.g. eastus" },
+        { key: "key", label: t("integrations_section.items.MICROSOFT.fields.key.label"), placeholder: t("integrations_section.items.MICROSOFT.fields.key.placeholder") },
+        { key: "region", label: t("integrations_section.items.MICROSOFT.fields.region.label"), placeholder: t("integrations_section.items.MICROSOFT.fields.region.placeholder") },
       ],
     },
     {
       id: "CLOUDINARY",
       name: "Cloudinary",
-      category: "Media Delivery",
-      description: "The professional standard for image and video management. Optimize, transform, and deliver assets at lightning speed.",
+      category: t("integrations_section.items.CLOUDINARY.category"),
+      description: t("integrations_section.items.CLOUDINARY.description"),
       icon: "/images/integrations/cloudinary.svg",
-      actionLabel: "Link Account",
+      actionLabel: t("integrations_section.items.CLOUDINARY.action_label"),
       fields: [
-        { key: "cloud_name", label: "Cloud Name", placeholder: "Your unique cloud identifier" },
-        { key: "api_key", label: "API Key", placeholder: "Access API Key" },
-        { key: "api_secret", label: "API Secret", placeholder: "Secure Secret" },
+        { key: "cloud_name", label: t("integrations_section.items.CLOUDINARY.fields.cloud_name.label"), placeholder: t("integrations_section.items.CLOUDINARY.fields.cloud_name.placeholder") },
+        { key: "api_key", label: t("integrations_section.items.CLOUDINARY.fields.api_key.label"), placeholder: t("integrations_section.items.CLOUDINARY.fields.api_key.placeholder") },
+        { key: "api_secret", label: t("integrations_section.items.CLOUDINARY.fields.api_secret.label"), placeholder: t("integrations_section.items.CLOUDINARY.fields.api_secret.placeholder") },
       ],
     },
     {
       id: "ACTIVECAMPAIGN",
       name: "ActiveCampaign",
-      category: "Marketing Automation",
-      description: "Synchronize your customer intelligence. Automatically pipeline contacts into advanced marketing automation flows.",
+      category: t("integrations_section.items.ACTIVECAMPAIGN.category"),
+      description: t("integrations_section.items.ACTIVECAMPAIGN.description"),
       icon: "/images/integrations/activecampaign.svg",
-      actionLabel: "Sync Gateway",
+      actionLabel: t("integrations_section.items.ACTIVECAMPAIGN.action_label"),
       fields: [
-        { key: "api_url", label: "API URL", placeholder: "https://youraccount.api-us1.com" },
-        { key: "api_key", label: "API Key", placeholder: "Account API Key" },
+        { key: "api_url", label: t("integrations_section.items.ACTIVECAMPAIGN.fields.api_url.label"), placeholder: "https://youraccount.api-us1.com" },
+        { key: "api_key", label: t("integrations_section.items.ACTIVECAMPAIGN.fields.api_key.label"), placeholder: t("integrations_section.items.ACTIVECAMPAIGN.fields.api_key.placeholder") },
       ],
     },
     {
       id: "CHATGPT",
       name: "OpenAI",
-      category: "Artificial Intelligence",
-      description: "Deploy world-class LLMs to analyze context and generate human-like responses. Power Whisper for precise voice-to-text.",
+      category: t("integrations_section.items.CHATGPT.category"),
+      description: t("integrations_section.items.CHATGPT.description"),
       icon: "/images/integrations/chat_gpt.svg",
-      actionLabel: "Authorize LLM",
-      fields: [{ key: "api_key", label: "OpenAI Key", placeholder: "sk-..." }],
+      actionLabel: t("integrations_section.items.CHATGPT.action_label"),
+      fields: [{ key: "api_key", label: t("integrations_section.items.CHATGPT.fields.api_key.label"), placeholder: "sk-..." }],
     },
     {
       id: "MAKE",
       name: "Make.com",
-      category: "Workflow Automation",
-      description: "Connect to 1,600+ third-party applications. Build complex visual workflows and automate tasks without a single line of code.",
+      category: t("integrations_section.items.MAKE.category"),
+      description: t("integrations_section.items.MAKE.description"),
       icon: "/images/integrations/make.png",
-      actionLabel: "View Blueprint",
+      actionLabel: t("integrations_section.items.MAKE.action_label"),
       externalUrl: "https://make.com",
     },
     {
       id: "ELEVENLABS",
       name: "ElevenLabs",
-      category: "Neural Synthesis",
-      description: "The most realistic AI voice generator. Synthesize top-tier audio in 29+ languages with emotional range and clarity.",
+      category: t("integrations_section.items.ELEVENLABS.category"),
+      description: t("integrations_section.items.ELEVENLABS.description"),
       icon: "/images/integrations/elevenlabs.png",
-      actionLabel: "Connect Engine",
-      fields: [{ key: "api_key", label: "ElevenLabs API Key", placeholder: "Enter your API Key" }],
+      actionLabel: t("integrations_section.items.ELEVENLABS.action_label"),
+      fields: [{ key: "api_key", label: t("integrations_section.items.ELEVENLABS.fields.api_key.label"), placeholder: t("integrations_section.items.ELEVENLABS.fields.api_key.placeholder") }],
     },
     {
       id: "CAL",
       name: "Cal.com",
-      category: "Scheduling",
-      description: "Open-source scheduling infrastructure. Manage availability and booking sessions directly within your smart automation flows.",
+      category: t("integrations_section.items.CAL.category"),
+      description: t("integrations_section.items.CAL.description"),
       icon: "/images/integrations/cal_dot_com.png",
-      actionLabel: "Manage Sync",
-      fields: [{ key: "api_key", label: "Cal.com API Key", placeholder: "Account API Key" }],
+      actionLabel: t("integrations_section.items.CAL.action_label"),
+      fields: [{ key: "api_key", label: t("integrations_section.items.CAL.fields.api_key.label"), placeholder: t("integrations_section.items.CAL.fields.api_key.placeholder") }],
     },
     {
       id: "BASEROW",
       name: "Baserow.io",
-      category: "Data Management",
-      description: "No-code relational database. Manipulate complex datasets and synchronize external tables with your workspace records.",
+      category: t("integrations_section.items.BASEROW.category"),
+      description: t("integrations_section.items.BASEROW.description"),
       icon: "/images/integrations/baserow.png",
-      actionLabel: "Manage Tables",
-      fields: [{ key: "token", label: "API Token", placeholder: "Enter Baserow Token" }],
+      actionLabel: t("integrations_section.items.BASEROW.action_label"),
+      fields: [{ key: "token", label: t("integrations_section.items.BASEROW.fields.token.label"), placeholder: t("integrations_section.items.BASEROW.fields.token.placeholder") }],
     },
   ];
 
@@ -205,7 +207,7 @@ export default function IntegrationsSection() {
     }
     const existing = integrationsData?.integrations?.find((i: any) => i.type === item.id);
     if (existing) {
-      toast({ title: "Active Session", description: `${item.name} is already operational.` });
+      toast({ title: t("integrations_section.toast_active_session_title"), description: t("integrations_section.toast_already_operational_description", { name: item.name }) });
       return;
     }
     setConnectingId(item.id);
@@ -221,7 +223,7 @@ export default function IntegrationsSection() {
     if (integration) {
       toggleMutation.mutate({ id: integration.id, status: checked ? "ACTIVE" : "PAUSED" });
     } else {
-      toast({ title: "Action Required", description: "Initial authentication required." });
+      toast({ title: t("integrations_section.toast_action_required_title"), description: t("integrations_section.toast_initial_auth_description") });
     }
   };
 
@@ -251,19 +253,19 @@ export default function IntegrationsSection() {
                 <Plug className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Integrations</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("integrations_section.title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Connect external applications to unlock your account's full potential.
+                  {t("integrations_section.subtitle")}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <Badge variant="outline" className="h-7 px-3 rounded-md border-primary/20 bg-primary/5 text-primary text-[10px] font-semibold">
-                {visibleIntegrations.length} Available
+                {t("integrations_section.available_badge", { count: visibleIntegrations.length })}
               </Badge>
               <Badge variant="outline" className="h-7 px-3 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                <Check size={10} className="mr-1" /> {connectedCount} Connected
+                <Check size={10} className="mr-1" /> {t("integrations_section.connected_badge", { count: connectedCount })}
               </Badge>
             </div>
           </div>
@@ -312,7 +314,7 @@ export default function IntegrationsSection() {
                         {item.name}
                         {connected && (
                           <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("integrations_section.active")}
                           </span>
                         )}
                       </h3>
@@ -331,7 +333,7 @@ export default function IntegrationsSection() {
                           className="data-[state=checked]:bg-primary"
                         />
                         <span className={cn("text-[11px] font-semibold", sub)}>
-                          {connected ? "On" : "Off"}
+                          {connected ? t("integrations_section.on") : t("integrations_section.off")}
                         </span>
                       </div>
                       <button
@@ -343,7 +345,7 @@ export default function IntegrationsSection() {
                             : "border-primary text-primary hover:bg-primary hover:text-white"
                         )}
                       >
-                        {connected ? "Manage" : item.actionLabel}
+                        {connected ? t("integrations_section.manage") : item.actionLabel}
                         <ArrowRight size={12} />
                       </button>
                     </div>
@@ -366,10 +368,10 @@ export default function IntegrationsSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    Connect {currentConnecting?.name}
+                    {t("integrations_section.connect_dialog_title", { name: currentConnecting?.name })}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Securely link your platform credentials.
+                    {t("integrations_section.connect_dialog_description")}
                   </DialogDescription>
                 </div>
               </div>
@@ -389,7 +391,7 @@ export default function IntegrationsSection() {
                       type="text"
                       value={formData[field.key] || ""}
                       onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                      placeholder={field.placeholder || `Enter ${field.label}...`}
+                      placeholder={field.placeholder || t("integrations_section.enter_placeholder", { label: field.label })}
                       className={inputCls}
                     />
                   </div>
@@ -399,7 +401,7 @@ export default function IntegrationsSection() {
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
               <button onClick={() => setConnectingId(null)} className={outlineBtn}>
-                Discard
+                {t("integrations_section.discard")}
               </button>
               <button
                 onClick={submitConnection}
@@ -407,7 +409,7 @@ export default function IntegrationsSection() {
                 className={primaryBtn}
               >
                 {createMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-                Authorize
+                {t("integrations_section.authorize")}
               </button>
             </div>
           </div>

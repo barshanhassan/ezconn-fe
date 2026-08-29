@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   MoreVertical,
@@ -33,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SmsCallsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -73,7 +75,7 @@ export default function SmsCallsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Deleted", description: "Twilio account disconnected." });
+      toast({ title: t("sms_calls_section.toast_deleted_title"), description: t("sms_calls_section.toast_deleted_description") });
     },
   });
 
@@ -84,13 +86,13 @@ export default function SmsCallsSection() {
   const toggleSecret = (id: number) => setShowSecret((p) => ({ ...p, [id]: !p[id] }));
 
   const handleConnect = () => {
-    toast({ title: "Connecting...", description: "Starting Twilio authentication flow." });
+    toast({ title: t("sms_calls_section.toast_connecting_title"), description: t("sms_calls_section.toast_connecting_description") });
   };
 
   const copyToken = (val: string) => {
     if (!val) return;
     navigator.clipboard.writeText(val);
-    toast({ title: "Copied", description: "Copied to clipboard." });
+    toast({ title: t("sms_calls_section.toast_copied_title"), description: t("sms_calls_section.toast_copied_description") });
   };
 
   if (isLoading) {
@@ -112,11 +114,11 @@ export default function SmsCallsSection() {
                 <img src="/images/automations/sms.svg" alt="Twilio" className="w-5 h-5" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>SMS &amp; Calls</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("sms_calls_section.title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
                   {view === "list"
-                    ? "Connect your Twilio account for SMS and Call automation."
-                    : "Integrate your Twilio account to unlock 2-Way interactive dynamic conversations"}
+                    ? t("sms_calls_section.subtitle_list")
+                    : t("sms_calls_section.subtitle_manage")}
                 </p>
               </div>
             </div>
@@ -125,10 +127,10 @@ export default function SmsCallsSection() {
               {view === "manage" && (
                 <>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add New
+                    <Plus size={12} /> {t("sms_calls_section.add_new")}
                   </button>
                   <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Back
+                    <ChevronLeft size={12} /> {t("sms_calls_section.back")}
                   </button>
                 </>
               )}
@@ -144,7 +146,7 @@ export default function SmsCallsSection() {
                     <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                       <img src="/images/automations/sms.svg" alt="Twilio" className="w-5 h-5" />
                     </div>
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>SMS &amp; Calls</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("sms_calls_section.title")}</h3>
                   </div>
                   <a
                     href="https://www.twilio.com/docs"
@@ -157,11 +159,11 @@ export default function SmsCallsSection() {
                 </div>
 
                 <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
-                  Integrate your Twilio account to unlock 2-Way interactive dynamic conversations.
+                  {t("sms_calls_section.list_description")}
                 </p>
 
                 <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
-                  Manage
+                  {t("sms_calls_section.manage")}
                 </button>
               </div>
             </div>
@@ -176,13 +178,13 @@ export default function SmsCallsSection() {
                     <img src="/images/automations/sms.svg" alt="Twilio" className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Connect your Twilio account now</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("sms_calls_section.empty_title")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Integrate this communication channel to automate conversations.
+                      {t("sms_calls_section.empty_description")}
                     </p>
                   </div>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    Connect now
+                    {t("sms_calls_section.connect_now")}
                   </button>
                 </div>
               ) : (
@@ -200,7 +202,7 @@ export default function SmsCallsSection() {
                               <img src="/images/automations/sms.svg" alt="Twilio" className="w-6 h-6" />
                             </div>
                             <div className="min-w-0">
-                              <p className={cn("text-[13px] font-black truncate", text)}>{account.name || "Twilio Account"}</p>
+                              <p className={cn("text-[13px] font-black truncate", text)}>{account.name || t("sms_calls_section.twilio_account_fallback")}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 {account.phone_number && (
                                   <Badge variant="outline" className="h-5 px-2 rounded-md border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400 text-[10px] font-semibold">
@@ -208,7 +210,7 @@ export default function SmsCallsSection() {
                                   </Badge>
                                 )}
                                 <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("sms_calls_section.active")}
                                 </span>
                               </div>
                             </div>
@@ -216,10 +218,10 @@ export default function SmsCallsSection() {
 
                           <div className="flex items-center gap-2 shrink-0">
                             <button
-                              onClick={() => toast({ title: "Syncing...", description: "Account data refreshed." })}
+                              onClick={() => toast({ title: t("sms_calls_section.toast_syncing_title"), description: t("sms_calls_section.toast_syncing_description") })}
                               className={outlineBtn}
                             >
-                              <RefreshCw size={12} /> Sync
+                              <RefreshCw size={12} /> {t("sms_calls_section.sync")}
                             </button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -232,7 +234,7 @@ export default function SmsCallsSection() {
                                   onClick={() => { setAccountToDelete(account); setShowDeleteConfirm(true); }}
                                   className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                                 >
-                                  <Trash2 size={12} /> Delete
+                                  <Trash2 size={12} /> {t("sms_calls_section.delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -242,7 +244,7 @@ export default function SmsCallsSection() {
                         {/* Credentials */}
                         <div className="px-6 py-4 space-y-3">
                           <div className="space-y-2">
-                            <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>Account SID</label>
+                            <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>{t("sms_calls_section.account_sid")}</label>
                             <div className={cn("flex items-center gap-2 px-3 h-11 rounded-xl border", card, border)}>
                               <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>
                                 {sidVisible ? sid : maskedSid}
@@ -264,7 +266,7 @@ export default function SmsCallsSection() {
 
                           {account.phone_number && (
                             <div className="space-y-2">
-                              <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>Phone Number</label>
+                              <label className={cn("text-[11px] font-semibold pl-1 block", sub)}>{t("sms_calls_section.phone_number")}</label>
                               <div className={cn("flex items-center gap-2 px-3 h-11 rounded-xl border", card, border)}>
                                 <Phone size={14} className="text-red-500 shrink-0" />
                                 <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>{account.phone_number}</code>
@@ -297,19 +299,19 @@ export default function SmsCallsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Twilio Account?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("sms_calls_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{accountToDelete?.name || accountToDelete?.phone_number}</span> will be permanently disconnected.
+                  <span className="text-rose-500 font-black">{accountToDelete?.name || accountToDelete?.phone_number}</span> {t("sms_calls_section.delete_dialog_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("sms_calls_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => { deleteMutation.mutate(accountToDelete.id); setShowDeleteConfirm(false); }}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("sms_calls_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

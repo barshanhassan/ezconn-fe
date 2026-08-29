@@ -22,6 +22,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES } from "@/lib/supportedLanguages";
 
 const AgencyNotificationsSettings = () => {
   const { mode } = useTheme();
@@ -32,7 +33,7 @@ const AgencyNotificationsSettings = () => {
   const agencyId = userInfo.modelable_id;
 
   const [notifEmail, setNotifEmail] = useState("");
-  const [notifLanguage, setNotifLanguage] = useState("en-US");
+  const [notifLanguage, setNotifLanguage] = useState("en");
 
   const { data: agencyResponse } = useQuery({
     queryKey: [`/api/organizations/${agencyId}`],
@@ -69,7 +70,7 @@ const AgencyNotificationsSettings = () => {
   useEffect(() => {
     if (agencyResponse?.agency) {
       setNotifEmail(agencyResponse.agency.notification_email || "");
-      setNotifLanguage(agencyResponse.agency.notification_language || "en-US");
+      setNotifLanguage(agencyResponse.agency.notification_language || "en");
     }
   }, [agencyResponse]);
 
@@ -87,11 +88,7 @@ const AgencyNotificationsSettings = () => {
     }
   });
 
-  const LANGUAGES = [
-    { code: "en-US", label: t("common.languages.en"), flag: "us" },
-    { code: "es-ES", label: t("common.languages.es"), flag: "es" },
-    { code: "pt-BR", label: t("common.languages.pt"), flag: "br" },
-  ];
+  const LANGUAGES = SUPPORTED_LANGUAGES;
 
   const selectedLang = LANGUAGES.find(l => l.code === notifLanguage) || LANGUAGES[0];
   const dark = mode === 'dark';
@@ -118,12 +115,23 @@ const AgencyNotificationsSettings = () => {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
+          disabled={updateMutation.isPending}
+          className={cn(
+            "px-8 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shadow-lg",
+            "bg-primary text-white hover:bg-primary/90 shadow-primary/20 active:scale-95 disabled:opacity-50"
+          )}>
+          {updateMutation.isPending ? t("common.saving") : t("common.save")}
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden p-8">
         <div className={cn("rounded-2xl border overflow-hidden shadow-sm h-fit max-h-full", card, border)}>
-          <div className="p-8 max-w-[550px] space-y-8">
-            
+          <div className="p-8 w-full space-y-8">
+
+            {/* Notification Email + Language — one row, two columns. */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Notification Email Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
@@ -132,22 +140,20 @@ const AgencyNotificationsSettings = () => {
                   {t("agency.settings.notifications.email")}
                 </label>
               </div>
-              
+
               <div className="space-y-2">
-                <Input 
+                <Input
                   value={notifEmail}
                   onChange={(e) => setNotifEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className={cn("text-[13px] h-11 px-4 rounded-xl transition-all border shadow-none focus-visible:ring-primary/20 focus-visible:border-primary/50", 
-                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                  className={cn("text-[13px] h-11 px-4 rounded-xl transition-all border shadow-none focus-visible:ring-primary/20 focus-visible:border-primary/50",
+                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
                 />
                 <p className={cn("text-[11px] font-bold leading-relaxed", sub)}>
                   {t("agency.settings.notifications.emailDesc")}
                 </p>
               </div>
             </div>
-
-            <div className={cn("h-px w-full", dark ? "bg-slate-800/50" : "bg-slate-100")}></div>
 
             {/* Notification Language Section */}
             <div className="space-y-4">
@@ -164,17 +170,25 @@ const AgencyNotificationsSettings = () => {
                     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
                     <SelectValue placeholder={t("agency.settings.notifications.selectLanguage")}>
                       <div className="flex items-center gap-2">
-                        <img src={`https://flagcdn.com/w20/${selectedLang.flag}.png`} width="20" alt={selectedLang.flag} className="rounded-sm" />
+                        {selectedLang.flag ? (
+                          <img src={`https://flagcdn.com/w20/${selectedLang.flag}.png`} width="20" alt={selectedLang.flag} className="rounded-sm" />
+                        ) : (
+                          <Globe size={14} className={sub} />
+                        )}
                         <span className="font-bold">{selectedLang.label}</span>
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className={cn("border shadow-2xl rounded-xl overflow-hidden", 
+                  <SelectContent className={cn("border shadow-2xl rounded-xl overflow-hidden max-h-72",
                     dark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}>
                     {LANGUAGES.map(lang => (
                       <SelectItem key={lang.code} value={lang.code} className="text-[13px] font-bold focus:bg-primary focus:text-primary-foreground">
                         <div className="flex items-center gap-2">
-                          <img src={`https://flagcdn.com/w20/${lang.flag}.png`} width="20" alt={lang.flag} className="rounded-sm" />
+                          {lang.flag ? (
+                            <img src={`https://flagcdn.com/w20/${lang.flag}.png`} width="20" alt={lang.flag} className="rounded-sm" />
+                          ) : (
+                            <Globe size={14} className={sub} />
+                          )}
                           <span>{lang.label}</span>
                         </div>
                       </SelectItem>
@@ -186,18 +200,6 @@ const AgencyNotificationsSettings = () => {
                 </p>
               </div>
             </div>
-
-            {/* Action Button */}
-            <div className="pt-4">
-              <button 
-                onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
-                disabled={updateMutation.isPending}
-                className={cn(
-                  "px-10 py-3 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all shadow-lg",
-                  "bg-primary text-white hover:bg-primary/90 shadow-primary/20 active:scale-95 disabled:opacity-50"
-                )}>
-                {updateMutation.isPending ? t("common.saving") : t("common.save")}
-              </button>
             </div>
 
           </div>

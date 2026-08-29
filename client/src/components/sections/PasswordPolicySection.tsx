@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -34,6 +35,7 @@ const PasswordPolicySection = () => {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [settings, setSettings] = React.useState<PasswordPolicySettings>(DEFAULT_SETTINGS);
 
   // ── Design tokens ─────────────────────────────────────────
@@ -70,10 +72,10 @@ const PasswordPolicySection = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/password-policy"] });
-      toast({ title: "Settings Saved", description: "Password policy settings have been updated." });
+      toast({ title: t("password_policy_section.settings_saved"), description: t("password_policy_section.settings_updated") });
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("password_policy_section.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -124,9 +126,9 @@ const PasswordPolicySection = () => {
               <ShieldCheck className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Password Policy</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("password_policy_section.title")}</h1>
               <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                Configure password policy settings for your user accounts.
+                {t("password_policy_section.subtitle")}
               </p>
             </div>
           </div>
@@ -136,7 +138,7 @@ const PasswordPolicySection = () => {
             className={primaryBtn}
           >
             {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
-            Save
+            {t("password_policy_section.save")}
           </button>
         </div>
 
@@ -145,9 +147,9 @@ const PasswordPolicySection = () => {
           {/* Enable toggle */}
           <div className={cn("flex items-center justify-between p-5 rounded-[1.5rem] border", softBg, softBorder)}>
             <div>
-              <p className={cn("text-[13px] font-black", text)}>Enable Password Policy</p>
+              <p className={cn("text-[13px] font-black", text)}>{t("password_policy_section.enable_title")}</p>
               <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                Enforce password rules across all user accounts.
+                {t("password_policy_section.enable_description")}
               </p>
             </div>
             <Switch
@@ -159,20 +161,20 @@ const PasswordPolicySection = () => {
 
           {/* Settings */}
           <div className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}>
-            <Field label="Policy Name" tip="Provide a unique name for your password policy.">
+            <Field label={t("password_policy_section.policy_name_label")} tip={t("password_policy_section.policy_name_tip")}>
               <input
                 value={settings.policyName}
                 onChange={(e) => setSettings((prev) => ({ ...prev, policyName: e.target.value }))}
                 disabled={!settings.policyEnabled}
-                placeholder="e.g. Corporate Standard Policy"
+                placeholder={t("password_policy_section.policy_name_placeholder")}
                 className={inputCls}
               />
             </Field>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <Field
-                label="Expiration (Days)"
-                tip="Passwords expire after this many days. Default is 90 days."
+                label={t("password_policy_section.expiration_label")}
+                tip={t("password_policy_section.expiration_tip")}
               >
                 <input
                   type="number"
@@ -185,8 +187,8 @@ const PasswordPolicySection = () => {
               </Field>
 
               <Field
-                label="Reuse Count"
-                tip="How many times a previous password can be reused before it is rejected."
+                label={t("password_policy_section.reuse_count_label")}
+                tip={t("password_policy_section.reuse_count_tip")}
               >
                 <input
                   type="number"
@@ -199,8 +201,8 @@ const PasswordPolicySection = () => {
               </Field>
 
               <Field
-                label="Lockout Threshold"
-                tip="Number of failed login attempts allowed before the account is locked."
+                label={t("password_policy_section.lockout_threshold_label")}
+                tip={t("password_policy_section.lockout_threshold_tip")}
               >
                 <input
                   type="number"

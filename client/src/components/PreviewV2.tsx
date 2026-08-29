@@ -3,6 +3,7 @@ import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, Fi
 import { Forward, Briefcase, Shapes, MapPin, Mail, Globe, MessageSquare } from 'lucide-react';
 import { MdMic, MdAttachFile, MdSend, MdDoneAll } from 'react-icons/md';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 type Mode = "chat" | "profile";
 
@@ -61,7 +62,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   mode = "chat",
   headerText = "",
   bodyText = "",
-  placeholderText = "Start typing to see your template preview...",
+  placeholderText,
   footerText = "",
   selectedMediaFile = "",
   templateButtons = [],
@@ -73,8 +74,8 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   onCardChange,
   showPlaceholderMessageInTemplate = true,
   showMobile = true,
-  profileName = "Your Business Name",
-  profileSubText = "Business Account",
+  profileName,
+  profileSubText,
   profilePfpUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='50' fill='%23DFE5E7'/%3E%3Cg fill='white'%3E%3Ccircle cx='50' cy='40' r='15'/%3E%3Cpath d='M50,60 C30,60 20,80 20,100 L80,100 C80,80 70,60 50,60 Z'/%3E%3C/g%3E%3C/svg%3E",
   profilePhoneNumber = "",
   profileDescription = "",
@@ -86,6 +87,10 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   showTopBar = true,
   showBottomBar = true,
 }) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholderText = placeholderText ?? t("preview_v2.placeholder_text_default");
+  const resolvedProfileName = profileName ?? t("preview_v2.profile_name_default");
+  const resolvedProfileSubText = profileSubText ?? t("preview_v2.profile_sub_text_default");
   const containerRef = useRef<HTMLDivElement>(null);
   const scaleWrapperRef = useRef<HTMLDivElement>(null);
   const chatAreaRef = useRef<HTMLDivElement>(null);
@@ -227,7 +232,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       emoji = `📋 ${flowEmoji}`;
     }
 
-    const text = button.buttonText || "Button";
+    const text = button.buttonText || t("preview_v2.button_default");
     return emoji ? `${emoji} ${text}` : text;
   };
 
@@ -304,10 +309,10 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
             <div className="flex items-center">
               <ArrowLeft size={24} color="#111B21" />
-              <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
+              <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt={t("preview_v2.profile_picture_alt")} />
               <div className="flex flex-col">
-                <span className="text-[19px] font-semibold truncate max-w-[230px] text-[#111B21]">{profileName}</span>
-                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px] text-[#111B21]">{profileSubText}</span>
+                <span className="text-[19px] font-semibold truncate max-w-[230px] text-[#111B21]">{resolvedProfileName}</span>
+                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px] text-[#111B21]">{resolvedProfileSubText}</span>
               </div>
             </div>
             <MoreVertical size={24} />
@@ -327,13 +332,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                         {typeof selectedMediaFile === 'string' ? (
                           <img
                             src={selectedMediaFile}
-                            alt="Media preview"
+                            alt={t("preview_v2.media_preview_alt")}
                             className="max-w-full h-auto rounded max-h-[192px] object-cover"
                           />
                         ) : selectedMediaFile.type.startsWith('image/') ? (
                           <img
                             src={URL.createObjectURL(selectedMediaFile)}
-                            alt="Media preview"
+                            alt={t("preview_v2.media_preview_alt")}
                             className="max-w-full h-auto rounded max-h-[192px] object-cover"
                           />
                         ) : selectedMediaFile.type.startsWith('video/') ? (
@@ -391,7 +396,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
                     {!hasContent && (
                       <p className="text-[17.5px] text-[#999999] italic">
-                        {placeholderText}
+                        {resolvedPlaceholderText}
                       </p>
                     )}
 
@@ -417,7 +422,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                             <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{ borderTopWidth: "2px", borderTopColor: "#e7e7e7ff" }}></div>
                             <div className="px-[12px] py-[8px] text-center">
                               <Play size={14} className="text-[#0064FF]" />
-                              <p className="text-[18px] text-[#0064FF] font-normal">See all options</p>
+                              <p className="text-[18px] text-[#0064FF] font-normal">{t("preview_v2.see_all_options")}</p>
                             </div>
                           </>
                         )}
@@ -438,7 +443,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                             {card?.mediaFormat === "VIDEO" ? (
                               <video src={cardMediaUrl} className="w-full h-[140px] object-cover" controls />
                             ) : (
-                              <img src={cardMediaUrl} alt="Card" className="w-full h-[140px] object-cover" />
+                              <img src={cardMediaUrl} alt={t("preview_v2.card_alt")} className="w-full h-[140px] object-cover" />
                             )}
                           </div>
                         )}
@@ -527,7 +532,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                       <>
                         {command.commandText.trim() !== "" && (
                           <div key={index} className="flex items-start p-[8px]">
-                            <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
+                            <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt={t("preview_v2.profile_picture_alt")} />
                             <div className="flex flex-col">
                               <span className="text-[16px] font-semibold text-[#111B21] break-all">{command.commandText}</span>
                               <span className="text-[14.5px] text-[#666666] break-all">{command.commandDescription}</span>
@@ -543,7 +548,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 <Smile size={25} className="text-gray-500" />
                 <input
                   type="text"
-                  placeholder={commands.length > 0 && commands.some(commands => commands.commandText.trim() !== "") ? "\\" : "Message"}
+                  placeholder={commands.length > 0 && commands.some(commands => commands.commandText.trim() !== "") ? "\\" : t("preview_v2.message_placeholder")}
                   className={`flex-1 bg-transparent outline-none px-[10px] placeholder:text-[19px] ${commands.length > 0 ? 'placeholder:text-[#111B21]' : 'placeholder:text-gray-500'}`}
                   disabled
                 />
@@ -563,17 +568,17 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           <div className={`pb-[30px] w-full h-full bg-white -mt-px px-[16px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
             <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
               <ArrowLeft size={24} />
-              <img src={profilePfpUrl} className="w-[130px] h-[130px] rounded-full object-cover" alt="Profile" />
+              <img src={profilePfpUrl} className="w-[130px] h-[130px] rounded-full object-cover" alt={t("preview_v2.profile_alt")} />
               <MoreVertical size={24} />
             </div>
 
             {/* Profile Picture, Name, ~Phone Number, Share Button */}
             <div className="flex flex-col items-center text-center pt-[10px] mb-[2px]">
-              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7 break-all text-[#111B21]">{profileName}</h2>
+              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7 break-all text-[#111B21]">{resolvedProfileName}</h2>
               {profilePhoneNumber && <p className="mt-[4px] text-[20px] text-gray-500 max-w-[300px] break-all">{profilePhoneNumber}</p>}
               <div className="mt-[24px] py-[6px] px-[44px] flex flex-col items-center justify-center border rounded-[10px] shadow-xs border-[#0000001A]">
                 <Forward size={24} color="#36AD60" />
-                <h3 className='font-medium text-[#111B21]'>Share</h3>
+                <h3 className='font-medium text-[#111B21]'>{t("preview_v2.share")}</h3>
               </div>
             </div>
 
@@ -636,9 +641,9 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   }}
                 />
                 <h3 className="text-gray-500 font-semibold mb-[4px]">
-                  {profileAbout ? "About" : ""}
-                  {profileAbout && profilePhoneNumber ? " and phone number" : ""}
-                  {profilePhoneNumber && !profileAbout ? "Phone number" : ""}
+                  {profileAbout ? t("preview_v2.about") : ""}
+                  {profileAbout && profilePhoneNumber ? t("preview_v2.and_phone_number") : ""}
+                  {profilePhoneNumber && !profileAbout ? t("preview_v2.phone_number") : ""}
                 </h3>
                 <div>
                   {profileAbout && (

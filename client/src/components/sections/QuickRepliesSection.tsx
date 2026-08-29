@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bot,
   Plus,
@@ -73,6 +74,7 @@ interface CustomFieldOption {
 }
 
 export default function QuickRepliesSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -112,7 +114,7 @@ export default function QuickRepliesSection() {
         m.name ||
         [m.first_name, m.last_name].filter(Boolean).join(" ") ||
         m.email ||
-        "Unknown",
+        t("quick_replies_section.unknown_member"),
       email: m.email ?? "",
     }));
   }, [membersData]);
@@ -160,21 +162,21 @@ export default function QuickRepliesSection() {
       (await apiRequest("POST", "/api/quick-response/group", payload)).json(),
     onSuccess: () => invalidateQR(),
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("quick_replies_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
   const messageMutation = useMutation({
     mutationFn: async (payload: any) =>
       (await apiRequest("POST", "/api/quick-response/message", payload)).json(),
     onSuccess: () => invalidateQR(),
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("quick_replies_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
   const deleteMutation = useMutation({
     mutationFn: async (id: string) =>
       (await apiRequest("DELETE", `/api/quick-response/${id}`)).json(),
     onSuccess: () => invalidateQR(),
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("quick_replies_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   // ── View / form state ──────────────────────────────────────────
@@ -286,7 +288,9 @@ export default function QuickRepliesSection() {
     groupMutation.mutate(payload, {
       onSuccess: () => {
         toast({
-          title: collectionForm.id ? "Collection updated" : "Collection created",
+          title: collectionForm.id
+            ? t("quick_replies_section.toast_collection_updated")
+            : t("quick_replies_section.toast_collection_created"),
         });
         if (onDone) onDone();
         else setView("list");
@@ -337,15 +341,15 @@ export default function QuickRepliesSection() {
   const handleSubmitMessage = () => {
     if (!currentCollectionId) return;
     if (!messageForm.title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("quick_replies_section.toast_title_required"), variant: "destructive" });
       return;
     }
     if (messageForm.type === "text" && !messageForm.content.trim()) {
-      toast({ title: "Message text required", variant: "destructive" });
+      toast({ title: t("quick_replies_section.toast_message_text_required"), variant: "destructive" });
       return;
     }
     if (messageForm.type === "media" && messageForm.media.length === 0) {
-      toast({ title: "Add at least one media item", variant: "destructive" });
+      toast({ title: t("quick_replies_section.toast_add_media_required"), variant: "destructive" });
       return;
     }
     const payload: any = {
@@ -360,7 +364,9 @@ export default function QuickRepliesSection() {
     messageMutation.mutate(payload, {
       onSuccess: () => {
         toast({
-          title: messageForm.id ? "Message updated" : "Message created",
+          title: messageForm.id
+            ? t("quick_replies_section.toast_message_updated")
+            : t("quick_replies_section.toast_message_created"),
         });
         setView("collection_detail");
         resetMessageForm();
@@ -372,7 +378,7 @@ export default function QuickRepliesSection() {
     if (!currentCollectionId) return;
     deleteMutation.mutate(currentCollectionId, {
       onSuccess: () => {
-        toast({ title: "Collection deleted" });
+        toast({ title: t("quick_replies_section.toast_collection_deleted") });
         setCurrentCollectionId(null);
         setIsDeleteModalOpen(false);
         setView("list");
@@ -382,7 +388,7 @@ export default function QuickRepliesSection() {
 
   const handleDeleteMessage = (id: string) => {
     deleteMutation.mutate(id, {
-      onSuccess: () => toast({ title: "Message deleted" }),
+      onSuccess: () => toast({ title: t("quick_replies_section.toast_message_deleted") }),
     });
   };
 
@@ -396,7 +402,7 @@ export default function QuickRepliesSection() {
     const id = messageForm.mediaInput.trim();
     if (!id) return;
     if (messageForm.media.some((m) => m.gallery_media_id === id)) {
-      toast({ title: "Already added", variant: "destructive" });
+      toast({ title: t("quick_replies_section.toast_already_added"), variant: "destructive" });
       return;
     }
     setMessageForm((p) => ({
@@ -423,11 +429,11 @@ export default function QuickRepliesSection() {
   const headerTitle =
     view === "create_collection"
       ? collectionForm.id
-        ? "Edit Collection"
-        : "Create Collection"
+        ? t("quick_replies_section.header_edit_collection")
+        : t("quick_replies_section.header_create_collection")
       : view === "collection_detail" || view === "create_message"
-        ? currentCollection?.name || "Collection"
-        : "Quick Replies";
+        ? currentCollection?.name || t("quick_replies_section.header_collection_fallback")
+        : t("quick_replies_section.header_quick_replies");
 
   const RadioRow = ({
     value,
@@ -473,12 +479,12 @@ export default function QuickRepliesSection() {
       <div className="flex items-center gap-2">
         <Users size={14} className="text-primary" />
         <span className={cn("text-[12px] font-semibold", text)}>
-          Pick agents ({collectionForm.bindings.length} selected)
+          {t("quick_replies_section.agent_picker_title", { count: collectionForm.bindings.length })}
         </span>
       </div>
       {members.length === 0 ? (
         <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-          No other agents in this workspace yet.
+          {t("quick_replies_section.agent_picker_empty")}
         </p>
       ) : (
         <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
@@ -531,7 +537,7 @@ export default function QuickRepliesSection() {
                   {headerTitle}
                 </h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Create and organize quick replies for live chats with leads or contacts.
+                  {t("quick_replies_section.header_subtitle")}
                 </p>
               </div>
             </div>
@@ -539,23 +545,23 @@ export default function QuickRepliesSection() {
             <div className="flex items-center gap-2 shrink-0">
               {view === "list" && (
                 <button onClick={handleCreateCollectionClick} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add Collection
+                  <Plus size={12} /> {t("quick_replies_section.add_collection")}
                 </button>
               )}
               {view === "create_collection" && (
                 <button onClick={handleCancelCreateCollection} className={outlineBtn}>
-                  <ChevronLeft size={12} /> Back
+                  <ChevronLeft size={12} /> {t("quick_replies_section.back")}
                 </button>
               )}
               {(view === "collection_detail" || view === "create_message") && (
                 <>
                   {view === "collection_detail" && (
                     <button onClick={handleCreateMessageClick} className={primaryOutlineBtn}>
-                      <Plus size={12} /> Add Message
+                      <Plus size={12} /> {t("quick_replies_section.add_message")}
                     </button>
                   )}
                   <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Collections
+                    <ChevronLeft size={12} /> {t("quick_replies_section.collections")}
                   </button>
                 </>
               )}
@@ -567,8 +573,8 @@ export default function QuickRepliesSection() {
             <div className="p-8">
               <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
                 <div className={cn("px-6 py-4 border-b flex items-center justify-between", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                  <span className={cn("text-[11px] font-semibold", sub)}>Collection Name</span>
-                  <span className={cn("text-[11px] font-semibold", sub)}>Action</span>
+                  <span className={cn("text-[11px] font-semibold", sub)}>{t("quick_replies_section.list_collection_name")}</span>
+                  <span className={cn("text-[11px] font-semibold", sub)}>{t("quick_replies_section.list_action")}</span>
                 </div>
                 {isLoading ? (
                   <div className="py-12 flex justify-center">
@@ -580,9 +586,9 @@ export default function QuickRepliesSection() {
                       <Bot className="w-7 h-7 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className={cn("text-[13px] font-black", text)}>No collections found</h3>
+                      <h3 className={cn("text-[13px] font-black", text)}>{t("quick_replies_section.no_collections_title")}</h3>
                       <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                        Create a new one to get started.
+                        {t("quick_replies_section.no_collections_desc")}
                       </p>
                     </div>
                   </div>
@@ -607,10 +613,10 @@ export default function QuickRepliesSection() {
                           </span>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={cn("text-[10px] font-medium opacity-60", sub)}>
-                              {collection.share}
+                              {t(`quick_replies_section.share_${collection.share}`)}
                             </span>
                             <span className={cn("text-[10px] font-medium opacity-60", sub)}>
-                              · {collection.messages.length} message{collection.messages.length === 1 ? "" : "s"}
+                              · {t("quick_replies_section.message_count", { count: collection.messages.length })}
                             </span>
                           </div>
                         </div>
@@ -624,13 +630,13 @@ export default function QuickRepliesSection() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
                             <DropdownMenuItem onClick={() => openEditModal(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
-                              <Edit2 size={13} /> Edit
+                              <Edit2 size={13} /> {t("quick_replies_section.edit_action")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openCollectionDetail(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
-                              <Bot size={13} /> Open collection
+                              <Bot size={13} /> {t("quick_replies_section.open_collection_action")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openDeleteModal(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
-                              <Trash2 size={13} /> Delete
+                              <Trash2 size={13} /> {t("quick_replies_section.delete_action")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -648,44 +654,44 @@ export default function QuickRepliesSection() {
               <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
                 <div className="max-w-xl space-y-6">
                   <div className="space-y-2">
-                    <label className={labelCls}>Collection Name</label>
+                    <label className={labelCls}>{t("quick_replies_section.create_collection_name_label")}</label>
                     <input
                       value={collectionForm.name}
                       onChange={(e) => {
                         setCollectionForm((p) => ({ ...p, name: e.target.value.slice(0, 80) }));
                         if (e.target.value.trim()) setShowError(false);
                       }}
-                      placeholder="Enter collection name"
+                      placeholder={t("quick_replies_section.create_collection_name_placeholder")}
                       className={cn(inputCls, showError && "!border-rose-500 focus:!ring-rose-500/30")}
                     />
                     {showError && (
-                      <p className="text-[11px] font-bold text-rose-500">Enter collection name.</p>
+                      <p className="text-[11px] font-bold text-rose-500">{t("quick_replies_section.create_collection_name_error")}</p>
                     )}
                   </div>
 
                   <div className="space-y-3">
-                    <label className={labelCls}>Share this collection with</label>
+                    <label className={labelCls}>{t("quick_replies_section.share_with_label")}</label>
                     <div className="space-y-2">
                       <RadioRow
                         value="private"
                         current={collectionForm.share}
                         onSelect={() => setCollectionForm((p) => ({ ...p, share: "private" }))}
-                        label="Private"
-                        sublabel="Only you can see."
+                        label={t("quick_replies_section.share_private")}
+                        sublabel={t("quick_replies_section.share_private_desc")}
                       />
                       <RadioRow
                         value="public"
                         current={collectionForm.share}
                         onSelect={() => setCollectionForm((p) => ({ ...p, share: "public" }))}
-                        label="Public"
-                        sublabel="All agents can see."
+                        label={t("quick_replies_section.share_public")}
+                        sublabel={t("quick_replies_section.share_public_desc")}
                       />
                       <RadioRow
                         value="users"
                         current={collectionForm.share}
                         onSelect={() => setCollectionForm((p) => ({ ...p, share: "users" }))}
-                        label="Specific agents"
-                        sublabel="Share with picked agents only."
+                        label={t("quick_replies_section.share_users")}
+                        sublabel={t("quick_replies_section.share_users_desc")}
                       />
                     </div>
                     {collectionForm.share === "users" && <AgentPicker />}
@@ -693,14 +699,14 @@ export default function QuickRepliesSection() {
                 </div>
 
                 <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
-                  <button onClick={handleCancelCreateCollection} className={outlineBtn}>Cancel</button>
+                  <button onClick={handleCancelCreateCollection} className={outlineBtn}>{t("quick_replies_section.cancel")}</button>
                   <button
                     onClick={() => handleSubmitCollection()}
                     disabled={groupMutation.isPending}
                     className={primaryBtn}
                   >
                     {groupMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                    <Plus size={12} /> Save
+                    <Plus size={12} /> {t("quick_replies_section.save")}
                   </button>
                 </div>
               </div>
@@ -717,9 +723,9 @@ export default function QuickRepliesSection() {
                       <MessageSquare className="w-7 h-7 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className={cn("text-[13px] font-black", text)}>No messages yet</h3>
+                      <h3 className={cn("text-[13px] font-black", text)}>{t("quick_replies_section.no_messages_title")}</h3>
                       <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                        Add a canned message to this collection.
+                        {t("quick_replies_section.no_messages_desc")}
                       </p>
                     </div>
                   </div>
@@ -743,7 +749,7 @@ export default function QuickRepliesSection() {
                         <div className="min-w-0">
                           <span className={cn("text-[13px] font-black", text)}>{message.title}</span>
                           <p className={cn("text-[11px] font-medium opacity-60 truncate max-w-md", sub)}>
-                            {message.content || `${message.mediaList.length} media`}
+                            {message.content || t("quick_replies_section.media_summary", { count: message.mediaList.length })}
                           </p>
                         </div>
                       </button>
@@ -755,13 +761,13 @@ export default function QuickRepliesSection() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
                           <DropdownMenuItem onClick={() => openEditMessage(message)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
-                            <Edit2 size={13} /> Edit
+                            <Edit2 size={13} /> {t("quick_replies_section.edit_action")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDeleteMessage(message.id)}
                             className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
                           >
-                            <Trash2 size={13} /> Delete
+                            <Trash2 size={13} /> {t("quick_replies_section.delete_action")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -778,9 +784,9 @@ export default function QuickRepliesSection() {
               <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className={labelCls}>Message Title</label>
+                    <label className={labelCls}>{t("quick_replies_section.message_title_label")}</label>
                     <input
-                      placeholder="Enter message title"
+                      placeholder={t("quick_replies_section.message_title_placeholder")}
                       value={messageForm.title}
                       onChange={(e) => setMessageForm((p) => ({ ...p, title: e.target.value.slice(0, 80) }))}
                       className={inputCls}
@@ -788,28 +794,28 @@ export default function QuickRepliesSection() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className={labelCls}>Message Type</label>
+                    <label className={labelCls}>{t("quick_replies_section.message_type_label")}</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-md">
                       <RadioRow
                         value="text"
                         current={messageForm.type}
                         onSelect={() => setMessageForm((p) => ({ ...p, type: "text" }))}
-                        label="Text message"
+                        label={t("quick_replies_section.message_type_text")}
                       />
                       <RadioRow
                         value="media"
                         current={messageForm.type}
                         onSelect={() => setMessageForm((p) => ({ ...p, type: "media" }))}
-                        label="Media message"
+                        label={t("quick_replies_section.message_type_media")}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className={labelCls}>Response Text</label>
+                    <label className={labelCls}>{t("quick_replies_section.response_text_label")}</label>
                     <div className="relative">
                       <textarea
-                        placeholder="Type message..."
+                        placeholder={t("quick_replies_section.response_text_placeholder")}
                         rows={6}
                         value={messageForm.content}
                         onChange={(e) => setMessageForm((p) => ({ ...p, content: e.target.value.slice(0, 2000) }))}
@@ -818,7 +824,7 @@ export default function QuickRepliesSection() {
                       <button
                         type="button"
                         className={cn("absolute bottom-3 right-3 transition-colors", sub, "hover:text-primary")}
-                        title="Emoji"
+                        title={t("quick_replies_section.emoji_title")}
                       >
                         <Smile size={18} />
                       </button>
@@ -829,7 +835,7 @@ export default function QuickRepliesSection() {
                         onChange={(e) => insertField(e.target.value)}
                         className={cn(selectCls, "h-9 max-w-[240px] text-[11px]")}
                       >
-                        <option value="">Insert field…</option>
+                        <option value="">{t("quick_replies_section.insert_field_placeholder")}</option>
                         <option value="first_name">{`{{first_name}}`}</option>
                         <option value="last_name">{`{{last_name}}`}</option>
                         <option value="email">{`{{email}}`}</option>
@@ -840,7 +846,7 @@ export default function QuickRepliesSection() {
                         ))}
                       </select>
                       <span className="text-[11px] font-semibold text-primary">
-                        {2000 - messageForm.content.length} remaining
+                        {t("quick_replies_section.chars_remaining", { count: 2000 - messageForm.content.length })}
                       </span>
                     </div>
                   </div>
@@ -848,20 +854,20 @@ export default function QuickRepliesSection() {
                   {messageForm.type === "media" && (
                     <div className={cn("rounded-xl border p-4 space-y-3", softBg, softBorder)}>
                       <div>
-                        <p className={cn("text-[12px] font-black", text)}>Attached media</p>
+                        <p className={cn("text-[12px] font-black", text)}>{t("quick_replies_section.attached_media_title")}</p>
                         <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                          Paste a Gallery media ID — find it in Media Gallery. Replyagent supports image, document, video, audio.
+                          {t("quick_replies_section.attached_media_desc")}
                         </p>
                       </div>
                       <div className="flex gap-2">
                         <input
-                          placeholder="Gallery media ID"
+                          placeholder={t("quick_replies_section.media_id_placeholder")}
                           value={messageForm.mediaInput}
                           onChange={(e) => setMessageForm((p) => ({ ...p, mediaInput: e.target.value }))}
                           className={cn(inputCls, "flex-1 font-mono text-[12px]")}
                         />
                         <button onClick={addMediaId} className={primaryOutlineBtn} type="button">
-                          <Plus size={12} /> Add
+                          <Plus size={12} /> {t("quick_replies_section.add_button")}
                         </button>
                       </div>
                       {messageForm.media.length > 0 && (
@@ -895,7 +901,7 @@ export default function QuickRepliesSection() {
                     }}
                     className={outlineBtn}
                   >
-                    Cancel
+                    {t("quick_replies_section.cancel")}
                   </button>
                   <button
                     onClick={handleSubmitMessage}
@@ -903,7 +909,7 @@ export default function QuickRepliesSection() {
                     className={primaryBtn}
                   >
                     {messageMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                    <Plus size={12} /> {messageForm.id ? "Save" : "Add"}
+                    <Plus size={12} /> {messageForm.id ? t("quick_replies_section.save") : t("quick_replies_section.add_button")}
                   </button>
                 </div>
               </div>
@@ -931,10 +937,10 @@ export default function QuickRepliesSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    Edit Collection
+                    {t("quick_replies_section.header_edit_collection")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Update name, sharing and agents.
+                    {t("quick_replies_section.edit_collection_modal_desc")}
                   </DialogDescription>
                 </div>
               </div>
@@ -942,16 +948,16 @@ export default function QuickRepliesSection() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className={labelCls}>Collection Name</label>
+                <label className={labelCls}>{t("quick_replies_section.create_collection_name_label")}</label>
                 <input
                   value={collectionForm.name}
                   onChange={(e) => setCollectionForm((p) => ({ ...p, name: e.target.value.slice(0, 80) }))}
-                  placeholder="Enter collection name"
+                  placeholder={t("quick_replies_section.create_collection_name_placeholder")}
                   className={inputCls}
                 />
               </div>
               <div className="space-y-2">
-                <label className={labelCls}>Sharing</label>
+                <label className={labelCls}>{t("quick_replies_section.sharing_label")}</label>
                 <select
                   value={collectionForm.share}
                   onChange={(e) =>
@@ -959,9 +965,9 @@ export default function QuickRepliesSection() {
                   }
                   className={selectCls}
                 >
-                  <option value="private">Private — only you</option>
-                  <option value="public">Public — all agents</option>
-                  <option value="users">Specific agents</option>
+                  <option value="private">{t("quick_replies_section.share_private_full")}</option>
+                  <option value="public">{t("quick_replies_section.share_public_full")}</option>
+                  <option value="users">{t("quick_replies_section.share_users")}</option>
                 </select>
               </div>
               {collectionForm.share === "users" && <AgentPicker />}
@@ -975,7 +981,7 @@ export default function QuickRepliesSection() {
                 }}
                 className={outlineBtn}
               >
-                Cancel
+                {t("quick_replies_section.cancel")}
               </button>
               <button
                 onClick={() => handleSubmitCollection(() => setIsEditModalOpen(false))}
@@ -983,7 +989,7 @@ export default function QuickRepliesSection() {
                 className={primaryBtn}
               >
                 {groupMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                Save Changes
+                {t("quick_replies_section.save_changes")}
               </button>
             </div>
           </div>
@@ -1000,24 +1006,24 @@ export default function QuickRepliesSection() {
               </div>
               <div>
                 <h2 className={cn("text-[14px] font-semibold", text)}>
-                  Delete Collection?
+                  {t("quick_replies_section.delete_collection_title")}
                 </h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
                   <span className="text-rose-500 font-black">
-                    {collections.find((c) => c.id === currentCollectionId)?.name ?? "This collection"}
+                    {collections.find((c) => c.id === currentCollectionId)?.name ?? t("quick_replies_section.delete_collection_fallback_name")}
                   </span>{" "}
-                  and every message inside it will be permanently removed.
+                  {t("quick_replies_section.delete_collection_desc_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("quick_replies_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteCollection}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
                 {deleteMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                Delete
+                {t("quick_replies_section.delete_action")}
               </AlertDialogAction>
             </div>
           </div>

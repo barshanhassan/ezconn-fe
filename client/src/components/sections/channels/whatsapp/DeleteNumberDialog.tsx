@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +32,7 @@ export default function DeleteNumberDialog({ open, number, onClose }: Props) {
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const [cb1, setCb1] = useState(false);
   const [cb2, setCb2] = useState(false);
@@ -55,7 +57,7 @@ export default function DeleteNumberDialog({ open, number, onClose }: Props) {
     },
     onSuccess: (data: any) => {
       toast({
-        title: data?.success ? "Number deleted" : "Could not delete",
+        title: data?.success ? t("delete_number_dialog.number_deleted") : t("delete_number_dialog.could_not_delete"),
         description: data?.message ?? "",
         variant: data?.success ? "default" : "destructive",
       });
@@ -76,7 +78,7 @@ export default function DeleteNumberDialog({ open, number, onClose }: Props) {
               <AlertTriangle size={32} />
             </div>
             <div className={cn("text-base font-black tracking-tight", dark ? "text-white" : "text-slate-900")}>
-              Delete this WhatsApp number?
+              {t("delete_number_dialog.title")}
             </div>
             <div className={cn("mt-2 text-[13px] font-mono", dark ? "text-emerald-400" : "text-emerald-600")}>
               {number.display_phone_number}
@@ -87,27 +89,24 @@ export default function DeleteNumberDialog({ open, number, onClose }: Props) {
             <div className="flex items-start gap-3">
               <Checkbox id="dn1" checked={cb1} onCheckedChange={(c) => setCb1(!!c)} className="mt-1" />
               <label htmlFor="dn1" className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}>
-                I understand that this number will be removed from the platform and any Smart Flows, broadcasts, or
-                templates using it will fail until reconnected.
+                {t("delete_number_dialog.checkbox1_label")}
               </label>
             </div>
             <div className="flex items-start gap-3">
               <Checkbox id="dn2" checked={cb2} onCheckedChange={(c) => setCb2(!!c)} className="mt-1" />
               <label htmlFor="dn2" className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}>
-                I understand that previous conversations will be archived but no new messages will route through this
-                number after deletion.
+                {t("delete_number_dialog.checkbox2_label")}
               </label>
             </div>
             <div className="flex items-start gap-3">
               <Checkbox id="dn3" checked={cb3} onCheckedChange={(c) => setCb3(!!c)} className="mt-1" />
               <label htmlFor="dn3" className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}>
-                I understand that this action cannot be undone and re-connecting will require completing WhatsApp
-                onboarding again.
+                {t("delete_number_dialog.checkbox3_label")}
               </label>
             </div>
 
             <p className="text-[11px] text-rose-500 font-bold leading-relaxed pt-1">
-              Re-connecting the same number from Meta side may take up to 24 hours after deletion.
+              {t("delete_number_dialog.reconnect_warning")}
             </p>
 
             <DeletionGuard onValid={setGuardOk} />
@@ -121,14 +120,14 @@ export default function DeleteNumberDialog({ open, number, onClose }: Props) {
                 dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400",
               )}
             >
-              Cancel
+              {t("delete_number_dialog.cancel")}
             </button>
             <button
               onClick={() => mutation.mutate()}
               disabled={!valid || mutation.isPending}
               className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-2 bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Trash2 size={12} /> {mutation.isPending ? "Deleting…" : "Delete"}
+              <Trash2 size={12} /> {mutation.isPending ? t("delete_number_dialog.deleting") : t("delete_number_dialog.delete")}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,13 @@ const items = [
 ];
 
 export default function CustomizationSection({ openPanel }: { openPanel?: string }) {
+  const { t } = useTranslation();
+  const itemLabels: Record<string, string> = {
+    "Custom fields": t("customization_section.item_custom_fields"),
+    "Tags": t("customization_section.item_tags"),
+    "Chat Widget": t("customization_section.item_chat_widget"),
+    "Iframe": t("customization_section.item_iframe"),
+  };
   const [open, setOpen] = useState<string | null>(openPanel ?? null);
   const [fields, setFields] = useState<string[]>(["Customer ID"]);
   const [newField, setNewField] = useState("");
@@ -44,7 +52,7 @@ export default function CustomizationSection({ openPanel }: { openPanel?: string
     <div className="p-6">
       <Card className="border-0 shadow-none">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Customization</CardTitle>
+          <CardTitle className="text-lg">{t("customization_section.title")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-800">
@@ -58,7 +66,7 @@ export default function CustomizationSection({ openPanel }: { openPanel?: string
                     aria-expanded={isOpen}
                     aria-controls={`panel-${it.replace(/\s+/g, "-").toLowerCase()}`}
                   >
-                    <span className="font-medium">{it}</span>
+                    <span className="font-medium">{itemLabels[it]}</span>
                     <ChevronDown size={16} className={`text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </button>
 
@@ -74,8 +82,8 @@ export default function CustomizationSection({ openPanel }: { openPanel?: string
                           ))}
                         </div>
                         <div className="flex gap-2">
-                          <Input value={newField} onChange={(e: any) => setNewField(e.target.value)} placeholder="Add custom field" />
-                          <Button onClick={addField}>Add</Button>
+                          <Input value={newField} onChange={(e: any) => setNewField(e.target.value)} placeholder={t("customization_section.add_custom_field_placeholder")} />
+                          <Button onClick={addField}>{t("customization_section.add")}</Button>
                         </div>
                       </div>
                     )}
@@ -88,19 +96,19 @@ export default function CustomizationSection({ openPanel }: { openPanel?: string
                           ))}
                         </div>
                         <div className="flex gap-2">
-                          <Input value={newTag} onChange={(e: any) => setNewTag(e.target.value)} placeholder="Add tag" />
-                          <Button onClick={addTag}>Add</Button>
+                          <Input value={newTag} onChange={(e: any) => setNewTag(e.target.value)} placeholder={t("customization_section.add_tag_placeholder")} />
+                          <Button onClick={addTag}>{t("customization_section.add")}</Button>
                         </div>
                       </div>
                     )}
 
                     {it === "Chat Widget" && (
                       <div>
-                        <p className="text-sm text-muted-foreground mb-2">Configure your embeddable chat widget.</p>
+                        <p className="text-sm text-muted-foreground mb-2">{t("customization_section.chat_widget_description")}</p>
                         <div className="flex gap-2">
-                          <Input value={widgetId} onChange={(e: any) => setWidgetId(e.target.value)} placeholder="Widget ID or snippet" />
+                          <Input value={widgetId} onChange={(e: any) => setWidgetId(e.target.value)} placeholder={t("customization_section.widget_id_placeholder")} />
                           <Button onClick={() => navigator.clipboard?.writeText(widgetId || "")}>
-                            Copy
+                            {t("customization_section.copy")}
                           </Button>
                         </div>
                       </div>
@@ -108,14 +116,14 @@ export default function CustomizationSection({ openPanel }: { openPanel?: string
 
                     {it === "Iframe" && (
                       <div>
-                        <p className="text-sm text-muted-foreground mb-2">Paste an iframe or URL to preview.</p>
+                        <p className="text-sm text-muted-foreground mb-2">{t("customization_section.iframe_description")}</p>
                         <div className="flex gap-2 mb-3">
                           <Input value={iframeUrl} onChange={(e: any) => setIframeUrl(e.target.value)} placeholder="https://example.com/embed" />
-                          <Button onClick={() => {}}>Save</Button>
+                          <Button onClick={() => {}}>{t("customization_section.save")}</Button>
                         </div>
                         {iframeUrl && (
                           <div className="border rounded overflow-hidden">
-                            <iframe src={iframeUrl} title="iframe-preview" className="w-full h-48" />
+                            <iframe src={iframeUrl} title={t("customization_section.iframe_preview_title")} className="w-full h-48" />
                           </div>
                         )}
                       </div>

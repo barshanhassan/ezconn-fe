@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Input } from '../components/ui/input';
 import { ArrowLeft, ArrowRight, User, Link2, MailCheck, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -106,13 +107,15 @@ const FLOATING_ICONS = [
   { Icon: MessengerIcon, left: 469, top: 165, delay: '.5s', dur: '5.1s' },
 ];
 
-const STEPS = [
-  { label: 'STEP 1', icon: User, title: 'Create your account', subtitle: "Email & a workspace name, that's it.", dark: false },
-  { label: 'STEP 2', icon: Link2, title: 'Select your favourite channel and get onboarded.', subtitle: 'One-click, official WhatsApp Business API.', dark: false },
-  { label: "YOU'RE LIVE", icon: WandIcon, title: 'Start replying, AI has your back', subtitle: 'Messages land in one inbox, answered 24/7.', dark: true },
+const getSteps = (t: (key: string) => string) => [
+  { label: t('signup_page.step1_label'), icon: User, title: t('signup_page.step1_title'), subtitle: t('signup_page.step1_subtitle'), dark: false },
+  { label: t('signup_page.step2_label'), icon: Link2, title: t('signup_page.step2_title'), subtitle: t('signup_page.step2_subtitle'), dark: false },
+  { label: t('signup_page.step3_label'), icon: WandIcon, title: t('signup_page.step3_title'), subtitle: t('signup_page.step3_subtitle'), dark: true },
 ];
 
 const SignupPage: React.FC = () => {
+  const { t } = useTranslation();
+  const STEPS = getSteps(t);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [agencyName, setAgencyName] = useState('');
@@ -167,13 +170,13 @@ const SignupPage: React.FC = () => {
         email,
       });
 
-      setSuccessMessage('Verification code sent to your email');
+      setSuccessMessage(t('signup_page.verification_code_sent'));
       setStep('otp');
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setTimeout(() => otpInputRefs.current[0]?.focus(), 0);
     } catch (error: any) {
       console.error('Signup error:', error);
-      setErrorMessage(error?.message || 'Failed to create account');
+      setErrorMessage(error?.message || t('signup_page.failed_to_create_account'));
     } finally {
       setIsLoading(false);
     }
@@ -191,7 +194,7 @@ const SignupPage: React.FC = () => {
       setStep('done');
     } catch (error: any) {
       console.error('OTP verify error:', error);
-      setOtpError(error?.message || 'Invalid or expired code');
+      setOtpError(error?.message || t('signup_page.invalid_or_expired_code'));
       setOtpDigits(Array(OTP_LENGTH).fill(''));
       otpInputRefs.current[0]?.focus();
     } finally {
@@ -243,12 +246,12 @@ const SignupPage: React.FC = () => {
     setOtpError('');
     try {
       await apiRequest('POST', '/auth/resend-signup-otp', { email });
-      setOtpSuccess('New code sent');
+      setOtpSuccess(t('signup_page.new_code_sent'));
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setOtpDigits(Array(OTP_LENGTH).fill(''));
       otpInputRefs.current[0]?.focus();
     } catch (error: any) {
-      setOtpError(error?.message || 'Failed to resend code');
+      setOtpError(error?.message || t('signup_page.failed_to_resend_code'));
     } finally {
       setIsResending(false);
     }
@@ -287,7 +290,7 @@ const SignupPage: React.FC = () => {
           {/* headline */}
           <div className="absolute" style={{ left: 41, top: 63, width: 340 }}>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
-              Get set up in a few clicks
+              {t('signup_page.get_set_up_headline')}
             </div>
           </div>
 
@@ -371,7 +374,7 @@ const SignupPage: React.FC = () => {
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#25d366" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                Verified Tech Partner
+                {t('signup_page.verified_tech_partner')}
               </span>
             </div>
           </div>
@@ -391,15 +394,15 @@ const SignupPage: React.FC = () => {
                   <MailCheck className="w-8 h-8 text-[#1eb955]" />
                 </div>
                 <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
-                  Account created
+                  {t('signup_page.account_created')}
                 </div>
                 <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: '#0B1020' }}>
-                  Check your email
+                  {t('signup_page.check_your_email')}
                 </h1>
                 <p className="mt-3" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
-                  We've sent all your details — your login URL, username &amp; password — to{' '}
+                  {t('signup_page.details_sent_prefix')}{' '}
                   <span className="font-semibold" style={{ color: '#0B1020' }}>{email}</span>.
-                  Please check your inbox to log in to your organization.
+                  {' '}{t('signup_page.details_sent_suffix')}
                 </p>
                 <button
                   type="button"
@@ -407,20 +410,20 @@ const SignupPage: React.FC = () => {
                   className="mt-6 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
                   style={{ color: '#1eb955' }}
                 >
-                  Didn't get the email? Find my account
+                  {t('signup_page.didnt_get_email')}
                 </button>
               </div>
             ) : step === 'otp' ? (
               <>
                 <div className="mb-8">
                   <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
-                    Almost there
+                    {t('signup_page.almost_there')}
                   </div>
                   <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: '#0B1020' }}>
-                    Verify your email
+                    {t('signup_page.verify_your_email')}
                   </h1>
                   <p className="mt-3" style={{ fontSize: 15, color: '#6b7482' }}>
-                    Enter the 4-digit code sent to <span className="font-semibold" style={{ color: '#0B1020' }}>{email}</span>
+                    {t('signup_page.enter_code_sent_to')} <span className="font-semibold" style={{ color: '#0B1020' }}>{email}</span>
                   </p>
                 </div>
 
@@ -456,12 +459,12 @@ const SignupPage: React.FC = () => {
                     className="w-full h-[52px] rounded-[11px] border-none flex items-center justify-center gap-2 text-white disabled:opacity-60"
                     style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, background: '#22B257', boxShadow: '0 16px 34px -16px rgba(37,211,102,.7)' }}
                   >
-                    {isVerifying ? 'Verifying…' : 'Verify'}
+                    {isVerifying ? t('signup_page.verifying') : t('signup_page.verify')}
                   </button>
 
                   <div className="text-center text-sm" style={{ color: '#6b7482' }}>
                     {resendCooldown > 0 ? (
-                      <span>Resend code in {resendCooldown}s</span>
+                      <span>{t('signup_page.resend_code_in', { seconds: resendCooldown })}</span>
                     ) : (
                       <button
                         type="button"
@@ -470,7 +473,7 @@ const SignupPage: React.FC = () => {
                         className="font-semibold hover:underline disabled:opacity-50"
                         style={{ color: '#1eb955' }}
                       >
-                        {isResending ? 'Resending…' : 'Resend code'}
+                        {isResending ? t('signup_page.resending') : t('signup_page.resend_code')}
                       </button>
                     )}
                   </div>
@@ -484,7 +487,7 @@ const SignupPage: React.FC = () => {
                     style={{ color: '#1eb955' }}
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Back
+                    {t('signup_page.back')}
                   </button>
                 </div>
               </>
@@ -492,13 +495,13 @@ const SignupPage: React.FC = () => {
               <>
                 <div className="mb-6">
                   <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
-                    Get started free
+                    {t('signup_page.get_started_free')}
                   </div>
                   <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: '#0B1020' }}>
-                    Great to have you onboard
+                    {t('signup_page.great_to_have_you')}
                   </h1>
                   <p className="mt-2.5" style={{ fontSize: 14, lineHeight: 1.5, color: '#6b7482' }}>
-                    Reply to every customer across WhatsApp, Messenger &amp; Instagram, in one AI-powered inbox.
+                    {t('signup_page.reply_across_channels')}
                   </p>
                 </div>
 
@@ -506,7 +509,7 @@ const SignupPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <label className="block relative">
                       <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
-                        <span style={{ color: '#f2545b' }}>* </span>First name
+                        <span style={{ color: '#f2545b' }}>* </span>{t('signup_page.first_name')}
                       </span>
                       <Input
                         id="firstName"
@@ -521,7 +524,7 @@ const SignupPage: React.FC = () => {
                     </label>
                     <label className="block relative">
                       <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
-                        <span style={{ color: '#f2545b' }}>* </span>Last name
+                        <span style={{ color: '#f2545b' }}>* </span>{t('signup_page.last_name')}
                       </span>
                       <Input
                         id="lastName"
@@ -538,7 +541,7 @@ const SignupPage: React.FC = () => {
 
                   <label className="block relative">
                     <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
-                      Company name
+                      {t('signup_page.company_name')}
                     </span>
                     <Input
                       id="agencyName"
@@ -553,7 +556,7 @@ const SignupPage: React.FC = () => {
 
                   <label className="block relative">
                     <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
-                      <span style={{ color: '#f2545b' }}>* </span>Work email
+                      <span style={{ color: '#f2545b' }}>* </span>{t('signup_page.work_email')}
                     </span>
                     <Input
                       id="email"
@@ -581,29 +584,29 @@ const SignupPage: React.FC = () => {
                       className="mt-0.5 w-[15px] h-[15px] rounded-[4px] border-[#cfd6e0] text-[#25d366] focus:ring-[#25d366]"
                     />
                     <span style={{ fontSize: 12.5, color: '#6b7482' }}>
-                      I agree to agentawk's <a href="#" style={{ color: '#1eb955', fontWeight: 600 }}>Terms of Service</a> and{' '}
-                      <a href="#" style={{ color: '#1eb955', fontWeight: 600 }}>Privacy Policy</a>.
+                      {t('signup_page.agree_to_terms_prefix')} <a href="#" style={{ color: '#1eb955', fontWeight: 600 }}>{t('signup_page.terms_of_service')}</a> {t('signup_page.and')}{' '}
+                      <a href="#" style={{ color: '#1eb955', fontWeight: 600 }}>{t('signup_page.privacy_policy')}</a>.
                     </span>
                   </label>
 
                   <button
                     type="submit"
                     disabled={isLoading || !agreed}
-                    title={!agreed ? 'Please accept the Terms of Service and Privacy Policy first' : undefined}
+                    title={!agreed ? t('signup_page.accept_terms_tooltip') : undefined}
                     className="w-full h-10 rounded-[11px] border-none flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                     style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, background: '#22B257', boxShadow: '0 16px 34px -16px rgba(37,211,102,.7)' }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#1ea34e')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '#22B257')}
                   >
-                    {isLoading ? 'Creating account…' : (
+                    {isLoading ? t('signup_page.creating_account') : (
                       <>
-                        Sign up <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
+                        {t('signup_page.sign_up')} <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
                       </>
                     )}
                   </button>
                   {!agreed && (
                     <p className="text-center" style={{ fontSize: 12, color: '#9aa4b5' }}>
-                      Please accept the Terms &amp; Privacy Policy to continue.
+                      {t('signup_page.accept_terms_notice')}
                     </p>
                   )}
                 </form>
@@ -616,7 +619,7 @@ const SignupPage: React.FC = () => {
                     style={{ color: '#1eb955' }}
                   >
                     <Search className="h-4 w-4" />
-                    Find my account
+                    {t('signup_page.find_my_account')}
                   </button>
                 </div>
               </>

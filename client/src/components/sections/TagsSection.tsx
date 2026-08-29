@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   ChevronLeft,
@@ -84,6 +85,7 @@ const TAG_PRESETS: { bg: string; text: string }[] = [
 ];
 
 export default function TagsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -233,11 +235,11 @@ export default function TagsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Tag created" });
+      toast({ title: t("tags_section.tag_created") });
       setShowCreateModal(false);
       setForm(emptyForm);
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("tags_section.error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -254,12 +256,12 @@ export default function TagsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Tag updated" });
+      toast({ title: t("tags_section.tag_updated") });
       setShowEditModal(false);
       setEditingItem(null);
       setForm(emptyForm);
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("tags_section.error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -268,11 +270,11 @@ export default function TagsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Tag deleted" });
+      toast({ title: t("tags_section.tag_deleted") });
       setShowDeleteModal(false);
       setItemToDelete(null);
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("tags_section.error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const folderMutation = useMutation({
@@ -285,12 +287,12 @@ export default function TagsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: editingFolder ? "Folder renamed" : "Folder created" });
+      toast({ title: editingFolder ? t("tags_section.folder_renamed") : t("tags_section.folder_created") });
       setShowFolderModal(false);
       setEditingFolder(null);
       setFolderName("");
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("tags_section.error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const deleteFolderMutation = useMutation({
@@ -299,11 +301,11 @@ export default function TagsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Folder deleted" });
+      toast({ title: t("tags_section.folder_deleted") });
       // Reset the folder filter if we just deleted the active folder.
       setFolderFilter((cur) => (cur === itemToDelete?.id ? "ALL" : cur));
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("tags_section.error_title"), description: e?.message, variant: "destructive" }),
   });
 
   // ── Handlers ─────────────────────────────────────────────────────
@@ -372,7 +374,7 @@ export default function TagsSection() {
 
   const submitCreate = () => {
     if (!form.name.trim()) {
-      toast({ title: "Missing name", description: "Please enter a tag name.", variant: "destructive" });
+      toast({ title: t("tags_section.missing_name_title"), description: t("tags_section.missing_name_description"), variant: "destructive" });
       return;
     }
     createMutation.mutate();
@@ -380,7 +382,7 @@ export default function TagsSection() {
 
   const submitUpdate = () => {
     if (!form.name.trim()) {
-      toast({ title: "Missing name", description: "Please enter a tag name.", variant: "destructive" });
+      toast({ title: t("tags_section.missing_name_title"), description: t("tags_section.missing_name_description"), variant: "destructive" });
       return;
     }
     updateMutation.mutate();
@@ -413,7 +415,7 @@ export default function TagsSection() {
               value === p[presetKey] ? "border-primary scale-110" : "border-transparent",
             )}
             style={{ backgroundColor: p[presetKey] }}
-            aria-label={`Pick ${p[presetKey]}`}
+            aria-label={t("tags_section.pick_color_aria", { color: p[presetKey] })}
           />
         ))}
         <input
@@ -422,7 +424,7 @@ export default function TagsSection() {
           onChange={(e) => onChange(e.target.value)}
           maxLength={9}
           className={cn(inputCls, "w-28 h-9 text-[11px] font-mono")}
-          placeholder="#000000"
+          placeholder={t("tags_section.hex_placeholder")}
         />
       </div>
     </div>
@@ -439,9 +441,9 @@ export default function TagsSection() {
                 <TagIcon className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Tags</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("tags_section.header_title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Create tags to categorize your conversations.
+                  {t("tags_section.header_subtitle")}
                 </p>
               </div>
             </div>
@@ -455,10 +457,10 @@ export default function TagsSection() {
                 }}
                 className={outlineBtn}
               >
-                <FolderPlus size={12} /> New Folder
+                <FolderPlus size={12} /> {t("tags_section.new_folder")}
               </button>
               <button onClick={openCreate} className={primaryOutlineBtn}>
-                <Plus size={12} /> Add Tag
+                <Plus size={12} /> {t("tags_section.add_tag")}
               </button>
             </div>
           </div>
@@ -471,31 +473,31 @@ export default function TagsSection() {
                 <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4", sub)} />
                 <input
                   type="text"
-                  placeholder="Search tags..."
+                  placeholder={t("tags_section.search_placeholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className={cn(inputCls, "pl-11")}
+                  className={cn(inputCls, "pl-11 h-10 text-[12px] font-medium")}
                 />
               </div>
               <select
                 value={forFilter}
                 onChange={(e) => setForFilter(e.target.value as TagFor)}
-                className={cn(selectCls, "max-w-[180px]")}
+                className={cn(selectCls, "max-w-[180px] h-10 text-[12px] font-medium")}
               >
-                <option value="">All entities</option>
-                <option value="WORKSPACE">Workspace</option>
-                <option value="CONTACT">Contact</option>
-                <option value="COMPANY">Company</option>
-                <option value="OPPORTUNITY">Opportunity</option>
+                <option value="">{t("tags_section.filter_all_entities")}</option>
+                <option value="WORKSPACE">{t("tags_section.filter_workspace")}</option>
+                <option value="CONTACT">{t("tags_section.filter_contact")}</option>
+                <option value="COMPANY">{t("tags_section.filter_company")}</option>
+                <option value="OPPORTUNITY">{t("tags_section.filter_opportunity")}</option>
               </select>
               <div className="flex items-center gap-1">
                 <select
                   value={folderFilter}
                   onChange={(e) => setFolderFilter(e.target.value)}
-                  className={cn(selectCls, "max-w-[200px]")}
+                  className={cn(selectCls, "max-w-[200px] h-10 text-[12px] font-medium")}
                 >
-                  <option value="ALL">All folders</option>
-                  <option value="root">Root (no folder)</option>
+                  <option value="ALL">{t("tags_section.filter_all_folders")}</option>
+                  <option value="root">{t("tags_section.filter_root_folder")}</option>
                   {folders.map((f) => (
                     <option key={f.id} value={f.id}>
                       {f.name}
@@ -520,17 +522,17 @@ export default function TagsSection() {
                         }}
                         className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                       >
-                        <Edit2 size={13} /> Rename
+                        <Edit2 size={13} /> {t("tags_section.rename")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          if (confirm("Delete this folder? It must be empty.")) {
+                          if (confirm(t("tags_section.delete_folder_confirm"))) {
                             deleteFolderMutation.mutate(folderFilter);
                           }
                         }}
                         className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
                       >
-                        <Trash2 size={13} /> Delete
+                        <Trash2 size={13} /> {t("tags_section.delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -545,13 +547,13 @@ export default function TagsSection() {
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
                       <th className={thCls} onClick={() => handleColumnSort("name")}>
-                        <div className="flex items-center gap-2">Name {renderSortIcon("name")}</div>
+                        <div className="flex items-center gap-2">{t("tags_section.table_name")} {renderSortIcon("name")}</div>
                       </th>
-                      <th className={cn(thCls, "cursor-default")}>Visible in Inbox</th>
+                      <th className={cn(thCls, "cursor-default")}>{t("tags_section.table_visible_inbox")}</th>
                       <th className={thCls} onClick={() => handleColumnSort("lastEdited")}>
-                        <div className="flex items-center gap-2">Last Edited {renderSortIcon("lastEdited")}</div>
+                        <div className="flex items-center gap-2">{t("tags_section.table_last_edited")} {renderSortIcon("lastEdited")}</div>
                       </th>
-                      <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                      <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("tags_section.table_actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -569,9 +571,9 @@ export default function TagsSection() {
                               <TagIcon className="w-7 h-7 text-primary" />
                             </div>
                             <div className="space-y-1">
-                              <h3 className={cn("text-[13px] font-black", text)}>No tags found</h3>
+                              <h3 className={cn("text-[13px] font-black", text)}>{t("tags_section.empty_title")}</h3>
                               <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                                Create your first tag to categorize conversations.
+                                {t("tags_section.empty_description")}
                               </p>
                             </div>
                           </div>
@@ -596,11 +598,11 @@ export default function TagsSection() {
                           <td className="px-6 py-4">
                             {item.displayInbox ? (
                               <span className="inline-flex h-5 px-2 items-center gap-1 rounded-md text-[10px] font-semibold border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400">
-                                <Eye size={10} /> Yes
+                                <Eye size={10} /> {t("tags_section.visible_yes")}
                               </span>
                             ) : (
                               <span className="inline-flex h-5 px-2 items-center gap-1 rounded-md text-[10px] font-semibold border border-slate-500/30 bg-slate-500/5 text-slate-500">
-                                <EyeOff size={10} /> No
+                                <EyeOff size={10} /> {t("tags_section.visible_no")}
                               </span>
                             )}
                           </td>
@@ -615,7 +617,7 @@ export default function TagsSection() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
                                   <DropdownMenuItem onClick={() => openEdit(item)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
-                                    <Edit2 size={13} /> Edit
+                                    <Edit2 size={13} /> {t("tags_section.edit")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => {
@@ -624,7 +626,7 @@ export default function TagsSection() {
                                     }}
                                     className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
                                   >
-                                    <Trash2 size={13} /> Delete
+                                    <Trash2 size={13} /> {t("tags_section.delete")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -640,10 +642,10 @@ export default function TagsSection() {
               {!isLoading && (
                 <div className={cn("px-6 py-3 border-t flex items-center justify-between flex-wrap gap-3", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
                   <span className={cn("text-[11px] font-semibold", sub)}>
-                    {totalFilteredItems} results
+                    {t("tags_section.results_count", { count: totalFilteredItems })}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className={cn("text-[11px] font-semibold", sub)}>Rows</span>
+                    <span className={cn("text-[11px] font-semibold", sub)}>{t("tags_section.rows_label")}</span>
                     <select
                       value={rowsPerPage}
                       onChange={(e) => {
@@ -659,7 +661,7 @@ export default function TagsSection() {
                       ))}
                     </select>
                     <span className={cn("text-[11px] font-semibold", sub)}>
-                      Page {page} of {totalPages}
+                      {t("tags_section.page_of", { page, totalPages })}
                     </span>
                     <div className="flex gap-1">
                       {[
@@ -707,10 +709,10 @@ export default function TagsSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    {showEditModal ? "Edit Tag" : "Create Tag"}
+                    {showEditModal ? t("tags_section.edit_tag_title") : t("tags_section.create_tag_title")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    {showEditModal ? "Update name, colors, scope and visibility." : "Add a new tag to categorize conversations."}
+                    {showEditModal ? t("tags_section.edit_tag_description") : t("tags_section.create_tag_description")}
                   </DialogDescription>
                 </div>
               </div>
@@ -719,11 +721,11 @@ export default function TagsSection() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className={labelCls}>
-                  Name <span className="text-rose-500">*</span>
+                  {t("tags_section.name_label")} <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <input
-                    placeholder="Enter tag name"
+                    placeholder={t("tags_section.name_placeholder")}
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value.slice(0, 25) }))}
                     className={cn(inputCls, "pr-16")}
@@ -735,26 +737,26 @@ export default function TagsSection() {
               </div>
 
               <ColorPicker
-                label="Background colour"
+                label={t("tags_section.bg_color_label")}
                 value={form.bgColor}
                 onChange={(v) => setForm((p) => ({ ...p, bgColor: v }))}
                 presetKey="bg"
               />
               <ColorPicker
-                label="Text colour"
+                label={t("tags_section.text_color_label")}
                 value={form.textColor}
                 onChange={(v) => setForm((p) => ({ ...p, textColor: v }))}
                 presetKey="text"
               />
 
               <div className="space-y-2">
-                <label className={labelCls}>Preview</label>
+                <label className={labelCls}>{t("tags_section.preview_label")}</label>
                 <div>
                   <span
                     className="inline-flex h-8 px-3 items-center rounded-md text-[13px] font-semibold"
                     style={{ backgroundColor: form.bgColor, color: form.textColor }}
                   >
-                    {form.name || "Sample"}
+                    {form.name || t("tags_section.sample_text")}
                   </span>
                 </div>
               </div>
@@ -764,13 +766,13 @@ export default function TagsSection() {
                   on the list view still allows browsing tags by entity. */}
 
               <div className="space-y-2">
-                <label className={labelCls}>Folder</label>
+                <label className={labelCls}>{t("tags_section.folder_label")}</label>
                 <select
                   value={form.folderId}
                   onChange={(e) => setForm((p) => ({ ...p, folderId: e.target.value }))}
                   className={selectCls}
                 >
-                  <option value="">Root (no folder)</option>
+                  <option value="">{t("tags_section.filter_root_folder")}</option>
                   {folders.map((f) => (
                     <option key={f.id} value={f.id}>
                       {f.name}
@@ -781,9 +783,9 @@ export default function TagsSection() {
 
               <div className={cn("flex items-center justify-between p-4 rounded-xl border", softBg, softBorder)}>
                 <div>
-                  <p className={cn("text-[12px] font-black", text)}>Visible in Inbox</p>
+                  <p className={cn("text-[12px] font-black", text)}>{t("tags_section.visible_inbox_title")}</p>
                   <p className={cn("text-[10px] font-medium opacity-60", sub)}>
-                    Show this tag in conversation lists.
+                    {t("tags_section.visible_inbox_description")}
                   </p>
                 </div>
                 <Switch
@@ -804,7 +806,7 @@ export default function TagsSection() {
                 }}
                 className={outlineBtn}
               >
-                Cancel
+                {t("tags_section.cancel")}
               </button>
               <button
                 onClick={showEditModal ? submitUpdate : submitCreate}
@@ -814,7 +816,7 @@ export default function TagsSection() {
                 {(createMutation.isPending || updateMutation.isPending) && (
                   <Loader2 size={12} className="animate-spin" />
                 )}
-                {showEditModal ? "Save Changes" : "Create"}
+                {showEditModal ? t("tags_section.save_changes") : t("tags_section.create")}
               </button>
             </div>
           </div>
@@ -841,22 +843,22 @@ export default function TagsSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    {editingFolder ? "Rename Folder" : "Create Folder"}
+                    {editingFolder ? t("tags_section.rename_folder_title") : t("tags_section.create_folder_title")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    {editingFolder ? "Pick a new name." : "Group tags under a folder."}
+                    {editingFolder ? t("tags_section.rename_folder_description") : t("tags_section.create_folder_description")}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
             <div className="space-y-2">
-              <label className={labelCls}>Folder name</label>
+              <label className={labelCls}>{t("tags_section.folder_name_label")}</label>
               <input
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value.slice(0, 25))}
                 className={inputCls}
-                placeholder="Enter folder name"
+                placeholder={t("tags_section.folder_name_placeholder")}
               />
             </div>
 
@@ -869,12 +871,12 @@ export default function TagsSection() {
                 }}
                 className={outlineBtn}
               >
-                Cancel
+                {t("tags_section.cancel")}
               </button>
               <button
                 onClick={() => {
                   if (!folderName.trim()) {
-                    toast({ title: "Missing name", variant: "destructive" });
+                    toast({ title: t("tags_section.missing_name_title"), variant: "destructive" });
                     return;
                   }
                   folderMutation.mutate();
@@ -883,7 +885,7 @@ export default function TagsSection() {
                 className={primaryBtn}
               >
                 {folderMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                {editingFolder ? "Save" : "Create"}
+                {editingFolder ? t("tags_section.save") : t("tags_section.create")}
               </button>
             </div>
           </div>
@@ -899,17 +901,17 @@ export default function TagsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Tag?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("tags_section.delete_tag_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
                   <span className="text-rose-500 font-black break-all">
-                    {itemToDelete?.name || "This tag"}
+                    {itemToDelete?.name || t("tags_section.delete_tag_fallback_name")}
                   </span>{" "}
-                  will be permanently removed and unlinked from every conversation, contact and opportunity.
+                  {t("tags_section.delete_tag_description_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("tags_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => itemToDelete && deleteMutation.mutate(itemToDelete.id)}
                 disabled={deleteMutation.isPending}
@@ -920,7 +922,7 @@ export default function TagsSection() {
                 ) : (
                   <Trash2 size={12} />
                 )}
-                Delete
+                {t("tags_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

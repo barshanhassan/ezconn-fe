@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -22,6 +23,7 @@ interface Props {
 export default function DeletionGuard({ phrase, onValid, className }: Props) {
   const { mode } = useTheme();
   const dark = mode === "dark";
+  const { t } = useTranslation();
   const [text, setText] = useState("");
   // Random 5-digit confirmation code (replyagent parity — a fresh code per mount
   // is harder to muscle-memory past than a static "DELETE"). An explicit `phrase`
@@ -36,7 +38,8 @@ export default function DeletionGuard({ phrase, onValid, className }: Props) {
   return (
     <div className={cn("space-y-2", className)}>
       <label className={cn("text-[11px] font-semibold", dark ? "text-slate-400" : "text-slate-600")}>
-        Type <span className="text-rose-500">{target}</span> to confirm
+        {t("deletion_guard.type_prefix")} <span className="text-rose-500">{target}</span>{" "}
+        {t("deletion_guard.type_suffix")}
       </label>
       <Input
         value={text}

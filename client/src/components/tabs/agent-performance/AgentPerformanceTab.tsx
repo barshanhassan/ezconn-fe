@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
 import AgentPerformanceMain from "./AgentPerformanceMain";
@@ -11,6 +12,7 @@ const teams: Array<{ id: string; name: string }> = [];
 const agents: Array<{ id: string; name: string }> = [];
 
 export default function AgentPerformanceTab() {
+  const { t } = useTranslation();
   const { activeSubTab, setActiveSubTab } = useTab();
   const [agentPerformanceTab, setAgentPerformanceTab] = useState(activeSubTab.agentPerformance);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -34,8 +36,8 @@ export default function AgentPerformanceTab() {
         {/* Left: Compact Sub-tabs Switcher (Restored original colors) */}
         <div className="flex items-center p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-lg shadow-inner">
           {[
-            { id: "agent-performance-main", label: "Agent Performance", icon: <Users2 size={12} /> },
-            { id: "agent-conversion", label: "Agent Conversion", icon: <Target size={12} /> },
+            { id: "agent-performance-main", label: t("agent_performance_tab.agent_performance"), icon: <Users2 size={12} /> },
+            { id: "agent-conversion", label: t("agent_performance_tab.agent_conversion"), icon: <Target size={12} /> },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -57,21 +59,21 @@ export default function AgentPerformanceTab() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
             <Filter size={11} className="text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Filters:</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("agent_performance_tab.filters")}</span>
           </div>
           <div className="flex items-center gap-2">
             <CustomDropdown
               options={teams}
               selected={selectedTeams}
               onChange={setSelectedTeams}
-              placeholder="Teams"
+              placeholder={t("agent_performance_tab.teams")}
               className="h-8 min-w-[100px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
             />
             <CustomDropdown
               options={agents}
               selected={selectedAgents}
               onChange={setSelectedAgents}
-              placeholder="Agents"
+              placeholder={t("agent_performance_tab.agents")}
               className="h-8 min-w-[100px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
             />
           </div>
@@ -81,7 +83,7 @@ export default function AgentPerformanceTab() {
       {/* Filter Chips / Summary */}
       {(selectedTeams.length > 0 || selectedAgents.length > 0) && (
         <div className="flex items-center gap-2 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
-          <span className="text-[10px] font-medium text-slate-400">Filtering by:</span>
+          <span className="text-[10px] font-medium text-slate-400">{t("agent_performance_tab.filtering_by")}</span>
           <div className="flex flex-wrap gap-1.5">
             {selectedTeams.map(id => (
               <span key={id} className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold border border-slate-200 dark:border-slate-700">
@@ -97,7 +99,7 @@ export default function AgentPerformanceTab() {
               onClick={() => { setSelectedTeams([]); setSelectedAgents([]); }}
               className="text-[9px] font-bold text-slate-400 hover:text-rose-500 transition-colors ml-1"
             >
-              Clear
+              {t("agent_performance_tab.clear")}
             </button>
           </div>
         </div>

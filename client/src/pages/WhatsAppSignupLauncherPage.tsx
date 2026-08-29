@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { loadFacebookSdk, launchEmbeddedSignup } from "@/lib/metaEmbeddedSignup";
+import { useTranslation } from "react-i18next";
 
 /**
  * Self-hosted WhatsApp Embedded Signup launcher — replyagent parity.
@@ -23,6 +24,7 @@ import { loadFacebookSdk, launchEmbeddedSignup } from "@/lib/metaEmbeddedSignup"
  * — we show a "Continue" button that triggers the dialog on click.
  */
 export default function WhatsAppSignupLauncherPage() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -44,9 +46,7 @@ export default function WhatsAppSignupLauncherPage() {
 
   useEffect(() => {
     if (!appId || !configId) {
-      setError(
-        "VITE_META_APP_ID and VITE_META_ES_CONFIG_ID must be set in the frontend .env to launch Meta Embedded Signup.",
-      );
+      setError(t("whatsapp_signup_launcher_page.missing_config"));
       return;
     }
     // Warm up the SDK so the dialog opens instantly on the first click.
@@ -82,7 +82,7 @@ export default function WhatsAppSignupLauncherPage() {
         redirectToReturn(`#s=${sourceRef.current}`);
         return;
       }
-      setError(err?.message ?? "Something went wrong while launching Meta sign-up.");
+      setError(err?.message ?? t("whatsapp_signup_launcher_page.launch_error"));
       setBusy(false);
     }
   };
@@ -113,7 +113,7 @@ export default function WhatsAppSignupLauncherPage() {
         {error ? (
           <>
             <h1 className={cn("mt-8 font-bold text-3xl", dark ? "text-white" : "text-slate-900")}>
-              Could not start sign-up
+              {t("whatsapp_signup_launcher_page.could_not_start")}
             </h1>
             <p className={cn("mt-4 text-base leading-normal max-w-lg", dark ? "text-slate-400" : "text-slate-600")}>
               {error}
@@ -122,14 +122,13 @@ export default function WhatsAppSignupLauncherPage() {
         ) : (
           <>
             <h1 className={cn("mt-8 font-bold text-4xl md:text-5xl", dark ? "text-white" : "text-slate-900")}>
-              {coexRef.current ? "Connect Whatsapp Business App" : "Connect Whatsapp Business Account"}
+              {coexRef.current ? t("whatsapp_signup_launcher_page.connect_business_app") : t("whatsapp_signup_launcher_page.connect_business_account")}
             </h1>
             <p className={cn("mt-4 text-base", dark ? "text-slate-400" : "text-slate-500")}>
-              Follow the instructions to connect Whatsapp account
+              {t("whatsapp_signup_launcher_page.follow_instructions")}
             </p>
             <p className={cn("mt-8 text-lg leading-relaxed max-w-xl", dark ? "text-slate-300" : "text-slate-700")}>
-              We requires certain permissions to build automations with Whatsapp. Click the button below to get
-              started. Don't worry Whatsapp is a part of Facebook ecosystem.
+              {t("whatsapp_signup_launcher_page.permissions_note")}
             </p>
           </>
         )}
@@ -142,14 +141,14 @@ export default function WhatsAppSignupLauncherPage() {
             "bg-[#1EBF5A] hover:bg-[#17a34c]",
           )}
         >
-          {busy ? "Waiting for Facebook…" : "Continue with Facebook"}
+          {busy ? t("whatsapp_signup_launcher_page.waiting_for_facebook") : t("whatsapp_signup_launcher_page.continue_with_facebook")}
         </button>
 
         <button
           onClick={() => (window.location.href = `${window.location.origin}/settings?tab=WhatsApp`)}
           className={cn("mt-5 text-sm font-medium", dark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900")}
         >
-          Cancel
+          {t("whatsapp_signup_launcher_page.cancel")}
         </button>
       </div>
     </div>

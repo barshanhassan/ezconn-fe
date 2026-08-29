@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
   // credentials are a single server-side (.env) account, not something an
   // agency edits — hide the editable form and just show connection status.
   const isAgencyScope = basePath.includes("/agency");
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   // Agency-scoped transactions span the whole agency, not one workspace — the
@@ -121,11 +123,11 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`${basePath}/credentials`] });
-      toast({ title: "Connected", description: "Swich PayIn credentials saved." });
+      toast({ title: t("payments_section.toast_connected_title"), description: t("payments_section.toast_credentials_saved_description") });
       setCredForm((f) => ({ ...f, client_secret: "" }));
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to save credentials. Check the values and try again.", variant: "destructive" });
+      toast({ title: t("payments_section.toast_error_title"), description: t("payments_section.toast_save_error_description"), variant: "destructive" });
     },
   });
 
@@ -135,7 +137,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`${basePath}/credentials`] });
-      toast({ title: "Disconnected", description: "Swich PayIn credentials removed." });
+      toast({ title: t("payments_section.toast_disconnected_title"), description: t("payments_section.toast_credentials_removed_description") });
     },
   });
 
@@ -152,10 +154,10 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: [`${basePath}/transactions`] });
       const status = result?.data?.transaction?.transactionStatus || result?.data?.status;
-      toast({ title: "Status checked", description: `Swich reports: ${status || "unknown"}` });
+      toast({ title: t("payments_section.toast_status_checked_title"), description: t("payments_section.toast_swich_reports_description", { status: status || t("payments_section.unknown") }) });
     },
     onError: () => {
-      toast({ title: "Error", description: "Could not check status with Swich.", variant: "destructive" });
+      toast({ title: t("payments_section.toast_error_title"), description: t("payments_section.toast_status_check_error_description"), variant: "destructive" });
     },
     onSettled: () => setInquiringId(null),
   });
@@ -181,19 +183,19 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                 <CreditCard className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Swich PayIn</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("payments_section.title")}</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Accept E-Wallet, Bank, QR, RTP and Card payments through Swich.
+                  {t("payments_section.subtitle")}
                 </p>
               </div>
             </div>
             {isConnected ? (
               <Badge variant="outline" className="h-7 px-3 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                <Check size={10} className="mr-1" /> Connected · {account.environment}
+                <Check size={10} className="mr-1" /> {t("payments_section.connected_env", { env: account.environment })}
               </Badge>
             ) : (
               <Badge variant="outline" className="h-7 px-3 rounded-md border-slate-300/50 bg-slate-500/5 text-slate-500 text-[10px] font-semibold">
-                Not Connected
+                {t("payments_section.not_connected")}
               </Badge>
             )}
           </div>
@@ -204,12 +206,12 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={16} className="text-primary" />
                   <div>
-                    <p className={cn("text-[12px] font-bold", text)}>Client ID: {maskCredential(account.client_id)}</p>
+                    <p className={cn("text-[12px] font-bold", text)}>{t("payments_section.client_id_label", { value: maskCredential(account.client_id) })}</p>
                     <p className={cn("text-[10px] opacity-60", sub)}>
-                      {account.environment === "production" ? "Live" : "Sandbox"} mode
-                      {account.has_pwa_credentials ? " · PWA client set" : ""}
-                      {account.has_checksum_secret ? " · checksum secret set" : ""}
-                      {account.has_aes_key ? " · AES key set" : ""}
+                      {account.environment === "production" ? t("payments_section.live") : t("payments_section.sandbox")} {t("payments_section.mode")}
+                      {account.has_pwa_credentials ? ` · ${t("payments_section.pwa_client_set")}` : ""}
+                      {account.has_checksum_secret ? ` · ${t("payments_section.checksum_secret_set")}` : ""}
+                      {account.has_aes_key ? ` · ${t("payments_section.aes_key_set")}` : ""}
                     </p>
                   </div>
                 </div>
@@ -219,7 +221,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     disabled={disconnectMutation.isPending}
                     className="text-[11px] font-semibold text-red-500 hover:text-red-600"
                   >
-                    {disconnectMutation.isPending ? "Removing…" : "Disconnect"}
+                    {disconnectMutation.isPending ? t("payments_section.removing") : t("payments_section.disconnect")}
                   </button>
                 )}
               </div>
@@ -227,7 +229,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
 
             {isAgencyScope && !isConnected && (
               <p className={cn("text-[12px]", sub)}>
-                Swich isn't configured on the server yet. This is set once for the whole platform (server config), not per agency.
+                {t("payments_section.agency_not_configured")}
               </p>
             )}
 
@@ -238,26 +240,26 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     their hosted Landing Page / PWA checkout. Keep them visually
                     separate so they don't get mixed up. */}
                 <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>For API</p>
+                  <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>{t("payments_section.for_api")}</p>
                   <p className={cn("text-[11px] opacity-70 mb-2", sub)}>
-                    Used when we call Swich directly (E-Wallet, Bank, QR, RTP, Refund). Find this in your Swich dashboard under "API Access".
+                    {t("payments_section.for_api_description")}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Client ID</label>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.client_id")}</label>
                       <input
                         className={inputCls}
-                        placeholder="Provided by Swich"
+                        placeholder={t("payments_section.provided_by_swich")}
                         value={credForm.client_id}
                         onChange={(e) => setCredForm({ ...credForm, client_id: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Client Secret</label>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.client_secret")}</label>
                       <input
                         type="password"
                         className={inputCls}
-                        placeholder={isConnected ? "•••••••• (leave blank to keep current)" : "Provided by Swich"}
+                        placeholder={isConnected ? t("payments_section.leave_blank_keep_current") : t("payments_section.provided_by_swich")}
                         value={credForm.client_secret}
                         onChange={(e) => setCredForm({ ...credForm, client_secret: e.target.value })}
                       />
@@ -266,26 +268,26 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                 </div>
 
                 <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>For PWA (Landing Page)</p>
+                  <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>{t("payments_section.for_pwa")}</p>
                   <p className={cn("text-[11px] opacity-70 mb-2", sub)}>
-                    Used for the hosted payment page customers see (Section 5 of Swich's guide). Find this under "PWA / Checkout" in your Swich dashboard — it's different from the API credentials above.
+                    {t("payments_section.for_pwa_description")}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>PWA Client ID</label>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.pwa_client_id")}</label>
                       <input
                         className={inputCls}
-                        placeholder="Provided by Swich"
+                        placeholder={t("payments_section.provided_by_swich")}
                         value={credForm.pwa_client_id}
                         onChange={(e) => setCredForm({ ...credForm, pwa_client_id: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>PWA Client Secret</label>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.pwa_client_secret")}</label>
                       <input
                         type="password"
                         className={inputCls}
-                        placeholder={account?.has_pwa_credentials ? "•••••••• (leave blank to keep current)" : "Provided by Swich"}
+                        placeholder={account?.has_pwa_credentials ? t("payments_section.leave_blank_keep_current") : t("payments_section.provided_by_swich")}
                         value={credForm.pwa_client_secret}
                         onChange={(e) => setCredForm({ ...credForm, pwa_client_secret: e.target.value })}
                       />
@@ -294,7 +296,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                 </div>
 
                 <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Environment</label>
+                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.environment")}</label>
                   <div className="flex gap-2">
                     {(["sandbox", "production"] as const).map((env) => (
                       <button
@@ -307,7 +309,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                             : cn(border, sub)
                         )}
                       >
-                        {env}
+                        {env === "sandbox" ? t("payments_section.sandbox") : t("payments_section.production")}
                       </button>
                     ))}
                   </div>
@@ -318,27 +320,27 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                   className={cn("flex items-center gap-1.5 text-[11px] font-semibold", sub)}
                 >
                   {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  Advanced (checksum secret, AES key for POST landing page)
+                  {t("payments_section.advanced_toggle")}
                 </button>
 
                 {showAdvanced && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Checksum Secret (optional)</label>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.checksum_secret_optional")}</label>
                       <input
                         type="password"
                         className={inputCls}
-                        placeholder="Falls back to Client Secret if empty"
+                        placeholder={t("payments_section.checksum_secret_placeholder")}
                         value={credForm.checksum_secret}
                         onChange={(e) => setCredForm({ ...credForm, checksum_secret: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>AES Encryption Key (optional)</label>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.aes_key_optional")}</label>
                       <input
                         type="password"
                         className={inputCls}
-                        placeholder="Only needed for the POST landing page"
+                        placeholder={t("payments_section.aes_key_placeholder")}
                         value={credForm.aes_encryption_key}
                         onChange={(e) => setCredForm({ ...credForm, aes_encryption_key: e.target.value })}
                       />
@@ -353,7 +355,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     onClick={() => saveMutation.mutate(credForm)}
                   >
                     {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
-                    {isConnected ? "Update Credentials" : "Connect Swich"}
+                    {isConnected ? t("payments_section.update_credentials") : t("payments_section.connect_swich")}
                   </button>
                 </div>
               </>
@@ -367,79 +369,79 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
         <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm", card, border)}>
           <CardContent className="p-8 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className={cn("text-[14px] font-bold", text)}>Recent Transactions</h2>
+              <h2 className={cn("text-[14px] font-bold", text)}>{t("payments_section.recent_transactions")}</h2>
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: [`${basePath}/transactions`] })}
                 className={cn("flex items-center gap-1.5 text-[11px] font-semibold", sub)}
               >
-                <RefreshCw size={12} /> Refresh
+                <RefreshCw size={12} /> {t("payments_section.refresh")}
               </button>
             </div>
 
             {!transactions?.length ? (
-              <p className={cn("text-[12px] opacity-60", sub)}>No transactions yet.</p>
+              <p className={cn("text-[12px] opacity-60", sub)}>{t("payments_section.no_transactions_yet")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px]">
                   <thead>
                     <tr className={cn("text-left border-b", border, sub)}>
-                      <th className="py-2 pr-4 font-semibold">Transaction ID</th>
-                      <th className="py-2 pr-4 font-semibold">Plan</th>
-                      <th className="py-2 pr-4 font-semibold">Channel</th>
-                      <th className="py-2 pr-4 font-semibold">Amount</th>
-                      <th className="py-2 pr-4 font-semibold">Method</th>
-                      <th className="py-2 pr-4 font-semibold">Account / Number</th>
-                      <th className="py-2 pr-4 font-semibold">Status</th>
-                      <th className="py-2 pr-4 font-semibold">Created</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_transaction_id")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_plan")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_channel")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_amount")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_method")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_account_number")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_status")}</th>
+                      <th className="py-2 pr-4 font-semibold">{t("payments_section.column_created")}</th>
                       <th className="py-2 pr-4 font-semibold"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((t: any) => (
-                      <tr key={t.id} className={cn("border-b last:border-0", border)}>
-                        <td className={cn("py-2 pr-4 font-mono", text)}>{t.customer_transaction_id}</td>
+                    {transactions.map((txn: any) => (
+                      <tr key={txn.id} className={cn("border-b last:border-0", border)}>
+                        <td className={cn("py-2 pr-4 font-mono", text)}>{txn.customer_transaction_id}</td>
                         <td className={cn("py-2 pr-4 font-semibold", text)}>
-                          {t.plan_name || <span className="opacity-50 font-normal">—</span>}
+                          {txn.plan_name || <span className="opacity-50 font-normal">—</span>}
                         </td>
-                        <td className={cn("py-2 pr-4 capitalize", text)}>{t.channel.replace(/_/g, " ")}</td>
-                        <td className={cn("py-2 pr-4", text)}>{t.amount ? `${t.amount} ${t.currency}` : "—"}</td>
+                        <td className={cn("py-2 pr-4 capitalize", text)}>{txn.channel.replace(/_/g, " ")}</td>
+                        <td className={cn("py-2 pr-4", text)}>{txn.amount ? `${txn.amount} ${txn.currency}` : "—"}</td>
                         <td className={cn("py-2 pr-4", text)}>
-                          {t.swich_channel_name || <span className="opacity-50">Not confirmed yet</span>}
+                          {txn.swich_channel_name || <span className="opacity-50">{t("payments_section.not_confirmed_yet")}</span>}
                         </td>
                         <td className={cn("py-2 pr-4 font-mono", text)}>
-                          {t.swich_consumer_number || t.msisdn || "—"}
+                          {txn.swich_consumer_number || txn.msisdn || "—"}
                         </td>
                         <td className="py-2 pr-4">
                           <Badge
                             variant="outline"
                             className={cn(
                               "h-5 px-2 rounded-md text-[10px] font-semibold capitalize",
-                              t.status === "success"
+                              txn.status === "success"
                                 ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                                : t.status === "failed"
+                                : txn.status === "failed"
                                   ? "border-red-500/30 bg-red-500/5 text-red-600 dark:text-red-400"
                                   : "border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400"
                             )}
                           >
-                            {t.status}
+                            {txn.status}
                           </Badge>
                         </td>
                         <td className={cn("py-2 pr-4 opacity-60", sub)}>
-                          {t.created_at ? formatInWorkspaceTz(t.created_at, "M/d/yyyy, h:mm:ss a", workspaceTz) : "—"}
+                          {txn.created_at ? formatInWorkspaceTz(txn.created_at, "M/d/yyyy, h:mm:ss a", workspaceTz) : "—"}
                         </td>
                         <td className="py-2 pr-4">
-                          {t.status === "pending" && (
+                          {txn.status === "pending" && (
                             <button
-                              onClick={() => inquireMutation.mutate(t.customer_transaction_id)}
-                              disabled={inquiringId === t.customer_transaction_id}
+                              onClick={() => inquireMutation.mutate(txn.customer_transaction_id)}
+                              disabled={inquiringId === txn.customer_transaction_id}
                               className={cn("flex items-center gap-1 text-[10px] font-semibold whitespace-nowrap", sub)}
                             >
-                              {inquiringId === t.customer_transaction_id ? (
+                              {inquiringId === txn.customer_transaction_id ? (
                                 <Loader2 size={11} className="animate-spin" />
                               ) : (
                                 <RefreshCw size={11} />
                               )}
-                              Check Status
+                              {t("payments_section.check_status")}
                             </button>
                           )}
                         </td>

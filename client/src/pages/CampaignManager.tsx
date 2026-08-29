@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
 import {
   FaWhatsapp,
@@ -69,13 +70,13 @@ interface SortEntry {
 // value like "Hi [CONTACT_FIRST_NAME]" personalises per contact. Mirrors
 // replyagent's [CONTACT_*] placeholders — keep in sync with the resolver in
 // agentawk-core's broadcast-processor.service.ts.
-const CONTACT_TOKENS: Array<{ token: string; label: string }> = [
-  { token: "[CONTACT_FIRST_NAME]", label: "First name" },
-  { token: "[CONTACT_LAST_NAME]", label: "Last name" },
-  { token: "[CONTACT_FULL_NAME]", label: "Full name" },
-  { token: "[CONTACT_TITLE]", label: "Title" },
-  { token: "[CREATED_AT]", label: "Created on" },
-  { token: "[CURRENT_DATETIME]", label: "Current date & time" },
+const CONTACT_TOKENS: Array<{ token: string; labelKey: string }> = [
+  { token: "[CONTACT_FIRST_NAME]", labelKey: "first_name" },
+  { token: "[CONTACT_LAST_NAME]", labelKey: "last_name" },
+  { token: "[CONTACT_FULL_NAME]", labelKey: "full_name" },
+  { token: "[CONTACT_TITLE]", labelKey: "title" },
+  { token: "[CREATED_AT]", labelKey: "created_on" },
+  { token: "[CURRENT_DATETIME]", labelKey: "current_datetime" },
 ];
 
 // True when `date` falls inside the rolling window identified by `token`.
@@ -174,6 +175,7 @@ interface EngagementData {
 }
 
 export default function CampaignManager() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const workspaceTz = useWorkspaceTimezone();
   // "Allow" permissions (replyagent canManageBraodcasts / canDeleteBraodcasts) —
@@ -376,8 +378,8 @@ export default function CampaignManager() {
     const raw = tagsResponse?.tags ?? tagsResponse?.data ?? tagsResponse ?? [];
     if (!Array.isArray(raw)) return [];
     return raw
-      .filter((t: any) => t?.id != null && t?.name)
-      .map((t: any) => ({ id: String(t.id), name: String(t.name) }));
+      .filter((tg: any) => tg?.id != null && tg?.name)
+      .map((tg: any) => ({ id: String(tg.id), name: String(tg.name) }));
   }, [tagsResponse]);
 
   // Workspace custom fields — populates the "Custom Fields" category in
@@ -454,8 +456,8 @@ export default function CampaignManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
       toast({
-        title: "Broadcast Created",
-        description: "Your broadcast has been created successfully.",
+        title: t("campaign_manager.toast.created_title"),
+        description: t("campaign_manager.toast.created_desc"),
       });
       setCreateOpen(false);
       resetCreateCampaignForm();
@@ -470,8 +472,8 @@ export default function CampaignManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
       toast({
-        title: "Broadcast Updated",
-        description: "Your broadcast has been updated successfully.",
+        title: t("campaign_manager.toast.updated_title"),
+        description: t("campaign_manager.toast.updated_desc"),
       });
       setCreateOpen(false);
       setEditingCampaignId(null);
@@ -485,8 +487,8 @@ export default function CampaignManager() {
     },
     onSuccess: () => {
       toast({
-        title: "Campaign deleted",
-        description: "The campaign has been removed successfully.",
+        title: t("campaign_manager.toast.deleted_title"),
+        description: t("campaign_manager.toast.deleted_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
       setShowDeleteModal(false);
@@ -494,7 +496,7 @@ export default function CampaignManager() {
     },
     onError: (err: Error) => {
       toast({
-        title: "Delete failed",
+        title: t("campaign_manager.toast.delete_failed"),
         description: err.message,
         variant: "destructive",
       });
@@ -509,8 +511,8 @@ export default function CampaignManager() {
   // value — flipping the order causes a TDZ runtime crash.
   const whatsappTemplates = useMemo(() => {
     const list: any[] = templatesResponse?.templates ?? [];
-    return list.map((t: any) => {
-      const components: any[] = Array.isArray(t.components) ? t.components : [];
+    return list.map((tpl: any) => {
+      const components: any[] = Array.isArray(tpl.components) ? tpl.components : [];
       const header = components.find((c) => c?.type === "HEADER");
       const body = components.find((c) => c?.type === "BODY");
       const footer = components.find((c) => c?.type === "FOOTER");
@@ -523,11 +525,11 @@ export default function CampaignManager() {
       variables.forEach((v) => (variableSamples[v] = ""));
 
       return {
-        id: Number(t.id),
-        backend_id: t.id, // preserve string form for write-back
-        name: t.name,
-        category: t.category,
-        language: t.language,
+        id: Number(tpl.id),
+        backend_id: tpl.id, // preserve string form for write-back
+        name: tpl.name,
+        category: tpl.category,
+        language: tpl.language,
         body: bodyText,
         header: header?.text ?? "",
         footer: footer?.text ?? "",
@@ -549,7 +551,7 @@ export default function CampaignManager() {
   const campaigns = useMemo(() => {
     if (!broadcastsData?.broadcasts) return [];
     const templateById = new Map<number, any>();
-    whatsappTemplates.forEach((t: any) => templateById.set(t.id, t));
+    whatsappTemplates.forEach((tpl: any) => templateById.set(tpl.id, tpl));
 
     // Backend status (lowercase: draft / pending / in_progress / completed /
     // failed) → the UI status vocab used by the badge colours and filters.
@@ -802,7 +804,7 @@ export default function CampaignManager() {
         setCampaignName(campaignToEdit.name);
         setSelectedWhatsAppTemplate(campaignToEdit.whatsAppTemplateName);
         // Set the selectedTemplate to match the pre-selected template name
-        setSelectedTemplate(whatsappTemplates.find(t => t.name === campaignToEdit.whatsAppTemplateName) || null);
+        setSelectedTemplate(whatsappTemplates.find(tpl => tpl.name === campaignToEdit.whatsAppTemplateName) || null);
 
         if (campaignToEdit.type === "API Triggered") {
           setCampaignCreationStep("apiTriggeredForm");
@@ -936,8 +938,8 @@ export default function CampaignManager() {
 
     createBroadcastMutation.mutate(clonedCampaign);
     toast({
-      title: "Campaign Cloned",
-      description: `${cloneCampaignName} has been cloned to Draft`,
+      title: t("campaign_manager.toast.cloned_title"),
+      description: t("campaign_manager.toast.cloned_desc", { name: cloneCampaignName }),
     });
     handleCancelCloneDialog();
   };
@@ -953,8 +955,8 @@ export default function CampaignManager() {
 
     updateBroadcastMutation.mutate({ id: campaignToArchive.id, data: { status: "archived" } });
     toast({
-      title: "Campaign Archived",
-      description: `${campaignToArchive.name} has been archived`,
+      title: t("campaign_manager.toast.archived_title"),
+      description: t("campaign_manager.toast.archived_desc", { name: campaignToArchive.name }),
     });
     setShowArchiveModal(false);
     setCampaignToArchive(null);
@@ -988,8 +990,8 @@ export default function CampaignManager() {
     // Bulk actions should ideally hit a bulk API. For now, hitting update for each or TODO.
     archivable.forEach(id => updateBroadcastMutation.mutate({ id, data: { status: "archived" } }));
     toast({
-      title: "Campaigns Archived",
-      description: `${archivable.length} campaign(s) have been archived`,
+      title: t("campaign_manager.toast.bulk_archived_title"),
+      description: t("campaign_manager.toast.bulk_archived_desc", { count: archivable.length }),
     });
     setShowBulkArchiveModal(false);
     setSelectedCampaigns([]);
@@ -1001,8 +1003,8 @@ export default function CampaignManager() {
     // Bulk actions should ideally hit a bulk API.
     deletable.forEach(id => deleteMutation.mutate(id));
     toast({
-      title: "Campaigns Deleted",
-      description: `${deletable.length} campaign(s) have been deleted`,
+      title: t("campaign_manager.toast.bulk_deleted_title"),
+      description: t("campaign_manager.toast.bulk_deleted_desc", { count: deletable.length }),
     });
     setShowBulkDeleteModal(false);
     setSelectedCampaigns([]);
@@ -1101,7 +1103,7 @@ export default function CampaignManager() {
     type: "API Triggered" | "Broadcast",
     uiStatus: "draft" | "scheduled",
   ) => {
-    const templateRow = whatsappTemplates.find((t: any) => t.name === selectedWhatsAppTemplate);
+    const templateRow = whatsappTemplates.find((tpl: any) => tpl.name === selectedWhatsAppTemplate);
     const wa_template_id = templateRow?.backend_id ?? templateRow?.id ?? null;
 
     // First scheduled slot drives `scheduled_at`. Backend treats "pending"
@@ -1254,7 +1256,7 @@ export default function CampaignManager() {
     audienceFilterPayload.items.length > 0 ? (audiencePreview?.count ?? 0) : 0;
 
   const buildComposerPayload = (uiStatus: "draft" | "scheduled") => {
-    const templateRow = whatsappTemplates.find((t: any) => t.name === selectedWhatsAppTemplate);
+    const templateRow = whatsappTemplates.find((tpl: any) => tpl.name === selectedWhatsAppTemplate);
     const wa_template_id = templateRow?.backend_id ?? templateRow?.id ?? null;
     // Ordered values for the template's body placeholders — index 0 → {{1}}.
     const templateParams = (templateRow?.variables ?? []).map(
@@ -1340,7 +1342,7 @@ export default function CampaignManager() {
     // Template
     setSelectedWhatsAppTemplate(campaign.whatsAppTemplateName || null);
     const editTpl =
-      whatsappTemplates.find((t: any) => t.name === campaign.whatsAppTemplateName) || null;
+      whatsappTemplates.find((tpl: any) => tpl.name === campaign.whatsAppTemplateName) || null;
     setSelectedTemplate(editTpl);
     // Restore saved placeholder values (ordered array in metadata.templateParams).
     const savedParams: any[] = Array.isArray(campaign.metadata?.templateParams)
@@ -1380,7 +1382,7 @@ export default function CampaignManager() {
 
   const handleComposerSaveDraft = () => {
     if (!campaignName.trim() || !newBroadcastChannelKey) {
-      toast({ title: "Missing details", description: "Add a name and pick a channel first.", variant: "destructive" });
+      toast({ title: t("campaign_manager.toast.missing_details_title"), description: t("campaign_manager.toast.missing_details_desc"), variant: "destructive" });
       return;
     }
     const payload = buildComposerPayload("draft");
@@ -1418,7 +1420,7 @@ export default function CampaignManager() {
       (composerScheduleMode === "later" && !composerScheduleDate);
     if (anyMissing) {
       setComposerSendAttempted(true);
-      toast({ title: "Please complete the highlighted fields", variant: "destructive" });
+      toast({ title: t("campaign_manager.toast.complete_highlighted"), variant: "destructive" });
       return;
     }
     // Refuse instead of silently dropping: an untranslatable condition would be
@@ -1427,10 +1429,10 @@ export default function CampaignManager() {
     if (unsupportedConditions.length > 0) {
       setComposerSendAttempted(true);
       toast({
-        title: "Unsupported audience condition",
-        description: `${unsupportedConditions
-          .map((c) => c.fieldLabel)
-          .join(", ")} can't be used to target an audience yet. Remove it, or filter by First / Last / Full name, Tag, or a custom field.`,
+        title: t("campaign_manager.toast.unsupported_condition_title"),
+        description: t("campaign_manager.toast.unsupported_condition_desc", {
+          fields: unsupportedConditions.map((c) => c.fieldLabel).join(", "),
+        }),
         variant: "destructive",
       });
       return;
@@ -1463,8 +1465,8 @@ export default function CampaignManager() {
   const handleCreateCampaign = (status: "draft" | "scheduled") => {
     if (!defaultChannel) {
       toast({
-        title: "No WhatsApp account",
-        description: "Connect a WhatsApp account before creating campaigns.",
+        title: t("campaign_manager.toast.no_whatsapp_title"),
+        description: t("campaign_manager.toast.no_whatsapp_desc"),
         variant: "destructive",
       });
       return;
@@ -1483,8 +1485,8 @@ export default function CampaignManager() {
   const handleCreateBroadcastCampaign = (status: "draft" | "scheduled") => {
     if (!defaultChannel) {
       toast({
-        title: "No WhatsApp account",
-        description: "Connect a WhatsApp account before creating campaigns.",
+        title: t("campaign_manager.toast.no_whatsapp_title"),
+        description: t("campaign_manager.toast.no_whatsapp_desc"),
         variant: "destructive",
       });
       return;
@@ -1511,13 +1513,13 @@ export default function CampaignManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
       toast({
-        title: "Broadcast queued",
-        description: "It will be executed within the next minute.",
+        title: t("campaign_manager.toast.queued_title"),
+        description: t("campaign_manager.toast.queued_desc"),
       });
     },
     onError: (err: Error) => {
       toast({
-        title: "Send failed",
+        title: t("campaign_manager.toast.send_failed"),
         description: err.message,
         variant: "destructive",
       });
@@ -1600,17 +1602,17 @@ export default function CampaignManager() {
       (c: any) => `${c.channel_type}:${c.channelable_id}` === newBroadcastChannelKey,
     );
     const activeChannelType = String(activeChannel?.channel_type ?? "whatsapp");
-    const activeChannelName = activeChannel?.name ?? "Channel";
+    const activeChannelName = activeChannel?.name ?? t("campaign_manager.composer.channel_fallback");
     const activeChannelSub = activeChannel?.phone_number ?? activeChannel?.display_phone_number ?? "";
     // Chip state per progress step. Audience needs a segment name AND a
     // resolved channel; Template needs a picked template; Schedule needs
     // either "now" or a picked date; Delivery is always ready (has
     // sensible defaults).
     const steps = [
-      { key: "audience", label: "Audience", ready: !!campaignName.trim() && !!newBroadcastChannelKey },
-      { key: "template", label: "Template", ready: !!selectedWhatsAppTemplate },
-      { key: "schedule", label: "Schedule", ready: composerScheduleMode === "now" || !!composerScheduleDate },
-      { key: "delivery", label: "Delivery", ready: true },
+      { key: "audience", label: t("campaign_manager.composer.step_audience"), ready: !!campaignName.trim() && !!newBroadcastChannelKey },
+      { key: "template", label: t("campaign_manager.composer.step_template"), ready: !!selectedWhatsAppTemplate },
+      { key: "schedule", label: t("campaign_manager.composer.step_schedule"), ready: composerScheduleMode === "now" || !!composerScheduleDate },
+      { key: "delivery", label: t("campaign_manager.composer.step_delivery"), ready: true },
     ];
     const readyCount = steps.filter((s) => s.ready).length;
     const remaining = steps.length - readyCount;
@@ -1642,7 +1644,7 @@ export default function CampaignManager() {
               <button
                 onClick={closeComposer}
                 className="shrink-0 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors"
-                title="Back"
+                title={t("campaign_manager.composer.back")}
               >
                 <ArrowLeft size={16} />
               </button>
@@ -1652,14 +1654,14 @@ export default function CampaignManager() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h1 className="text-[16px] font-bold text-slate-900 dark:text-white truncate">
-                    {editingCampaignId ? campaignName || "Broadcast" : "Performance Broadcast"}
+                    {editingCampaignId ? campaignName || t("campaign_manager.composer.untitled_broadcast") : t("campaign_manager.composer.performance_broadcast")}
                   </h1>
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 uppercase tracking-wider">
-                    {editingCampaignId ? "Edit" : "Draft"}
+                    {editingCampaignId ? t("campaign_manager.composer.badge_edit") : t("campaign_manager.composer.badge_draft")}
                   </span>
                 </div>
                 <p className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate">
-                  High-performance bulk messaging for your audience
+                  {t("campaign_manager.composer.subtitle")}
                 </p>
               </div>
             </div>
@@ -1670,7 +1672,7 @@ export default function CampaignManager() {
                 onClick={closeComposer}
                 className="h-8 px-3 text-[12px] font-semibold text-slate-600 dark:text-slate-300"
               >
-                Cancel
+                {t("campaign_manager.common.cancel")}
               </Button>
               <Button
                 variant="outline"
@@ -1680,7 +1682,7 @@ export default function CampaignManager() {
                 className="h-8 px-3 text-[12px] font-semibold border-slate-200 dark:border-slate-800"
               >
                 {createBroadcastMutation.isPending && <Loader2 size={12} className="mr-1.5 animate-spin" />}
-                Save as draft
+                {t("campaign_manager.composer.save_as_draft")}
               </Button>
               <Button
                 size="sm"
@@ -1691,7 +1693,7 @@ export default function CampaignManager() {
                 {sendBroadcastMutation.isPending
                   ? <Loader2 size={12} className="mr-1.5 animate-spin" />
                   : <Send size={13} strokeWidth={2.5} className="mr-1.5" />}
-                {composerScheduleMode === "now" ? "Send broadcast" : "Schedule"}
+                {composerScheduleMode === "now" ? t("campaign_manager.composer.send_broadcast") : t("campaign_manager.composer.schedule_action")}
               </Button>
             </div>
           </div>
@@ -1721,7 +1723,9 @@ export default function CampaignManager() {
               ))}
             </div>
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">
-              <span className="text-slate-700 dark:text-slate-200 font-semibold">{readyCount} of {steps.length}</span> ready · <span className="text-slate-700 dark:text-slate-200 font-semibold">{remaining}</span> step{remaining === 1 ? "" : "s"} remaining
+              <span className="text-slate-700 dark:text-slate-200 font-semibold">{t("campaign_manager.composer.ready_count", { ready: readyCount, total: steps.length })}</span>{" "}
+              <span className="text-slate-700 dark:text-slate-200 font-semibold">{remaining}</span>{" "}
+              {t("campaign_manager.composer.steps_remaining", { count: remaining })}
             </p>
           </div>
 
@@ -1734,8 +1738,8 @@ export default function CampaignManager() {
                   <UsersRound size={16} strokeWidth={2.5} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">01 · Audience</p>
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Who receives this</h3>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">{t("campaign_manager.composer.section_audience")}</p>
+                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.composer.who_receives")}</h3>
                 </div>
               </div>
               {/* Sending from */}
@@ -1753,7 +1757,7 @@ export default function CampaignManager() {
                   <ChannelChipIcon channel={activeChannelType} size={16} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Sending from</p>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">{t("campaign_manager.composer.sending_from")}</p>
                   <p className="text-[12.5px] font-semibold text-slate-900 dark:text-white truncate">
                     {activeChannelName}
                   </p>
@@ -1766,7 +1770,7 @@ export default function CampaignManager() {
               </div>
               {/* Segment name */}
               <div className="space-y-1.5">
-                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">Segment name</label>
+                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.segment_name")}</label>
                 <Input
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value.slice(0, 512))}
@@ -1778,12 +1782,12 @@ export default function CampaignManager() {
                   )}
                 />
                 {composerSendAttempted && !campaignName.trim() && (
-                  <p className="text-[11px] text-rose-500 italic">Please provide a segment name</p>
+                  <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.segment_name_required")}</p>
                 )}
               </div>
               {/* Match */}
               <div className="space-y-1.5">
-                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">Match</label>
+                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.match")}</label>
                 <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-slate-100 dark:bg-slate-800/60">
                   {(["any", "all"] as const).map((m) => (
                     <button
@@ -1796,7 +1800,7 @@ export default function CampaignManager() {
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
                       )}
                     >
-                      {m === "any" ? "Any condition" : "All conditions"}
+                      {m === "any" ? t("campaign_manager.composer.match_any") : t("campaign_manager.composer.match_all")}
                     </button>
                   ))}
                 </div>
@@ -1808,7 +1812,7 @@ export default function CampaignManager() {
               {composerConditions.length > 0 && (
                 <div className="space-y-2">
                   {composerConditions.map((c, i) => {
-                    const verb = conditionOperatorPreview(c.fieldType, c.operator);
+                    const verb = conditionOperatorPreview(c.fieldType, c.operator, t);
                     const skips = operatorSkipsValue(c.operator);
                     const displayValue = skips
                       ? ""
@@ -1829,7 +1833,7 @@ export default function CampaignManager() {
                               setComposerConditions(composerConditions.filter((_, idx) => idx !== i))
                             }
                             className="p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 shrink-0"
-                            title="Remove"
+                            title={t("campaign_manager.common.remove")}
                           >
                             <X size={12} />
                           </button>
@@ -1852,7 +1856,7 @@ export default function CampaignManager() {
                 onClick={() => setConditionModalOpen(true)}
                 className="w-full py-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-primary/50 hover:text-primary transition-colors"
               >
-                + Add condition
+                {t("campaign_manager.composer.add_condition")}
               </button>
               {/* Total audience — replyagent uses a warm rose→pink accent
                   so this row stands out from the emerald + slate chrome
@@ -1864,17 +1868,17 @@ export default function CampaignManager() {
                 <p className="text-[28px] font-bold leading-none tabular-nums bg-gradient-to-br from-rose-600 to-fuchsia-600 bg-clip-text text-transparent">
                   {audienceLoading ? "…" : audienceCount.toLocaleString()}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1.5">Total audience</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1.5">{t("campaign_manager.composer.total_audience")}</p>
                 <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
                   {composerConditions.length === 0
-                    ? "Add a condition to target contacts"
+                    ? t("campaign_manager.composer.audience_hint_empty")
                     : unsupportedConditions.length > 0
-                      ? "This condition can't be used yet"
-                      : "Will receive the message"}
+                      ? t("campaign_manager.composer.audience_hint_unsupported")
+                      : t("campaign_manager.composer.audience_hint_ready")}
                 </p>
                 {composerSendAttempted && composerConditions.length === 0 && (
                   <p className="text-[10.5px] text-rose-500 italic mt-1.5">
-                    There is no audience to send this broadcast to.
+                    {t("campaign_manager.composer.no_audience_error")}
                   </p>
                 )}
                 <span className="absolute right-3 bottom-3 h-9 w-9 rounded-full bg-gradient-to-br from-rose-500 to-fuchsia-500 shadow-md shadow-rose-500/30 flex items-center justify-center">
@@ -1890,18 +1894,18 @@ export default function CampaignManager() {
                   <MessageSquare size={16} strokeWidth={2.5} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">02 · Configuration</p>
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Message & schedule</h3>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">{t("campaign_manager.composer.section_configuration")}</p>
+                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.composer.message_and_schedule")}</h3>
                 </div>
               </div>
               {/* Template */}
               <div className="space-y-1.5">
-                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">Template</label>
+                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.template")}</label>
                 <Select
                   value={selectedWhatsAppTemplate || ""}
                   onValueChange={(value) => {
                     setSelectedWhatsAppTemplate(value);
-                    const tpl = whatsappTemplates.find(t => t.name === value) || null;
+                    const tpl = whatsappTemplates.find(tpl => tpl.name === value) || null;
                     setSelectedTemplate(tpl);
                     // Reset placeholder values for the newly picked template.
                     const count = tpl?.variables?.length ?? 0;
@@ -1918,7 +1922,7 @@ export default function CampaignManager() {
                   )}>
                     <div className="flex items-center gap-2">
                       <span className="h-6 w-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-amber-500">★</span>
-                      <SelectValue placeholder="Select the template" />
+                      <SelectValue placeholder={t("campaign_manager.composer.select_template")} />
                     </div>
                   </SelectTrigger>
                   <SelectContent>
@@ -1928,7 +1932,7 @@ export default function CampaignManager() {
                   </SelectContent>
                 </Select>
                 {composerSendAttempted && !selectedWhatsAppTemplate && (
-                  <p className="text-[11px] text-rose-500 italic">Please select a template</p>
+                  <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.template_required")}</p>
                 )}
               </div>
 
@@ -1936,10 +1940,10 @@ export default function CampaignManager() {
               {selectedTemplate && (selectedTemplate.variables?.length ?? 0) > 0 && (
                 <div className="space-y-2">
                   <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">
-                    Template variables
+                    {t("campaign_manager.composer.template_variables")}
                   </label>
                   <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                    Type a fixed value, or insert a contact field to personalise it per recipient.
+                    {t("campaign_manager.composer.template_variables_hint")}
                   </p>
                   {selectedTemplate.variables.map((_: any, i: number) => {
                     const key = String(i + 1);
@@ -1956,7 +1960,7 @@ export default function CampaignManager() {
                           onChange={(e) =>
                             setComposerVariables((prev) => ({ ...prev, [key]: e.target.value }))
                           }
-                          placeholder={`Value for {{${key}}}`}
+                          placeholder={t("campaign_manager.composer.variable_placeholder", { key: `{{${key}}}` })}
                           className={cn(
                             "h-9 rounded-lg text-[12px]",
                             missing
@@ -1970,25 +1974,25 @@ export default function CampaignManager() {
                           <DropdownMenuTrigger asChild>
                             <button
                               type="button"
-                              title="Insert a contact field"
+                              title={t("campaign_manager.composer.insert_contact_field")}
                               className="h-9 w-9 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-primary shrink-0"
                             >
                               <User className="h-3.5 w-3.5" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-xl p-1.5 min-w-[190px]">
-                            {CONTACT_TOKENS.map((t) => (
+                            {CONTACT_TOKENS.map((tok) => (
                               <DropdownMenuItem
-                                key={t.token}
+                                key={tok.token}
                                 className="rounded-lg py-2 cursor-pointer font-medium text-[11px]"
                                 onClick={() =>
                                   setComposerVariables((prev) => ({
                                     ...prev,
-                                    [key]: `${prev[key] ?? ""}${t.token}`,
+                                    [key]: `${prev[key] ?? ""}${tok.token}`,
                                   }))
                                 }
                               >
-                                {t.label}
+                                {t(`campaign_manager.contact_tokens.${tok.labelKey}`)}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
@@ -2000,13 +2004,13 @@ export default function CampaignManager() {
                     /\[[A-Z_]+\]/.test(composerVariables[String(i + 1)] ?? ""),
                   ) && (
                     <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 leading-snug">
-                      Contact fields are replaced with each recipient's own data when sending.
+                      {t("campaign_manager.composer.contact_fields_note")}
                     </p>
                   )}
                   {composerSendAttempted &&
                     selectedTemplate.variables.some(
                       (_: any, i: number) => !(composerVariables[String(i + 1)] ?? "").trim(),
-                    ) && <p className="text-[11px] text-rose-500 italic">Fill every template variable</p>}
+                    ) && <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.fill_all_variables")}</p>}
                 </div>
               )}
 
@@ -2016,9 +2020,9 @@ export default function CampaignManager() {
                   <CheckCircle2 size={13} strokeWidth={2.5} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-semibold text-slate-900 dark:text-white">Pause if Meta reclassifies to Marketing</p>
+                  <p className="text-[12px] font-semibold text-slate-900 dark:text-white">{t("campaign_manager.composer.pause_marketing_title")}</p>
                   <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
-                    The system will verify whether Meta has automatically reclassified the message type as Marketing. If so, the broadcast will not be sent.
+                    {t("campaign_manager.composer.pause_marketing_desc")}
                   </p>
                 </div>
                 <button
@@ -2036,7 +2040,7 @@ export default function CampaignManager() {
               </div>
               {/* Schedule */}
               <div className="space-y-1.5">
-                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">Schedule</label>
+                <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.schedule")}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setComposerScheduleMode("now")}
@@ -2048,8 +2052,8 @@ export default function CampaignManager() {
                     )}
                   >
                     <Zap size={14} className="text-primary mb-1.5" strokeWidth={2.5} />
-                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white">Send now</p>
-                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">Start immediately</p>
+                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white">{t("campaign_manager.composer.send_now")}</p>
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">{t("campaign_manager.composer.send_now_hint")}</p>
                   </button>
                   <button
                     onClick={() => setComposerScheduleMode("later")}
@@ -2061,8 +2065,8 @@ export default function CampaignManager() {
                     )}
                   >
                     <Calendar size={14} className={cn("mb-1.5", composerScheduleMode === "later" ? "text-primary" : "text-slate-500")} strokeWidth={2.5} />
-                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white">Schedule</p>
-                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">Pick date &amp; time</p>
+                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white">{t("campaign_manager.composer.schedule")}</p>
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">{t("campaign_manager.composer.schedule_hint")}</p>
                   </button>
                 </div>
                 {/* Date + time inputs appear only when "Schedule" mode is
@@ -2085,7 +2089,7 @@ export default function CampaignManager() {
                           <div className="flex items-center min-w-0">
                             <Calendar size={12} className="mr-1.5 shrink-0" />
                             <span className="truncate">
-                              {composerScheduleDate ? composerScheduleDate.toLocaleDateString() : "Pick date"}
+                              {composerScheduleDate ? composerScheduleDate.toLocaleDateString() : t("campaign_manager.composer.pick_date")}
                             </span>
                           </div>
                           <ChevronDown size={12} className="shrink-0 text-slate-400" />
@@ -2107,7 +2111,7 @@ export default function CampaignManager() {
                     <div className="grid grid-cols-2 gap-1">
                       <Select value={composerScheduleHour} onValueChange={setComposerScheduleHour}>
                         <SelectTrigger className="h-9 text-[12px] rounded-lg">
-                          <SelectValue placeholder="HH" />
+                          <SelectValue placeholder={t("campaign_manager.composer.hh")} />
                         </SelectTrigger>
                         <SelectContent>
                           {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => (
@@ -2117,7 +2121,7 @@ export default function CampaignManager() {
                       </Select>
                       <Select value={composerScheduleMinute} onValueChange={setComposerScheduleMinute}>
                         <SelectTrigger className="h-9 text-[12px] rounded-lg">
-                          <SelectValue placeholder="MM" />
+                          <SelectValue placeholder={t("campaign_manager.composer.mm")} />
                         </SelectTrigger>
                         <SelectContent>
                           {["00", "15", "30", "45"].map((m) => (
@@ -2128,7 +2132,7 @@ export default function CampaignManager() {
                     </div>
                   </div>
                   {composerSendAttempted && !composerScheduleDate && (
-                    <p className="text-[11px] text-rose-500 italic">Please pick a schedule date</p>
+                    <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.schedule_date_required")}</p>
                   )}
                   </div>
                 )}
@@ -2140,20 +2144,20 @@ export default function CampaignManager() {
                     <span className="text-[11px]">🏷</span>
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white">Tag failed contacts</p>
+                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white">{t("campaign_manager.composer.tag_failed_title")}</p>
                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Apply a tag to the contacts that the message delivery failed.
+                      {t("campaign_manager.composer.tag_failed_desc")}
                     </p>
                   </div>
                 </div>
                 <Select value={composerTagFailed} onValueChange={setComposerTagFailed}>
                   <SelectTrigger className="h-9 rounded-lg text-[12px]">
-                    <SelectValue placeholder="Create or select a tag" />
+                    <SelectValue placeholder={t("campaign_manager.composer.tag_placeholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none">No tag</SelectItem>
-                    {workspaceTags.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    <SelectItem value="__none">{t("campaign_manager.composer.no_tag")}</SelectItem>
+                    {workspaceTags.map((tg) => (
+                      <SelectItem key={tg.id} value={tg.id}>{tg.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -2167,8 +2171,8 @@ export default function CampaignManager() {
                   <Eye size={16} strokeWidth={2.5} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">03 · Preview</p>
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">How it lands</h3>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">{t("campaign_manager.composer.section_preview")}</p>
+                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.composer.how_it_lands")}</h3>
                 </div>
               </div>
               <div className="rounded-xl bg-slate-100 dark:bg-slate-800/60 h-[280px] flex items-center justify-center">
@@ -2183,29 +2187,29 @@ export default function CampaignManager() {
                     variableSamples={composerVariables}
                   />
                 ) : (
-                  <p className="text-[12px] text-slate-400">No template selected</p>
+                  <p className="text-[12px] text-slate-400">{t("campaign_manager.composer.no_template_selected")}</p>
                 )}
               </div>
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
                 <div className="flex items-center justify-between text-[11.5px]">
                   <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                    <UsersRound size={12} /> Audience
+                    <UsersRound size={12} /> {t("campaign_manager.composer.audience")}
                   </span>
-                  <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{audienceCount.toLocaleString()} contacts</span>
+                  <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{t("campaign_manager.composer.contacts_count", { count: audienceCount })}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11.5px]">
                   <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                    <Clock size={12} /> Est. duration
+                    <Clock size={12} /> {t("campaign_manager.composer.est_duration")}
                   </span>
                   <span className="font-semibold text-slate-900 dark:text-white">{estDuration}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11.5px]">
                   <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                    <Zap size={12} /> First message at
+                    <Zap size={12} /> {t("campaign_manager.composer.first_message_at")}
                   </span>
                   <span className="font-semibold text-slate-900 dark:text-white">
                     {composerScheduleMode === "now"
-                      ? "Now"
+                      ? t("campaign_manager.composer.now")
                       : composerScheduleDate
                         ? `${composerScheduleDate.toLocaleDateString()} ${composerScheduleHour}:${composerScheduleMinute}`
                         : "—"}
@@ -2222,17 +2226,17 @@ export default function CampaignManager() {
                 <Activity size={16} strokeWidth={2.5} />
               </span>
               <div className="min-w-0">
-                <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">04 · Delivery Profile</p>
-                <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Configure the rate of messages sent to contacts</h3>
+                <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">{t("campaign_manager.composer.section_delivery")}</p>
+                <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.composer.delivery_desc")}</h3>
               </div>
             </div>
             {/* Preset cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
               {([
-                { key: "conservative", label: "Conservative", desc: "Safest, slowest", Icon: CheckCircle2, iconBg: "bg-sky-500", batch: 5, pause: 120, interval: "5-15s" },
-                { key: "standard",     label: "Standard",     desc: "Recommended",    Icon: CheckCircle2, iconBg: "bg-emerald-500", batch: 10, pause: 60, interval: "2-7s" },
-                { key: "aggressive",   label: "Aggressive",   desc: "Fastest, riskier", Icon: Zap,        iconBg: "bg-orange-500", batch: 25, pause: 20, interval: "1-3s" },
-                { key: "custom",       label: "Custom",       desc: "Set it yourself",  Icon: Activity,   iconBg: "bg-violet-500", batch: composerBatchSize, pause: composerBatchPause, interval: `${composerIntervalMin}-${composerIntervalMax}s` },
+                { key: "conservative", label: t("campaign_manager.presets.conservative"), desc: t("campaign_manager.presets.conservative_desc"), Icon: CheckCircle2, iconBg: "bg-sky-500", batch: 5, pause: 120, interval: "5-15s" },
+                { key: "standard",     label: t("campaign_manager.presets.standard"),     desc: t("campaign_manager.presets.standard_desc"),    Icon: CheckCircle2, iconBg: "bg-emerald-500", batch: 10, pause: 60, interval: "2-7s" },
+                { key: "aggressive",   label: t("campaign_manager.presets.aggressive"),   desc: t("campaign_manager.presets.aggressive_desc"), Icon: Zap,        iconBg: "bg-orange-500", batch: 25, pause: 20, interval: "1-3s" },
+                { key: "custom",       label: t("campaign_manager.presets.custom"),       desc: t("campaign_manager.presets.custom_desc"),  Icon: Activity,   iconBg: "bg-violet-500", batch: composerBatchSize, pause: composerBatchPause, interval: `${composerIntervalMin}-${composerIntervalMax}s` },
               ] as const).map((p) => (
                 <button
                   key={p.key}
@@ -2258,9 +2262,9 @@ export default function CampaignManager() {
                   <p className="text-[13px] font-bold text-slate-900 dark:text-white">{p.label}</p>
                   <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mb-2">{p.desc}</p>
                   <div className="space-y-0.5 text-[10.5px]">
-                    <div className="flex items-center justify-between"><span className="text-slate-500">Batch</span><span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{p.batch}</span></div>
-                    <div className="flex items-center justify-between"><span className="text-slate-500">Pause</span><span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{p.pause}s</span></div>
-                    <div className="flex items-center justify-between"><span className="text-slate-500">Interval</span><span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{p.interval}</span></div>
+                    <div className="flex items-center justify-between"><span className="text-slate-500">{t("campaign_manager.presets.batch")}</span><span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{p.batch}</span></div>
+                    <div className="flex items-center justify-between"><span className="text-slate-500">{t("campaign_manager.presets.pause")}</span><span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{p.pause}s</span></div>
+                    <div className="flex items-center justify-between"><span className="text-slate-500">{t("campaign_manager.presets.interval")}</span><span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{p.interval}</span></div>
                   </div>
                 </button>
               ))}
@@ -2268,31 +2272,31 @@ export default function CampaignManager() {
             {/* Number inputs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <NumberStepper
-                label="Batch size"
-                suffix="msgs / batch"
+                label={t("campaign_manager.composer.batch_size")}
+                suffix={t("campaign_manager.composer.batch_size_suffix")}
                 value={composerBatchSize}
                 onChange={(v) => { setComposerBatchSize(v); setComposerDeliveryPreset("custom"); }}
                 min={1} max={100}
-                hint="Messages sent before pausing."
+                hint={t("campaign_manager.composer.batch_size_hint")}
               />
               <NumberStepper
-                label="Pause between batches"
-                suffix="seconds"
+                label={t("campaign_manager.composer.batch_pause")}
+                suffix={t("campaign_manager.composer.batch_pause_suffix")}
                 value={composerBatchPause}
                 onChange={(v) => { setComposerBatchPause(v); setComposerDeliveryPreset("custom"); }}
                 min={1} max={600}
-                hint="How long to wait between batches."
+                hint={t("campaign_manager.composer.batch_pause_hint")}
               />
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500">Interval per message</label>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">Random range</span>
+                  <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500">{t("campaign_manager.composer.interval_per_message")}</label>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">{t("campaign_manager.composer.random_range")}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <StepperInput value={composerIntervalMin} onChange={(v) => { setComposerIntervalMin(v); setComposerDeliveryPreset("custom"); }} min={1} max={60} />
                   <StepperInput value={composerIntervalMax} onChange={(v) => { setComposerIntervalMax(v); setComposerDeliveryPreset("custom"); }} min={1} max={60} />
                 </div>
-                <p className="text-[10.5px] text-slate-400">Random delay between each message.</p>
+                <p className="text-[10.5px] text-slate-400">{t("campaign_manager.composer.random_delay_hint")}</p>
               </div>
             </div>
           </div>
@@ -2301,18 +2305,18 @@ export default function CampaignManager() {
         {/* Sticky bottom bar */}
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-4 text-[11.5px] text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1.5"><UsersRound size={13} /> <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{audienceCount}</span> contacts</span>
-            <span className="flex items-center gap-1.5"><Clock size={13} /> <span className="font-semibold text-slate-800 dark:text-slate-200">{estDuration}</span> to deliver</span>
-            <span className="flex items-center gap-1.5"><Zap size={13} /> Starts <span className="font-semibold text-slate-800 dark:text-slate-200">
+            <span className="flex items-center gap-1.5"><UsersRound size={13} /> <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{audienceCount}</span> {t("campaign_manager.composer.contacts_label")}</span>
+            <span className="flex items-center gap-1.5"><Clock size={13} /> <span className="font-semibold text-slate-800 dark:text-slate-200">{estDuration}</span> {t("campaign_manager.composer.to_deliver")}</span>
+            <span className="flex items-center gap-1.5"><Zap size={13} /> {t("campaign_manager.composer.starts")} <span className="font-semibold text-slate-800 dark:text-slate-200">
               {composerScheduleMode === "now"
-                ? "Now"
+                ? t("campaign_manager.composer.now")
                 : composerScheduleDate
                   ? `${composerScheduleDate.toLocaleDateString()} ${composerScheduleHour}:${composerScheduleMinute}`
                   : "—"}
             </span></span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={closeComposer} className="h-9 px-4 text-[12.5px]">Cancel</Button>
+            <Button variant="ghost" size="sm" onClick={closeComposer} className="h-9 px-4 text-[12.5px]">{t("campaign_manager.common.cancel")}</Button>
             <Button
               variant="outline"
               size="sm"
@@ -2321,7 +2325,7 @@ export default function CampaignManager() {
               className="h-9 px-4 text-[12.5px] border-slate-200 dark:border-slate-800"
             >
               {createBroadcastMutation.isPending && <Loader2 size={12} className="mr-1.5 animate-spin" />}
-              Save as draft
+              {t("campaign_manager.composer.save_as_draft")}
             </Button>
             <Button
               size="sm"
@@ -2332,7 +2336,7 @@ export default function CampaignManager() {
               {sendBroadcastMutation.isPending
                 ? <Loader2 size={12} className="mr-1.5 animate-spin" />
                 : <Send size={13} strokeWidth={2.5} className="mr-1.5" />}
-              {composerScheduleMode === "now" ? "Send broadcast" : "Schedule"}
+              {composerScheduleMode === "now" ? t("campaign_manager.composer.send_broadcast") : t("campaign_manager.composer.schedule_action")}
             </Button>
           </div>
         </div>
@@ -2432,10 +2436,10 @@ export default function CampaignManager() {
                     </div>
                     <div className="space-y-0.5">
                         <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                            Broadcasts
+                            {t("campaign_manager.list.title")}
                         </h1>
                         <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                            Reach your contacts in minutes with our high-performance Broadcast service
+                            {t("campaign_manager.list.subtitle")}
                         </p>
                     </div>
                 </div>
@@ -2447,7 +2451,7 @@ export default function CampaignManager() {
                         className="h-8 px-3 rounded-lg text-[11px] font-semibold border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
                         <RefreshCw size={13} strokeWidth={2.5} className="mr-1.5" />
-                        Refresh
+                        {t("campaign_manager.list.refresh")}
                     </Button>
                     {canManageBroadcasts && (
                     <Button
@@ -2456,7 +2460,7 @@ export default function CampaignManager() {
                         data-testid="button-create-campaign"
                     >
                         <Plus size={14} strokeWidth={2.5} />
-                        <span>New Broadcast</span>
+                        <span>{t("campaign_manager.list.new_broadcast")}</span>
                     </Button>
                     )}
                 </div>
@@ -2481,19 +2485,19 @@ export default function CampaignManager() {
                 <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5" />
-                        Date Range
+                        {t("campaign_manager.filters.date_range")}
                     </label>
                     <CustomDropdown
                         options={[
-                            { id: "", name: "All Time" },
-                            { id: "today", name: "Today" },
-                            { id: "last7", name: "Last 7 days" },
-                            { id: "last30", name: "Last 30 days" },
-                            { id: "thisMonth", name: "This month" },
+                            { id: "", name: t("campaign_manager.filters.all_time") },
+                            { id: "today", name: t("campaign_manager.filters.today") },
+                            { id: "last7", name: t("campaign_manager.filters.last7") },
+                            { id: "last30", name: t("campaign_manager.filters.last30") },
+                            { id: "thisMonth", name: t("campaign_manager.filters.this_month") },
                         ]}
                         selected={dateRangeFilter}
                         onChange={(ids) => setDateRangeFilter(ids[0] === "" ? [] : ids)}
-                        placeholder="All Time"
+                        placeholder={t("campaign_manager.filters.all_time")}
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
@@ -2501,8 +2505,8 @@ export default function CampaignManager() {
                             <>
                                 <span className={cn("truncate text-[12px]", dateRangeFilter.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
                                     {dateRangeFilter.length === 0
-                                        ? "All Time"
-                                        : ({ today: "Today", last7: "Last 7 days", last30: "Last 30 days", thisMonth: "This month" } as Record<string, string>)[dateRangeFilter[0]] ?? dateRangeFilter[0]}
+                                        ? t("campaign_manager.filters.all_time")
+                                        : ({ today: t("campaign_manager.filters.today"), last7: t("campaign_manager.filters.last7"), last30: t("campaign_manager.filters.last30"), thisMonth: t("campaign_manager.filters.this_month") } as Record<string, string>)[dateRangeFilter[0]] ?? dateRangeFilter[0]}
                                 </span>
                                 <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
                             </>
@@ -2514,22 +2518,22 @@ export default function CampaignManager() {
                 <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Status
+                        {t("campaign_manager.filters.status")}
                     </label>
                     <CustomDropdown
                         options={[
-                            { id: "", name: "All" },
-                            { id: "draft", name: "Draft" },
-                            { id: "queued", name: "Queued" },
-                            { id: "scheduled", name: "Scheduled" },
-                            { id: "sending", name: "Sending" },
-                            { id: "sent", name: "Sent" },
-                            { id: "failed", name: "Failed" },
-                            { id: "archived", name: "Archived" },
+                            { id: "", name: t("campaign_manager.filters.all") },
+                            { id: "draft", name: t("campaign_manager.status.draft") },
+                            { id: "queued", name: t("campaign_manager.status.queued") },
+                            { id: "scheduled", name: t("campaign_manager.status.scheduled") },
+                            { id: "sending", name: t("campaign_manager.status.sending") },
+                            { id: "sent", name: t("campaign_manager.status.sent") },
+                            { id: "failed", name: t("campaign_manager.status.failed") },
+                            { id: "archived", name: t("campaign_manager.status.archived") },
                         ]}
                         selected={selectedStatus}
                         onChange={(ids) => setSelectedStatus(ids[0] === "" ? [] : ids)}
-                        placeholder="All"
+                        placeholder={t("campaign_manager.filters.all")}
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
@@ -2537,8 +2541,8 @@ export default function CampaignManager() {
                             <>
                                 <span className={cn("truncate text-[12px]", selectedStatus.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
                                     {selectedStatus.length === 0
-                                        ? "All"
-                                        : selectedStatus[0].charAt(0).toUpperCase() + selectedStatus[0].slice(1)}
+                                        ? t("campaign_manager.filters.all")
+                                        : t(`campaign_manager.status.${selectedStatus[0]}`, { defaultValue: selectedStatus[0].charAt(0).toUpperCase() + selectedStatus[0].slice(1) })}
                                 </span>
                                 <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
                             </>
@@ -2550,11 +2554,11 @@ export default function CampaignManager() {
                 <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <MessageSquare className="h-3.5 w-3.5" />
-                        Channel
+                        {t("campaign_manager.filters.channel")}
                     </label>
                     <CustomDropdown
                         options={[
-                            { id: "", name: "All" },
+                            { id: "", name: t("campaign_manager.filters.all") },
                             { id: "whatsapp", name: "WhatsApp" },
                             { id: "telegram", name: "Telegram" },
                             { id: "messenger", name: "Messenger" },
@@ -2564,7 +2568,7 @@ export default function CampaignManager() {
                         ]}
                         selected={selectedChannels}
                         onChange={(ids) => setSelectedChannels(ids[0] === "" ? [] : ids)}
-                        placeholder="All"
+                        placeholder={t("campaign_manager.filters.all")}
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
@@ -2572,7 +2576,7 @@ export default function CampaignManager() {
                             <>
                                 <span className={cn("truncate text-[12px]", selectedChannels.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
                                     {selectedChannels.length === 0
-                                        ? "All"
+                                        ? t("campaign_manager.filters.all")
                                         : selectedChannels[0].charAt(0).toUpperCase() + selectedChannels[0].slice(1).replace("_", " ")}
                                 </span>
                                 <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
@@ -2587,16 +2591,16 @@ export default function CampaignManager() {
                 <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <UsersRound className="h-3.5 w-3.5" />
-                        Agent
+                        {t("campaign_manager.filters.agent")}
                     </label>
                     <CustomDropdown
                         options={[
-                            { id: "", name: "All Agents" },
+                            { id: "", name: t("campaign_manager.filters.all_agents") },
                             ...workspaceUsers.map((u) => ({ id: u.id, name: u.name })),
                         ]}
                         selected={selectedAgents}
                         onChange={(ids) => setSelectedAgents(ids[0] === "" ? [] : ids)}
-                        placeholder="All Agents"
+                        placeholder={t("campaign_manager.filters.all_agents")}
                         width="100%"
                         showSelectedOption={true}
                         showSearch={workspaceUsers.length > 6}
@@ -2604,10 +2608,10 @@ export default function CampaignManager() {
                             <>
                                 <span className={cn("truncate text-[12px]", selectedAgents.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
                                     {selectedAgents.length === 0
-                                        ? "All Agents"
+                                        ? t("campaign_manager.filters.all_agents")
                                         : selectedAgents.length === 1
-                                            ? workspaceUsers.find((u) => u.id === selectedAgents[0])?.name ?? "1 agent"
-                                            : `${selectedAgents.length} agents`}
+                                            ? workspaceUsers.find((u) => u.id === selectedAgents[0])?.name ?? t("campaign_manager.filters.agents_count", { count: 1 })
+                                            : t("campaign_manager.filters.agents_count", { count: selectedAgents.length })}
                                 </span>
                                 <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
                             </>
@@ -2626,7 +2630,7 @@ export default function CampaignManager() {
             <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">
-                        All Broadcasts
+                        {t("campaign_manager.list.all_broadcasts")}
                     </h3>
                     <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold tabular-nums">
                         {campaigns.length}
@@ -2635,7 +2639,7 @@ export default function CampaignManager() {
                 <div className="relative group w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <Input
-                        placeholder="Search by name or channel"
+                        placeholder={t("campaign_manager.list.search_placeholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9 h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-md text-[12px] font-medium placeholder:text-slate-400"
@@ -2653,7 +2657,7 @@ export default function CampaignManager() {
                         <tr>
                             <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
                                 <div className="flex items-center gap-2">
-                                    Name &amp; Channel
+                                    {t("campaign_manager.table.name_channel")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                         {renderSortIcon("name")}
                                     </div>
@@ -2661,7 +2665,7 @@ export default function CampaignManager() {
                             </th>
                             <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("audience")}>
                                 <div className="flex items-center gap-2">
-                                    Audience
+                                    {t("campaign_manager.table.audience")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                         {renderSortIcon("audience")}
                                     </div>
@@ -2669,7 +2673,7 @@ export default function CampaignManager() {
                             </th>
                             <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("createdAt")}>
                                 <div className="flex items-center gap-2">
-                                    Created At
+                                    {t("campaign_manager.table.created_at")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                         {renderSortIcon("createdAt")}
                                     </div>
@@ -2677,7 +2681,7 @@ export default function CampaignManager() {
                             </th>
                             <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("scheduledAt")}>
                                 <div className="flex items-center gap-2">
-                                    Scheduled
+                                    {t("campaign_manager.table.scheduled")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                         {renderSortIcon("scheduledAt")}
                                     </div>
@@ -2685,13 +2689,13 @@ export default function CampaignManager() {
                             </th>
                             <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("status")}>
                                 <div className="flex items-center gap-2">
-                                    Status
+                                    {t("campaign_manager.table.status")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                         {renderSortIcon("status")}
                                     </div>
                                 </div>
                             </th>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">Action</th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">{t("campaign_manager.table.action")}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
@@ -2700,7 +2704,7 @@ export default function CampaignManager() {
                                 <td colSpan={6} className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 size={24} className="animate-spin text-primary" />
-                                        <p className="text-[11px] font-semibold text-slate-400">Fetching Broadcasts...</p>
+                                        <p className="text-[11px] font-semibold text-slate-400">{t("campaign_manager.list.loading")}</p>
                                     </div>
                                 </td>
                             </tr>
@@ -2712,8 +2716,8 @@ export default function CampaignManager() {
                                             <Send size={32} strokeWidth={1} />
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-[14px] font-bold text-slate-900 dark:text-white">No broadcasts found</p>
-                                            <p className="text-[11px] font-medium text-slate-400">Create your first broadcast to reach your customers in minutes</p>
+                                            <p className="text-[14px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.list.empty_title")}</p>
+                                            <p className="text-[11px] font-medium text-slate-400">{t("campaign_manager.list.empty_desc")}</p>
                                         </div>
                                         {canManageBroadcasts && (
                                           <Button
@@ -2721,7 +2725,7 @@ export default function CampaignManager() {
                                               onClick={() => setCreateOpen(true)}
                                               className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-primary/30 text-primary hover:bg-primary/10 transition-all shadow-sm"
                                           >
-                                              Create one now
+                                              {t("campaign_manager.list.create_one_now")}
                                           </Button>
                                         )}
                                     </div>
@@ -2772,7 +2776,7 @@ export default function CampaignManager() {
                                             </span>
                                             {(campaign.failed ?? 0) > 0 && (
                                                 <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
-                                                    · {campaign.failed} failed
+                                                    {t("campaign_manager.list.failed_count", { count: campaign.failed })}
                                                 </span>
                                             )}
                                         </div>
@@ -2814,7 +2818,7 @@ export default function CampaignManager() {
                                             {canManageBroadcasts && (
                                                 <button
                                                     onClick={() => openComposerForCampaign(campaign)}
-                                                    title="Edit broadcast"
+                                                    title={t("campaign_manager.list.edit_broadcast")}
                                                     className="p-1.5 rounded-md text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                                 >
                                                     <Edit2 size={14} />
@@ -2823,7 +2827,7 @@ export default function CampaignManager() {
                                             {canDeleteBroadcasts && (
                                                 <button
                                                     onClick={() => handleOpenDeleteModal(campaign)}
-                                                    title="Delete broadcast"
+                                                    title={t("campaign_manager.list.delete_broadcast")}
                                                     className="p-1.5 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
                                                 >
                                                     <Trash2 size={14} />
@@ -2831,7 +2835,7 @@ export default function CampaignManager() {
                                             )}
                                             <button
                                                 onClick={() => openComposerForCampaign(campaign)}
-                                                title="View broadcast"
+                                                title={t("campaign_manager.list.view_broadcast")}
                                                 className="p-1.5 rounded-md text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                             >
                                                 <Eye size={14} />
@@ -2840,7 +2844,7 @@ export default function CampaignManager() {
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <button
-                                                        title="More actions"
+                                                        title={t("campaign_manager.list.more_actions")}
                                                         className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                     >
                                                         <MoreVertical size={14} />
@@ -2853,7 +2857,7 @@ export default function CampaignManager() {
                                                             className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 hover:text-primary"
                                                         >
                                                             <Copy size={14} className="text-primary" />
-                                                            Clone
+                                                            {t("campaign_manager.list.clone")}
                                                         </DropdownMenuItem>
                                                     )}
                                                     {canManageBroadcasts && (campaign.status === "draft" || campaign.status === "failed") && (
@@ -2862,7 +2866,7 @@ export default function CampaignManager() {
                                                             className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 rounded-lg cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                                                         >
                                                             <Send size={14} className="text-emerald-600" />
-                                                            Send Now
+                                                            {t("campaign_manager.list.send_now")}
                                                         </DropdownMenuItem>
                                                     )}
                                                 </DropdownMenuContent>
@@ -2880,7 +2884,7 @@ export default function CampaignManager() {
             <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-slate-500">Rows per page:</span>
+                        <span className="text-[11px] font-semibold text-slate-500">{t("campaign_manager.list.rows_per_page")}</span>
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 type="button"
@@ -2915,13 +2919,13 @@ export default function CampaignManager() {
                     </div>
                     <div className="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
                     <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                        {getFilteredCampaigns().length} results total
+                        {t("campaign_manager.list.results_total", { count: getFilteredCampaigns().length })}
                     </span>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                        Page 1 <span className="text-slate-300 mx-1">/</span> 1
+                        {t("campaign_manager.list.page")} 1 <span className="text-slate-300 mx-1">/</span> 1
                     </span>
                     <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
@@ -2973,9 +2977,9 @@ export default function CampaignManager() {
                     <Megaphone size={20} className="text-primary-foreground" strokeWidth={2.5} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-[17px] font-bold text-slate-900 dark:text-white">Create a Broadcast</DialogTitle>
+                    <DialogTitle className="text-[17px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.create_dialog.title")}</DialogTitle>
                     <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Name it and pick the channel you'll send from.
+                      {t("campaign_manager.create_dialog.subtitle")}
                     </p>
                   </div>
                 </div>
@@ -2986,17 +2990,17 @@ export default function CampaignManager() {
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2.5">
                     <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shadow-sm">1</span>
-                    <label className="text-[14px] font-semibold text-slate-900 dark:text-white">Name</label>
+                    <label className="text-[14px] font-semibold text-slate-900 dark:text-white">{t("campaign_manager.create_dialog.name")}</label>
                   </div>
                   <Input
-                    placeholder="e.g. June launch - Brasil list"
+                    placeholder={t("campaign_manager.create_dialog.name_placeholder")}
                     value={campaignName}
                     onChange={(e) => setCampaignName(e.target.value.slice(0, 512))}
                     className="h-10 text-[13px] rounded-lg border-slate-200 dark:border-slate-800 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-0 focus-visible:border-primary/50 transition-shadow"
                   />
                   <p className="text-[11.5px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                     <Info size={11} className="shrink-0" />
-                    Only you and your team will see this name.
+                    {t("campaign_manager.create_dialog.name_hint")}
                   </p>
                 </div>
 
@@ -3004,7 +3008,7 @@ export default function CampaignManager() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2.5">
                     <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shadow-sm">2</span>
-                    <label className="text-[14px] font-semibold text-slate-900 dark:text-white">Select a channel</label>
+                    <label className="text-[14px] font-semibold text-slate-900 dark:text-white">{t("campaign_manager.create_dialog.select_channel")}</label>
                   </div>
 
                   {channels.length === 0 ? (
@@ -3013,10 +3017,10 @@ export default function CampaignManager() {
                         <MessageSquare size={18} className="text-slate-400" />
                       </div>
                       <p className="text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
-                        No channels connected yet
+                        {t("campaign_manager.create_dialog.no_channels")}
                       </p>
                       <p className="text-[11.5px] text-slate-400 mt-1 max-w-xs mx-auto">
-                        Connect a WhatsApp / Telegram / Messenger channel from Settings to start broadcasting.
+                        {t("campaign_manager.create_dialog.no_channels_hint")}
                       </p>
                     </div>
                   ) : (
@@ -3136,7 +3140,7 @@ export default function CampaignManager() {
                                     <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/20">
                                       <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" strokeWidth={2.5} />
                                       <p className="text-[11.5px] text-amber-800 dark:text-amber-200 leading-snug">
-                                        Make sure a payment method is added to your WhatsApp account in Meta Business Manager, otherwise the broadcast may fail.
+                                        {t("campaign_manager.create_dialog.payment_warning")}
                                       </p>
                                     </div>
                                   )}
@@ -3158,8 +3162,8 @@ export default function CampaignManager() {
               <div className="flex items-center justify-between gap-2 pt-4 -mx-6 -mb-6 px-6 pb-6 border-t border-slate-200 dark:border-slate-800 mt-5">
                 <p className="text-[11.5px] text-slate-400 dark:text-slate-500">
                   {newBroadcastChannelKey
-                    ? "Ready — click Create broadcast to continue."
-                    : "Choose a channel to continue."}
+                    ? t("campaign_manager.create_dialog.ready_hint")
+                    : t("campaign_manager.create_dialog.choose_channel_hint")}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -3171,7 +3175,7 @@ export default function CampaignManager() {
                     }}
                     className="h-9 px-4 rounded-lg font-semibold text-[12.5px] border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
-                    Cancel
+                    {t("campaign_manager.common.cancel")}
                   </Button>
                   <Button
                     size="sm"
@@ -3188,7 +3192,7 @@ export default function CampaignManager() {
                     className="h-9 px-4 rounded-lg font-semibold text-[12.5px] bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm shadow-primary/20 disabled:shadow-none disabled:opacity-60"
                   >
                     <Plus size={14} className="mr-1.5" strokeWidth={2.5} />
-                    Create broadcast
+                    {t("campaign_manager.create_dialog.create_broadcast")}
                   </Button>
                 </div>
               </div>
@@ -3203,14 +3207,14 @@ export default function CampaignManager() {
       <Dialog open={cloneDialogOpen} onOpenChange={handleCancelCloneDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Clone Campaign</DialogTitle>
+            <DialogTitle>{t("campaign_manager.clone.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Campaign Name<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("campaign_manager.clone.campaign_name")}<span className="text-red-500 pl-0.5">*</span></label>
               <div className="relative">
                 <Input
-                  placeholder="Enter campaign name..."
+                  placeholder={t("campaign_manager.clone.name_placeholder")}
                   value={cloneCampaignName}
                   onChange={(e) => setCloneCampaignName(e.target.value.slice(0, 512))}
                   className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -3222,7 +3226,7 @@ export default function CampaignManager() {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={handleCancelCloneDialog}>
-                Cancel
+                {t("campaign_manager.common.cancel")}
               </Button>
               <Button
                 className="btn-outline-primary"
@@ -3230,7 +3234,7 @@ export default function CampaignManager() {
                 onClick={handleCloneCampaign}
                 disabled={!cloneCampaignName.trim()}
               >
-                Clone Campaign
+                {t("campaign_manager.clone.title")}
               </Button>
             </div>
           </div>
@@ -3242,12 +3246,13 @@ export default function CampaignManager() {
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader className="mb-2">
-            <DialogTitle>Delete Campaign</DialogTitle>
+            <DialogTitle>{t("campaign_manager.delete.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold break-all">{campaignToDelete?.name}</span>? This action cannot be undone.            </p>
+              {t("campaign_manager.delete.confirm_prefix")} <span className="font-semibold break-all">{campaignToDelete?.name}</span>{t("campaign_manager.delete.confirm_suffix")}
+            </p>
           </div>
 
           {/* Modal Footer */}
@@ -3257,13 +3262,13 @@ export default function CampaignManager() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("campaign_manager.common.cancel")}
             </Button>
             <Button
               onClick={handleConfirmDelete}
               className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
             >
-              Delete
+              {t("campaign_manager.common.delete")}
             </Button>
           </div>
         </DialogContent>
@@ -3369,6 +3374,7 @@ function ConditionPickerModal({
   workspaceTags: Array<{ id: string; name: string }>;
   onPick: (cond: ConditionOption) => void;
 }) {
+  const { t } = useTranslation();
   // Icon glyph per option — kept as a lookup so the option list can stay
   // pure-data.
   const glyph = (name: string, size = 13): React.ReactNode => {
@@ -3392,54 +3398,54 @@ function ConditionPickerModal({
     }
   };
 
-  const tagEnum = workspaceTags.map((t) => ({ id: t.id, label: t.name }));
+  const tagEnum = workspaceTags.map((tg) => ({ id: tg.id, label: tg.name }));
   const statusEnum = [
-    { id: "open", label: "Open" },
-    { id: "won", label: "Won" },
-    { id: "lost", label: "Lost" },
+    { id: "open", label: t("campaign_manager.opportunity_status.open") },
+    { id: "won", label: t("campaign_manager.opportunity_status.won") },
+    { id: "lost", label: t("campaign_manager.opportunity_status.lost") },
   ];
   // Build sections dynamically so channel accounts appear inline.
   const sections: Array<{ title: string; options: ConditionOption[] }> = [
     {
-      title: "General",
+      title: t("campaign_manager.categories.general"),
       options: [
-        { id: "tag", label: "Tag", category: "General", icon: "tag", fieldType: "enum", enumOptions: tagEnum },
-        { id: "opportunity_tag", label: "Opportunity Tag", category: "General", icon: "tag", fieldType: "enum", enumOptions: tagEnum },
+        { id: "tag", label: t("campaign_manager.fields.tag"), category: t("campaign_manager.categories.general"), icon: "tag", fieldType: "enum", enumOptions: tagEnum },
+        { id: "opportunity_tag", label: t("campaign_manager.fields.opportunity_tag"), category: t("campaign_manager.categories.general"), icon: "tag", fieldType: "enum", enumOptions: tagEnum },
       ],
     },
     {
-      title: "System",
+      title: t("campaign_manager.categories.system"),
       options: [
-        { id: "contact_id", label: "Contact ID", category: "System", icon: "hash", fieldType: "number" },
-        { id: "full_name", label: "Full name", category: "System", icon: "user", fieldType: "text" },
-        { id: "first_name", label: "First Name", category: "System", icon: "user", fieldType: "text" },
-        { id: "last_name", label: "Last Name", category: "System", icon: "user", fieldType: "text" },
-        { id: "title", label: "Title", category: "System", icon: "user", fieldType: "text" },
-        { id: "source", label: "Source", category: "System", icon: "link", fieldType: "text" },
-        { id: "phone", label: "Phone", category: "System", icon: "phone", fieldType: "text" },
-        { id: "whatsapp_number", label: "WhatsApp number", category: "System", icon: "phone", fieldType: "text" },
-        { id: "phone_country_code", label: "Phone Country Code", category: "System", icon: "message", fieldType: "text" },
-        { id: "email", label: "Email", category: "System", icon: "mail", fieldType: "text" },
-        { id: "created_on", label: "Created on", category: "System", icon: "clock", fieldType: "date" },
+        { id: "contact_id", label: t("campaign_manager.fields.contact_id"), category: t("campaign_manager.categories.system"), icon: "hash", fieldType: "number" },
+        { id: "full_name", label: t("campaign_manager.fields.full_name"), category: t("campaign_manager.categories.system"), icon: "user", fieldType: "text" },
+        { id: "first_name", label: t("campaign_manager.fields.first_name"), category: t("campaign_manager.categories.system"), icon: "user", fieldType: "text" },
+        { id: "last_name", label: t("campaign_manager.fields.last_name"), category: t("campaign_manager.categories.system"), icon: "user", fieldType: "text" },
+        { id: "title", label: t("campaign_manager.fields.title"), category: t("campaign_manager.categories.system"), icon: "user", fieldType: "text" },
+        { id: "source", label: t("campaign_manager.fields.source"), category: t("campaign_manager.categories.system"), icon: "link", fieldType: "text" },
+        { id: "phone", label: t("campaign_manager.fields.phone"), category: t("campaign_manager.categories.system"), icon: "phone", fieldType: "text" },
+        { id: "whatsapp_number", label: t("campaign_manager.fields.whatsapp_number"), category: t("campaign_manager.categories.system"), icon: "phone", fieldType: "text" },
+        { id: "phone_country_code", label: t("campaign_manager.fields.phone_country_code"), category: t("campaign_manager.categories.system"), icon: "message", fieldType: "text" },
+        { id: "email", label: t("campaign_manager.fields.email"), category: t("campaign_manager.categories.system"), icon: "mail", fieldType: "text" },
+        { id: "created_on", label: t("campaign_manager.fields.created_on"), category: t("campaign_manager.categories.system"), icon: "clock", fieldType: "date" },
       ],
     },
     {
-      title: "Opportunity",
+      title: t("campaign_manager.categories.opportunity"),
       options: [
-        { id: "opp_status", label: "Status", category: "Opportunity", icon: "check", fieldType: "enum", enumOptions: statusEnum },
-        { id: "opp_value", label: "Opportunity value", category: "Opportunity", icon: "dollar", fieldType: "number" },
-        { id: "opp_closing_date", label: "Closing date", category: "Opportunity", icon: "calendar", fieldType: "date" },
-        { id: "opp_confidence", label: "Confidence", category: "Opportunity", icon: "percent", fieldType: "number" },
-        { id: "opp_assigned_to", label: "Assigned to", category: "Opportunity", icon: "user", fieldType: "text" },
+        { id: "opp_status", label: t("campaign_manager.fields.opp_status"), category: t("campaign_manager.categories.opportunity"), icon: "check", fieldType: "enum", enumOptions: statusEnum },
+        { id: "opp_value", label: t("campaign_manager.fields.opp_value"), category: t("campaign_manager.categories.opportunity"), icon: "dollar", fieldType: "number" },
+        { id: "opp_closing_date", label: t("campaign_manager.fields.opp_closing_date"), category: t("campaign_manager.categories.opportunity"), icon: "calendar", fieldType: "date" },
+        { id: "opp_confidence", label: t("campaign_manager.fields.opp_confidence"), category: t("campaign_manager.categories.opportunity"), icon: "percent", fieldType: "number" },
+        { id: "opp_assigned_to", label: t("campaign_manager.fields.opp_assigned_to"), category: t("campaign_manager.categories.opportunity"), icon: "user", fieldType: "text" },
       ],
     },
     ...(customFields.length > 0
       ? [{
-          title: "Custom Fields",
+          title: t("campaign_manager.categories.custom_fields"),
           options: customFields.map((f) => ({
             id: `cf_${f.id}`,
             label: f.name,
-            category: "Custom Fields",
+            category: t("campaign_manager.categories.custom_fields"),
             icon: "check-square",
             fieldType: "text" as const,
           })),
@@ -3458,24 +3464,24 @@ function ConditionPickerModal({
         webchat: "Webchat",
       } as Record<string, string>)[type] ?? type;
       const commonOpts: ConditionOption[] = [
-        { id: `${type}_${c.channelable_id}_last_interaction`, label: "Last Interaction", category: `${typeLabel} (${acctName})`, icon: "clock", fieldType: "date" },
-        { id: `${type}_${c.channelable_id}_opted_in`, label: "Opted-in", category: `${typeLabel} (${acctName})`, icon: "check-square", fieldType: "boolean" },
+        { id: `${type}_${c.channelable_id}_last_interaction`, label: t("campaign_manager.fields.last_interaction"), category: `${typeLabel} (${acctName})`, icon: "clock", fieldType: "date" },
+        { id: `${type}_${c.channelable_id}_opted_in`, label: t("campaign_manager.fields.opted_in"), category: `${typeLabel} (${acctName})`, icon: "check-square", fieldType: "boolean" },
       ];
       const typeSpecific: ConditionOption[] = type === "telegram"
         ? [
-            { id: `${type}_${c.channelable_id}_tg_id`, label: "Telegram ID", category: `${typeLabel} (${acctName})`, icon: "hash", fieldType: "text" },
-            { id: `${type}_${c.channelable_id}_tg_username`, label: "Telegram Username", category: `${typeLabel} (${acctName})`, icon: "user", fieldType: "text" },
+            { id: `${type}_${c.channelable_id}_tg_id`, label: t("campaign_manager.fields.telegram_id"), category: `${typeLabel} (${acctName})`, icon: "hash", fieldType: "text" },
+            { id: `${type}_${c.channelable_id}_tg_username`, label: t("campaign_manager.fields.telegram_username"), category: `${typeLabel} (${acctName})`, icon: "user", fieldType: "text" },
           ]
         : type === "whatsapp"
         ? [
-            { id: `${type}_${c.channelable_id}_wa_number`, label: "Whatsapp Phone Number", category: `${typeLabel} (${acctName})`, icon: "hash", fieldType: "text" },
-            { id: `${type}_${c.channelable_id}_wa_country`, label: "Whatsapp Country Code", category: `${typeLabel} (${acctName})`, icon: "message", fieldType: "text" },
+            { id: `${type}_${c.channelable_id}_wa_number`, label: t("campaign_manager.fields.wa_phone_number"), category: `${typeLabel} (${acctName})`, icon: "hash", fieldType: "text" },
+            { id: `${type}_${c.channelable_id}_wa_country`, label: t("campaign_manager.fields.wa_country_code"), category: `${typeLabel} (${acctName})`, icon: "message", fieldType: "text" },
           ]
         : type === "messenger"
         ? [
-            { id: `${type}_${c.channelable_id}_msg_window`, label: "Message window (Inside 24h)", category: `${typeLabel} (${acctName})`, icon: "message-circle", fieldType: "boolean" },
-            { id: `${type}_${c.channelable_id}_locale`, label: "Locale", category: `${typeLabel} (${acctName})`, icon: "globe", fieldType: "text" },
-            { id: `${type}_${c.channelable_id}_language`, label: "Language", category: `${typeLabel} (${acctName})`, icon: "message", fieldType: "text" },
+            { id: `${type}_${c.channelable_id}_msg_window`, label: t("campaign_manager.fields.message_window"), category: `${typeLabel} (${acctName})`, icon: "message-circle", fieldType: "boolean" },
+            { id: `${type}_${c.channelable_id}_locale`, label: t("campaign_manager.fields.locale"), category: `${typeLabel} (${acctName})`, icon: "globe", fieldType: "text" },
+            { id: `${type}_${c.channelable_id}_language`, label: t("campaign_manager.fields.language"), category: `${typeLabel} (${acctName})`, icon: "message", fieldType: "text" },
           ]
         : [];
       return {
@@ -3509,10 +3515,10 @@ function ConditionPickerModal({
             </div>
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-[16px] font-bold text-slate-900 dark:text-white">
-                Select a condition
+                {t("campaign_manager.condition_picker.title")}
               </DialogTitle>
               <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Pick a field to filter your audience.
+                {t("campaign_manager.condition_picker.subtitle")}
               </p>
             </div>
           </div>
@@ -3523,7 +3529,7 @@ function ConditionPickerModal({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <Input
-              placeholder="Search"
+              placeholder={t("campaign_manager.condition_picker.search")}
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-9 h-10 rounded-lg border-slate-200 dark:border-slate-800 text-[13px]"
@@ -3536,7 +3542,7 @@ function ConditionPickerModal({
         <div className="px-5 py-3 max-h-[52vh] overflow-y-auto space-y-5">
           {filteredSections.length === 0 ? (
             <div className="py-10 text-center text-[12px] text-slate-400">
-              No fields match "{search}"
+              {t("campaign_manager.condition_picker.no_match", { query: search })}
             </div>
           ) : (
             filteredSections.map((section) => (
@@ -3611,8 +3617,13 @@ const CONDITION_OPERATORS: Record<
 };
 
 // Returns the past-tense preview verb for a given (fieldType, operator).
-function conditionOperatorPreview(fieldType: keyof typeof CONDITION_OPERATORS, op: string): string {
-  return CONDITION_OPERATORS[fieldType].find((o) => o.value === op)?.preview ?? op;
+function conditionOperatorPreview(
+  fieldType: keyof typeof CONDITION_OPERATORS,
+  op: string,
+  t: (key: string) => string,
+): string {
+  const found = CONDITION_OPERATORS[fieldType].find((o) => o.value === op);
+  return found ? t(`campaign_manager.operator_previews.${found.value}`) : op;
 }
 
 // True when the operator itself carries the whole meaning (no value input
@@ -3657,12 +3668,13 @@ function ConfigureConditionModal({
   onClose: () => void;
   onSave: () => void;
 }) {
+  const { t } = useTranslation();
   if (!field) return null;
   const operators = CONDITION_OPERATORS[field.fieldType];
   const skipValue = operatorSkipsValue(operator);
   // Preview line — quoted for text/enum, bare for numbers, empty when
   // the operator (has_value / is_null) subsumes the value.
-  const previewVerb = conditionOperatorPreview(field.fieldType, operator);
+  const previewVerb = conditionOperatorPreview(field.fieldType, operator, t);
   const previewValue = skipValue
     ? ""
     : field.fieldType === "enum"
@@ -3692,10 +3704,10 @@ function ConfigureConditionModal({
             </div>
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-[16px] font-bold text-slate-900 dark:text-white">
-                Configure condition
+                {t("campaign_manager.configure_condition.title")}
               </DialogTitle>
               <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Set how this field should be matched.
+                {t("campaign_manager.configure_condition.subtitle")}
               </p>
             </div>
           </div>
@@ -3716,7 +3728,7 @@ function ConfigureConditionModal({
           {/* Operator */}
           <div className="space-y-1.5">
             <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">
-              {field.fieldType === "enum" ? "Where" : "When"}
+              {field.fieldType === "enum" ? t("campaign_manager.configure_condition.where") : t("campaign_manager.configure_condition.when")}
             </label>
             <Select value={operator} onValueChange={onOperatorChange}>
               <SelectTrigger className="h-9 rounded-lg text-[12.5px]">
@@ -3724,7 +3736,7 @@ function ConfigureConditionModal({
               </SelectTrigger>
               <SelectContent>
                 {operators.map((op) => (
-                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                  <SelectItem key={op.value} value={op.value}>{t(`campaign_manager.operators.${op.value}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -3734,7 +3746,7 @@ function ConfigureConditionModal({
           {!skipValue && (
             <div className="space-y-1.5">
               <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">
-                {field.fieldType === "enum" ? field.fieldLabel : "Where"}
+                {field.fieldType === "enum" ? field.fieldLabel : t("campaign_manager.configure_condition.where")}
               </label>
               {field.fieldType === "enum" ? (
                 <Select
@@ -3746,11 +3758,11 @@ function ConfigureConditionModal({
                   }}
                 >
                   <SelectTrigger className="h-9 rounded-lg text-[12.5px]">
-                    <SelectValue placeholder={`Select ${field.fieldLabel.toLowerCase()}`} />
+                    <SelectValue placeholder={t("campaign_manager.configure_condition.select_value", { field: field.fieldLabel.toLowerCase() })} />
                   </SelectTrigger>
                   <SelectContent>
                     {(field.enumOptions ?? []).length === 0 ? (
-                      <SelectItem value="__none__" disabled>No options available</SelectItem>
+                      <SelectItem value="__none__" disabled>{t("campaign_manager.configure_condition.no_options")}</SelectItem>
                     ) : (
                       (field.enumOptions ?? []).map((o) => (
                         <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
@@ -3770,14 +3782,14 @@ function ConfigureConditionModal({
                   type="number"
                   value={value}
                   onChange={(e) => onValueChange(e.target.value)}
-                  placeholder="Enter a number"
+                  placeholder={t("campaign_manager.configure_condition.enter_number")}
                   className="h-9 rounded-lg text-[12.5px]"
                 />
               ) : (
                 <Input
                   value={value}
                   onChange={(e) => onValueChange(e.target.value)}
-                  placeholder={`Enter ${field.fieldLabel.toLowerCase()}`}
+                  placeholder={t("campaign_manager.configure_condition.enter_value", { field: field.fieldLabel.toLowerCase() })}
                   className="h-9 rounded-lg text-[12.5px]"
                 />
               )}
@@ -3802,10 +3814,10 @@ function ConfigureConditionModal({
             className="h-9 px-3 text-[12.5px] border-slate-200 dark:border-slate-800"
           >
             <ChevronLeft size={13} className="mr-1" />
-            Back
+            {t("campaign_manager.configure_condition.back")}
           </Button>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-[12.5px]">Close</Button>
+            <Button variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-[12.5px]">{t("campaign_manager.common.close")}</Button>
             <Button
               size="sm"
               onClick={onSave}
@@ -3813,7 +3825,7 @@ function ConfigureConditionModal({
               className="h-9 px-4 text-[12.5px] font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-500/20 disabled:opacity-60"
             >
               <CheckCircle2 size={13} strokeWidth={2.5} className="mr-1.5" />
-              Save condition
+              {t("campaign_manager.configure_condition.save")}
             </Button>
           </div>
         </div>
@@ -3924,6 +3936,7 @@ function NumberStepper({
 // Coloured top borders + top-right icon tile match replyagent's card
 // treatment and let the user scan the row at a glance.
 function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
+  const { t } = useTranslation();
   const totalBroadcasts = campaigns.length;
   const totalContacts = campaigns.reduce(
     (sum, c) => sum + (c.audience ?? 0),
@@ -3965,25 +3978,25 @@ function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
 
   const cards: Card[] = [
     {
-      label: "Total Broadcasts",
+      label: t("campaign_manager.stats.total_broadcasts"),
       value: totalBroadcasts.toLocaleString(),
-      hint: "this month",
+      hint: t("campaign_manager.stats.this_month"),
       Icon: Megaphone,
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
       topBorder: "bg-primary",
     },
     {
-      label: "Total Contacts",
+      label: t("campaign_manager.stats.total_contacts"),
       value: totalContacts.toLocaleString(),
-      hint: "reachable audience",
+      hint: t("campaign_manager.stats.reachable_audience"),
       Icon: UsersRound,
       iconBg: "bg-blue-100 dark:bg-blue-900/30",
       iconColor: "text-blue-600 dark:text-blue-400",
       topBorder: "bg-blue-500",
     },
     {
-      label: "Average Delivery Rate",
+      label: t("campaign_manager.stats.avg_delivery_rate"),
       value: `${deliveryRate}%`,
       Icon: CheckCircle2,
       iconBg: "bg-slate-100 dark:bg-slate-800",
@@ -3993,7 +4006,7 @@ function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
       chartData: deliverySeries,
     },
     {
-      label: "Average Open Rate",
+      label: t("campaign_manager.stats.avg_open_rate"),
       value: `${openRate}%`,
       Icon: Mail,
       iconBg: "bg-amber-100 dark:bg-amber-900/30",

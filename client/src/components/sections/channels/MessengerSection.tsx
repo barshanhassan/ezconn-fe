@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   MoreVertical,
@@ -36,6 +37,7 @@ export default function MessengerSection() {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [view, setView] = useState<"list" | "manage">("list");
   const queryClient = useQueryClient();
 
@@ -73,7 +75,7 @@ export default function MessengerSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({ title: "Deleted", description: "Facebook Page disconnected." });
+      toast({ title: t("messenger_section.deleted"), description: t("messenger_section.page_disconnected") });
     },
   });
 
@@ -81,7 +83,7 @@ export default function MessengerSection() {
   const [pageToDelete, setPageToDelete] = useState<any>(null);
 
   const handleConnect = () => {
-    toast({ title: "Connecting...", description: "Starting Facebook authentication flow." });
+    toast({ title: t("messenger_section.connecting"), description: t("messenger_section.starting_auth_flow") });
   };
 
   if (isLoading) {
@@ -106,8 +108,8 @@ export default function MessengerSection() {
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Messenger</h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
                   {view === "list"
-                    ? "Connect your Facebook Page to automate conversations."
-                    : "Integrate your Facebook Page to unlock 2-Way interactive dynamic conversations via Messenger"}
+                    ? t("messenger_section.header_description_list")
+                    : t("messenger_section.header_description_manage")}
                 </p>
               </div>
             </div>
@@ -116,10 +118,10 @@ export default function MessengerSection() {
               {view === "manage" && (
                 <>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add New
+                    <Plus size={12} /> {t("messenger_section.add_new")}
                   </button>
                   <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Back
+                    <ChevronLeft size={12} /> {t("messenger_section.back")}
                   </button>
                 </>
               )}
@@ -148,11 +150,11 @@ export default function MessengerSection() {
                 </div>
 
                 <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
-                  The Messenger integration allows you to automate conversations on your Facebook Page.
+                  {t("messenger_section.card_description")}
                 </p>
 
                 <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
-                  Manage
+                  {t("messenger_section.manage")}
                 </button>
               </div>
             </div>
@@ -167,13 +169,13 @@ export default function MessengerSection() {
                     <img src="/images/automations/messenger.svg" alt="Messenger" className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No integration found</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("messenger_section.no_integration_found")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Integrate this communication channel to automate conversations.
+                      {t("messenger_section.no_integration_description")}
                     </p>
                   </div>
                   <button onClick={handleConnect} className={primaryOutlineBtn}>
-                    Connect now
+                    {t("messenger_section.connect_now")}
                   </button>
                 </div>
               ) : (
@@ -200,10 +202,10 @@ export default function MessengerSection() {
                             <p className={cn("text-[13px] font-black truncate", text)}>{page.name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <Badge variant="outline" className="h-5 px-2 rounded-md border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[10px] font-semibold">
-                                ID: {page.page_id}
+                                {t("messenger_section.id_label")}: {page.page_id}
                               </Badge>
                               <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Connected
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("messenger_section.connected")}
                               </span>
                             </div>
                           </div>
@@ -211,10 +213,10 @@ export default function MessengerSection() {
 
                         <div className="flex items-center gap-2 shrink-0">
                           <button
-                            onClick={() => toast({ title: "Syncing...", description: "Page data refreshed." })}
+                            onClick={() => toast({ title: t("messenger_section.syncing"), description: t("messenger_section.page_data_refreshed") })}
                             className={outlineBtn}
                           >
-                            <RefreshCw size={12} /> Sync
+                            <RefreshCw size={12} /> {t("messenger_section.sync")}
                           </button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -228,25 +230,25 @@ export default function MessengerSection() {
                                 className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] flex justify-between"
                               >
                                 <span className="flex items-center gap-2">
-                                  <Bot size={12} className="text-primary" /> AI Feeder
+                                  <Bot size={12} className="text-primary" /> {t("messenger_section.ai_feeder")}
                                 </span>
                                 <Switch
                                   checked={page.allow_in_feeder}
-                                  onCheckedChange={() => toast({ title: "Updated", description: "AI Feeder setting saved." })}
+                                  onCheckedChange={() => toast({ title: t("messenger_section.updated"), description: t("messenger_section.ai_feeder_saved") })}
                                   className="data-[state=checked]:bg-primary"
                                 />
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => toast({ title: "Activated", description: "Meta Conversions API enabled." })}
+                                onClick={() => toast({ title: t("messenger_section.activated"), description: t("messenger_section.conversions_api_enabled") })}
                                 className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
                               >
-                                <ShieldCheck size={12} className="text-primary" /> Conversions API
+                                <ShieldCheck size={12} className="text-primary" /> {t("messenger_section.conversions_api")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => { setPageToDelete(page); setShowDeleteConfirm(true); }}
                                 className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                               >
-                                <Trash2 size={12} /> Delete
+                                <Trash2 size={12} /> {t("messenger_section.delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -270,19 +272,19 @@ export default function MessengerSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Facebook Page?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("messenger_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{pageToDelete?.name}</span> will be permanently disconnected.
+                  <span className="text-rose-500 font-black">{pageToDelete?.name}</span> {t("messenger_section.delete_dialog_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("messenger_section.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => { deleteMutation.mutate(pageToDelete.id); setShowDeleteConfirm(false); }}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Delete
+                <Trash2 size={12} /> {t("messenger_section.delete")}
               </AlertDialogAction>
             </div>
           </div>

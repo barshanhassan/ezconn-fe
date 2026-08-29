@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Shield, ShieldCheck, Plus, ChevronLeft, Loader2, Archive, RotateCcw,
   Pencil, Settings, Share2, UserCog, Sparkles, Lock,
@@ -59,6 +60,7 @@ const WORKSPACE_GROUP_ICONS: Record<string, React.ElementType> = {
 };
 
 export default function RolesSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
@@ -156,10 +158,10 @@ export default function RolesSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
-      toast({ title: "Saved", description: "Role created successfully." });
+      toast({ title: t("roles_section.toast_saved_title"), description: t("roles_section.toast_created_desc") });
       setView("list"); resetForm();
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: t("roles_section.toast_error_title"), description: err.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -169,10 +171,10 @@ export default function RolesSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
-      toast({ title: "Saved", description: "Role updated." });
+      toast({ title: t("roles_section.toast_saved_title"), description: t("roles_section.toast_updated_desc") });
       setView("list"); resetForm();
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: t("roles_section.toast_error_title"), description: err.message, variant: "destructive" }),
   });
 
   const togglePermission = (slug: string) => {
@@ -221,10 +223,10 @@ export default function RolesSection() {
   // at least one permission selected.
   const validateRole = (): string | null => {
     const name = roleName.trim();
-    if (!name) return "Please enter role name";
-    if (name.length < 3 || name.length > 100) return "Minimum 3 and maximum 100 characters allowed";
-    if (roleDescription.length > 300) return "Maximum 300 characters allowed";
-    if (collectSelectedSlugs().length === 0) return "Please select at least one permission";
+    if (!name) return t("roles_section.error_name_required");
+    if (name.length < 3 || name.length > 100) return t("roles_section.error_name_length");
+    if (roleDescription.length > 300) return t("roles_section.error_description_length");
+    if (collectSelectedSlugs().length === 0) return t("roles_section.error_permission_required");
     return null;
   };
 
@@ -242,7 +244,7 @@ export default function RolesSection() {
   const handleSave = () => {
     const err = validateRole();
     if (err) {
-      toast({ title: "Validation", description: err, variant: "destructive" });
+      toast({ title: t("roles_section.toast_validation_title"), description: err, variant: "destructive" });
       return;
     }
     // Editing affects every user assigned this role → confirm first (replyagent prompt).
@@ -275,16 +277,16 @@ export default function RolesSection() {
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
-                  {editingRole ? "Edit Role" : "Create Role"}
+                  {editingRole ? t("roles_section.title_edit_role") : t("roles_section.title_create_role")}
                 </h1>
                 <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
-                  Define scope and capabilities
+                  {t("roles_section.subtitle_edit")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => { setView("list"); resetForm(); }} className={outlineBtn}>
-                Cancel
+                {t("roles_section.btn_cancel")}
               </button>
               <button
                 onClick={handleSave}
@@ -296,7 +298,7 @@ export default function RolesSection() {
                 ) : (
                   <ShieldCheck size={12} />
                 )}
-                {editingRole ? "Update" : "Save"}
+                {editingRole ? t("roles_section.btn_update") : t("roles_section.btn_save")}
               </button>
             </div>
           </div>
@@ -306,9 +308,9 @@ export default function RolesSection() {
               {/* Sidebar */}
               <div className={cn("w-full md:w-72 md:shrink-0 border-b md:border-r p-6 space-y-6", border, softBg)}>
                 <div className="space-y-2">
-                  <FieldLabel dark={dark}>Role Name</FieldLabel>
+                  <FieldLabel dark={dark}>{t("roles_section.label_role_name")}</FieldLabel>
                   <Input
-                    placeholder="e.g. Senior Support"
+                    placeholder={t("roles_section.placeholder_role_name")}
                     value={roleName}
                     onChange={(e) => setRoleName(e.target.value)}
                     className={inputCls}
@@ -316,9 +318,9 @@ export default function RolesSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <FieldLabel dark={dark}>Description</FieldLabel>
+                  <FieldLabel dark={dark}>{t("roles_section.label_description")}</FieldLabel>
                   <Textarea
-                    placeholder="Briefly describe the responsibilities..."
+                    placeholder={t("roles_section.placeholder_description")}
                     value={roleDescription}
                     onChange={(e) => setRoleDescription(e.target.value)}
                     className={cn(
@@ -330,7 +332,7 @@ export default function RolesSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <FieldLabel dark={dark}>Icon</FieldLabel>
+                  <FieldLabel dark={dark}>{t("roles_section.label_icon")}</FieldLabel>
                   <div className="grid grid-cols-4 gap-2">
                     {ICONS.map((item) => {
                       const active = selectedIcon.name === item.name;
@@ -357,7 +359,7 @@ export default function RolesSection() {
                 {/* Stats */}
                 <div className={cn("rounded-[1.25rem] border p-4 space-y-3", dark ? "bg-slate-950/50 border-slate-800" : "bg-white border-slate-200")}>
                   <div className="flex items-center justify-between">
-                    <span className={cn("text-[11px] font-semibold", sub)}>Capability</span>
+                    <span className={cn("text-[11px] font-semibold", sub)}>{t("roles_section.label_capability")}</span>
                     <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">{pct}%</span>
                   </div>
                   <div className={cn("h-1.5 rounded-full overflow-hidden", dark ? "bg-slate-800" : "bg-slate-100")}>
@@ -369,7 +371,7 @@ export default function RolesSection() {
                       <span className={cn("text-[11px] font-bold", text)}>{enabledCount} / {totalPerms}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={cn("text-[10px] font-semibold", sub)}>All</span>
+                      <span className={cn("text-[10px] font-semibold", sub)}>{t("roles_section.label_all")}</span>
                       <Switch checked={enableAll} onCheckedChange={handleEnableAll} className="data-[state=checked]:bg-primary scale-75" />
                     </div>
                   </div>
@@ -482,15 +484,15 @@ export default function RolesSection() {
         <AlertDialog open={confirmSaveOpen} onOpenChange={setConfirmSaveOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Save changes?</AlertDialogTitle>
+              <AlertDialogTitle>{t("roles_section.confirm_save_title")}</AlertDialogTitle>
               <AlertDialogDescription>
-                The changes will affect all the users who are assigned this role. Are you sure you want to continue?
+                {t("roles_section.confirm_save_desc")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("roles_section.btn_cancel")}</AlertDialogCancel>
               <AlertDialogAction onClick={() => { setConfirmSaveOpen(false); doSave(); }}>
-                Yes, continue
+                {t("roles_section.btn_yes_continue")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -510,13 +512,13 @@ export default function RolesSection() {
               <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Roles & permissions</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("roles_section.header_title")}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold flex items-center gap-1">
-                  <ShieldCheck size={10} /> {activeRoles.length} Active
+                  <ShieldCheck size={10} /> {t("roles_section.stat_active_count", { count: activeRoles.length })}
                 </span>
                 <span className={cn("px-2 py-0.5 rounded-md text-[11px] font-semibold flex items-center gap-1", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")}>
-                  <Archive size={10} /> {archivedRoles.length} Archived
+                  <Archive size={10} /> {t("roles_section.stat_archived_count", { count: archivedRoles.length })}
                 </span>
               </div>
             </div>
@@ -527,8 +529,8 @@ export default function RolesSection() {
         <div className={cn("px-6 border-b flex flex-wrap items-center justify-between gap-3", softBorder)}>
             <div className="flex gap-6">
               {[
-                { key: "active",   label: "Active",   icon: ShieldCheck, count: activeRoles.length },
-                { key: "archived", label: "Archived", icon: Archive,     count: archivedRoles.length },
+                { key: "active",   label: t("roles_section.tab_active"),   icon: ShieldCheck, count: activeRoles.length },
+                { key: "archived", label: t("roles_section.tab_archived"), icon: Archive,     count: archivedRoles.length },
               ].map((tab) => {
                 const active = activeTab === tab.key;
                 return (
@@ -556,14 +558,14 @@ export default function RolesSection() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                 <Input
-                  placeholder="Search roles..."
+                  placeholder={t("roles_section.placeholder_search_roles")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={cn(inputCls, "h-10 pl-9 w-56")}
                 />
               </div>
               <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
-                <Plus size={12} /> Add Role
+                <Plus size={12} /> {t("roles_section.btn_add_role")}
               </button>
             </div>
           </div>
@@ -583,19 +585,14 @@ export default function RolesSection() {
                 </div>
                 <div className="space-y-1">
                   <p className={cn("text-[14px] font-semibold", text)}>
-                    {activeTab === "active" ? "No Active Roles" : "Archive Empty"}
+                    {activeTab === "active" ? t("roles_section.empty_title_active") : t("roles_section.empty_title_archived")}
                   </p>
                   <p className={cn("text-[11px] font-medium opacity-60 max-w-xs", sub)}>
                     {activeTab === "active"
-                      ? "Create your first role to start managing access."
-                      : "No archived roles found."}
+                      ? t("roles_section.empty_desc_active")
+                      : t("roles_section.empty_desc_archived")}
                   </p>
                 </div>
-                {activeTab === "active" && (
-                  <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
-                    <Plus size={12} /> Create Role
-                  </button>
-                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -623,7 +620,7 @@ export default function RolesSection() {
                           {!role.isSystem && activeTab === "active" && (
                             <button
                               onClick={() => handleManage(role)}
-                              title="Edit Role"
+                              title={t("roles_section.tooltip_edit_role")}
                               className={cn(
                                 "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
                                 dark ? "bg-slate-900 text-slate-400 hover:bg-primary hover:text-white" : "bg-white border border-slate-200 text-slate-500 hover:bg-primary hover:text-white hover:border-primary"
@@ -635,7 +632,7 @@ export default function RolesSection() {
                           {!role.isSystem && (
                             <button
                               onClick={() => updateMutation.mutate({ id: role.id, data: { isArchived: !role.isArchived } })}
-                              title={activeTab === "active" ? "Archive" : "Restore"}
+                              title={activeTab === "active" ? t("roles_section.tooltip_archive") : t("roles_section.tooltip_restore")}
                               className={cn(
                                 "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
                                 activeTab === "active"
@@ -654,13 +651,13 @@ export default function RolesSection() {
                           {role.name}
                         </h4>
                         <p className={cn("text-[11px] font-medium line-clamp-2 leading-relaxed opacity-60", sub)}>
-                          {role.description || "No description provided."}
+                          {role.description || t("roles_section.no_description")}
                         </p>
                       </div>
 
                       <div className="space-y-2 pt-3 border-t" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
                         <div className="flex items-center justify-between">
-                          <span className={cn("text-[10px] font-semibold", sub)}>Permissions</span>
+                          <span className={cn("text-[10px] font-semibold", sub)}>{t("roles_section.label_permissions")}</span>
                           <span className={cn("text-[10px] font-black", text)}>{permCount}</span>
                         </div>
                         <div className={cn("h-1 rounded-full overflow-hidden", dark ? "bg-slate-800" : "bg-slate-100")}>

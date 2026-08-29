@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface Option {
   id: string;
@@ -35,6 +36,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   popoutWidth,
   popoutAlign = 'left',
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -130,7 +132,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               </span>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t("custom_dropdown.search_placeholder")}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full text-sm focus:outline-none bg-transparent focus:ring-0 text-foreground dark:text-white dark:placeholder-gray-500"
@@ -139,7 +141,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           )}
           <ul className="max-h-48 overflow-y-auto py-1">
             {filteredOptions.length === 0 && (
-              <li className="px-3 py-2 text-muted-foreground dark:text-gray-400 text-sm">No results</li>
+              <li className="px-3 py-2 text-muted-foreground dark:text-gray-400 text-sm">{t("custom_dropdown.no_results")}</li>
             )}
             {filteredOptions.map(option => (
               <li

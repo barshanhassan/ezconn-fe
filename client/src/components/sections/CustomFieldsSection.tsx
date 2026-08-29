@@ -48,6 +48,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 type ForValue = "WORKSPACE" | "CONTACT" | "COMPANY" | "OPPORTUNITY";
 type ContentType =
@@ -116,43 +117,45 @@ interface CFFolder {
   name: string;
 }
 
-// Replyagent's content_types list (icon + name + details). Order mirrors
-// `WorkspaceStore.custom_field_content_types`. GENDER is intentionally
-// excluded because replyagent excludes it from the picker too.
+// Internal reference product's content_types list (icon + name + details).
+// Order mirrors `WorkspaceStore.custom_field_content_types`. GENDER is
+// intentionally excluded because that reference product excludes it from
+// the picker too. Name/details are translated at render time (see
+// `contentOptions` inside the component below) — this array only carries
+// structural data.
 const CONTENT_OPTIONS: Array<{
   content_type: ContentType;
-  name: string;
-  details: string;
   Icon: any;
 }> = [
-  { content_type: "COUNTRY", name: "Country", details: "List of countries with flags", Icon: Flag },
-  { content_type: "CURRENCY", name: "Currency", details: "Choose accepted currencies", Icon: DollarSign },
-  { content_type: "DATE", name: "Date", details: "Calendar date picker", Icon: Calendar },
-  { content_type: "DATETIME", name: "Datetime", details: "Date with time of day", Icon: CalendarClock },
-  { content_type: "TEXT", name: "Text", details: "Plain text, single or multi-line", Icon: Type },
-  { content_type: "FIXED", name: "Fixed text", details: "A constant value applied to every record", Icon: CircleSlash },
-  { content_type: "NUMBER", name: "Numbers", details: "Numeric input", Icon: Hash },
-  { content_type: "PHONE", name: "Phone", details: "Phone number with country code", Icon: PhoneIcon },
-  { content_type: "EMAIL", name: "Email", details: "Email address", Icon: Mail },
-  { content_type: "URL", name: "URL", details: "Web address", Icon: Link2 },
-  { content_type: "JSON", name: "JSON", details: "Structured data payload", Icon: Braces },
+  { content_type: "COUNTRY", Icon: Flag },
+  { content_type: "CURRENCY", Icon: DollarSign },
+  { content_type: "DATE", Icon: Calendar },
+  { content_type: "DATETIME", Icon: CalendarClock },
+  { content_type: "TEXT", Icon: Type },
+  { content_type: "FIXED", Icon: CircleSlash },
+  { content_type: "NUMBER", Icon: Hash },
+  { content_type: "PHONE", Icon: PhoneIcon },
+  { content_type: "EMAIL", Icon: Mail },
+  { content_type: "URL", Icon: Link2 },
+  { content_type: "JSON", Icon: Braces },
 ];
 
-// Replyagent's input_types — same 5 cards with icons + labels.
+// Internal reference product's input_types — same 5 cards with icons +
+// labels. Labels are translated at render time (see `inputOptions` inside
+// the component below).
 const INPUT_OPTIONS: Array<{
   slug: Exclude<InputType, "checkbox" | "radio" | "number" | "paragraph">;
-  text: string;
   Icon: any;
 }> = [
-  { slug: "multiselect", text: "Choice (Multiple)", Icon: ListIcon },
-  { slug: "select", text: "Choice (single)", Icon: ListIcon },
-  { slug: "text", text: "Single line", Icon: TextCursorInput },
-  { slug: "email", text: "Email field", Icon: Mail },
-  { slug: "textarea", text: "Paragraph", Icon: MessageSquare },
+  { slug: "multiselect", Icon: ListIcon },
+  { slug: "select", Icon: ListIcon },
+  { slug: "text", Icon: TextCursorInput },
+  { slug: "email", Icon: Mail },
+  { slug: "textarea", Icon: MessageSquare },
 ];
 
-// Content_type → permitted input_type slugs (mirrors replyagent's
-// `getInputTypes` switch).
+// Content_type → permitted input_type slugs (mirrors the internal
+// reference product's `getInputTypes` switch).
 const INPUT_TYPES_BY_CONTENT: Record<string, InputType[]> = {
   COUNTRY: ["select", "multiselect"],
   CURRENCY: ["select", "multiselect"],
@@ -179,15 +182,15 @@ const DATE_FORMATS = [
   { php: "m/d/Y", js: "MM/dd/yyyy" },
 ];
 const TIME_FORMATS = [
-  { php: "H:i", js: "H:mm", text: "Full day (24h)" },
-  { php: "h:i a", js: "hh:mm a", text: "Half day (12h)" },
+  { php: "H:i", js: "H:mm" },
+  { php: "h:i a", js: "hh:mm a" },
 ];
-const DELIMITERS: Array<{ value: string; label: string }> = [
-  { value: ",", label: "Comma" },
-  { value: "\n", label: "New line" },
-  { value: ";", label: "Semicolon" },
-  { value: ":", label: "Colon" },
-  { value: "=", label: "Equal sign" },
+const DELIMITERS: Array<{ value: string }> = [
+  { value: "," },
+  { value: "\n" },
+  { value: ";" },
+  { value: ":" },
+  { value: "=" },
 ];
 
 interface FormState {
@@ -241,10 +244,72 @@ const EMPTY_FORM: FormState = {
 const WORKSPACE_FIELD_LIMIT = 50;
 
 export default function CustomFieldsSection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const contentTypeLabels: Record<string, { name: string; details: string }> = {
+    COUNTRY: { name: t("custom_fields_section.content_type_country_name"), details: t("custom_fields_section.content_type_country_details") },
+    CURRENCY: { name: t("custom_fields_section.content_type_currency_name"), details: t("custom_fields_section.content_type_currency_details") },
+    DATE: { name: t("custom_fields_section.content_type_date_name"), details: t("custom_fields_section.content_type_date_details") },
+    DATETIME: { name: t("custom_fields_section.content_type_datetime_name"), details: t("custom_fields_section.content_type_datetime_details") },
+    TEXT: { name: t("custom_fields_section.content_type_text_name"), details: t("custom_fields_section.content_type_text_details") },
+    FIXED: { name: t("custom_fields_section.content_type_fixed_name"), details: t("custom_fields_section.content_type_fixed_details") },
+    NUMBER: { name: t("custom_fields_section.content_type_number_name"), details: t("custom_fields_section.content_type_number_details") },
+    PHONE: { name: t("custom_fields_section.content_type_phone_name"), details: t("custom_fields_section.content_type_phone_details") },
+    EMAIL: { name: t("custom_fields_section.content_type_email_name"), details: t("custom_fields_section.content_type_email_details") },
+    URL: { name: t("custom_fields_section.content_type_url_name"), details: t("custom_fields_section.content_type_url_details") },
+    JSON: { name: t("custom_fields_section.content_type_json_name"), details: t("custom_fields_section.content_type_json_details") },
+  };
+  const contentOptions = useMemo(
+    () =>
+      CONTENT_OPTIONS.map((o) => ({
+        ...o,
+        name: contentTypeLabels[o.content_type]?.name ?? o.content_type,
+        details: contentTypeLabels[o.content_type]?.details ?? "",
+      })),
+    [t],
+  );
+
+  const inputTypeLabels: Record<string, string> = {
+    multiselect: t("custom_fields_section.input_type_multiselect"),
+    select: t("custom_fields_section.input_type_select"),
+    text: t("custom_fields_section.input_type_text"),
+    email: t("custom_fields_section.input_type_email"),
+    textarea: t("custom_fields_section.input_type_textarea"),
+  };
+  const inputOptions = useMemo(
+    () =>
+      INPUT_OPTIONS.map((o) => ({
+        ...o,
+        text: inputTypeLabels[o.slug] ?? o.slug,
+      })),
+    [t],
+  );
+
+  const timeFormatLabel = (php: string) =>
+    php === "H:i"
+      ? t("custom_fields_section.time_format_full_day")
+      : t("custom_fields_section.time_format_half_day");
+
+  const delimiterLabel = (value: string) => {
+    switch (value) {
+      case ",":
+        return t("custom_fields_section.delimiter_comma");
+      case "\n":
+        return t("custom_fields_section.delimiter_newline");
+      case ";":
+        return t("custom_fields_section.delimiter_semicolon");
+      case ":":
+        return t("custom_fields_section.delimiter_colon");
+      case "=":
+        return t("custom_fields_section.delimiter_equal");
+      default:
+        return value;
+    }
+  };
 
   const [showFieldDialog, setShowFieldDialog] = useState(false);
   const [fieldToDelete, setFieldToDelete] = useState<CustomField | null>(null);
@@ -351,11 +416,11 @@ export default function CustomFieldsSection() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // Map UI state → replyagent-compatible payload. For COUNTRY/CURRENCY
-      // we ship the chosen rows as `properties: [{name, value}]` so the
-      // backend's existing property-replacement logic stores them. The
-      // `validation` blob mirrors replyagent's structure so a future server
-      // implementation can read it without translation.
+      // Map UI state → the API payload format. For COUNTRY/CURRENCY we ship
+      // the chosen rows as `properties: [{name, value}]` so the backend's
+      // existing property-replacement logic stores them. The `validation`
+      // blob mirrors the reference implementation's structure so a future
+      // server implementation can read it without translation.
       const payload: any = {
         label: form.label.trim(),
         description: form.description.trim() || null,
@@ -395,11 +460,11 @@ export default function CustomFieldsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: form.slug ? "Field updated" : "Field created" });
+      toast({ title: form.slug ? t("custom_fields_section.toast_field_updated") : t("custom_fields_section.toast_field_created") });
       closeDialog();
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("custom_fields_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -408,11 +473,11 @@ export default function CustomFieldsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Field deleted" });
+      toast({ title: t("custom_fields_section.toast_field_deleted") });
       setFieldToDelete(null);
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("custom_fields_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const toggleFeederMutation = useMutation({
@@ -422,7 +487,7 @@ export default function CustomFieldsSection() {
     },
     onSuccess: () => invalidate(),
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("custom_fields_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const folderMutation = useMutation({
@@ -435,13 +500,13 @@ export default function CustomFieldsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: editingFolder ? "Folder renamed" : "Folder created" });
+      toast({ title: editingFolder ? t("custom_fields_section.toast_folder_renamed") : t("custom_fields_section.toast_folder_created") });
       setShowFolderModal(false);
       setEditingFolder(null);
       setFolderName("");
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("custom_fields_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   const deleteFolderMutation = useMutation({
@@ -450,11 +515,11 @@ export default function CustomFieldsSection() {
     },
     onSuccess: () => {
       invalidate();
-      toast({ title: "Folder deleted" });
+      toast({ title: t("custom_fields_section.toast_folder_deleted") });
       setFolderFilter("ALL");
     },
     onError: (e: any) =>
-      toast({ title: "Error", description: e?.message, variant: "destructive" }),
+      toast({ title: t("custom_fields_section.toast_error_title"), description: e?.message, variant: "destructive" }),
   });
 
   // ── Slug check (debounced) ───────────────────────────────────────
@@ -538,7 +603,7 @@ export default function CustomFieldsSection() {
 
   const onLabelChange = (value: string) => {
     setForm((p) => {
-      // Replyagent auto-generates the slug from the label when creating.
+      // Auto-generate the slug from the label when creating.
       const next = { ...p, label: value.slice(0, 60) };
       if (!p.slug) {
         next.systemName = value
@@ -639,7 +704,7 @@ export default function CustomFieldsSection() {
         ? raw.split(/\r?\n/)
         : raw.split(delim);
     if (parts.length > 500) {
-      toast({ title: "Too many options (max 500)", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_too_many_options"), variant: "destructive" });
       return;
     }
     setForm((p) => ({
@@ -653,35 +718,35 @@ export default function CustomFieldsSection() {
 
   const handleSave = () => {
     if (!form.label.trim()) {
-      toast({ title: "Display name is required", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_display_name_required"), variant: "destructive" });
       return;
     }
     if (!form.slug && !form.systemName.trim()) {
-      toast({ title: "System name is required", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_system_name_required"), variant: "destructive" });
       return;
     }
     if (!form.slug && slugAvailable === false) {
       toast({
-        title: "System name is taken",
-        description: "Pick a different system name.",
+        title: t("custom_fields_section.toast_system_name_taken_title"),
+        description: t("custom_fields_section.toast_system_name_taken_description"),
         variant: "destructive",
       });
       return;
     }
     if (!form.contentType) {
-      toast({ title: "Pick a content type", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_pick_content_type"), variant: "destructive" });
       return;
     }
     if (form.contentType !== "FIXED" && !form.inputType) {
-      toast({ title: "Pick how to present this field", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_pick_input_type"), variant: "destructive" });
       return;
     }
     if (form.contentType === "FIXED" && !form.inputType) {
-      toast({ title: "Pick a fixed input style", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_pick_fixed_input_style"), variant: "destructive" });
       return;
     }
     if (form.contentType === "FIXED" && !form.fixedValue.trim()) {
-      toast({ title: "Enter the fixed value", variant: "destructive" });
+      toast({ title: t("custom_fields_section.toast_enter_fixed_value"), variant: "destructive" });
       return;
     }
     if (
@@ -691,7 +756,7 @@ export default function CustomFieldsSection() {
       form.properties.filter((p) => p.name.trim()).length === 0
     ) {
       toast({
-        title: "Add at least one option",
+        title: t("custom_fields_section.toast_add_option"),
         variant: "destructive",
       });
       return;
@@ -707,8 +772,8 @@ export default function CustomFieldsSection() {
   const allowedInputs = useMemo(() => {
     if (!form.contentType) return [];
     const allowed = INPUT_TYPES_BY_CONTENT[form.contentType] ?? [];
-    return INPUT_OPTIONS.filter((o) => allowed.includes(o.slug as InputType));
-  }, [form.contentType]);
+    return inputOptions.filter((o) => allowed.includes(o.slug as InputType));
+  }, [form.contentType, inputOptions]);
 
   const isEditMode = !!form.slug;
   const showListOptions =
@@ -734,9 +799,9 @@ export default function CustomFieldsSection() {
                 <Database className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Custom fields</h1>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("custom_fields_section.header_title")}</h1>
                 <p className={cn("text-[11px] font-medium mt-0.5 opacity-60 max-w-2xl", sub)}>
-                  Manage custom fields and link them to contacts, companies, or opportunities.
+                  {t("custom_fields_section.header_subtitle")}
                 </p>
               </div>
             </div>
@@ -749,14 +814,14 @@ export default function CustomFieldsSection() {
                 }}
                 className={outlineBtn}
               >
-                <FolderPlus size={12} /> New Folder
+                <FolderPlus size={12} /> {t("custom_fields_section.new_folder_button")}
               </button>
               <button
                 onClick={openCreate}
                 disabled={fields.length >= WORKSPACE_FIELD_LIMIT}
                 className={cn(primaryOutlineBtn, "disabled:opacity-50 disabled:cursor-not-allowed")}
               >
-                <Plus size={12} /> Add New
+                <Plus size={12} /> {t("custom_fields_section.add_new_button")}
               </button>
             </div>
           </div>
@@ -772,8 +837,8 @@ export default function CustomFieldsSection() {
                     onChange={(e) => setFolderFilter(e.target.value)}
                     className={cn(selectCls, "h-9 text-[11px] py-0 w-[180px]")}
                   >
-                    <option value="ALL">All folders</option>
-                    <option value="root">Root</option>
+                    <option value="ALL">{t("custom_fields_section.folder_filter_all")}</option>
+                    <option value="root">{t("custom_fields_section.folder_filter_root")}</option>
                     {folders.map((f) => (
                       <option key={f.id} value={f.id}>
                         {f.name}
@@ -791,18 +856,18 @@ export default function CustomFieldsSection() {
                           setShowFolderModal(true);
                         }}
                         className={cn("w-8 h-8 rounded-md flex items-center justify-center transition-colors", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
-                        title="Rename folder"
+                        title={t("custom_fields_section.rename_folder_title")}
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={() => {
-                          if (confirm("Delete this folder? It must be empty.")) {
+                          if (confirm(t("custom_fields_section.delete_folder_confirm"))) {
                             deleteFolderMutation.mutate(folderFilter);
                           }
                         }}
                         className={cn("w-8 h-8 rounded-md flex items-center justify-center transition-colors", "hover:bg-rose-500/10 text-rose-500")}
-                        title="Delete folder"
+                        title={t("custom_fields_section.delete_folder_title")}
                       >
                         <Trash2 size={13} />
                       </button>
@@ -811,15 +876,15 @@ export default function CustomFieldsSection() {
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className={cn("text-[11px] font-semibold", sub)}>
-                    {totalFields} of {WORKSPACE_FIELD_LIMIT}
+                    {t("custom_fields_section.field_count_label", { count: totalFields, limit: WORKSPACE_FIELD_LIMIT })}
                   </span>
                   <select
                     value={contentTypeFilter}
                     onChange={(e) => setContentTypeFilter(e.target.value)}
                     className={cn(selectCls, "h-9 text-[11px] py-0 w-[180px]")}
                   >
-                    <option value="">All content types</option>
-                    {CONTENT_OPTIONS.map((c) => (
+                    <option value="">{t("custom_fields_section.content_type_filter_all")}</option>
+                    {contentOptions.map((c) => (
                       <option key={c.content_type} value={c.content_type}>
                         {c.name}
                       </option>
@@ -833,13 +898,13 @@ export default function CustomFieldsSection() {
                 <table className="w-full">
                   <thead>
                     <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Name</th>
-                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>ID</th>
-                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Content Type</th>
-                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Data Format</th>
-                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>For</th>
-                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Feeder</th>
-                      <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Actions</th>
+                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_name")}</th>
+                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_id")}</th>
+                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_content_type")}</th>
+                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_data_format")}</th>
+                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_for")}</th>
+                      <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_feeder")}</th>
+                      <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("custom_fields_section.table_header_actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -857,9 +922,9 @@ export default function CustomFieldsSection() {
                               <Database className="w-7 h-7 text-primary" />
                             </div>
                             <div className="space-y-1">
-                              <h3 className={cn("text-[13px] font-black", text)}>No custom fields yet</h3>
+                              <h3 className={cn("text-[13px] font-black", text)}>{t("custom_fields_section.empty_state_title")}</h3>
                               <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                                Create your first custom field to get started.
+                                {t("custom_fields_section.empty_state_description")}
                               </p>
                             </div>
                           </div>
@@ -867,7 +932,7 @@ export default function CustomFieldsSection() {
                       </tr>
                     ) : (
                       fields.map((field) => {
-                        const ctMeta = CONTENT_OPTIONS.find((c) => c.content_type === field.content_type);
+                        const ctMeta = contentOptions.find((c) => c.content_type === field.content_type);
                         const Icon = ctMeta?.Icon ?? Type;
                         return (
                           <tr
@@ -888,10 +953,10 @@ export default function CustomFieldsSection() {
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(field.slug);
-                                    toast({ title: "Copied", description: "Field ID copied." });
+                                    toast({ title: t("custom_fields_section.copied_toast_title"), description: t("custom_fields_section.copied_toast_description") });
                                   }}
                                   className={cn("w-6 h-6 rounded-md flex items-center justify-center transition-colors", dark ? "hover:bg-slate-800 text-slate-500 hover:text-primary" : "hover:bg-slate-100 text-slate-400 hover:text-primary")}
-                                  title="Copy ID"
+                                  title={t("custom_fields_section.copy_id_title")}
                                 >
                                   <Copy size={11} />
                                 </button>
@@ -917,14 +982,14 @@ export default function CustomFieldsSection() {
                                 <button
                                   onClick={() => openEdit(field)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
-                                  title="Edit"
+                                  title={t("custom_fields_section.edit_title")}
                                 >
                                   <Edit2 size={13} />
                                 </button>
                                 <button
                                   onClick={() => setFieldToDelete(field)}
                                   className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
-                                  title="Delete"
+                                  title={t("custom_fields_section.delete_title")}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -939,14 +1004,14 @@ export default function CustomFieldsSection() {
               </div>
 
               <div className={cn("px-6 py-3 border-t text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                Showing {fields.length} of {totalFields} custom fields
+                {t("custom_fields_section.footer_showing", { shown: fields.length, total: totalFields })}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ── Create / Edit Modal — replyagent-style flow ── */}
+      {/* ── Create / Edit Modal ── */}
       <Dialog open={showFieldDialog} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-2xl max-h-[92vh] overflow-y-auto", card, border)}>
           <div className="p-6 space-y-5">
@@ -957,10 +1022,10 @@ export default function CustomFieldsSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    {isEditMode ? "Edit Custom Field" : "Create Custom Field"}
+                    {isEditMode ? t("custom_fields_section.modal_title_edit") : t("custom_fields_section.modal_title_create")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Define a new field to collect data.
+                    {t("custom_fields_section.modal_description")}
                   </DialogDescription>
                 </div>
               </div>
@@ -969,14 +1034,14 @@ export default function CustomFieldsSection() {
             <div className="space-y-5">
               {/* Display Name */}
               <div className="space-y-2">
-                <label className={labelCls}>Display name</label>
+                <label className={labelCls}>{t("custom_fields_section.display_name_label")}</label>
                 <input
                   type="text"
                   value={form.label}
                   onChange={(e) => onLabelChange(e.target.value)}
                   disabled={isEditMode}
                   className={cn(inputCls, "disabled:opacity-60")}
-                  placeholder="e.g. Birthday"
+                  placeholder={t("custom_fields_section.display_name_placeholder")}
                 />
               </div>
 
@@ -984,8 +1049,8 @@ export default function CustomFieldsSection() {
               {!isEditMode && (
                 <div className="space-y-2">
                   <label className={cn(labelCls, "flex items-center gap-2")}>
-                    System name
-                    <span title="Lowercase identifier used by the API + automations">
+                    {t("custom_fields_section.system_name_label")}
+                    <span title={t("custom_fields_section.system_name_tooltip")}>
                       <Info size={11} className="opacity-60" />
                     </span>
                   </label>
@@ -995,7 +1060,7 @@ export default function CustomFieldsSection() {
                       value={form.systemName}
                       onChange={(e) => onSystemNameChange(e.target.value)}
                       className={cn(inputCls, "lowercase pr-10 font-mono")}
-                      placeholder="e.g. birthday"
+                      placeholder={t("custom_fields_section.system_name_placeholder")}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2">
                       {slugChecking ? (
@@ -1013,8 +1078,8 @@ export default function CustomFieldsSection() {
               {/* Description */}
               <div className="space-y-2">
                 <label className={cn(labelCls, "flex items-center gap-2")}>
-                  Description
-                  <span title="Optional hint shown to teammates">
+                  {t("custom_fields_section.description_label")}
+                  <span title={t("custom_fields_section.description_tooltip")}>
                     <Info size={11} className="opacity-60" />
                   </span>
                 </label>
@@ -1026,12 +1091,12 @@ export default function CustomFieldsSection() {
                 />
               </div>
 
-              {/* What type of data — replyagent's rich dropdown */}
+              {/* What type of data — rich content-type dropdown */}
               <div className="space-y-2">
-                <label className={labelCls}>What type of data you want to collect?</label>
+                <label className={labelCls}>{t("custom_fields_section.data_type_label")}</label>
                 <div className={cn("rounded-xl border overflow-hidden", softBorder, softBg)}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
-                    {CONTENT_OPTIONS.map((opt) => {
+                    {contentOptions.map((opt) => {
                       const selected = form.contentType === opt.content_type;
                       const Icon = opt.Icon;
                       return (
@@ -1072,7 +1137,7 @@ export default function CustomFieldsSection() {
               {/* How to present this field */}
               {form.contentType && form.contentType !== "FIXED" && (
                 <div className="space-y-2">
-                  <label className={labelCls}>How to present this field</label>
+                  <label className={labelCls}>{t("custom_fields_section.present_field_label")}</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {allowedInputs.map((opt) => {
                       const selected = form.inputType === opt.slug;
@@ -1100,15 +1165,15 @@ export default function CustomFieldsSection() {
               {form.contentType === "FIXED" && (
                 <div className="space-y-3">
                   <p className={cn("text-[11px] font-medium", "text-cyan-500")}>
-                    Fixed text applies the same value to every record.
+                    {t("custom_fields_section.fixed_text_notice")}
                   </p>
                   <div className="space-y-2">
-                    <label className={labelCls}>How to present this field</label>
+                    <label className={labelCls}>{t("custom_fields_section.present_field_label")}</label>
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { slug: "text", label: "Text", Icon: TextCursorInput },
-                        { slug: "textarea", label: "Paragraph", Icon: MessageSquare },
-                        { slug: "number", label: "Number", Icon: Hash },
+                        { slug: "text", label: t("custom_fields_section.fixed_input_text"), Icon: TextCursorInput },
+                        { slug: "textarea", label: t("custom_fields_section.fixed_input_paragraph"), Icon: MessageSquare },
+                        { slug: "number", label: t("custom_fields_section.fixed_input_number"), Icon: Hash },
                       ].map((opt) => {
                         const selected = form.inputType === opt.slug;
                         const Icon = opt.Icon;
@@ -1131,7 +1196,7 @@ export default function CustomFieldsSection() {
                   </div>
                   <div className="space-y-2">
                     <label className={cn(labelCls, "flex items-center gap-2")}>
-                      <Info size={11} className="opacity-60" /> Enter the fixed value
+                      <Info size={11} className="opacity-60" /> {t("custom_fields_section.enter_fixed_value_label")}
                     </label>
                     {form.inputType === "textarea" ? (
                       <textarea
@@ -1155,11 +1220,11 @@ export default function CustomFieldsSection() {
               {/* Validations */}
               {showValidation && (form.contentType === "TEXT" || form.contentType === "NUMBER") && (
                 <div className={cn("rounded-xl border p-4 space-y-3", softBg, softBorder)}>
-                  <p className={cn("text-[12px] font-semibold", text)}>Validations</p>
+                  <p className={cn("text-[12px] font-semibold", text)}>{t("custom_fields_section.validations_title")}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className={cn(labelCls)}>
-                        {form.contentType === "TEXT" ? "Min length" : "Min number"}
+                        {form.contentType === "TEXT" ? t("custom_fields_section.min_length_label") : t("custom_fields_section.min_number_label")}
                       </label>
                       <input
                         type="number"
@@ -1175,7 +1240,7 @@ export default function CustomFieldsSection() {
                     </div>
                     <div className="space-y-1">
                       <label className={cn(labelCls)}>
-                        {form.contentType === "TEXT" ? "Max length" : "Max number"}
+                        {form.contentType === "TEXT" ? t("custom_fields_section.max_length_label") : t("custom_fields_section.max_number_label")}
                       </label>
                       <input
                         type="number"
@@ -1195,10 +1260,10 @@ export default function CustomFieldsSection() {
 
               {showValidation && (form.contentType === "DATE" || form.contentType === "DATETIME") && (
                 <div className={cn("rounded-xl border p-4 space-y-3", softBg, softBorder)}>
-                  <p className={cn("text-[12px] font-semibold", text)}>Validations</p>
+                  <p className={cn("text-[12px] font-semibold", text)}>{t("custom_fields_section.validations_title")}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className={cn(labelCls)}>Date format</label>
+                      <label className={cn(labelCls)}>{t("custom_fields_section.date_format_label")}</label>
                       <select
                         value={form.validation.date_format}
                         onChange={(e) =>
@@ -1218,7 +1283,7 @@ export default function CustomFieldsSection() {
                     </div>
                     {form.contentType === "DATETIME" && (
                       <div className="space-y-1">
-                        <label className={cn(labelCls)}>Time format</label>
+                        <label className={cn(labelCls)}>{t("custom_fields_section.time_format_label")}</label>
                         <select
                           value={form.validation.time_format}
                           onChange={(e) =>
@@ -1231,7 +1296,7 @@ export default function CustomFieldsSection() {
                         >
                           {TIME_FORMATS.map((f) => (
                             <option key={f.js} value={f.js}>
-                              {f.text}
+                              {timeFormatLabel(f.php)}
                             </option>
                           ))}
                         </select>
@@ -1243,10 +1308,10 @@ export default function CustomFieldsSection() {
 
               {showValidation && form.contentType === "PHONE" && (
                 <div className={cn("rounded-xl border p-4 space-y-3", softBg, softBorder)}>
-                  <p className={cn("text-[12px] font-semibold", text)}>Validations</p>
+                  <p className={cn("text-[12px] font-semibold", text)}>{t("custom_fields_section.validations_title")}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className={cn(labelCls)}>Country</label>
+                      <label className={cn(labelCls)}>{t("custom_fields_section.country_label")}</label>
                       <select
                         value={form.validation.country?.id ?? ""}
                         onChange={(e) => {
@@ -1262,7 +1327,7 @@ export default function CustomFieldsSection() {
                         }}
                         className={selectCls}
                       >
-                        <option value="">Select country</option>
+                        <option value="">{t("custom_fields_section.select_country_option")}</option>
                         {countries.map((c) => (
                           <option key={c.id} value={c.id}>
                             {flagEmoji(c.iso2)} {c.name} {c.phone_code ? `(${c.phone_code})` : ""}
@@ -1271,7 +1336,7 @@ export default function CustomFieldsSection() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className={cn(labelCls)}>Digits</label>
+                      <label className={cn(labelCls)}>{t("custom_fields_section.digits_label")}</label>
                       <div className="flex gap-2 items-center">
                         {form.validation.country?.phone_code && (
                           <span className={cn("h-11 px-3 rounded-xl border flex items-center text-[12px] font-bold", softBorder, sub)}>
@@ -1288,7 +1353,7 @@ export default function CustomFieldsSection() {
                             }))
                           }
                           className={cn(inputCls, "flex-1")}
-                          placeholder="e.g 11"
+                          placeholder={t("custom_fields_section.digits_placeholder")}
                         />
                       </div>
                     </div>
@@ -1303,21 +1368,21 @@ export default function CustomFieldsSection() {
                   {form.contentType !== "COUNTRY" && form.contentType !== "CURRENCY" && (
                     <div className="flex border-b">
                       {[
-                        { slug: "create", label: "Create or select options" },
-                        { slug: "import", label: "Upload or Copy" },
-                      ].map((t) => {
-                        const active = form.listType === t.slug;
+                        { slug: "create", label: t("custom_fields_section.list_tab_create") },
+                        { slug: "import", label: t("custom_fields_section.list_tab_import") },
+                      ].map((tab) => {
+                        const active = form.listType === tab.slug;
                         return (
                           <button
-                            key={t.slug}
+                            key={tab.slug}
                             type="button"
-                            onClick={() => setForm((p) => ({ ...p, listType: t.slug as "create" | "import", properties: [] }))}
+                            onClick={() => setForm((p) => ({ ...p, listType: tab.slug as "create" | "import", properties: [] }))}
                             className={cn(
                               "px-4 py-2 text-[12px] font-semibold transition-colors",
                               active ? "text-primary border-b-2 border-primary" : sub,
                             )}
                           >
-                            {t.label}
+                            {tab.label}
                           </button>
                         );
                       })}
@@ -1328,7 +1393,7 @@ export default function CustomFieldsSection() {
                   {form.contentType === "COUNTRY" && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className={cn("text-[11px] font-black", text)}>Choose countries</p>
+                        <p className={cn("text-[11px] font-black", text)}>{t("custom_fields_section.choose_countries_title")}</p>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -1337,7 +1402,7 @@ export default function CustomFieldsSection() {
                             className="rounded accent-[hsl(var(--primary))]"
                           />
                           <span className={cn("text-[11px] font-semibold", sub)}>
-                            Select all countries
+                            {t("custom_fields_section.select_all_countries")}
                           </span>
                         </label>
                       </div>
@@ -1362,7 +1427,7 @@ export default function CustomFieldsSection() {
                         })}
                       </div>
                       <p className={cn("text-[10px] font-medium opacity-60", sub)}>
-                        {form.countries.length} of {countries.length} selected
+                        {t("custom_fields_section.countries_selected_count", { selected: form.countries.length, total: countries.length })}
                       </p>
                     </div>
                   )}
@@ -1371,7 +1436,7 @@ export default function CustomFieldsSection() {
                   {form.contentType === "CURRENCY" && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className={cn("text-[11px] font-black", text)}>Choose currencies</p>
+                        <p className={cn("text-[11px] font-black", text)}>{t("custom_fields_section.choose_currencies_title")}</p>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -1384,7 +1449,7 @@ export default function CustomFieldsSection() {
                             className="rounded accent-[hsl(var(--primary))]"
                           />
                           <span className={cn("text-[11px] font-semibold", sub)}>
-                            Select all currencies
+                            {t("custom_fields_section.select_all_currencies")}
                           </span>
                         </label>
                       </div>
@@ -1420,10 +1485,10 @@ export default function CustomFieldsSection() {
                     form.contentType !== "CURRENCY" &&
                     form.listType === "create" && (
                       <div className="space-y-2">
-                        <label className={cn(labelCls)}>List options</label>
+                        <label className={cn(labelCls)}>{t("custom_fields_section.list_options_label")}</label>
                         {form.properties.length === 0 ? (
                           <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                            No options yet.
+                            {t("custom_fields_section.no_options_yet")}
                           </p>
                         ) : (
                           form.properties.map((prop, idx) => (
@@ -1433,7 +1498,7 @@ export default function CustomFieldsSection() {
                                 value={prop.name}
                                 onChange={(e) => updateProperty(idx, e.target.value.slice(0, 250))}
                                 className={cn(inputCls, "flex-1")}
-                                placeholder="Enter text"
+                                placeholder={t("custom_fields_section.option_placeholder")}
                               />
                               <button
                                 type="button"
@@ -1450,7 +1515,7 @@ export default function CustomFieldsSection() {
                           onClick={addProperty}
                           className="flex items-center gap-1 text-primary text-[12px] font-bold mt-1"
                         >
-                          <Plus size={14} /> Add more option
+                          <Plus size={14} /> {t("custom_fields_section.add_more_option")}
                         </button>
                       </div>
                     )}
@@ -1460,13 +1525,13 @@ export default function CustomFieldsSection() {
                     form.contentType !== "CURRENCY" &&
                     form.listType === "import" && (
                       <div className="space-y-3">
-                        <label className={cn(labelCls)}>Paste options</label>
+                        <label className={cn(labelCls)}>{t("custom_fields_section.paste_options_label")}</label>
                         <textarea
                           value={importRaw}
                           onChange={(e) => handleImport(e.target.value, delimiter)}
                           rows={5}
                           className={textareaCls}
-                          placeholder="Paste your options here"
+                          placeholder={t("custom_fields_section.paste_options_placeholder")}
                         />
                         <select
                           value={delimiter}
@@ -1478,7 +1543,7 @@ export default function CustomFieldsSection() {
                         >
                           {DELIMITERS.map((d) => (
                             <option key={d.value} value={d.value}>
-                              {d.label}
+                              {delimiterLabel(d.value)}
                             </option>
                           ))}
                         </select>
@@ -1499,7 +1564,7 @@ export default function CustomFieldsSection() {
               {/* For + Folder — kept compact */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <label className={labelCls}>For (entity)</label>
+                  <label className={labelCls}>{t("custom_fields_section.for_entity_label")}</label>
                   <select
                     value={form.creatingFor}
                     onChange={(e) => setForm((p) => ({ ...p, creatingFor: e.target.value as ForValue }))}
@@ -1514,13 +1579,13 @@ export default function CustomFieldsSection() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className={labelCls}>Folder</label>
+                  <label className={labelCls}>{t("custom_fields_section.folder_label")}</label>
                   <select
                     value={form.folderId}
                     onChange={(e) => setForm((p) => ({ ...p, folderId: e.target.value }))}
                     className={selectCls}
                   >
-                    <option value="">Root</option>
+                    <option value="">{t("custom_fields_section.folder_root_option")}</option>
                     {folders.map((f) => (
                       <option key={f.id} value={f.id}>
                         {f.name}
@@ -1533,11 +1598,11 @@ export default function CustomFieldsSection() {
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
               <button onClick={closeDialog} className={outlineBtn}>
-                Cancel
+                {t("custom_fields_section.cancel_button")}
               </button>
               <button onClick={handleSave} disabled={saveMutation.isPending} className={primaryBtn}>
                 {saveMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                {isEditMode ? "Update" : "Create"}
+                {isEditMode ? t("custom_fields_section.update_button") : t("custom_fields_section.create_button")}
               </button>
             </div>
           </div>
@@ -1564,21 +1629,21 @@ export default function CustomFieldsSection() {
                 </div>
                 <div className="text-left">
                   <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    {editingFolder ? "Rename Folder" : "Create Folder"}
+                    {editingFolder ? t("custom_fields_section.folder_modal_title_rename") : t("custom_fields_section.folder_modal_title_create")}
                   </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    {editingFolder ? "Pick a new name." : "Group custom fields under a folder."}
+                    {editingFolder ? t("custom_fields_section.folder_modal_desc_rename") : t("custom_fields_section.folder_modal_desc_create")}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
             <div className="space-y-2">
-              <label className={labelCls}>Folder name</label>
+              <label className={labelCls}>{t("custom_fields_section.folder_name_label")}</label>
               <input
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value.slice(0, 60))}
                 className={inputCls}
-                placeholder="Enter folder name"
+                placeholder={t("custom_fields_section.folder_name_placeholder")}
               />
             </div>
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
@@ -1590,12 +1655,12 @@ export default function CustomFieldsSection() {
                 }}
                 className={outlineBtn}
               >
-                Cancel
+                {t("custom_fields_section.cancel_button")}
               </button>
               <button
                 onClick={() => {
                   if (!folderName.trim()) {
-                    toast({ title: "Missing name", variant: "destructive" });
+                    toast({ title: t("custom_fields_section.toast_missing_name"), variant: "destructive" });
                     return;
                   }
                   folderMutation.mutate();
@@ -1604,7 +1669,7 @@ export default function CustomFieldsSection() {
                 className={primaryBtn}
               >
                 {folderMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                {editingFolder ? "Save" : "Create"}
+                {editingFolder ? t("custom_fields_section.save_button") : t("custom_fields_section.create_button")}
               </button>
             </div>
           </div>
@@ -1620,21 +1685,21 @@ export default function CustomFieldsSection() {
                 <AlertCircle size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Delete Field?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("custom_fields_section.delete_dialog_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black">{fieldToDelete?.label ?? "This field"}</span> and every stored value will be permanently removed.
+                  <span className="text-rose-500 font-black">{fieldToDelete?.label ?? t("custom_fields_section.delete_dialog_field_fallback")}</span> {t("custom_fields_section.delete_dialog_description_suffix")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("custom_fields_section.cancel_button")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => fieldToDelete && deleteMutation.mutate(fieldToDelete.slug)}
                 disabled={deleteMutation.isPending}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
                 {deleteMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                Delete
+                {t("custom_fields_section.delete_button")}
               </AlertDialogAction>
             </div>
           </div>

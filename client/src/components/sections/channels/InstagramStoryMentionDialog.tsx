@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Image as ImageIcon, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +28,7 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
   const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const text = dark ? "text-white" : "text-slate-900";
   const sub = dark ? "text-slate-500" : "text-slate-400";
@@ -73,14 +75,14 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
         await apiRequest("POST", `/api/instagram/pages/${account?.id}/story-mention`, { automation_id: automationId });
       }
     },
-    onSuccess: () => { invalidate(); toast({ title: "Saved", description: "Story mention settings updated." }); onClose(); },
-    onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
+    onSuccess: () => { invalidate(); toast({ title: t("instagram_story_mention_dialog.saved"), description: t("instagram_story_mention_dialog.settings_updated") }); onClose(); },
+    onError: () => toast({ title: t("instagram_story_mention_dialog.error"), description: t("instagram_story_mention_dialog.failed_to_save"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => { await apiRequest("DELETE", `/api/instagram/pages/${account?.id}/story-mention`); },
-    onSuccess: () => { setEnabled(false); setAutomationId(null); invalidate(); toast({ title: "Cleared", description: "Story mention automation removed." }); onClose(); },
-    onError: () => toast({ title: "Error", description: "Failed to clear.", variant: "destructive" }),
+    onSuccess: () => { setEnabled(false); setAutomationId(null); invalidate(); toast({ title: t("instagram_story_mention_dialog.cleared"), description: t("instagram_story_mention_dialog.automation_removed") }); onClose(); },
+    onError: () => toast({ title: t("instagram_story_mention_dialog.error"), description: t("instagram_story_mention_dialog.failed_to_clear"), variant: "destructive" }),
   });
 
   if (!account) return null;
@@ -94,10 +96,11 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
               <ImageIcon size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={cn("text-[14px] font-semibold", text)}>Story Mention</div>
+              <div className={cn("text-[14px] font-semibold", text)}>{t("instagram_story_mention_dialog.title")}</div>
               <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                Trigger an automation whenever someone mentions{" "}
-                <span className="font-mono">@{account.username ?? account.name}</span> in their story.
+                {t("instagram_story_mention_dialog.description_prefix")}{" "}
+                <span className="font-mono">@{account.username ?? account.name}</span>{" "}
+                {t("instagram_story_mention_dialog.description_suffix")}
               </p>
             </div>
             <Switch
@@ -109,13 +112,13 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
 
           {enabled && (
             <div className="space-y-2">
-              <label className={cn("text-[11px] font-semibold", sub)}>Automation to trigger on story mention</label>
+              <label className={cn("text-[11px] font-semibold", sub)}>{t("instagram_story_mention_dialog.select_label")}</label>
               <select
                 value={automationId ?? ""}
                 onChange={(e) => setAutomationId(e.target.value || null)}
                 className={selectCls}
               >
-                <option value="">— Choose an automation —</option>
+                <option value="">{t("instagram_story_mention_dialog.choose_automation")}</option>
                 {automations.map((a: any) => (
                   <option key={a.id} value={String(a.id)}>{a.name}</option>
                 ))}
@@ -131,7 +134,7 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
                   disabled={deleteMutation.isPending}
                   className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all flex items-center gap-2 bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50"
                 >
-                  <Trash2 size={12} /> {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                  <Trash2 size={12} /> {deleteMutation.isPending ? t("instagram_story_mention_dialog.deleting") : t("instagram_story_mention_dialog.delete")}
                 </button>
               )}
             </div>
@@ -141,14 +144,14 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
                 disabled={saveMutation.isPending || deleteMutation.isPending}
                 className={cn("h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
               >
-                Close
+                {t("instagram_story_mention_dialog.close")}
               </button>
               <button
                 onClick={() => saveMutation.mutate()}
                 disabled={saveMutation.isPending || (enabled && !automationId)}
                 className="h-10 px-5 rounded-xl text-[11px] font-semibold transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saveMutation.isPending ? "Saving…" : "Save"}
+                {saveMutation.isPending ? t("instagram_story_mention_dialog.saving") : t("instagram_story_mention_dialog.save")}
               </button>
             </div>
           </div>

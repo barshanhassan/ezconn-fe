@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +10,13 @@ import { cn } from "@/lib/utils";
 type SortDirection = "asc" | "desc" | "default";
 interface SortState { column: string | null; direction: SortDirection; }
 
-export default function CSATDetails() {
+interface CSATDetailsProps {
+  teamIds?: string[];
+  agentIds?: string[];
+}
+
+export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetailsProps) {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -37,13 +44,15 @@ export default function CSATDetails() {
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const feedbackDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Backend returns honest empty arrays today (no csat_responses table yet)
-  // but the wiring is in place so the moment CSAT collection ships, this
-  // table populates without any frontend change.
+  const filterParams = new URLSearchParams();
+  if (teamIds.length) filterParams.set("teamIds", teamIds.join(","));
+  if (agentIds.length) filterParams.set("agentIds", agentIds.join(","));
+  const filterQs = filterParams.toString();
+
   const { data: csatDet } = useQuery<any>({
-    queryKey: ["/api/statistics/csat-details"],
+    queryKey: ["/api/statistics/csat-details", filterQs],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/csat-details");
+      const res = await apiRequest("GET", `/api/statistics/csat-details${filterQs ? `?${filterQs}` : ""}`);
       return res.json();
     },
     refetchInterval: 300_000,
@@ -124,10 +133,10 @@ export default function CSATDetails() {
 
   const Pagination = ({ count, rows, setRows, isOpen, setIsOpen, ref }: any) => (
     <div className="flex items-center justify-between mt-5 px-1">
-      <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{count} results</span>
+      <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("csat_dashboard.results_count", { count })}</span>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2.5">
-          <span className={cn("text-[11px] font-semibold opacity-60", sub)}>Rows per page:</span>
+          <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("csat_dashboard.rows_per_page")}</span>
           <div className="relative" ref={ref}>
             <button onClick={() => setIsOpen(!isOpen)} className={cn("flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all", btnCls)}>
               {rows} <ChevronDown size={12} className="opacity-50" />
@@ -157,10 +166,10 @@ export default function CSATDetails() {
       {/* Agent CSAT Performance */}
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className={cn("text-[13px] font-bold", text)}>Agent CSAT Performance</h3>
+          <h3 className={cn("text-[13px] font-bold", text)}>{t("csat_dashboard.agent_performance_title")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
-            <input placeholder="Search by name or ID..." value={searchAgent} onChange={(e) => setSearchAgent(e.target.value)} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
+            <input placeholder={t("csat_dashboard.search_agent_placeholder")} value={searchAgent} onChange={(e) => setSearchAgent(e.target.value)} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -168,12 +177,12 @@ export default function CSATDetails() {
             <thead>
               <tr className={cn("border-b text-left", divider)}>
                 {[
-                  { l: "Agent",   k: "agentName" },
-                  { l: "Team",    k: "team" },
-                  { l: "Great",   k: "great" },
-                  { l: "Average", k: "average" },
-                  { l: "Poor",    k: "poor" },
-                  { l: "Total",   k: "total" },
+                  { l: t("csat_dashboard.th_agent"),      k: "agentName" },
+                  { l: t("csat_dashboard.th_team"),       k: "team" },
+                  { l: t("csat_dashboard.rating_great"),   k: "great" },
+                  { l: t("csat_dashboard.rating_average"), k: "average" },
+                  { l: t("csat_dashboard.rating_poor"),    k: "poor" },
+                  { l: t("csat_dashboard.th_total"),      k: "total" },
                 ].map((h) => (
                   <th key={h.k} onClick={() => handleAgentSort(h.k)} className={cn("pb-2 px-3 text-[10px] font-bold cursor-pointer", thCls)}>
                     <div className="flex items-center gap-1.5">{h.l} {renderSortIcon(h.k, agentSort)}</div>
@@ -191,7 +200,7 @@ export default function CSATDetails() {
                   <td className="py-3 px-3 text-[12px] font-black text-rose-500">{item.poor}</td>
                   <td className={cn("py-3 px-3 text-[12px] font-black", text)}>{item.total}</td>
                 </tr>
-              )) : <tr><td colSpan={6} className={cn("py-8 text-center text-[11px]", sub)}>No results found</td></tr>}
+              )) : <tr><td colSpan={6} className={cn("py-8 text-center text-[11px]", sub)}>{t("csat_dashboard.no_results")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -201,10 +210,10 @@ export default function CSATDetails() {
       {/* Feedback Table */}
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className={cn("text-[13px] font-bold", text)}>Feedback Table</h3>
+          <h3 className={cn("text-[13px] font-bold", text)}>{t("csat_dashboard.feedback_table_title")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
-            <input placeholder="Search by customer or ID..." value={searchFeedback} onChange={(e) => setSearchFeedback(e.target.value)} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
+            <input placeholder={t("csat_dashboard.search_feedback_placeholder")} value={searchFeedback} onChange={(e) => setSearchFeedback(e.target.value)} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -212,11 +221,11 @@ export default function CSATDetails() {
             <thead>
               <tr className={cn("border-b text-left", divider)}>
                 {[
-                  { l: "Conversation", k: "conversationId" },
-                  { l: "Customer",     k: "customer" },
-                  { l: "Agent",        k: "agent" },
-                  { l: "Feedback",     k: "rating" },
-                  { l: "Date",         k: "date" },
+                  { l: t("csat_dashboard.th_conversation"), k: "conversationId" },
+                  { l: t("csat_dashboard.th_customer"),     k: "customer" },
+                  { l: t("csat_dashboard.th_agent"),        k: "agent" },
+                  { l: t("csat_dashboard.th_feedback"),     k: "rating" },
+                  { l: t("csat_dashboard.th_date"),         k: "date" },
                 ].map((h) => (
                   <th key={h.k} onClick={() => handleFeedbackSort(h.k)} className={cn("pb-2 px-3 text-[10px] font-bold cursor-pointer", thCls)}>
                     <div className="flex items-center gap-1.5">{h.l} {renderSortIcon(h.k, feedbackSort)}</div>
@@ -237,12 +246,13 @@ export default function CSATDetails() {
                       item.rating === "Average" ? "bg-orange-500/10 text-orange-500 border-orange-500/20"   :
                                                   "bg-rose-500/10 text-rose-500 border-rose-500/20"
                     )}>
-                      {item.rating === "Great" ? "😊" : item.rating === "Average" ? "😐" : "😞"} {item.rating}
+                      {item.rating === "Great" ? "😊" : item.rating === "Average" ? "😐" : "😞"}{" "}
+                      {item.rating === "Great" ? t("csat_dashboard.rating_great") : item.rating === "Average" ? t("csat_dashboard.rating_average") : t("csat_dashboard.rating_poor")}
                     </span>
                   </td>
                   <td className={cn("py-3 px-3 text-[11px] tabular-nums", sub)}>{item.date}</td>
                 </tr>
-              )) : <tr><td colSpan={5} className={cn("py-8 text-center text-[11px]", sub)}>No results found</td></tr>}
+              )) : <tr><td colSpan={5} className={cn("py-8 text-center text-[11px]", sub)}>{t("csat_dashboard.no_results")}</td></tr>}
             </tbody>
           </table>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearch, useLocation } from "wouter";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar, X, Download, Upload } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical, Users, Tag } from "lucide-react";
@@ -110,7 +111,12 @@ function expectedNationalLength(iso: CountryCode | undefined): number | undefine
 interface PhoneValidationResult {
   ok: boolean;
   reason?: "empty" | "no-digits" | "too-short" | "too-long" | "invalid";
-  message?: string;
+  // Translation key + interpolation params for the failure message — the
+  // caller (inside the component, where `t` is available) resolves this
+  // to localized text. Kept as key/params rather than a resolved string
+  // since this helper lives outside the component.
+  messageKey?: string;
+  messageParams?: Record<string, unknown>;
 }
 
 // Run a phone string through libphonenumber-js. When a country is
@@ -122,14 +128,14 @@ function validatePhone(
 ): PhoneValidationResult {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) {
-    return { ok: false, reason: "empty", message: "Phone number is required." };
+    return { ok: false, reason: "empty", messageKey: "contacts_section.phone_validation.required" };
   }
   // Reject inputs that are just punctuation / dashes / spaces.
   if (!/\d/.test(trimmed)) {
     return {
       ok: false,
       reason: "no-digits",
-      message: "Phone number must contain digits.",
+      messageKey: "contacts_section.phone_validation.no_digits",
     };
   }
   const parsed = parsePhoneNumberFromString(trimmed, iso);
@@ -137,9 +143,9 @@ function validatePhone(
     return {
       ok: false,
       reason: "invalid",
-      message: iso
-        ? "Invalid phone number for the selected country."
-        : "Invalid international phone number — include the + and country code.",
+      messageKey: iso
+        ? "contacts_section.phone_validation.invalid_for_country"
+        : "contacts_section.phone_validation.invalid_international",
     };
   }
   // If we know the country, gate strictly on its national length.
@@ -150,14 +156,16 @@ function validatePhone(
       return {
         ok: false,
         reason: "too-short",
-        message: `Phone number is too short — expected ${expected} digits.`,
+        messageKey: "contacts_section.phone_validation.too_short",
+        messageParams: { expected },
       };
     }
     if (actual > expected) {
       return {
         ok: false,
         reason: "too-long",
-        message: `Phone number is too long — expected ${expected} digits.`,
+        messageKey: "contacts_section.phone_validation.too_long",
+        messageParams: { expected },
       };
     }
   }
@@ -165,7 +173,7 @@ function validatePhone(
     return {
       ok: false,
       reason: "invalid",
-      message: "Phone number is not valid.",
+      messageKey: "contacts_section.phone_validation.not_valid",
     };
   }
   return { ok: true };
@@ -223,6 +231,7 @@ function getAvatarColor(name: string): string {
 }
 
 export default function ContactsSection() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const workspaceTz = useWorkspaceTimezone();
@@ -271,12 +280,12 @@ export default function ContactsSection() {
   // junk tags like "Marketing"/"Test" on save). The add/edit/bulk pickers use
   // these; the top filter prepends an "All" sentinel via tagFilterOptions.
   const realTags = ((tagsResponse?.tags || tagsResponse || []) as any[])
-    .map((t: any) => ({ id: t.name || t.id?.toString(), name: t.name || t }))
+    .map((tg: any) => ({ id: tg.name || tg.id?.toString(), name: tg.name || tg }))
     .filter((tag, index, self) =>
-      tag.name && index === self.findIndex((t) => t.name === tag.name)
+      tag.name && index === self.findIndex((tg) => tg.name === tag.name)
     );
   const contactTagOptions = realTags;
-  const tagFilterOptions = [{ id: "__all__", name: "All" }, ...realTags];
+  const tagFilterOptions = [{ id: "__all__", name: t("contacts_section.filters.all") }, ...realTags];
 
   // Fetch contacts
   const { data: contactsResponse, isLoading: isLoadingContacts } = useQuery({
@@ -386,7 +395,7 @@ export default function ContactsSection() {
       setNewContactCountryId("");
       setNewContactCountryIso("PK");
       setNewContactTags([]);
-      toast({ title: "Contact added" });
+      toast({ title: t("contacts_section.toasts.contact_added") });
       return { queries, tempId };
     },
     onError: (err: any, _vars, context) => {
@@ -404,9 +413,13 @@ export default function ContactsSection() {
       const isLimit = /reached the limit/i.test(msg);
       const isDup = /already exists/i.test(msg);
       toast({
-        title: isLimit ? "Contact limit reached" : isDup ? "Duplicate contact" : "Error",
+        title: isLimit
+          ? t("contacts_section.toasts.contact_limit_reached")
+          : isDup
+            ? t("contacts_section.toasts.duplicate_contact")
+            : t("contacts_section.toasts.error"),
         description: isLimit
-          ? "This workspace has hit its maximum number of contacts. Increase the cap in the organization edit screen or delete unused contacts first."
+          ? t("contacts_section.toasts.contact_limit_reached_desc")
           : msg,
         variant: "destructive",
       });
@@ -441,8 +454,11 @@ export default function ContactsSection() {
         total: data?.total ?? 0,
       });
       toast({
-        title: "Import complete",
-        description: `${data?.created ?? 0} created, ${data?.updated ?? 0} updated.`,
+        title: t("contacts_section.toasts.import_complete"),
+        description: t("contacts_section.toasts.import_complete_desc", {
+          created: data?.created ?? 0,
+          updated: data?.updated ?? 0,
+        }),
       });
     },
     onError: (err: any) => {
@@ -451,7 +467,7 @@ export default function ContactsSection() {
         const parsed = JSON.parse(msg);
         if (parsed?.message) msg = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
       } catch { /* plain string */ }
-      toast({ title: "Import failed", description: msg || "Could not import the file.", variant: "destructive" });
+      toast({ title: t("contacts_section.toasts.import_failed"), description: msg || t("contacts_section.toasts.import_failed_desc"), variant: "destructive" });
     },
   });
 
@@ -502,20 +518,20 @@ export default function ContactsSection() {
         }
       });
       setShowDeleteContactModal(false);
-      toast({ title: "Contact deleted" });
+      toast({ title: t("contacts_section.toasts.contact_deleted") });
       return { queries };
     },
     onError: (err: any, _vars, context) => {
       if (context?.queries) {
         context.queries.forEach(([key, value]) => queryClient.setQueryData(key, value));
       }
-      let msg: string = err?.message ?? "Could not delete contact.";
+      let msg: string = err?.message ?? t("contacts_section.toasts.delete_failed_desc");
       try {
         const parsed = JSON.parse(msg);
         if (parsed?.message)
           msg = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
       } catch { /* plain string */ }
-      toast({ title: "Delete failed", description: msg, variant: "destructive" });
+      toast({ title: t("contacts_section.toasts.delete_failed"), description: msg, variant: "destructive" });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
@@ -560,20 +576,20 @@ export default function ContactsSection() {
       setEditContactPhone("");
       setEditContactTags([]);
       setEditTagInput("");
-      toast({ title: "Contact updated" });
+      toast({ title: t("contacts_section.toasts.contact_updated") });
       return { queries };
     },
     onError: (err: any, _vars, context) => {
       if (context?.queries) {
         context.queries.forEach(([key, value]) => queryClient.setQueryData(key, value));
       }
-      let msg: string = err?.message ?? "Could not update contact.";
+      let msg: string = err?.message ?? t("contacts_section.toasts.update_failed_desc");
       try {
         const parsed = JSON.parse(msg);
         if (parsed?.message)
           msg = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
       } catch { /* plain string */ }
-      toast({ title: "Update failed", description: msg, variant: "destructive" });
+      toast({ title: t("contacts_section.toasts.update_failed"), description: msg, variant: "destructive" });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
@@ -643,6 +659,32 @@ export default function ContactsSection() {
   const [draggedFilterId, setDraggedFilterId] = useState<string | null>(null);
   const [openFilterColumnDropdown, setOpenFilterColumnDropdown] = useState<string | null>(null);
   const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
+
+  // Shared label for the sort/filter column pickers.
+  const columnLabel = (col: string) => {
+    switch (col) {
+      case "name": return t("contacts_section.table.name");
+      case "phoneNumber": return t("contacts_section.table.phone_number");
+      case "createdAt": return t("contacts_section.table.created_at");
+      case "lastActive": return t("contacts_section.table.last_active");
+      default: return t("contacts_section.table.updated_by");
+    }
+  };
+
+  // Display label for a filter operator — the underlying `operator` value
+  // stored in state stays the raw English string (it drives comparison
+  // logic in getFilteredAndSortedData), only the label shown is localized.
+  const operatorLabel = (op: string) => {
+    switch (op) {
+      case "contains": return t("contacts_section.filter_panel.operator_contains");
+      case "does not contain": return t("contacts_section.filter_panel.operator_not_contains");
+      case "is": return t("contacts_section.filter_panel.operator_is");
+      case "is not": return t("contacts_section.filter_panel.operator_is_not");
+      case "is empty": return t("contacts_section.filter_panel.operator_is_empty");
+      case "is not empty": return t("contacts_section.filter_panel.operator_is_not_empty");
+      default: return op;
+    }
+  };
 
   const addSort = () => {
     const availableColumns = ["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"];
@@ -863,7 +905,7 @@ export default function ContactsSection() {
     const contactText = `${contact.name} - ${contact.phoneNumber}`;
     navigator.clipboard.writeText(contactText);
     toast({
-      title: "Copied to clipboard",
+      title: t("contacts_section.toasts.copied_to_clipboard"),
       description: contactText,
     });
   };
@@ -893,12 +935,12 @@ export default function ContactsSection() {
   };
 
   const handleRemoveBulkTag = (tag: string) => {
-    setBulkEditTags(bulkEditTags.filter(t => t !== tag));
+    setBulkEditTags(bulkEditTags.filter(tg => tg !== tag));
   };
 
   const handleToggleBulkTag = (tag: string) => {
     if (bulkEditTags.includes(tag)) {
-      setBulkEditTags(bulkEditTags.filter(t => t !== tag));
+      setBulkEditTags(bulkEditTags.filter(tg => tg !== tag));
     } else {
       setBulkEditTags([...bulkEditTags, tag]);
     }
@@ -911,14 +953,14 @@ export default function ContactsSection() {
         apiRequest("PATCH", `/api/contacts/${id}`, { tags: bulkEditTags })
       ));
       toast({
-        title: "Contacts Updated",
-        description: `Tags updated for ${selectedContactIds.length} contact(s)`,
+        title: t("contacts_section.toasts.contacts_updated"),
+        description: t("contacts_section.toasts.tags_updated_for_count", { count: selectedContactIds.length }),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       setShowBulkEditModal(false);
       setSelectedRows(new Set());
     } catch (error) {
-      toast({ title: "Error", description: "Failed to update contacts", variant: "destructive" });
+      toast({ title: t("contacts_section.toasts.error"), description: t("contacts_section.toasts.failed_update_contacts"), variant: "destructive" });
     }
   };
 
@@ -933,14 +975,14 @@ export default function ContactsSection() {
         apiRequest("DELETE", `/api/contacts/${id}`)
       ));
       toast({
-        title: "Contacts Deleted",
-        description: `${selectedContactIds.length} contact(s) have been deleted`,
+        title: t("contacts_section.toasts.contacts_deleted"),
+        description: t("contacts_section.toasts.contacts_deleted_desc", { count: selectedContactIds.length }),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       setShowBulkDeleteModal(false);
       setSelectedRows(new Set());
     } catch (error) {
-      toast({ title: "Error", description: "Failed to delete contacts", variant: "destructive" });
+      toast({ title: t("contacts_section.toasts.error"), description: t("contacts_section.toasts.failed_delete_contacts"), variant: "destructive" });
     }
   };
 
@@ -952,7 +994,7 @@ export default function ContactsSection() {
   };
 
   const handleRemoveTag = (tag: string) => {
-    setNewContactTags(newContactTags.filter(t => t !== tag));
+    setNewContactTags(newContactTags.filter(tg => tg !== tag));
   };
 
   const handleToggleTag = (tag: string) => {
@@ -971,7 +1013,7 @@ export default function ContactsSection() {
   };
 
   const handleRemoveEditTag = (tag: string) => {
-    setEditContactTags(editContactTags.filter(t => t !== tag));
+    setEditContactTags(editContactTags.filter(tg => tg !== tag));
   };
 
   const handleToggleEditTag = (tag: string) => {
@@ -985,8 +1027,8 @@ export default function ContactsSection() {
   const handleSaveContact = () => {
     if (!newContactName.trim()) {
       toast({
-        title: "Missing Fields",
-        description: "Please enter a name",
+        title: t("contacts_section.toasts.missing_fields"),
+        description: t("contacts_section.toasts.enter_name"),
         variant: "destructive",
       });
       return;
@@ -1000,8 +1042,10 @@ export default function ContactsSection() {
     const phoneResult = validatePhone(newContactPhone, iso);
     if (!phoneResult.ok) {
       toast({
-        title: "Invalid Phone",
-        description: phoneResult.message ?? "Please enter a valid phone number.",
+        title: t("contacts_section.toasts.invalid_phone"),
+        description: phoneResult.messageKey
+          ? t(phoneResult.messageKey, phoneResult.messageParams)
+          : t("contacts_section.toasts.enter_valid_phone"),
         variant: "destructive",
       });
       return;
@@ -1019,8 +1063,8 @@ export default function ContactsSection() {
   const handleSaveEditContact = () => {
     if (!editContactName.trim()) {
       toast({
-        title: "Missing Fields",
-        description: "Please enter a name",
+        title: t("contacts_section.toasts.missing_fields"),
+        description: t("contacts_section.toasts.enter_name"),
         variant: "destructive",
       });
       return;
@@ -1032,8 +1076,10 @@ export default function ContactsSection() {
     const phoneResult = validatePhone(editContactPhone, iso);
     if (!phoneResult.ok) {
       toast({
-        title: "Invalid Phone",
-        description: phoneResult.message ?? "Please enter a valid phone number.",
+        title: t("contacts_section.toasts.invalid_phone"),
+        description: phoneResult.messageKey
+          ? t(phoneResult.messageKey, phoneResult.messageParams)
+          : t("contacts_section.toasts.enter_valid_phone"),
         variant: "destructive",
       });
       return;
@@ -1064,16 +1110,16 @@ export default function ContactsSection() {
   const handleExportSelectedAsCSV = () => {
     if (!planAllowsImportExport) {
       toast({
-        title: "Not available on your plan",
-        description: "Contact import/export isn't included in your current plan. Upgrade to unlock it.",
+        title: t("contacts_section.toasts.not_available_on_plan"),
+        description: t("contacts_section.toasts.not_available_on_plan_desc"),
         variant: "destructive",
       });
       return;
     }
     if (selectedRows.size === 0) {
       toast({
-        title: "No Contacts Selected",
-        description: "Please select at least one contact to export",
+        title: t("contacts_section.toasts.no_contacts_selected"),
+        description: t("contacts_section.toasts.select_contact_to_export"),
         variant: "destructive",
       });
       return;
@@ -1090,7 +1136,15 @@ export default function ContactsSection() {
     };
 
     // CSV headers
-    const headers = ["ID", "Name", "Phone Number", "Tags", "Created At", "Last Active", "Updated By"];
+    const headers = [
+      t("contacts_section.table.id"),
+      t("contacts_section.table.name"),
+      t("contacts_section.table.phone_number"),
+      t("contacts_section.table.tags"),
+      t("contacts_section.table.created_at"),
+      t("contacts_section.table.last_active"),
+      t("contacts_section.table.updated_by"),
+    ];
 
     // CSV rows
     const rows = selectedContacts.map(contact => [
@@ -1123,28 +1177,28 @@ export default function ContactsSection() {
     document.body.removeChild(link);
 
     toast({
-      title: "Export Successful",
-      description: `${selectedContacts.length} contact(s) exported as CSV`,
+      title: t("contacts_section.toasts.export_successful"),
+      description: t("contacts_section.toasts.export_successful_csv_desc", { count: selectedContacts.length }),
     });
   };
 
-  // Export Facebook/Instagram PSIDs for the selected contacts (replyagent
-  // EXPORT_PSID). Only INSTAGRAM/MESSENGER contacts produce a row; the backend
-  // pulls the page-scoped sender_id from insta_chats / fb_chats.
+  // Export Facebook/Instagram PSIDs for the selected contacts. Only
+  // INSTAGRAM/MESSENGER contacts produce a row; the backend pulls the
+  // page-scoped sender_id from insta_chats / fb_chats.
   const [exportingPSID, setExportingPSID] = useState(false);
   const handleExportPSID = async () => {
     if (!planAllowsImportExport) {
       toast({
-        title: "Not available on your plan",
-        description: "Contact import/export isn't included in your current plan. Upgrade to unlock it.",
+        title: t("contacts_section.toasts.not_available_on_plan"),
+        description: t("contacts_section.toasts.not_available_on_plan_desc"),
         variant: "destructive",
       });
       return;
     }
     if (selectedRows.size === 0) {
       toast({
-        title: "No Contacts Selected",
-        description: "Please select at least one contact to export PSIDs",
+        title: t("contacts_section.toasts.no_contacts_selected"),
+        description: t("contacts_section.toasts.select_contact_to_export_psid"),
         variant: "destructive",
       });
       return;
@@ -1158,8 +1212,8 @@ export default function ContactsSection() {
       // Header-only CSV → no IG/Messenger PSIDs in the selection.
       if (!csv || csv.trim().split("\n").length <= 1) {
         toast({
-          title: "No PSIDs found",
-          description: "None of the selected contacts are from Instagram or Messenger.",
+          title: t("contacts_section.toasts.no_psids_found"),
+          description: t("contacts_section.toasts.no_psids_found_desc"),
         });
         return;
       }
@@ -1173,14 +1227,14 @@ export default function ContactsSection() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast({ title: "Export Successful", description: "PSIDs exported as CSV" });
+      toast({ title: t("contacts_section.toasts.export_successful"), description: t("contacts_section.toasts.psids_exported_desc") });
     } catch (err: any) {
       let msg: string = err?.message ?? "";
       try {
         const parsed = JSON.parse(msg);
         if (parsed?.message) msg = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
       } catch { /* plain string */ }
-      toast({ title: "Export failed", description: msg || "Could not export PSIDs.", variant: "destructive" });
+      toast({ title: t("contacts_section.toasts.export_failed"), description: msg || t("contacts_section.toasts.export_failed_psid_desc"), variant: "destructive" });
     } finally {
       setExportingPSID(false);
     }
@@ -1244,10 +1298,10 @@ export default function ContactsSection() {
               </div>
               <div className="space-y-0.5">
                 <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                  Contacts
+                  {t("contacts_section.header.title")}
                 </h1>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  Manage and organize your audience with tags and custom filters
+                  {t("contacts_section.header.subtitle")}
                 </p>
               </div>
             </div>
@@ -1259,8 +1313,8 @@ export default function ContactsSection() {
                   onClick={() => {
                     if (!planAllowsImportExport) {
                       toast({
-                        title: "Not available on your plan",
-                        description: "Contact import/export isn't included in your current plan. Upgrade to unlock it.",
+                        title: t("contacts_section.toasts.not_available_on_plan"),
+                        description: t("contacts_section.toasts.not_available_on_plan_desc"),
                         variant: "destructive",
                       });
                       return;
@@ -1271,7 +1325,7 @@ export default function ContactsSection() {
                   className="h-8 px-4 rounded-lg font-semibold text-[11px] transition-all duration-300 active:scale-95 flex items-center gap-2"
                 >
                   <Upload size={14} strokeWidth={2.5} />
-                  <span>Import</span>
+                  <span>{t("contacts_section.header.import")}</span>
                 </Button>
               )}
               {canManageContacts && (
@@ -1280,7 +1334,7 @@ export default function ContactsSection() {
                   className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90"
                 >
                   <Plus size={14} strokeWidth={2.5} />
-                  <span>Add Contact</span>
+                  <span>{t("contacts_section.header.add_contact")}</span>
                 </Button>
               )}
             </div>
@@ -1301,7 +1355,7 @@ export default function ContactsSection() {
               </div>
               <input
                 type="text"
-                placeholder="Search by name or number..."
+                placeholder={t("contacts_section.filters.search_placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="block w-full pl-9 pr-3 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
@@ -1314,7 +1368,7 @@ export default function ContactsSection() {
                 options={tagFilterOptions}
                 selected={selectedTags}
                 onChange={setSelectedTags}
-                placeholder="Tags"
+                placeholder={t("contacts_section.filters.tags")}
                 width="120px"
                 className="!w-[120px]"
                 showSelectedOption={true}
@@ -1325,7 +1379,7 @@ export default function ContactsSection() {
                       <Tag className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                       <span className={cn("truncate text-[12px]", selectedTags.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
                         {selectedTags.length === 0 || selectedTags.includes("__all__")
-                          ? "All"
+                          ? t("contacts_section.filters.all")
                           : tagFilterOptions.find(o => o.id === selectedTags[0])?.name ?? selectedTags[0]}
                       </span>
                     </div>
@@ -1339,7 +1393,7 @@ export default function ContactsSection() {
                 <PopoverTrigger asChild>
                   <button style={{ borderRadius: '6px' }} className="h-9 w-[120px] px-3 flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 !rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-[11px] font-medium text-slate-600 dark:text-slate-300 shadow-sm border-0">
                     <Calendar size={13} className="text-slate-400" />
-                    <span>{createdAtRange?.from ? format(createdAtRange.from, 'dd MMM') : "Created"}</span>
+                    <span>{createdAtRange?.from ? format(createdAtRange.from, 'dd MMM') : t("contacts_section.filters.created")}</span>
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -1365,16 +1419,16 @@ export default function ContactsSection() {
                   )}
                 >
                   <ArrowUpDown size={13} className="mr-2" />
-                  Sort {sorts.length > 0 && `(${sorts.length})`}
+                  {t("contacts_section.filters.sort")} {sorts.length > 0 && `(${sorts.length})`}
                 </Button>
 
                 {showSort && (
                   <div className="absolute z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl p-4 top-full mt-2 right-0 min-w-[320px] animate-in slide-in-from-top-2 duration-200">
                     {sorts.length === 0 ? (
                       <div className="text-center py-6">
-                        <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">No sorting applied</h3>
-                        <p className="text-[11px] text-slate-500 mb-4">Organize your contact list efficiently.</p>
-                        <Button onClick={addSort} className="h-8 text-[11px] bg-primary text-primary-foreground hover:bg-primary/90">Add sort</Button>
+                        <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">{t("contacts_section.sort_panel.empty_title")}</h3>
+                        <p className="text-[11px] text-slate-500 mb-4">{t("contacts_section.sort_panel.empty_subtitle")}</p>
+                        <Button onClick={addSort} className="h-8 text-[11px] bg-primary text-primary-foreground hover:bg-primary/90">{t("contacts_section.sort_panel.add_sort")}</Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1382,7 +1436,7 @@ export default function ContactsSection() {
                           <div key={sort.id} className="flex gap-2 items-center" draggable onDragStart={() => handleSortDragStart(sort.id)} onDragOver={handleSortDragOver} onDrop={() => handleSortDrop(sort.id)}>
                             <div className="relative flex-1">
                               <button type="button" onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
-                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{columnLabel(sort.column)}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
                               {openSortColumnDropdown === sort.id && (
@@ -1393,7 +1447,7 @@ export default function ContactsSection() {
                                       const isDisabled = !canAddSort(option) && option !== sort.column;
                                       return (
                                         <li key={option} className={`px-3 py-2 text-[11px] font-medium transition-colors ${isCurrentOption || isDisabled ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"}`} onClick={() => { if (!isDisabled && !isCurrentOption) { updateSort(sort.id, option, sort.direction); setOpenSortColumnDropdown(null); } }}>
-                                          {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
+                                          {columnLabel(option)}
                                         </li>
                                       );
                                     })}
@@ -1403,7 +1457,7 @@ export default function ContactsSection() {
                             </div>
                             <div className="relative">
                               <button type="button" onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)} className="w-[80px] flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
-                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.direction === "asc" ? t("contacts_section.sort_panel.asc") : t("contacts_section.sort_panel.desc")}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
                               {openSortDirectionDropdown === sort.id && (
@@ -1411,7 +1465,7 @@ export default function ContactsSection() {
                                   <ul className="py-1">
                                     {["asc", "desc"].map(option => (
                                       <li key={option} className="px-3 py-2 text-[11px] font-medium cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200" onClick={() => { updateSort(sort.id, sort.column, option as "asc" | "desc"); setOpenSortDirectionDropdown(null); }}>
-                                        {option === "asc" ? "Asc" : "Desc"}
+                                        {option === "asc" ? t("contacts_section.sort_panel.asc") : t("contacts_section.sort_panel.desc")}
                                       </li>
                                     ))}
                                   </ul>
@@ -1423,8 +1477,8 @@ export default function ContactsSection() {
                           </div>
                         ))}
                         <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                          <Button onClick={addSort} disabled={sorts.length >= 5} className="h-8 text-[11px] flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline">Add sort</Button>
-                          <Button onClick={() => setSorts([])} variant="ghost" className="h-8 text-[11px] flex-1 text-slate-500 hover:text-slate-900 hover:bg-transparent dark:hover:text-white">Reset sorts</Button>
+                          <Button onClick={addSort} disabled={sorts.length >= 5} className="h-8 text-[11px] flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline">{t("contacts_section.sort_panel.add_sort")}</Button>
+                          <Button onClick={() => setSorts([])} variant="ghost" className="h-8 text-[11px] flex-1 text-slate-500 hover:text-slate-900 hover:bg-transparent dark:hover:text-white">{t("contacts_section.sort_panel.reset_sorts")}</Button>
                         </div>
                       </div>
                     )}
@@ -1444,16 +1498,16 @@ export default function ContactsSection() {
                   )}
                 >
                   <Filter size={13} className="mr-2" />
-                  Filter {filters.length > 0 && `(${filters.length})`}
+                  {t("contacts_section.filters.filter")} {filters.length > 0 && `(${filters.length})`}
                 </Button>
 
                 {showFilter && (
                   <div className="absolute z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl p-4 top-full mt-2 right-0 min-w-[340px] animate-in slide-in-from-top-2 duration-200">
                     {filters.length === 0 ? (
                       <div className="text-center py-6">
-                        <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">No filters applied</h3>
-                        <p className="text-[11px] text-slate-500 mb-4">Refine your results with smart filters.</p>
-                        <Button onClick={addFilter} className="h-8 text-[11px] bg-primary text-primary-foreground hover:bg-primary/90">Add filter</Button>
+                        <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">{t("contacts_section.filter_panel.empty_title")}</h3>
+                        <p className="text-[11px] text-slate-500 mb-4">{t("contacts_section.filter_panel.empty_subtitle")}</p>
+                        <Button onClick={addFilter} className="h-8 text-[11px] bg-primary text-primary-foreground hover:bg-primary/90">{t("contacts_section.filter_panel.add_filter")}</Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1461,7 +1515,7 @@ export default function ContactsSection() {
                           <div key={filter.id} className="flex gap-2 items-center" draggable onDragStart={() => handleFilterDragStart(filter.id)} onDragOver={handleFilterDragOver} onDrop={() => handleFilterDrop(filter.id)}>
                             <div className="relative flex-1">
                               <button type="button" onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
-                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{columnLabel(filter.column)}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
                               {openFilterColumnDropdown === filter.id && (
@@ -1471,7 +1525,7 @@ export default function ContactsSection() {
                                       const isCurrentOption = option === filter.column;
                                       return (
                                         <li key={option} className={`px-3 py-2 text-[11px] font-medium transition-colors ${isCurrentOption ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"}`} onClick={() => { if (!isCurrentOption) { updateFilter(filter.id, option, filter.operator, filter.value); setOpenFilterColumnDropdown(null); } }}>
-                                          {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
+                                          {columnLabel(option)}
                                         </li>
                                       );
                                     })}
@@ -1481,7 +1535,7 @@ export default function ContactsSection() {
                             </div>
                             <div className="relative flex-1">
                               <button type="button" onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
-                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{filter.operator}</span>
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{operatorLabel(filter.operator)}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
                               {openFilterOperatorDropdown === filter.id && (
@@ -1489,7 +1543,7 @@ export default function ContactsSection() {
                                   <ul className="py-1">
                                     {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
                                       <li key={option} className="px-3 py-2 text-[11px] font-medium cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200" onClick={() => { updateFilter(filter.id, filter.column, option, filter.value); setOpenFilterOperatorDropdown(null); }}>
-                                        {option}
+                                        {operatorLabel(option)}
                                       </li>
                                     ))}
                                   </ul>
@@ -1498,18 +1552,18 @@ export default function ContactsSection() {
                             </div>
                             {filter.operator === "is empty" || filter.operator === "is not empty" ? (
                               <div className="h-8 px-3 text-[11px] font-medium text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center bg-slate-50/40 dark:bg-slate-800/30 flex-1">
-                                (no value)
+                                {t("contacts_section.filter_panel.no_value")}
                               </div>
                             ) : (
-                              <input type="text" placeholder="Value..." value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1" />
+                              <input type="text" placeholder={t("contacts_section.filter_panel.value_placeholder")} value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1" />
                             )}
                             <button onClick={() => removeFilter(filter.id)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={13} /></button>
                             <GripVertical size={13} className="text-slate-300 cursor-grab active:cursor-grabbing" />
                           </div>
                         ))}
                         <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                          <Button onClick={addFilter} className="h-8 text-[11px] flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline">Add filter</Button>
-                          <Button onClick={() => setFilters([])} variant="ghost" className="h-8 text-[11px] flex-1 text-slate-500 hover:text-slate-900 hover:bg-transparent dark:hover:text-white">Reset filters</Button>
+                          <Button onClick={addFilter} className="h-8 text-[11px] flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline">{t("contacts_section.filter_panel.add_filter")}</Button>
+                          <Button onClick={() => setFilters([])} variant="ghost" className="h-8 text-[11px] flex-1 text-slate-500 hover:text-slate-900 hover:bg-transparent dark:hover:text-white">{t("contacts_section.filter_panel.reset_filters")}</Button>
                         </div>
                       </div>
                     )}
@@ -1528,7 +1582,7 @@ export default function ContactsSection() {
                   <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-primary/20">
                     {selectedRows.size}
                   </div>
-                  <span className="text-[11px] font-bold text-primary uppercase tracking-tight">Contacts selected</span>
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-tight">{t("contacts_section.bulk_toolbar.contacts_selected")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {canManageContacts && (
@@ -1538,7 +1592,7 @@ export default function ContactsSection() {
                       variant="outline"
                     >
                       <Edit2 size={13} />
-                      <span>Edit Tags</span>
+                      <span>{t("contacts_section.bulk_toolbar.edit_tags")}</span>
                     </Button>
                   )}
                   {canExportContacts && (
@@ -1548,7 +1602,7 @@ export default function ContactsSection() {
                       variant="outline"
                     >
                       <Download size={13} />
-                      <span>Export CSV</span>
+                      <span>{t("contacts_section.bulk_toolbar.export_csv")}</span>
                     </Button>
                   )}
                   {canExportPSID && (
@@ -1559,7 +1613,7 @@ export default function ContactsSection() {
                       variant="outline"
                     >
                       {exportingPSID ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download size={13} />}
-                      <span>Export PSID</span>
+                      <span>{t("contacts_section.bulk_toolbar.export_psid")}</span>
                     </Button>
                   )}
                   {canDeleteContacts && (
@@ -1569,7 +1623,7 @@ export default function ContactsSection() {
                       variant="outline"
                     >
                       <Trash2 size={13} />
-                      <span>Delete Selected</span>
+                      <span>{t("contacts_section.bulk_toolbar.delete_selected")}</span>
                     </Button>
                   )}
                 </div>
@@ -1592,7 +1646,7 @@ export default function ContactsSection() {
                       onClick={() => handleColumnSort("name")}
                     >
                       <div className="flex items-center gap-2">
-                        Name
+                        {t("contacts_section.table.name")}
                         {renderSortIcon("name")}
                       </div>
                     </th>
@@ -1601,17 +1655,17 @@ export default function ContactsSection() {
                       onClick={() => handleColumnSort("phoneNumber")}
                     >
                       <div className="flex items-center gap-2">
-                        Phone Number
+                        {t("contacts_section.table.phone_number")}
                         {renderSortIcon("phoneNumber")}
                       </div>
                     </th>
-                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">Tags</th>
+                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">{t("contacts_section.table.tags")}</th>
                     <th
                       className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-b border-slate-200 dark:border-slate-800"
                       onClick={() => handleColumnSort("createdAt")}
                     >
                       <div className="flex items-center gap-2">
-                        Created At
+                        {t("contacts_section.table.created_at")}
                         {renderSortIcon("createdAt")}
                       </div>
                     </th>
@@ -1620,7 +1674,7 @@ export default function ContactsSection() {
                       onClick={() => handleColumnSort("lastActive")}
                     >
                       <div className="flex items-center gap-2">
-                        Last Active
+                        {t("contacts_section.table.last_active")}
                         {renderSortIcon("lastActive")}
                       </div>
                     </th>
@@ -1629,11 +1683,11 @@ export default function ContactsSection() {
                       onClick={() => handleColumnSort("updatedBy")}
                     >
                       <div className="flex items-center gap-2">
-                        Updated by
+                        {t("contacts_section.table.updated_by")}
                         {renderSortIcon("updatedBy")}
                       </div>
                     </th>
-                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">Actions</th>
+                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">{t("contacts_section.table.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1642,7 +1696,7 @@ export default function ContactsSection() {
                       <td colSpan={8} className="text-center py-20">
                         <div className="flex flex-col items-center gap-3">
                           <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                          <p className="text-[11px] font-medium text-slate-500">Loading contacts...</p>
+                          <p className="text-[11px] font-medium text-slate-500">{t("contacts_section.table.loading_contacts")}</p>
                         </div>
                       </td>
                     </tr>
@@ -1653,7 +1707,7 @@ export default function ContactsSection() {
                           <div className="p-3 rounded-full bg-slate-50 dark:bg-slate-800/50">
                             <Users className="h-6 w-6 text-slate-300" />
                           </div>
-                          <p className="text-[11px] font-medium text-slate-500">No contacts found</p>
+                          <p className="text-[11px] font-medium text-slate-500">{t("contacts_section.table.no_contacts_found")}</p>
                         </div>
                       </td>
                     </tr>
@@ -1716,19 +1770,19 @@ export default function ContactsSection() {
                                 {canManageContacts && (
                                   <DropdownMenuItem onClick={() => handleEditContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                                     <Edit2 size={13} className="text-slate-400" />
-                                    <span>Edit</span>
+                                    <span>{t("contacts_section.row_actions.edit")}</span>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem onClick={() => handleCopyContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                                   <Copy size={13} className="text-slate-400" />
-                                  <span>Copy</span>
+                                  <span>{t("contacts_section.row_actions.copy")}</span>
                                 </DropdownMenuItem>
                                 {canDeleteContacts && (
                                   <>
                                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
                                     <DropdownMenuItem onClick={() => handleDeleteContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer">
                                       <Trash2 size={13} />
-                                      <span>Delete</span>
+                                      <span>{t("contacts_section.row_actions.delete")}</span>
                                     </DropdownMenuItem>
                                   </>
                                 )}
@@ -1747,11 +1801,11 @@ export default function ContactsSection() {
             <div className="py-3 px-5 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
               <div className="flex items-center gap-4">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  {getFilteredAndSortedData().length} results
+                  {t("contacts_section.pagination.results", { count: getFilteredAndSortedData().length })}
                 </span>
 
                 <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Rows:</span>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{t("contacts_section.pagination.rows")}</span>
                   <div className="relative" ref={dropdownRef}>
                     <button
                       type="button"
@@ -1785,7 +1839,7 @@ export default function ContactsSection() {
 
               <div className="flex items-center gap-4">
                 <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  Page <span className="text-slate-900 dark:text-slate-200">1</span> of 1
+                  {t("contacts_section.pagination.page_prefix")} <span className="text-slate-900 dark:text-slate-200">1</span> {t("contacts_section.pagination.page_of_suffix")} 1
                 </div>
                 <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
                   <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
@@ -1811,27 +1865,26 @@ export default function ContactsSection() {
       <Dialog open={showImportModal} onOpenChange={(o) => { if (!o) handleCloseImport(); else setShowImportModal(true); }}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-2">
-            <DialogTitle>Import Contacts</DialogTitle>
+            <DialogTitle>{t("contacts_section.import_modal.title")}</DialogTitle>
           </DialogHeader>
 
           {importResult ? (
             <div className="space-y-4">
               <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-muted-foreground">Created</span><span className="font-semibold text-emerald-600">{importResult.created}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Updated</span><span className="font-semibold text-blue-600">{importResult.updated}</span></div>
-                <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-1 mt-1"><span className="text-muted-foreground">Total</span><span className="font-semibold">{importResult.total}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("contacts_section.import_modal.created")}</span><span className="font-semibold text-emerald-600">{importResult.created}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("contacts_section.import_modal.updated")}</span><span className="font-semibold text-blue-600">{importResult.updated}</span></div>
+                <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-1 mt-1"><span className="text-muted-foreground">{t("contacts_section.import_modal.total")}</span><span className="font-semibold">{importResult.total}</span></div>
               </div>
               <div className="flex justify-end">
-                <Button onClick={handleCloseImport}>Done</Button>
+                <Button onClick={handleCloseImport}>{t("contacts_section.import_modal.done")}</Button>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground">
-                Upload a <span className="font-medium">.csv</span> file. Expected columns:{" "}
+                {t("contacts_section.import_modal.instructions_prefix")}{" "}<span className="font-medium">.csv</span>{" "}{t("contacts_section.import_modal.instructions_columns_prefix")}{" "}
                 <code className="text-[11px]">first_name, last_name, email, phone, tags</code>{" "}
-                (multiple tags separated by <code className="text-[11px]">;</code>). Existing contacts
-                are matched by email/phone and updated.
+                {t("contacts_section.import_modal.instructions_suffix")}
               </p>
 
               <button
@@ -1840,7 +1893,7 @@ export default function ContactsSection() {
                 className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
               >
                 <Download size={13} />
-                <span>Download CSV template</span>
+                <span>{t("contacts_section.import_modal.download_template")}</span>
               </button>
 
               <div>
@@ -1852,19 +1905,19 @@ export default function ContactsSection() {
                   className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                 />
                 {importFile && (
-                  <p className="mt-1.5 text-[11px] text-muted-foreground truncate">Selected: {importFile.name}</p>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground truncate">{t("contacts_section.import_modal.selected_file", { name: importFile.name })}</p>
                 )}
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={handleCloseImport}>Cancel</Button>
+                <Button variant="outline" onClick={handleCloseImport}>{t("contacts_section.common.cancel")}</Button>
                 <Button
                   onClick={handleRunImport}
                   disabled={!importFile || importMutation.isPending}
                   className="flex items-center gap-2"
                 >
                   {importMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload size={14} />}
-                  <span>{importMutation.isPending ? "Importing..." : "Import"}</span>
+                  <span>{importMutation.isPending ? t("contacts_section.import_modal.importing") : t("contacts_section.header.import")}</span>
                 </Button>
               </div>
             </div>
@@ -1876,29 +1929,29 @@ export default function ContactsSection() {
       <Dialog open={showAddContactModal} onOpenChange={setShowAddContactModal}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-2">
-            <DialogTitle>Add New Contact</DialogTitle>
+            <DialogTitle>{t("contacts_section.add_modal.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Name Input */}
             <div>
-              <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("contacts_section.common.name")}<span className="text-red-500 pl-0.5">*</span></label>
               <input
                 type="text"
-                placeholder="Enter contact name"
+                placeholder={t("contacts_section.common.name_placeholder")}
                 value={newContactName}
                 onChange={(e) => setNewContactName(e.target.value)}
                 className="w-full mt-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none transition-colors"
               />
             </div>
 
-            {/* Phone Input — replyagent-parity flag picker + searchable
-                country list, identical to the agency panel's Add Agent
-                form. The picker chip stores the ISO-2 code; on save we
-                resolve it back to the matching workspace country row. */}
+            {/* Phone Input — flag picker + searchable country list,
+                identical to the agency panel's Add Agent form. The
+                picker chip stores the ISO-2 code; on save we resolve it
+                back to the matching workspace country row. */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground">
-                Phone Number<span className="text-red-500 pl-0.5">*</span>
+                {t("contacts_section.common.phone_number")}<span className="text-red-500 pl-0.5">*</span>
               </label>
               {(() => {
                 const iso = (newContactCountryIso || "PK") as any;
@@ -1908,8 +1961,10 @@ export default function ContactsSection() {
                 const isComplete = expected !== undefined && digitCount === expected;
                 const staticCountry = STATIC_COUNTRIES.find((c) => c.code === iso);
                 const hint = expected
-                  ? `${digitCount}/${expected} digits${staticCountry ? ` (${staticCountry.name})` : ""}`
-                  : "Local number";
+                  ? (staticCountry
+                      ? t("contacts_section.common.digit_hint_with_country", { digitCount, expected, country: staticCountry.name })
+                      : t("contacts_section.common.digit_hint", { digitCount, expected }))
+                  : t("contacts_section.common.local_number");
                 return (
                   <>
                     <PhoneInputWithFlag
@@ -1958,7 +2013,7 @@ export default function ContactsSection() {
 
             {/* Tags Section */}
             <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Tags</label>
+              <label className="text-sm font-medium text-foreground">{t("contacts_section.common.tags")}</label>
               {/* Selected Tags */}
               {newContactTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 pb-1">
@@ -1982,7 +2037,7 @@ export default function ContactsSection() {
                 options={contactTagOptions}
                 selected={newContactTags}
                 onChange={setNewContactTags}
-                placeholder="Select tags"
+                placeholder={t("contacts_section.common.select_tags")}
                 width="100%"
               />
             </div>
@@ -1995,14 +2050,14 @@ export default function ContactsSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))] font-normal"
             >
-              Cancel
+              {t("contacts_section.common.cancel")}
             </Button>
             <Button
               onClick={handleSaveContact}
               className="btn-outline-primary font-normal"
               variant="outline"
             >
-              Save Contact
+              {t("contacts_section.add_modal.save_contact")}
             </Button>
           </div>
         </DialogContent>
@@ -2012,16 +2067,16 @@ export default function ContactsSection() {
       <Dialog open={showEditContactModal} onOpenChange={setShowEditContactModal}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-2">
-            <DialogTitle>Edit Contact</DialogTitle>
+            <DialogTitle>{t("contacts_section.edit_modal.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Name Input */}
             <div>
-              <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
+              <label className="text-sm font-medium text-foreground">{t("contacts_section.common.name")}<span className="text-red-500 pl-0.5">*</span></label>
               <input
                 type="text"
-                placeholder="Enter contact name"
+                placeholder={t("contacts_section.common.name_placeholder")}
                 value={editContactName}
                 onChange={(e) => setEditContactName(e.target.value)}
                 className="w-full mt-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none transition-colors"
@@ -2032,7 +2087,7 @@ export default function ContactsSection() {
                 pre-filled from the contact's E.164 phone number. */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground">
-                Phone Number<span className="text-red-500 pl-0.5">*</span>
+                {t("contacts_section.common.phone_number")}<span className="text-red-500 pl-0.5">*</span>
               </label>
               {(() => {
                 const iso = (editContactCountryIso || "PK") as any;
@@ -2042,8 +2097,10 @@ export default function ContactsSection() {
                 const isComplete = expected !== undefined && digitCount === expected;
                 const staticCountry = STATIC_COUNTRIES.find((c) => c.code === iso);
                 const hint = expected
-                  ? `${digitCount}/${expected} digits${staticCountry ? ` (${staticCountry.name})` : ""}`
-                  : "Local number";
+                  ? (staticCountry
+                      ? t("contacts_section.common.digit_hint_with_country", { digitCount, expected, country: staticCountry.name })
+                      : t("contacts_section.common.digit_hint", { digitCount, expected }))
+                  : t("contacts_section.common.local_number");
                 return (
                   <>
                     <PhoneInputWithFlag
@@ -2079,7 +2136,7 @@ export default function ContactsSection() {
 
             {/* Tags Section */}
             <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Tags</label>
+              <label className="text-sm font-medium text-foreground">{t("contacts_section.common.tags")}</label>
               {/* Selected Tags */}
               {editContactTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 pb-1">
@@ -2103,7 +2160,7 @@ export default function ContactsSection() {
                 options={contactTagOptions}
                 selected={editContactTags}
                 onChange={setEditContactTags}
-                placeholder="Select tags"
+                placeholder={t("contacts_section.common.select_tags")}
                 width="100%"
               />
             </div>
@@ -2116,14 +2173,14 @@ export default function ContactsSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("contacts_section.common.cancel")}
             </Button>
             <Button
               onClick={handleSaveEditContact}
               className="btn-outline-primary"
               variant="outline"
             >
-              Save Changes
+              {t("contacts_section.common.save_changes")}
             </Button>
           </div>
         </DialogContent>
@@ -2133,12 +2190,12 @@ export default function ContactsSection() {
       <Dialog open={showDeleteContactModal} onOpenChange={setShowDeleteContactModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader className="mb-2">
-            <DialogTitle>Delete Contact</DialogTitle>
+            <DialogTitle>{t("contacts_section.delete_modal.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold break-all">{contactToDelete?.name}</span>? This action cannot be undone.
+              {t("contacts_section.delete_modal.confirm_prefix")} <span className="font-semibold break-all">{contactToDelete?.name}</span>{t("contacts_section.delete_modal.confirm_suffix")}
             </p>
           </div>
 
@@ -2149,14 +2206,14 @@ export default function ContactsSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("contacts_section.common.cancel")}
             </Button>
             <Button
               onClick={handleConfirmDelete}
               className="btn-outline-destructive"
               variant="outline"
             >
-              Delete
+              {t("contacts_section.common.delete")}
             </Button>
           </div>
         </DialogContent>
@@ -2166,17 +2223,17 @@ export default function ContactsSection() {
       <Dialog open={showBulkEditModal} onOpenChange={setShowBulkEditModal}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-2">
-            <DialogTitle>Edit Tags for {selectedRows.size} Contact(s)</DialogTitle>
+            <DialogTitle>{t("contacts_section.bulk_edit_modal.title", { count: selectedRows.size })}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Tags Section */}
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Tags</label>
+              <label className="text-sm font-medium text-foreground mb-2 block">{t("contacts_section.common.tags")}</label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  placeholder="Add or select tag"
+                  placeholder={t("contacts_section.bulk_edit_modal.add_or_select_tag")}
                   value={bulkTagInput}
                   onChange={(e) => setBulkTagInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -2193,7 +2250,7 @@ export default function ContactsSection() {
                   variant="outline"
                   className="btn-outline-primary"
                 >
-                  Add
+                  {t("contacts_section.common.add")}
                 </Button>
               </div>
 
@@ -2215,7 +2272,7 @@ export default function ContactsSection() {
               {/* Available Tags */}
               {contactTagOptions.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Available tags:</p>
+                  <p className="text-xs text-muted-foreground mb-2">{t("contacts_section.bulk_edit_modal.available_tags")}</p>
                   <div className="flex flex-wrap gap-2">
                     {contactTagOptions.map((tagObj: any) => (
                       <button
@@ -2249,7 +2306,7 @@ export default function ContactsSection() {
               className="btn-outline-primary"
               variant="outline"
             >
-              Save Changes
+              {t("contacts_section.common.save_changes")}
             </Button>
           </div>
         </DialogContent>
@@ -2259,12 +2316,12 @@ export default function ContactsSection() {
       <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader className="mb-2">
-            <DialogTitle>Delete Contacts</DialogTitle>
+            <DialogTitle>{t("contacts_section.bulk_delete_modal.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold">{selectedRows.size} contact(s)</span>? This action cannot be undone.
+              {t("contacts_section.bulk_delete_modal.confirm_prefix")} <span className="font-semibold">{t("contacts_section.bulk_delete_modal.contact_count", { count: selectedRows.size })}</span>{t("contacts_section.delete_modal.confirm_suffix")}
             </p>
           </div>
 
@@ -2275,14 +2332,14 @@ export default function ContactsSection() {
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
             >
-              Cancel
+              {t("contacts_section.common.cancel")}
             </Button>
             <Button
               onClick={handleConfirmBulkDelete}
               className="btn-outline-destructive"
               variant="outline"
             >
-              Delete
+              {t("contacts_section.common.delete")}
             </Button>
           </div>
         </DialogContent>

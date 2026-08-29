@@ -1,5 +1,6 @@
 import React from "react";
 import { Send } from "react-feather";
+import { useTranslation } from "react-i18next";
 
 interface ProfilePreviewProps {
   profilePhotoUrl?: string | null;
@@ -18,9 +19,9 @@ interface ProfilePreviewProps {
 
 export default function ProfilePreview({
   profilePhotoUrl = null,
-  displayName = "Your Business Name",
-  about = "A short description about your business.",
-  category = "Category",
+  displayName,
+  about,
+  category,
   email = "business@example.com",
   website = "https://www.yourbusiness.com",
   containerClassName = "flex-1 flex items-center justify-center min-h-0",
@@ -28,6 +29,10 @@ export default function ProfilePreview({
   chatAreaClassName = "flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide",
   messageBoxClassName = "bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden",
 }: ProfilePreviewProps) {
+  const { t } = useTranslation();
+  const displayNameValue = displayName ?? t("profile_preview.default_display_name");
+  const aboutValue = about ?? t("profile_preview.default_about");
+  const categoryValue = category ?? t("profile_preview.default_category");
   return (
     <div className={containerClassName}>
       {/* Phone mockup */}
@@ -38,7 +43,7 @@ export default function ProfilePreview({
             <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
             <div>
               <p className="text-xs font-semibold text-white">WhatsApp</p>
-              <p className="text-xs text-[#DCF8C6]">Online</p>
+              <p className="text-xs text-[#DCF8C6]">{t("profile_preview.online")}</p>
             </div>
           </div>
         </div>
@@ -61,46 +66,46 @@ export default function ProfilePreview({
               {/* Profile Photo */}
               {profilePhotoUrl ? (
                 <div className="flex justify-center mb-3">
-                  <img src={profilePhotoUrl} alt="Profile Photo" className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md" />
+                  <img src={profilePhotoUrl} alt={t("profile_preview.profile_photo_alt")} className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md" />
                 </div>
               ) : (
                 <div className="flex justify-center mb-3">
                   <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs border-2 border-white shadow-md">
-                    No Photo
+                    {t("profile_preview.no_photo")}
                   </div>
                 </div>
               )}
 
               {/* Display Name */}
               <div className="text-center mb-3">
-                <p className="text-lg font-bold text-[#111B21]">{displayName}</p>
+                <p className="text-lg font-bold text-[#111B21]">{displayNameValue}</p>
               </div>
 
               {/* About */}
-              {about && (
+              {aboutValue && (
                 <div className="mb-3">
-                  <p className="text-xs text-[#666666] font-medium">About</p>
-                  <p className="text-sm text-[#111B21] whitespace-pre-wrap">{about}</p>
+                  <p className="text-xs text-[#666666] font-medium">{t("profile_preview.about_label")}</p>
+                  <p className="text-sm text-[#111B21] whitespace-pre-wrap">{aboutValue}</p>
                 </div>
               )}
 
               {/* Business Information */}
               <div className="space-y-2">
-                {category && (
+                {categoryValue && (
                   <div>
-                    <p className="text-xs text-[#666666] font-medium">Category</p>
-                    <p className="text-sm text-[#111B21]">{category}</p>
+                    <p className="text-xs text-[#666666] font-medium">{t("profile_preview.category_label")}</p>
+                    <p className="text-sm text-[#111B21]">{categoryValue}</p>
                   </div>
                 )}
                 {email && (
                   <div>
-                    <p className="text-xs text-[#666666] font-medium">Email</p>
+                    <p className="text-xs text-[#666666] font-medium">{t("profile_preview.email_label")}</p>
                     <p className="text-sm text-[#0084FF]">{email}</p>
                   </div>
                 )}
                 {website && (
                   <div>
-                    <p className="text-xs text-[#666666] font-medium">Website</p>
+                    <p className="text-xs text-[#666666] font-medium">{t("profile_preview.website_label")}</p>
                     <p className="text-sm text-[#0084FF]">{website}</p>
                   </div>
                 )}
@@ -114,7 +119,7 @@ export default function ProfilePreview({
         {/* Input area */}
         <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
           <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
-            <p className="text-sm text-[#999999]">Type a message...</p>
+            <p className="text-sm text-[#999999]">{t("profile_preview.type_a_message")}</p>
           </div>
           <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
             <Send size={16} className="text-white" />

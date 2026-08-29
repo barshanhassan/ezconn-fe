@@ -83,6 +83,25 @@ const AgencyRoles = () => {
     },
   });
 
+  // Permanent — unlike archive (reversible), this actually removes the role,
+  // its permission links, and unassigns it from any agent (backend: roles.service.ts deleteRole).
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (role: any) => {
+      const res = await apiRequest("DELETE", `/api/organizations/${agencyId}/roles/${role.id}`);
+      return res.json();
+    },
+    onSuccess: (_data, role: any) => {
+      queryClient.setQueryData(rolesKey, (old: any) => {
+        if (!old?.roles) return old;
+        return { ...old, roles: old.roles.filter((r: any) => r.id !== role.id) };
+      });
+      toast({ title: 'Role Deleted' });
+    },
+    onError: () => {
+      toast({ title: 'Could not delete role', description: 'Please try again.', variant: 'destructive' });
+    },
+  });
+
   const rawRoles = rolesResponse?.roles || [];
   const displayRoles = React.useMemo(() => {
     const q = search.toLowerCase();
@@ -130,58 +149,58 @@ const AgencyRoles = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative group">
-            <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors", sub)} />
-            <input
-              placeholder="Search roles..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={cn(
-                "pl-9 pr-3 h-8 w-64 text-[12px] rounded-lg border outline-none transition-colors",
-                dark
-                  ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600"
-                  : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300"
-              )}
-            />
-          </div>
-          <button
-            onClick={() => { setSelectedRole(null); setViewMode('ADD'); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
-          >
-            <Plus size={14} /> {t('agency.roles.add')}
-          </button>
-        </div>
+        <button
+          onClick={() => { setSelectedRole(null); setViewMode('ADD'); }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
+        >
+          <Plus size={14} /> {t('agency.roles.add')}
+        </button>
       </div>
 
-      {/* ── Tab bar ── */}
-      <div className={cn('px-8 border-b flex items-center gap-0', card, border)}>
-        {([
-          { key: 'active', label: t('common.active'), icon: <ShieldCheck size={13} />, count: activeRolesCount },
-          { key: 'archived', label: t('common.archived'), icon: <ShieldOff size={13} />, count: archivedRolesCount },
-        ] as const).map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+      {/* ── Search bar ── */}
+      <div className={cn('px-8 py-3 border-b flex items-center justify-between gap-4', card, border)}>
+        <div className="relative max-w-xs flex-1">
+          <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
+          <input
+            placeholder="Search roles..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className={cn(
-              'flex items-center gap-2 px-4 py-3.5 text-[12px] font-semibold border-b-2 transition-colors',
-              activeTab === tab.key
-                ? 'border-primary text-primary'
-                : cn('border-transparent', sub, 'hover:text-slate-300')
+              "pl-9 pr-3 h-8 w-full text-[12px] rounded-lg border outline-none transition-colors",
+              dark
+                ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600"
+                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300"
             )}
-          >
-            {tab.icon}
-            {tab.label}
-            <span className={cn(
-              'ml-0.5 min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded-full',
-              activeTab === tab.key
-                ? 'bg-primary/10 text-primary'
-                : dark ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400'
-            )}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          {([
+            { key: 'active', label: t('common.active'), icon: <ShieldCheck size={13} />, count: activeRolesCount },
+            { key: 'archived', label: t('common.archived'), icon: <ShieldOff size={13} />, count: archivedRolesCount },
+          ] as const).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors',
+                activeTab === tab.key
+                  ? 'bg-primary/10 text-primary'
+                  : cn(sub, 'hover:text-slate-300')
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+              <span className={cn(
+                'ml-0.5 min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+                activeTab === tab.key
+                  ? 'bg-primary/10 text-primary'
+                  : dark ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400'
+              )}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Table area ── */}
@@ -227,17 +246,9 @@ const AgencyRoles = () => {
               <p className={cn('text-[13px] font-bold mb-1', text)}>
                 {activeTab === 'active' ? t('agency.roles.empty') : t('agency.roles.empty')}
               </p>
-              <p className={cn('text-[12px] mb-5', sub)}>
+              <p className={cn('text-[12px]', sub)}>
                 {activeTab === 'active' ? t('agency.roles.emptyActive') : t('agency.roles.emptyArchived')}
               </p>
-              {activeTab === 'active' && (
-                <button
-                  onClick={() => setViewMode('ADD')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground"
-                >
-                  <Plus size={13} /> {t('agency.roles.add')}
-                </button>
-              )}
             </div>
           ) : (
             displayRoles.map((role: any, i: number) => {
@@ -340,6 +351,24 @@ const AgencyRoles = () => {
                         )}
                       >
                         {activeTab === 'active' ? <Archive size={13} /> : <RotateCcw size={13} />}
+                      </button>
+                    )}
+                    {!role.isSystem && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Delete role "${role.name}"? This cannot be undone — any agent assigned to it will lose that role.`)) {
+                            deleteRoleMutation.mutate(role);
+                          }
+                        }}
+                        title="Delete"
+                        className={cn(
+                          'p-1.5 rounded-lg border transition-all shadow-sm',
+                          dark
+                            ? 'border-slate-700 hover:bg-rose-500/10 text-slate-500 hover:text-rose-400'
+                            : 'border-slate-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600'
+                        )}
+                      >
+                        <Trash2 size={13} />
                       </button>
                     )}
                   </div>

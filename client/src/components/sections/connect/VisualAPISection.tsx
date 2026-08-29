@@ -18,6 +18,7 @@ import {
   CircleAlert,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -92,6 +93,7 @@ function safeParseJSON<T = any>(raw: any, fallback: T): T {
 }
 
 export default function VisualAPISection() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
   const queryClient = useQueryClient();
@@ -227,15 +229,18 @@ export default function VisualAPISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
-      toast({ title: "Successfully created", description: "Visual API is ready to receive data." });
+      toast({
+        title: t("visual_api_section.toast_created_title"),
+        description: t("visual_api_section.toast_created_description"),
+      });
       setIsCreateModalOpen(false);
       setNewTriggerName("");
       setNameError(null);
     },
     onError: (err: any) => {
       toast({
-        title: "Error",
-        description: err?.message ?? "Could not create trigger.",
+        title: t("visual_api_section.toast_error_title"),
+        description: err?.message ?? t("visual_api_section.toast_create_error_fallback"),
         variant: "destructive",
       });
     },
@@ -250,7 +255,7 @@ export default function VisualAPISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
-      toast({ title: "Successfully updated" });
+      toast({ title: t("visual_api_section.toast_updated_title") });
       setRenameTarget(null);
       setRenameInput("");
     },
@@ -268,7 +273,7 @@ export default function VisualAPISection() {
           (firstNameRow.key && firstNameRow.key !== "") ||
           (firstNameRow.postfix && firstNameRow.postfix !== ""));
       if (!firstNameOk) {
-        throw new Error("You must map First Name field");
+        throw new Error(t("visual_api_section.first_name_required_error"));
       }
       const payload: any = {
         mapping: managed.mapping,
@@ -288,10 +293,10 @@ export default function VisualAPISection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers", activeTriggerId] });
-      toast({ title: "Successfully updated" });
+      toast({ title: t("visual_api_section.toast_updated_title") });
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err?.message, variant: "destructive" });
+      toast({ title: t("visual_api_section.toast_error_title"), description: err?.message, variant: "destructive" });
     },
   });
 
@@ -306,7 +311,7 @@ export default function VisualAPISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers", activeTriggerId] });
-      toast({ title: "Mapping updated" });
+      toast({ title: t("visual_api_section.toast_mapping_updated_title") });
     },
   });
 
@@ -329,7 +334,7 @@ export default function VisualAPISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
-      toast({ title: "Deleted" });
+      toast({ title: t("visual_api_section.toast_deleted_title") });
       setDeleteConfirmation(null);
     },
   });
@@ -338,7 +343,7 @@ export default function VisualAPISection() {
   const handleCreateTrigger = () => {
     setNameError(null);
     if (!newTriggerName.trim()) {
-      setNameError("API name is required");
+      setNameError(t("visual_api_section.name_required_error"));
       return;
     }
     createMutation.mutate(newTriggerName.trim());
@@ -346,7 +351,7 @@ export default function VisualAPISection() {
 
   const copyToClipboard = (val: string) => {
     navigator.clipboard.writeText(val);
-    toast({ title: "Link copied" });
+    toast({ title: t("visual_api_section.toast_link_copied_title") });
   };
 
   const getWebhookUrl = (slug: string) =>
@@ -408,8 +413,8 @@ export default function VisualAPISection() {
 
   // Header content per view (matches replyagent — title + subtitle never
   // change between views, only the right-side actions do).
-  const headerTitle = "Visual APIs";
-  const headerSub = "Receive data from external platforms.";
+  const headerTitle = t("visual_api_section.header_title");
+  const headerSub = t("visual_api_section.header_subtitle");
 
   // ── Render ────────────────────────────────────────────────────────
   return (
@@ -432,21 +437,21 @@ export default function VisualAPISection() {
             <div className="flex items-center gap-2 shrink-0">
               {viewMode === "LIST" && (
                 <button onClick={() => setIsCreateModalOpen(true)} className={primaryOutlineBtn}>
-                  <Plus size={12} /> Add
+                  <Plus size={12} /> {t("visual_api_section.add_button")}
                 </button>
               )}
               {viewMode === "MANAGE" && (
                 <button onClick={goBack} className={primaryOutlineBtn}>
-                  <ChevronLeft size={12} /> Go back
+                  <ChevronLeft size={12} /> {t("visual_api_section.go_back_button")}
                 </button>
               )}
               {viewMode === "LOGS" && (
                 <>
                   <button onClick={() => refetchLogs()} className={primaryOutlineBtn}>
-                    <RefreshCcw size={12} className={cn(logsLoading && "animate-spin")} /> Refresh Logs
+                    <RefreshCcw size={12} className={cn(logsLoading && "animate-spin")} /> {t("visual_api_section.refresh_logs_button")}
                   </button>
                   <button onClick={goBack} className={outlineBtn}>
-                    <ChevronLeft size={12} /> Go back
+                    <ChevronLeft size={12} /> {t("visual_api_section.go_back_button")}
                   </button>
                 </>
               )}
@@ -462,14 +467,11 @@ export default function VisualAPISection() {
                     <Webhook className="w-8 h-8 text-primary" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Visual APIs</h3>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("visual_api_section.list_empty_title")}</h3>
                     <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Create your first Visual API
+                      {t("visual_api_section.list_empty_description")}
                     </p>
                   </div>
-                  <button onClick={() => setIsCreateModalOpen(true)} className={primaryOutlineBtn}>
-                    <Plus size={12} /> Add
-                  </button>
                 </div>
               ) : (
                 <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
@@ -477,11 +479,11 @@ export default function VisualAPISection() {
                     <table className="w-full">
                       <thead>
                         <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Name</th>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>URL</th>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Status</th>
-                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Created at</th>
-                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>Action</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_name")}</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_url")}</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_status")}</th>
+                          <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_created_at")}</th>
+                          <th className={cn("px-6 py-4 text-right text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_action")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -510,7 +512,7 @@ export default function VisualAPISection() {
                                 <button
                                   onClick={() => copyToClipboard(getWebhookUrl(trigger.slug))}
                                   className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-primary" : "hover:bg-slate-100 text-primary")}
-                                  title="Copy"
+                                  title={t("visual_api_section.copy_title")}
                                 >
                                   <Copy size={11} />
                                 </button>
@@ -519,11 +521,11 @@ export default function VisualAPISection() {
                             <td className="px-6 py-4">
                               {trigger.live ? (
                                 <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                                  Live
+                                  {t("visual_api_section.status_live")}
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="h-5 px-2 rounded-md border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-400 text-[10px] font-semibold">
-                                  Test
+                                  {t("visual_api_section.status_test")}
                                 </Badge>
                               )}
                             </td>
@@ -546,7 +548,7 @@ export default function VisualAPISection() {
                                     className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                                     onClick={() => openManage(trigger)}
                                   >
-                                    <SettingsIcon size={13} className="opacity-60" /> Manage
+                                    <SettingsIcon size={13} className="opacity-60" /> {t("visual_api_section.menu_manage")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-blue-500 focus:text-blue-500 focus:bg-blue-500/10"
@@ -555,20 +557,20 @@ export default function VisualAPISection() {
                                       setRenameInput(trigger.name);
                                     }}
                                   >
-                                    <Pencil size={13} /> Rename
+                                    <Pencil size={13} /> {t("visual_api_section.menu_rename")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
                                     onClick={() => setDeleteConfirmation(trigger)}
                                   >
-                                    <Trash2 size={13} /> Delete
+                                    <Trash2 size={13} /> {t("visual_api_section.menu_delete")}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="my-1" />
                                   <DropdownMenuItem
                                     className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
                                     onClick={() => openLogs(trigger)}
                                   >
-                                    <ListChecks size={13} className="opacity-60" /> Logs
+                                    <ListChecks size={13} className="opacity-60" /> {t("visual_api_section.menu_logs")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -579,7 +581,7 @@ export default function VisualAPISection() {
                     </table>
                   </div>
                   <div className={cn("px-6 py-3 border-t text-[11px] font-semibold", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                    Showing {triggers.length} of {triggers.length} triggers
+                    {t("visual_api_section.showing_triggers_count", { count: triggers.length })}
                   </div>
                 </div>
               )}
@@ -608,7 +610,7 @@ export default function VisualAPISection() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className={cn("text-[11px] font-semibold", !managed.live ? "text-rose-500" : "opacity-40")}>
-                    Test
+                    {t("visual_api_section.status_test")}
                   </span>
                   <Switch
                     checked={!!managed.live}
@@ -626,8 +628,8 @@ export default function VisualAPISection() {
                             (fn.postfix && fn.postfix !== ""));
                         if (!fnMapped) {
                           toast({
-                            title: "Error",
-                            description: "You must map First Name field",
+                            title: t("visual_api_section.toast_error_title"),
+                            description: t("visual_api_section.first_name_required_error"),
                             variant: "destructive",
                           });
                           return;
@@ -639,7 +641,7 @@ export default function VisualAPISection() {
                     className="data-[state=checked]:bg-primary"
                   />
                   <span className={cn("text-[11px] font-semibold", managed.live ? "text-emerald-500" : "opacity-40")}>
-                    Live
+                    {t("visual_api_section.status_live")}
                   </span>
                 </div>
               </div>
@@ -649,32 +651,32 @@ export default function VisualAPISection() {
                   rows. Falls back to a yellow waiting banner when no
                   payload has been received yet. */}
               <div className={cn("rounded-[1.5rem] border p-6 space-y-4", softBg, softBorder)}>
-                <p className={cn("text-[14px] font-black", text)}>Map incoming field with the fields of the system</p>
+                <p className={cn("text-[14px] font-black", text)}>{t("visual_api_section.manage_map_fields_title")}</p>
 
                 <div className={cn("rounded-xl border p-4 flex items-center gap-3 text-[12px] font-medium", "border-sky-500/30 bg-sky-500/5 text-sky-600 dark:text-sky-400")}>
-                  <Info size={14} /> Please note that you must map First Name system field.
+                  <Info size={14} /> {t("visual_api_section.manage_first_name_notice")}
                 </div>
 
                 {managed.new_keys && (
                   <div className={cn("rounded-xl border p-4 flex items-center justify-between gap-3", "border-sky-500/30 bg-sky-500/5")}>
                     <p className="text-[12px] font-medium text-sky-700 dark:text-sky-300">
-                      We have received a new request. Would you like to update current mapping?
+                      {t("visual_api_section.manage_new_request_notice")}
                     </p>
                     <button onClick={() => updateKeysMutation.mutate()} className={primaryOutlineBtn}>
-                      Update Mapping
+                      {t("visual_api_section.manage_update_mapping_button")}
                     </button>
                   </div>
                 )}
 
                 {!managed.mapped_keys ? (
                   <div className={cn("rounded-xl border p-4 flex items-center gap-3 text-[12px] font-medium", "border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400")}>
-                    <CircleAlert size={14} /> Send JSON data as a POST request to above URL to start mapping.
+                    <CircleAlert size={14} /> {t("visual_api_section.manage_waiting_for_data")}
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {/* System fields group */}
                     <div className="space-y-2">
-                      <p className={cn("text-[12px] font-black", text)}>System fields</p>
+                      <p className={cn("text-[12px] font-black", text)}>{t("visual_api_section.manage_system_fields_heading")}</p>
                       <div className={cn("divide-y border-b", softBorder)}>
                         {SYSTEM_FIELDS.map((field) => (
                           <MappingRow
@@ -698,6 +700,7 @@ export default function VisualAPISection() {
                             sub={sub}
                             text={text}
                             dark={dark}
+                            t={t}
                           />
                         ))}
                       </div>
@@ -706,7 +709,7 @@ export default function VisualAPISection() {
                     {/* Custom fields group */}
                     {customFields && customFields.length > 0 && (
                       <div className="space-y-2">
-                        <p className={cn("text-[12px] font-black", text)}>Custom fields</p>
+                        <p className={cn("text-[12px] font-black", text)}>{t("visual_api_section.manage_custom_fields_heading")}</p>
                         <div className={cn("divide-y border-b", softBorder)}>
                           {customFields.map((cf: any) => (
                             <MappingRow
@@ -725,6 +728,7 @@ export default function VisualAPISection() {
                               sub={sub}
                               text={text}
                               dark={dark}
+                              t={t}
                             />
                           ))}
                         </div>
@@ -733,9 +737,9 @@ export default function VisualAPISection() {
 
                     {/* Tags */}
                     <div className="space-y-4">
-                      <p className={cn("text-[12px] font-black", text)}>Tags</p>
+                      <p className={cn("text-[12px] font-black", text)}>{t("visual_api_section.manage_tags_heading")}</p>
                       <TagsRow
-                        label="Select tags to apply when a contact is triggered"
+                        label={t("visual_api_section.manage_tags_created_label")}
                         tags={tags ?? []}
                         selected={managed.created_tags ?? []}
                         onChange={(ids) => setManaged((p: any) => ({ ...p, created_tags: ids }))}
@@ -744,9 +748,10 @@ export default function VisualAPISection() {
                         dark={dark}
                         sub={sub}
                         text={text}
+                        t={t}
                       />
                       <TagsRow
-                        label="Select tags to apply when an existing contact is updated"
+                        label={t("visual_api_section.manage_tags_updated_label")}
                         tags={tags ?? []}
                         selected={managed.updated_tags ?? []}
                         onChange={(ids) => setManaged((p: any) => ({ ...p, updated_tags: ids }))}
@@ -755,13 +760,14 @@ export default function VisualAPISection() {
                         dark={dark}
                         sub={sub}
                         text={text}
+                        t={t}
                       />
                     </div>
 
                     {/* Duplicates radios */}
                     <div className="border-t pt-6 space-y-4">
                       <p className={cn("text-[12px] font-black", text)}>
-                        What action would you like to take in case of duplicates found against non indexed field.
+                        {t("visual_api_section.manage_duplicates_question")}
                       </p>
                       <label className="flex items-start gap-3 cursor-pointer">
                         <input
@@ -772,9 +778,9 @@ export default function VisualAPISection() {
                           className="mt-1 accent-[hsl(var(--primary))]"
                         />
                         <div>
-                          <p className={cn("text-[13px] font-black", text)}>Update duplicates</p>
+                          <p className={cn("text-[13px] font-black", text)}>{t("visual_api_section.manage_update_duplicates_title")}</p>
                           <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                            If a contact is found against the Index Field, that contact will be updated with the data of this API.
+                            {t("visual_api_section.manage_update_duplicates_description")}
                           </p>
                         </div>
                       </label>
@@ -787,9 +793,9 @@ export default function VisualAPISection() {
                           className="mt-1 accent-[hsl(var(--primary))]"
                         />
                         <div>
-                          <p className={cn("text-[13px] font-black", text)}>Skip duplicates</p>
+                          <p className={cn("text-[13px] font-black", text)}>{t("visual_api_section.manage_skip_duplicates_title")}</p>
                           <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                            If a contact is found against the Index Field, that contact will not be updated with the data of this API.
+                            {t("visual_api_section.manage_skip_duplicates_description")}
                           </p>
                         </div>
                       </label>
@@ -798,14 +804,14 @@ export default function VisualAPISection() {
                     {/* Footer Cancel + Save */}
                     <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
                       <button onClick={goBack} className={outlineBtn}>
-                        Cancel
+                        {t("visual_api_section.cancel_button")}
                       </button>
                       <button
                         onClick={() => saveManageMutation.mutate()}
                         disabled={saveManageMutation.isPending}
                         className={primaryBtn}
                       >
-                        {saveManageMutation.isPending ? "Saving..." : "Save"}
+                        {saveManageMutation.isPending ? t("visual_api_section.saving_button") : t("visual_api_section.save_button")}
                       </button>
                     </div>
                   </div>
@@ -824,10 +830,10 @@ export default function VisualAPISection() {
                       <table className="w-full">
                         <thead>
                           <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Created at</th>
-                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Status</th>
-                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Error Code</th>
-                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>Error</th>
+                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_created_at")}</th>
+                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.table_header_status")}</th>
+                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.logs_header_error_code")}</th>
+                            <th className={cn("px-6 py-4 text-left text-[11px] font-semibold", sub)}>{t("visual_api_section.logs_header_error")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -842,11 +848,11 @@ export default function VisualAPISection() {
                                 <td className="px-6 py-4">
                                   {success ? (
                                     <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
-                                      Success
+                                      {t("visual_api_section.status_success")}
                                     </Badge>
                                   ) : (
                                     <Badge variant="outline" className="h-5 px-2 rounded-md border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-400 text-[10px] font-semibold">
-                                      Failed
+                                      {t("visual_api_section.status_failed")}
                                     </Badge>
                                   )}
                                 </td>
@@ -865,7 +871,7 @@ export default function VisualAPISection() {
                     {logs.last_page > 1 && (
                       <div className={cn("flex items-center justify-between gap-3 px-6 py-3 border-t", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
                         <span className={cn("text-[11px] font-semibold", sub)}>
-                          Showing {logs.from} – {logs.to} of {logs.total}
+                          {t("visual_api_section.logs_showing_range", { from: logs.from, to: logs.to, total: logs.total })}
                         </span>
                         <div className="flex items-center gap-1">
                           <button
@@ -873,14 +879,14 @@ export default function VisualAPISection() {
                             onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
                             className={cn(outlineBtn, "h-8 px-3 disabled:opacity-40")}
                           >
-                            <ChevronLeft size={11} /> Previous
+                            <ChevronLeft size={11} /> {t("visual_api_section.previous_button")}
                           </button>
                           <button
                             disabled={logsPage >= logs.last_page}
                             onClick={() => setLogsPage((p) => p + 1)}
                             className={cn(outlineBtn, "h-8 px-3 disabled:opacity-40")}
                           >
-                            Next <ChevronLeft size={11} className="rotate-180" />
+                            {t("visual_api_section.next_button")} <ChevronLeft size={11} className="rotate-180" />
                           </button>
                         </div>
                       </div>
@@ -892,8 +898,8 @@ export default function VisualAPISection() {
                       <Plug className="w-8 h-8 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No Logs</h3>
-                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>No logs found</p>
+                      <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{t("visual_api_section.logs_empty_title")}</h3>
+                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>{t("visual_api_section.logs_empty_description")}</p>
                     </div>
                   </div>
                 )}
@@ -915,18 +921,18 @@ export default function VisualAPISection() {
                   <Plug size={18} />
                 </div>
                 <div className="text-left">
-                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>Add</DialogTitle>
+                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>{t("visual_api_section.add_button")}</DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Create a new Visual API trigger.
+                    {t("visual_api_section.create_modal_description")}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
             <div className="space-y-2">
-              <label className={labelCls}>Name</label>
+              <label className={labelCls}>{t("visual_api_section.name_label")}</label>
               <input
-                placeholder="e.g. Lead Capture"
+                placeholder={t("visual_api_section.name_placeholder")}
                 value={newTriggerName}
                 onChange={(e) => {
                   setNewTriggerName(e.target.value.slice(0, 100));
@@ -943,10 +949,10 @@ export default function VisualAPISection() {
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
               <button onClick={() => { setIsCreateModalOpen(false); setNewTriggerName(""); setNameError(null); }} className={outlineBtn}>
-                Cancel
+                {t("visual_api_section.cancel_button")}
               </button>
               <button onClick={handleCreateTrigger} disabled={createMutation.isPending} className={primaryBtn}>
-                {createMutation.isPending ? "Saving..." : "Save"}
+                {createMutation.isPending ? t("visual_api_section.saving_button") : t("visual_api_section.save_button")}
               </button>
             </div>
           </div>
@@ -963,16 +969,16 @@ export default function VisualAPISection() {
                   <Pencil size={18} />
                 </div>
                 <div className="text-left">
-                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>Rename</DialogTitle>
+                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>{t("visual_api_section.menu_rename")}</DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Update the trigger name.
+                    {t("visual_api_section.rename_modal_description")}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
             <div className="space-y-2">
-              <label className={labelCls}>Name</label>
+              <label className={labelCls}>{t("visual_api_section.name_label")}</label>
               <input
                 value={renameInput}
                 onChange={(e) => setRenameInput(e.target.value.slice(0, 100))}
@@ -983,14 +989,14 @@ export default function VisualAPISection() {
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
               <button onClick={() => setRenameTarget(null)} className={outlineBtn}>
-                Cancel
+                {t("visual_api_section.cancel_button")}
               </button>
               <button
                 onClick={() => renameMutation.mutate({ id: String(renameTarget.id), name: renameInput.trim() })}
                 disabled={!renameInput.trim() || renameMutation.isPending}
                 className={primaryBtn}
               >
-                {renameMutation.isPending ? "Saving..." : "Save"}
+                {renameMutation.isPending ? t("visual_api_section.saving_button") : t("visual_api_section.save_button")}
               </button>
             </div>
           </div>
@@ -1006,19 +1012,19 @@ export default function VisualAPISection() {
                 <CircleAlert size={18} />
               </div>
               <div>
-                <h2 className={cn("text-[14px] font-semibold", text)}>Are you sure?</h2>
+                <h2 className={cn("text-[14px] font-semibold", text)}>{t("visual_api_section.delete_confirm_title")}</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  This action can not be undone. Do you want to proceed?
+                  {t("visual_api_section.delete_confirm_description")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>No</AlertDialogCancel>
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>{t("visual_api_section.no_button")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => deleteMutation.mutate(deleteConfirmation.id)}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                <Trash2 size={12} /> Yes
+                <Trash2 size={12} /> {t("visual_api_section.yes_button")}
               </AlertDialogAction>
             </div>
           </div>
@@ -1036,7 +1042,7 @@ export default function VisualAPISection() {
               <input
                 value={pickerSearch}
                 onChange={(e) => setPickerSearch(e.target.value)}
-                placeholder="Search"
+                placeholder={t("visual_api_section.picker_search_placeholder")}
                 className={cn("flex-1 bg-transparent outline-none text-[13px] font-bold", text)}
               />
             </div>
@@ -1067,12 +1073,12 @@ export default function VisualAPISection() {
                   })}
                 </ul>
               ) : (
-                <div className={cn("p-6 text-center text-[12px] font-medium", sub)}>No mapping found</div>
+                <div className={cn("p-6 text-center text-[12px] font-medium", sub)}>{t("visual_api_section.picker_no_mapping_found")}</div>
               )}
             </div>
             <div className={cn("border-t text-right p-4", softBorder)}>
               <button onClick={() => { setPickerForFieldSlug(null); setPickerSearch(""); }} className={outlineBtn}>
-                Cancel
+                {t("visual_api_section.cancel_button")}
               </button>
             </div>
           </div>
@@ -1104,6 +1110,7 @@ function MappingRow(props: {
   sub: string;
   text: string;
   dark: boolean;
+  t: (key: string, options?: Record<string, any>) => string;
 }) {
   const {
     label,
@@ -1122,6 +1129,7 @@ function MappingRow(props: {
     text,
     dark,
     slug,
+    t,
   } = props;
 
   return (
@@ -1133,7 +1141,7 @@ function MappingRow(props: {
               {label}{" "}
               {primary && (
                 <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1", dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600")}>
-                  Primary
+                  {t("visual_api_section.mapping_row_primary_badge")}
                 </span>
               )}
             </span>
@@ -1148,8 +1156,8 @@ function MappingRow(props: {
                 onChange={() => onIndexFieldChange?.(slug)}
                 className="accent-[hsl(var(--primary))]"
               />
-              <span className={cn("text-[11px] font-medium", sub)}>Use as Index field</span>
-              <span title="System will search the contact against the index field and update if exist." className={cn(sub)}>
+              <span className={cn("text-[11px] font-medium", sub)}>{t("visual_api_section.mapping_row_index_field_label")}</span>
+              <span title={t("visual_api_section.mapping_row_index_field_tooltip")} className={cn(sub)}>
                 <Info size={11} />
               </span>
             </div>
@@ -1160,7 +1168,7 @@ function MappingRow(props: {
       <div className={cn("flex items-center gap-2 rounded-xl border px-2 overflow-x-auto", softBorder, dark ? "bg-slate-950/40" : "bg-white")}>
         <input
           type="text"
-          placeholder="Prefix"
+          placeholder={t("visual_api_section.mapping_row_prefix_placeholder")}
           value={mappingRow.prefix ?? ""}
           onChange={(e) => updateRow({ prefix: e.target.value })}
           className={cn("h-10 bg-transparent border-0 outline-none text-[12px] font-bold", "w-20 text-center")}
@@ -1178,18 +1186,18 @@ function MappingRow(props: {
                   removeKey();
                 }}
                 className="text-rose-500 shrink-0"
-                title="Clear"
+                title={t("visual_api_section.mapping_row_clear_title")}
               >
                 <X size={11} />
               </button>
             </>
           ) : (
-            <span className={cn("opacity-60", sub)}>Select a key to map</span>
+            <span className={cn("opacity-60", sub)}>{t("visual_api_section.mapping_row_select_key_placeholder")}</span>
           )}
         </div>
         <input
           type="text"
-          placeholder="Postfix"
+          placeholder={t("visual_api_section.mapping_row_postfix_placeholder")}
           value={mappingRow.postfix ?? ""}
           onChange={(e) => updateRow({ postfix: e.target.value })}
           className={cn("h-10 bg-transparent border-0 outline-none text-[12px] font-bold", "w-20 text-center")}
@@ -1212,8 +1220,9 @@ function TagsRow(props: {
   dark: boolean;
   sub: string;
   text: string;
+  t: (key: string, options?: Record<string, any>) => string;
 }) {
-  const { label, tags, selected, onChange, labelCls, softBorder, dark, sub, text } = props;
+  const { label, tags, selected, onChange, labelCls, softBorder, dark, sub, text, t } = props;
   const selectedIds = new Set(selected.map((s: any) => String(typeof s === "object" ? s.id : s)));
   const toggle = (tag: any) => {
     const id = String(tag.id);
@@ -1227,7 +1236,7 @@ function TagsRow(props: {
     <div className="space-y-2">
       <label className={labelCls}>{label}</label>
       {tags.length === 0 ? (
-        <p className={cn("text-[11px] font-medium opacity-60", sub)}>No tags created yet.</p>
+        <p className={cn("text-[11px] font-medium opacity-60", sub)}>{t("visual_api_section.manage_no_tags")}</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag: any) => {

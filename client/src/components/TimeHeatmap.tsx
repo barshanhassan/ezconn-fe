@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface TimeHeatmapData {
   time: string;
@@ -22,8 +23,10 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
   rowsPerTimeSlot = 2,
   cellHeight = 3,
   startDay = 4, // Thursday by default
-  valueLabel = "Value",
+  valueLabel,
 }) => {
+  const { t } = useTranslation();
+  const effectiveValueLabel = valueLabel ?? t("time_heatmap.default_value_label");
   const [tooltip, setTooltip] = useState<{
     x: number;
     y: number;
@@ -95,13 +98,13 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
 
   // Get day names starting from startDay
   const dayNames = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
+    t("time_heatmap.day_sunday"),
+    t("time_heatmap.day_monday"),
+    t("time_heatmap.day_tuesday"),
+    t("time_heatmap.day_wednesday"),
+    t("time_heatmap.day_thursday"),
+    t("time_heatmap.day_friday"),
+    t("time_heatmap.day_saturday"),
   ];
   const orderedDays: string[] = [];
   for (let i = 0; i < 7; i++) {
@@ -206,7 +209,7 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
         >
           <p className="text-sm font-medium">{tooltip.day}, {tooltip.time}</p>
           <div className="flex items-center gap-2">
-            <span className="text-sm">{valueLabel}:</span>
+            <span className="text-sm">{effectiveValueLabel}:</span>
             <span className="text-sm font-medium text-primary">{tooltip.value}</span>
           </div>
         </div>

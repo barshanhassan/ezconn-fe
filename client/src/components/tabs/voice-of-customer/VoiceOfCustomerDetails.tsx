@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ interface SortState {
 }
 
 export default function VoiceOfCustomerDetails() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -151,10 +153,10 @@ export default function VoiceOfCustomerDetails() {
 
   const pagination = (count: number, rows: number, setRows: (v: number) => void, isOpen: boolean, setIsOpen: (v: boolean) => void, ref: any) => (
     <div className="flex items-center justify-between mt-5 px-1">
-      <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{count} results</span>
+      <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("voice_of_customer_details.results_count", { count })}</span>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2.5">
-          <span className={cn("text-[11px] font-semibold opacity-60", sub)}>Rows per page:</span>
+          <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("voice_of_customer_details.rows_per_page")}</span>
           <div className="relative" ref={ref}>
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -174,7 +176,7 @@ export default function VoiceOfCustomerDetails() {
         <div className="flex items-center gap-1.5">
           <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronsLeft size={14} /></button>
           <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronLeft size={14} /></button>
-          <span className={cn("text-[11px] font-bold px-2", text)}>1 of 1</span>
+          <span className={cn("text-[11px] font-bold px-2", text)}>{t("voice_of_customer_details.page_indicator")}</span>
           <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronRight size={14} /></button>
           <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronsRight size={14} /></button>
         </div>
@@ -187,11 +189,11 @@ export default function VoiceOfCustomerDetails() {
       {/* Agent Performance Table */}
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className={cn("text-[13px] font-bold", text)}>Agent Sentiment Performance</h3>
+          <h3 className={cn("text-[13px] font-bold", text)}>{t("voice_of_customer_details.agent_sentiment_performance")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
             <input
-              placeholder="Search by agent name or ID..."
+              placeholder={t("voice_of_customer_details.search_agent_placeholder")}
               value={searchAgent}
               onChange={(e) => setSearchAgent(e.target.value)}
               className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)}
@@ -204,10 +206,10 @@ export default function VoiceOfCustomerDetails() {
             <thead>
               <tr className={cn("border-b text-left", divider)}>
                 {[
-                  { l: "Agent Name(ID)", k: "agentName" },
-                  { l: "Team", k: "team" },
-                  { l: "Date", k: "date" },
-                  { l: "Total", k: "total" }
+                  { l: t("voice_of_customer_details.header_agent_name_id"), k: "agentName" },
+                  { l: t("voice_of_customer_details.header_team"), k: "team" },
+                  { l: t("voice_of_customer_details.header_date"), k: "date" },
+                  { l: t("voice_of_customer_details.header_total"), k: "total" }
                 ].map((h) => (
                   <th 
                     key={h.k} 
@@ -229,7 +231,7 @@ export default function VoiceOfCustomerDetails() {
                   <td className={cn("py-3 px-3 text-[11px] tabular-nums", sub)}>{item.date}</td>
                   <td className={cn("py-3 px-3 text-[12px] font-black text-primary")}>{item.total}</td>
                 </tr>
-              )) : <tr><td colSpan={4} className={cn("py-8 text-center text-[11px]", sub)}>No results found</td></tr>}
+              )) : <tr><td colSpan={4} className={cn("py-8 text-center text-[11px]", sub)}>{t("voice_of_customer_details.no_results_found")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -239,11 +241,11 @@ export default function VoiceOfCustomerDetails() {
       {/* Customer Sentiment Analysis Table */}
       <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className={cn("text-[13px] font-bold", text)}>Customer Sentiment Analysis</h3>
+          <h3 className={cn("text-[13px] font-bold", text)}>{t("voice_of_customer_details.customer_sentiment_analysis")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
             <input
-              placeholder="Search by ID or agent..."
+              placeholder={t("voice_of_customer_details.search_conversation_placeholder")}
               value={searchConversation}
               onChange={(e) => setSearchConversation(e.target.value)}
               className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)}
@@ -256,12 +258,12 @@ export default function VoiceOfCustomerDetails() {
             <thead>
               <tr className={cn("border-b text-left", divider)}>
                 {[
-                  { l: "Conversation (ID)", k: "conversationId" },
-                  { l: "Agent", k: "agent" },
-                  { l: "Team", k: "team" },
-                  { l: "Sentiment", k: "sentiment" },
-                  { l: "Date", k: "date" },
-                  { l: "Channel", k: "channel" }
+                  { l: t("voice_of_customer_details.header_conversation_id"), k: "conversationId" },
+                  { l: t("voice_of_customer_details.header_agent"), k: "agent" },
+                  { l: t("voice_of_customer_details.header_team"), k: "team" },
+                  { l: t("voice_of_customer_details.header_sentiment"), k: "sentiment" },
+                  { l: t("voice_of_customer_details.header_date"), k: "date" },
+                  { l: t("voice_of_customer_details.header_channel"), k: "channel" }
                 ].map((h) => (
                   <th 
                     key={h.k} 
@@ -294,7 +296,7 @@ export default function VoiceOfCustomerDetails() {
                   <td className={cn("py-3 px-3 text-[11px] tabular-nums", sub)}>{item.date}</td>
                   <td className={cn("py-3 px-3 text-[11px] font-bold opacity-70", text)}>{item.channel}</td>
                 </tr>
-              )) : <tr><td colSpan={6} className={cn("py-8 text-center text-[11px]", sub)}>No results found</td></tr>}
+              )) : <tr><td colSpan={6} className={cn("py-8 text-center text-[11px]", sub)}>{t("voice_of_customer_details.no_results_found")}</td></tr>}
             </tbody>
           </table>
         </div>

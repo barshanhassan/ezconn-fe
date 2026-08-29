@@ -4,6 +4,18 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enJson from '../i18n/locales/en.json';
 import ptJson from '../i18n/locales/pt.json';
 import esJson from '../i18n/locales/es.json';
+import arJson from '../i18n/locales/ar.json';
+import frJson from '../i18n/locales/fr.json';
+import deJson from '../i18n/locales/de.json';
+import hiJson from '../i18n/locales/hi.json';
+import urJson from '../i18n/locales/ur.json';
+import zhJson from '../i18n/locales/zh.json';
+import jaJson from '../i18n/locales/ja.json';
+import ruJson from '../i18n/locales/ru.json';
+import trJson from '../i18n/locales/tr.json';
+import itJson from '../i18n/locales/it.json';
+import idJson from '../i18n/locales/id.json';
+import viJson from '../i18n/locales/vi.json';
 
 const resources = {
   en: {
@@ -842,10 +854,22 @@ function deepMerge(base: Record<string, any>, override: Record<string, any>): Re
 // English: merge hardcoded base with JSON file
 resources.en.translation = deepMerge(resources.en.translation, enJson) as typeof resources.en.translation;
 
-// pt and es: merge English (full) with their JSON, so missing keys fall back to English
+// All languages: merge English (full) with their JSON, so missing keys fall back to English
 const enFull = resources.en.translation;
 (resources as any).pt = { translation: deepMerge(enFull, ptJson) };
 (resources as any).es = { translation: deepMerge(enFull, esJson) };
+(resources as any).ar = { translation: deepMerge(enFull, arJson) };
+(resources as any).fr = { translation: deepMerge(enFull, frJson) };
+(resources as any).de = { translation: deepMerge(enFull, deJson) };
+(resources as any).hi = { translation: deepMerge(enFull, hiJson) };
+(resources as any).ur = { translation: deepMerge(enFull, urJson) };
+(resources as any).zh = { translation: deepMerge(enFull, zhJson) };
+(resources as any).ja = { translation: deepMerge(enFull, jaJson) };
+(resources as any).ru = { translation: deepMerge(enFull, ruJson) };
+(resources as any).tr = { translation: deepMerge(enFull, trJson) };
+(resources as any).it = { translation: deepMerge(enFull, itJson) };
+(resources as any).id = { translation: deepMerge(enFull, idJson) };
+(resources as any).vi = { translation: deepMerge(enFull, viJson) };
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
