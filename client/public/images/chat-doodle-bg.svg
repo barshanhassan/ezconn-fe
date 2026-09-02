@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+  <g fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.06">
+    <!-- speech bubble -->
+    <rect x="10" y="10" width="34" height="24" rx="6"/>
+    <path d="M20 34 L16 42 L28 34"/>
+    <!-- star -->
+    <path d="M96 8 L100 18 L111 18 L102 25 L105 36 L96 29 L87 36 L90 25 L81 18 L92 18 Z"/>
+    <!-- heart -->
+    <path d="M170 14 c0 -8 12 -8 12 0 c0 -8 12 -8 12 0 c0 8 -12 16 -12 20 c0 -4 -12 -12 -12 -20 Z"/>
+    <!-- exclamation -->
+    <path d="M8 78 L10 92"/>
+    <circle cx="9" cy="98" r="1.6" fill="#0f172a" stroke="none"/>
+    <!-- smiley -->
+    <circle cx="100" cy="88" r="14"/>
+    <circle cx="95" cy="84" r="1.4" fill="#0f172a" stroke="none"/>
+    <circle cx="105" cy="84" r="1.4" fill="#0f172a" stroke="none"/>
+    <path d="M92 92 Q100 98 108 92"/>
+    <!-- three lines -->
+    <path d="M168 78 h30 M168 86 h30 M168 94 h20"/>
+    <!-- camera -->
+    <rect x="8" y="140" width="30" height="22" rx="4"/>
+    <circle cx="23" cy="151" r="6"/>
+    <!-- triangle -->
+    <path d="M88 138 L110 138 L99 154 Z"/>
+    <!-- check circle -->
+    <circle cx="180" cy="150" r="14"/>
+    <path d="M173 150 l5 5 l10 -10"/>
+    <!-- plain circle -->
+    <circle cx="20" cy="200" r="8"/>
+    <!-- speech bubble small -->
+    <rect x="88" y="188" width="26" height="18" rx="5"/>
+    <path d="M96 206 L93 213 L103 206"/>
+    <!-- star small -->
+    <path d="M182 186 L185 194 L193 194 L187 199 L189 207 L182 202 L175 207 L177 199 L171 194 L179 194 Z"/>
+  </g>
+</svg>
