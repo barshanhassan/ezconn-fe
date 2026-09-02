@@ -3991,17 +3991,17 @@ function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
       value: totalContacts.toLocaleString(),
       hint: t("campaign_manager.stats.reachable_audience"),
       Icon: UsersRound,
-      iconBg: "bg-blue-100 dark:bg-blue-900/30",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      topBorder: "bg-blue-500",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      topBorder: "bg-primary",
     },
     {
       label: t("campaign_manager.stats.avg_delivery_rate"),
       value: `${deliveryRate}%`,
       Icon: CheckCircle2,
-      iconBg: "bg-slate-100 dark:bg-slate-800",
-      iconColor: "text-slate-700 dark:text-slate-300",
-      topBorder: "bg-slate-800 dark:bg-slate-600",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      topBorder: "bg-primary",
       chartColor: "bg-primary/60",
       chartData: deliverySeries,
     },
@@ -4009,10 +4009,10 @@ function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
       label: t("campaign_manager.stats.avg_open_rate"),
       value: `${openRate}%`,
       Icon: Mail,
-      iconBg: "bg-amber-100 dark:bg-amber-900/30",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      topBorder: "bg-amber-500",
-      chartColor: "bg-amber-300",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      topBorder: "bg-primary",
+      chartColor: "bg-primary/60",
       chartData: openSeries,
     },
   ];
@@ -4023,12 +4023,10 @@ function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
         {cards.map((c) => (
           <div
             key={c.label}
-            className="relative bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 pt-1 pb-4 px-4 flex flex-col justify-between overflow-hidden shadow-sm min-h-[140px]"
+            className="relative bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 pt-4 pb-4 px-4 flex flex-col justify-between overflow-hidden shadow-sm min-h-[140px]"
           >
-            {/* Coloured top strip */}
-            <div className={cn("absolute top-0 left-0 right-0 h-1.5 rounded-t-xl", c.topBorder)} />
-            {/* Icon top-right */}
-            <div className="flex items-start justify-between mt-2">
+            {/* Icon top-right — same plain style on every card, no colour-coded top strip. */}
+            <div className="flex items-start justify-between">
               <p className="text-[12px] font-medium text-slate-600 dark:text-slate-300">
                 {c.label}
               </p>

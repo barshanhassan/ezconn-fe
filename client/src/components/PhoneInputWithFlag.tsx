@@ -103,7 +103,10 @@ function CountrySelector({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          "w-[280px] p-0 shadow-xl border",
+          // Dialog/modal content sits at z-[60] — the base Popover z-50
+          // would render this country list BEHIND an "Add Contact"-style
+          // modal, so it must explicitly go higher.
+          "w-[280px] p-0 shadow-xl border z-[70]",
           isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200",
         )}
         align="start"

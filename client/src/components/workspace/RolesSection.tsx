@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Shield, ShieldCheck, Plus, ChevronLeft, Loader2, Archive, RotateCcw,
-  Pencil, Settings, Share2, UserCog, Sparkles, Lock,
+  Pencil, Settings, Share2, UserCog, Sparkles, Lock, Trash2,
   Search, CheckCircle2, Zap, User, Users, Scale, Bot,
   ChevronDown, Info, Link2, Calendar,
 } from "lucide-react";
@@ -177,18 +177,28 @@ export default function RolesSection() {
     onError: (err: any) => toast({ title: t("roles_section.toast_error_title"), description: err.message, variant: "destructive" }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/workspaces/roles/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
+      toast({ title: t("roles_section.toast_saved_title"), description: t("roles_section.toast_deleted_desc") });
+    },
+    onError: (err: any) => toast({ title: t("roles_section.toast_error_title"), description: err.message, variant: "destructive" }),
+  });
+  const [roleToDelete, setRoleToDelete] = useState<any>(null);
+
   const togglePermission = (slug: string) => {
     if (roleLocked) return; // owner/system role permissions are not editable
     setPermissions((prev) => ({ ...prev, [slug]: !prev[slug] }));
   };
 
-  // Accordion expand/collapse for a permission group (replyagent Disclosure).
+  // Accordion expand/collapse for a permission group — only one group open at
+  // a time: opening a new one auto-closes whichever was open before.
   const toggleGroup = (slug: string) => {
-    setOpenGroups((prev) => {
-      const next = new Set(prev);
-      next.has(slug) ? next.delete(slug) : next.add(slug);
-      return next;
-    });
+    setOpenGroups((prev) => (prev.has(slug) ? new Set() : new Set([slug])));
   };
 
   const handleEnableAll = (checked: boolean) => {
@@ -382,6 +392,20 @@ export default function RolesSection() {
               <div className="flex-1 flex flex-col min-w-0">
                 <TooltipProvider delayDuration={200}>
                   <div className="flex-1 p-6 space-y-3 overflow-y-auto">
+                    {/* Single global toggle for the whole permissions list —
+                        replaces the need for a per-group "select all". */}
+                    <div className="flex items-center justify-between pb-2">
+                      <h2 className={cn("text-[15px] font-bold", text)}>{t("roles_section.label_permissions")}</h2>
+                      <div className="flex items-center gap-2">
+                        <span className={cn("text-[11px] font-semibold", sub)}>{t("roles_section.label_enable_disable_all")}</span>
+                        <Switch
+                          checked={enableAll}
+                          disabled={roleLocked}
+                          onCheckedChange={handleEnableAll}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      </div>
+                    </div>
                     {loadingPerms ? (
                       <div className="flex items-center justify-center py-20">
                         <Loader2 size={20} className="animate-spin text-primary" />
@@ -643,6 +667,18 @@ export default function RolesSection() {
                               {activeTab === "active" ? <Archive size={12} /> : <RotateCcw size={12} />}
                             </button>
                           )}
+                          {!role.isSystem && activeTab === "archived" && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setRoleToDelete(role); }}
+                              title={t("roles_section.tooltip_delete")}
+                              className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                dark ? "bg-slate-900 text-slate-400 hover:bg-rose-500 hover:text-white" : "bg-white border border-slate-200 text-slate-500 hover:bg-rose-500 hover:text-white hover:border-rose-500"
+                              )}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -671,6 +707,29 @@ export default function RolesSection() {
             )}
           </div>
       </CardContent>
+
+      {/* Confirm before permanently deleting a role — this removes it (and
+          its permission links) from the database, unlike archive which is
+          reversible. */}
+      <AlertDialog open={!!roleToDelete} onOpenChange={(open) => !open && setRoleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("roles_section.confirm_delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("roles_section.confirm_delete_desc", { name: roleToDelete?.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("roles_section.btn_cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-500 hover:bg-rose-600"
+              onClick={() => { deleteMutation.mutate(roleToDelete.id); setRoleToDelete(null); }}
+            >
+              {t("roles_section.tooltip_delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

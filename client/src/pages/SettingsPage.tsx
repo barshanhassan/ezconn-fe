@@ -238,7 +238,10 @@ export default function SettingsPage() {
 
     { name: "Media Gallery", icon: Film },
     { name: "Developer Settings", icon: Code },
-    { name: "Change Password", icon: Lock },
+    // Now reachable from the "My Profile" page's own Password tab — kept
+    // here (not deleted) rather than removed outright, just hidden from
+    // the sidebar so it stops duplicating that entry point.
+    { name: "Change Password", icon: Lock, hidden: true },
   ];
 
 
@@ -330,7 +333,7 @@ export default function SettingsPage() {
   };
 
   // Filter sections based on search query
-  const filteredSections = sections.map(section => {
+  const filteredSections = sections.filter((section: any) => !section.hidden).map(section => {
     if (!searchQuery.trim()) return section;
 
     const matchesParent = section.name.toLowerCase().includes(searchQuery.toLowerCase());

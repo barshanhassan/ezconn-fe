@@ -370,29 +370,34 @@ export default function AppSidebar() {
       <div className="flex items-center justify-between h-full px-5">
         {/* Left: Logo + EZCONN + Menu + Search */}
         <div className="flex items-center gap-6">
-          {/* Logo — white-label aware. The uploaded logo only replaces the "EC" badge and is
-              tinted to the white-label primary color. The "EZCONN" wordmark always stays. */}
+          {/* Logo — white-label aware. When a custom logo is uploaded it fully
+              replaces the default agentawk mark (icon + wordmark) — a
+              white-labeled workspace shows the client's own brand, not ours.
+              The default BotMark + "agentawk" wordmark is the fallback when
+              no branding logo has been set. */}
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer">
               {isBrandingLoading ? (
-                // Invisible placeholder during initial fetch — prevents the EC-badge flash
+                // Invisible placeholder during initial fetch — prevents the logo flash
                 // before the actual branded logo arrives.
                 <div className="w-9 h-9 shrink-0" aria-hidden="true" />
               ) : headerLogoUrl ? (
                 <img
                   src={headerLogoUrl}
                   alt="Workspace logo"
-                  className="w-9 h-9 object-contain shrink-0 transition-transform duration-300"
+                  className="h-9 w-auto max-w-[180px] object-contain shrink-0 transition-transform duration-300"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
               ) : (
-                <BotMark className="w-9 h-9 shrink-0 transition-transform duration-300" />
+                <>
+                  <BotMark className="w-9 h-9 shrink-0 transition-transform duration-300" />
+                  <div className="overflow-hidden hidden md:flex items-center cursor-pointer">
+                    <p className={cn("font-black text-xl tracking-tighter uppercase transition-colors duration-300", theme === "dark" ? "text-white" : "text-slate-900")}>
+                      agen<span className="text-[#25d366]">tawk</span>
+                    </p>
+                  </div>
+                </>
               )}
-              <div className="overflow-hidden hidden md:flex items-center cursor-pointer">
-                <p className={cn("font-black text-xl tracking-tighter uppercase transition-colors duration-300", theme === "dark" ? "text-white" : "text-slate-900")}>
-                  agen<span className="text-[#25d366]">tawk</span>
-                </p>
-              </div>
             </div>
           </Link>
 

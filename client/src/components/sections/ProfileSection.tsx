@@ -161,26 +161,28 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
 
   return (
     <Tabs defaultValue="account" className="space-y-4">
-      <TabsList className={cn("h-auto w-fit p-1.5 gap-1 rounded-xl", dark ? "bg-slate-800/60" : "bg-slate-100")}>
-        {[
-          { value: "account", icon: User, label: t("profile_page.tab_account") },
-          { value: "password", icon: Lock, label: t("profile_page.tab_password") },
-          { value: "preferences", icon: Bell, label: t("profile_page.tab_preferences") },
-        ].map(({ value, icon: Icon, label }) => (
-          <TabsTrigger
-            key={value}
-            value={value}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold whitespace-nowrap transition-colors",
-              "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
-              "data-[state=active]:shadow-sm data-[state=active]:text-primary",
-              dark ? "data-[state=active]:bg-slate-900" : "data-[state=active]:bg-white"
-            )}
-          >
-            <Icon size={14} /> {label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <div className={cn("border-b flex justify-start overflow-x-auto", dark ? "border-slate-800" : "border-slate-200")}>
+        <TabsList className="h-auto p-0 gap-8 bg-transparent border-none flex justify-start rounded-none">
+          {[
+            { value: "account", icon: User, label: t("profile_page.tab_account") },
+            { value: "password", icon: Lock, label: t("profile_page.tab_password") },
+            { value: "preferences", icon: Bell, label: t("profile_page.tab_preferences") },
+          ].map(({ value, icon: Icon, label }) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className={cn(
+                "flex items-center gap-2 px-1 py-4 rounded-none text-[12px] font-semibold whitespace-nowrap transition-all shadow-none bg-transparent border-b-2 border-transparent",
+                "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary",
+                "hover:text-primary",
+                dark ? "text-slate-500" : "text-slate-400"
+              )}
+            >
+              <Icon size={14} /> {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
 
       {/* ── Account Details ── */}
       <TabsContent value="account">
