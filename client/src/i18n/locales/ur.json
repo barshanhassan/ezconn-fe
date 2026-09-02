@@ -3351,7 +3351,13 @@
     "toast_validation_title": "تصدیق",
     "tooltip_archive": "آرکائیو کریں",
     "tooltip_edit_role": "کردار میں ترمیم کریں",
-    "tooltip_restore": "بحال کریں"
+    "tooltip_restore": "بحال کریں",
+    "select_all": "سب منتخب کریں",
+    "label_enable_disable_all": "سب فعال / غیر فعال کریں",
+    "tooltip_delete": "حذف کریں",
+    "toast_deleted_desc": "کردار مستقل طور پر حذف کر دیا گیا۔",
+    "confirm_delete_title": "کیا اس کردار کو مستقل طور پر حذف کرنا ہے؟",
+    "confirm_delete_desc": "\"{{name}}\" مستقل طور پر حذف ہو جائے گا۔ اسے واپس نہیں لایا جا سکتا۔"
   },
   "teams_section": {
     "error_title": "خرابی",
@@ -3568,7 +3574,10 @@
     "kind_document": "دستاویز",
     "kind_file": "فائل",
     "copied_title": "کاپی ہو گیا",
-    "copied_description": "لنک کلپ بورڈ پر کاپی ہو گیا۔"
+    "copied_description": "لنک کلپ بورڈ پر کاپی ہو گیا۔",
+    "select": "منتخب کریں",
+    "download": "ڈاؤن لوڈ",
+    "share": "شیئر کریں"
   },
   "iframe_section": {
     "default_menu_title": "آئی فریمز",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "ورک اسپیس",
       "manage": "منظم کریں",
-      "live_chat": "لائیو چیٹ",
+      "live_chat": "ان باکس",
       "theme": "تھیم",
       "manage_user": "صارف کا انتظام کریں",
       "roles_permissions": "کردار اور اجازتیں",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "چینل کے ذریعے چیٹ کر رہے ہیں",
       "channel_fallback": "چینل",
       "in_smart_flow": "سمارٹ فلو میں",
-      "not_in_smart_flow": "یہ رابطہ فی الحال کسی سمارٹ فلو کا حصہ نہیں ہے۔",
+      "not_in_smart_flow": "فی الحال کسی سمارٹ فلو کا حصہ نہیں۔",
       "remove": "ہٹائیں",
       "pause_automated_messages": "خودکار پیغامات روکیں",
       "pause_smart_flow": "سمارٹ فلو روکیں",
@@ -6861,7 +6870,11 @@
       "delivered": "موصول ہو گیا",
       "read": "پڑھ لیا گیا",
       "sent_by_automation": "آٹومیشن کے ذریعے بھیجا گیا",
-      "agent_fallback": "ایجنٹ"
+      "agent_fallback": "ایجنٹ",
+      "more_options": "مزید اختیارات",
+      "copy": "کاپی کریں",
+      "copied": "کاپی ہو گیا",
+      "save_as": "محفوظ کریں بطور"
     },
     "template_card": {
       "label": "ٹیمپلیٹ"
@@ -6880,7 +6893,7 @@
       "note_tab": "نوٹ",
       "note_internal_hint": "اندرونی — کسٹمر کو نہیں بھیجا جاتا",
       "mention_agent": "کسی ایجنٹ کا ذکر کریں",
-      "note_placeholder": "اندرونی نوٹ لکھیں… (ذکر کے لیے @ استعمال کریں)",
+      "note_placeholder": "اپنی ٹیم کے ارکان کے لیے نوٹ بنائیں...",
       "reply_placeholder": "پیغام لکھیں…",
       "format_text": "متن فارمیٹ کریں",
       "bold": "بولڈ",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "صوتی پیغام بھیجیں",
       "geolocation_not_supported": "یہ براؤزر جغرافیائی محل وقوع کو سپورٹ نہیں کرتا",
       "instagram_unsupported_files": "Instagram دستاویزی فائلوں کو سپورٹ نہیں کرتا۔ صرف تصاویر، ویڈیوز اور آڈیو بھیجی جا سکتی ہیں۔",
-      "file_size_limit_exceeded": "فائل سائز کی حد سے تجاوز: {{labels}}"
+      "file_size_limit_exceeded": "فائل سائز کی حد سے تجاوز: {{labels}}",
+      "drag_to_resize": "سائز تبدیل کرنے کے لیے گھسیٹیں",
+      "add_note_button": "نوٹ شامل کریں",
+      "send_button": "بھیجیں"
     },
     "locked": {
       "assigned_to_other": "یہ گفتگو {{name}} کو تفویض ہے۔",
@@ -7088,7 +7104,8 @@
       "delete_failed": "حذف کرنا ناکام ہو گیا",
       "folder_updated": "فولڈر اپ ڈیٹ ہو گیا",
       "couldnt_move": "منتقل نہیں ہو سکا",
-      "downloading": "ڈاؤن لوڈ ہو رہا ہے..."
+      "downloading": "ڈاؤن لوڈ ہو رہا ہے...",
+      "media_attached": "میڈیا منسلک ہو گیا"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "ہٹائیں"
     },
     "toast": {
-      "created_title": "براڈکاسٹ بن گیا",
-      "created_desc": "آپ کا براڈکاسٹ کامیابی سے بنا دیا گیا ہے۔",
-      "updated_title": "براڈکاسٹ اپ ڈیٹ ہو گیا",
-      "updated_desc": "آپ کا براڈکاسٹ کامیابی سے اپ ڈیٹ ہو گیا ہے۔",
-      "deleted_title": "براڈکاسٹ حذف ہو گیا",
-      "deleted_desc": "براڈکاسٹ کامیابی سے ہٹا دیا گیا ہے۔",
+      "created_title": "مہم بن گیا",
+      "created_desc": "آپ کا مہم کامیابی سے بنا دیا گیا ہے۔",
+      "updated_title": "مہم اپ ڈیٹ ہو گیا",
+      "updated_desc": "آپ کا مہم کامیابی سے اپ ڈیٹ ہو گیا ہے۔",
+      "deleted_title": "مہم حذف ہو گیا",
+      "deleted_desc": "مہم کامیابی سے ہٹا دیا گیا ہے۔",
       "delete_failed": "حذف کرنا ناکام",
-      "cloned_title": "براڈکاسٹ کی نقل بن گئی",
+      "cloned_title": "مہم کی نقل بن گئی",
       "cloned_desc": "{{name}} کی نقل مسودے کے طور پر بنا دی گئی ہے۔",
-      "archived_title": "براڈکاسٹ محفوظ شدہ",
+      "archived_title": "مہم محفوظ شدہ",
       "archived_desc": "{{name}} کو آرکائیو کر دیا گیا ہے۔",
-      "bulk_archived_title": "براڈکاسٹ آرکائیو ہو گئے",
-      "bulk_archived_desc_one": "{{count}} براڈکاسٹ آرکائیو کر دیا گیا۔",
-      "bulk_archived_desc_other": "{{count}} براڈکاسٹ آرکائیو کر دیے گئے۔",
-      "bulk_deleted_title": "براڈکاسٹ حذف ہو گئے",
-      "bulk_deleted_desc_one": "{{count}} براڈکاسٹ حذف کر دیا گیا۔",
-      "bulk_deleted_desc_other": "{{count}} براڈکاسٹ حذف کر دیے گئے۔",
+      "bulk_archived_title": "مہم آرکائیو ہو گئے",
+      "bulk_archived_desc_one": "{{count}} مہم آرکائیو کر دیا گیا۔",
+      "bulk_archived_desc_other": "{{count}} مہم آرکائیو کر دیے گئے۔",
+      "bulk_deleted_title": "مہم حذف ہو گئے",
+      "bulk_deleted_desc_one": "{{count}} مہم حذف کر دیا گیا۔",
+      "bulk_deleted_desc_other": "{{count}} مہم حذف کر دیے گئے۔",
       "missing_details_title": "تفصیلات نامکمل ہیں",
       "missing_details_desc": "پہلے نام لکھیں اور ایک چینل منتخب کریں۔",
       "complete_highlighted": "براہِ کرم نمایاں کردہ خانے مکمل کریں",
       "unsupported_condition_title": "غیر معاون سامعین کی شرط",
       "unsupported_condition_desc": "{{fields}} کو ابھی سامعین منتخب کرنے کے لیے استعمال نہیں کیا جا سکتا۔ اسے ہٹائیں، یا پہلا / آخری / مکمل نام، ٹیگ، یا کسی کسٹم فیلڈ سے فلٹر کریں۔",
       "no_whatsapp_title": "کوئی WhatsApp اکاؤنٹ نہیں",
-      "no_whatsapp_desc": "براڈکاسٹ بنانے سے پہلے ایک WhatsApp اکاؤنٹ منسلک کریں۔",
-      "queued_title": "براڈکاسٹ قطار میں ہے",
+      "no_whatsapp_desc": "مہم بنانے سے پہلے ایک WhatsApp اکاؤنٹ منسلک کریں۔",
+      "queued_title": "مہم قطار میں ہے",
       "queued_desc": "یہ اگلے ایک منٹ میں بھیج دیا جائے گا۔",
       "send_failed": "بھیجنا ناکام"
     },
     "composer": {
       "back": "واپس",
       "channel_fallback": "چینل",
-      "untitled_broadcast": "براڈکاسٹ",
-      "performance_broadcast": "اعلیٰ کارکردگی والا براڈکاسٹ",
+      "untitled_broadcast": "مہم",
+      "performance_broadcast": "اعلیٰ کارکردگی والا مہم",
       "badge_edit": "ترمیم",
       "badge_draft": "مسودہ",
       "subtitle": "آپ کے سامعین کے لیے تیز رفتار بلک میسجنگ",
       "save_as_draft": "مسودے کے طور پر محفوظ کریں",
-      "send_broadcast": "براڈکاسٹ بھیجیں",
+      "send_broadcast": "مہم بھیجیں",
       "schedule_action": "شیڈول کریں",
       "step_audience": "سامعین",
       "step_template": "ٹیمپلیٹ",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "روابط کو ہدف بنانے کے لیے شرط شامل کریں",
       "audience_hint_unsupported": "یہ شرط ابھی استعمال نہیں ہو سکتی",
       "audience_hint_ready": "پیغام وصول کریں گے",
-      "no_audience_error": "اس براڈکاسٹ کو بھیجنے کے لیے کوئی سامعین نہیں ہیں۔",
+      "no_audience_error": "اس مہم کو بھیجنے کے لیے کوئی سامعین نہیں ہیں۔",
       "section_configuration": "02 · ترتیبات",
       "message_and_schedule": "پیغام اور شیڈول",
       "template": "ٹیمپلیٹ",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "بھیجتے وقت رابطہ فیلڈز ہر وصول کنندہ کے اپنے ڈیٹا سے بدل دیے جاتے ہیں۔",
       "fill_all_variables": "تمام ٹیمپلیٹ ویری ایبلز بھریں",
       "pause_marketing_title": "اگر Meta اسے Marketing میں تبدیل کرے تو روک دیں",
-      "pause_marketing_desc": "سسٹم جانچے گا کہ آیا Meta نے پیغام کی قسم خودکار طور پر Marketing میں تبدیل کی ہے۔ ایسی صورت میں براڈکاسٹ نہیں بھیجا جائے گا۔",
+      "pause_marketing_desc": "سسٹم جانچے گا کہ آیا Meta نے پیغام کی قسم خودکار طور پر Marketing میں تبدیل کی ہے۔ ایسی صورت میں مہم نہیں بھیجا جائے گا۔",
       "schedule": "شیڈول",
       "schedule_hint": "تاریخ اور وقت منتخب کریں",
       "send_now": "ابھی بھیجیں",
@@ -7515,21 +7532,21 @@
       "interval": "وقفہ"
     },
     "list": {
-      "title": "براڈکاسٹس",
-      "subtitle": "ہماری اعلیٰ کارکردگی والی براڈکاسٹ سروس سے منٹوں میں اپنے روابط تک پہنچیں",
+      "title": "مہمات",
+      "subtitle": "ہماری اعلیٰ کارکردگی والی مہم سروس سے منٹوں میں اپنے روابط تک پہنچیں",
       "refresh": "تازہ کریں",
-      "new_broadcast": "نیا براڈکاسٹ",
-      "all_broadcasts": "تمام براڈکاسٹس",
+      "new_broadcast": "نیا مہم",
+      "all_broadcasts": "تمام مہمس",
       "search_placeholder": "نام یا چینل سے تلاش کریں",
-      "loading": "براڈکاسٹس لائے جا رہے ہیں...",
-      "empty_title": "کوئی براڈکاسٹ نہیں ملا",
-      "empty_desc": "منٹوں میں اپنے گاہکوں تک پہنچنے کے لیے اپنا پہلا براڈکاسٹ بنائیں",
+      "loading": "مہمس لائے جا رہے ہیں...",
+      "empty_title": "کوئی مہم نہیں ملا",
+      "empty_desc": "منٹوں میں اپنے گاہکوں تک پہنچنے کے لیے اپنا پہلا مہم بنائیں",
       "create_one_now": "ابھی بنائیں",
       "failed_count_one": "· {{count}} ناکام",
       "failed_count_other": "· {{count}} ناکام",
-      "edit_broadcast": "براڈکاسٹ میں ترمیم کریں",
-      "delete_broadcast": "براڈکاسٹ حذف کریں",
-      "view_broadcast": "براڈکاسٹ دیکھیں",
+      "edit_broadcast": "مہم میں ترمیم کریں",
+      "delete_broadcast": "مہم حذف کریں",
+      "view_broadcast": "مہم دیکھیں",
       "more_actions": "مزید اقدامات",
       "clone": "نقل بنائیں",
       "send_now": "ابھی بھیجیں",
@@ -7571,26 +7588,26 @@
       "action": "کارروائی"
     },
     "create_dialog": {
-      "title": "براڈکاسٹ بنائیں",
+      "title": "مہم بنائیں",
       "subtitle": "اسے نام دیں اور وہ چینل منتخب کریں جس سے آپ بھیجیں گے۔",
       "name": "نام",
       "name_placeholder": "مثلاً: جون لانچ - برازیل فہرست",
       "name_hint": "یہ نام صرف آپ اور آپ کی ٹیم دیکھے گی۔",
       "select_channel": "چینل منتخب کریں",
       "no_channels": "ابھی کوئی چینل منسلک نہیں",
-      "no_channels_hint": "براڈکاسٹنگ شروع کرنے کے لیے ترتیبات سے WhatsApp / Telegram / Messenger چینل منسلک کریں۔",
-      "payment_warning": "یقینی بنائیں کہ Meta Business Manager میں آپ کے WhatsApp اکاؤنٹ کے ساتھ ادائیگی کا طریقہ شامل ہے، ورنہ براڈکاسٹ ناکام ہو سکتا ہے۔",
-      "ready_hint": "تیار — جاری رکھنے کے لیے براڈکاسٹ بنائیں پر کلک کریں۔",
+      "no_channels_hint": "مہمنگ شروع کرنے کے لیے ترتیبات سے WhatsApp / Telegram / Messenger چینل منسلک کریں۔",
+      "payment_warning": "یقینی بنائیں کہ Meta Business Manager میں آپ کے WhatsApp اکاؤنٹ کے ساتھ ادائیگی کا طریقہ شامل ہے، ورنہ مہم ناکام ہو سکتا ہے۔",
+      "ready_hint": "تیار — جاری رکھنے کے لیے مہم بنائیں پر کلک کریں۔",
       "choose_channel_hint": "جاری رکھنے کے لیے چینل منتخب کریں۔",
-      "create_broadcast": "براڈکاسٹ بنائیں"
+      "create_broadcast": "مہم بنائیں"
     },
     "clone": {
-      "title": "براڈکاسٹ کی نقل بنائیں",
-      "campaign_name": "براڈکاسٹ کا نام",
-      "name_placeholder": "براڈکاسٹ کا نام درج کریں..."
+      "title": "مہم کی نقل بنائیں",
+      "campaign_name": "مہم کا نام",
+      "name_placeholder": "مہم کا نام درج کریں..."
     },
     "delete": {
-      "title": "براڈکاسٹ حذف کریں",
+      "title": "مہم حذف کریں",
       "confirm_prefix": "کیا آپ واقعی حذف کرنا چاہتے ہیں",
       "confirm_suffix": "؟ یہ عمل واپس نہیں لیا جا سکتا۔"
     },
@@ -7691,7 +7708,7 @@
       "is_false": "غلط ہے"
     },
     "stats": {
-      "total_broadcasts": "کل براڈکاسٹس",
+      "total_broadcasts": "کل مہمس",
       "this_month": "اس مہینے",
       "total_contacts": "کل روابط",
       "reachable_audience": "قابلِ رسائی سامعین",

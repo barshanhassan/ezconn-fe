@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Validasi",
     "tooltip_archive": "Arsipkan",
     "tooltip_edit_role": "Edit Peran",
-    "tooltip_restore": "Pulihkan"
+    "tooltip_restore": "Pulihkan",
+    "select_all": "Pilih Semua",
+    "label_enable_disable_all": "Aktifkan / Nonaktifkan semua",
+    "tooltip_delete": "Hapus",
+    "toast_deleted_desc": "Peran dihapus secara permanen.",
+    "confirm_delete_title": "Hapus peran ini secara permanen?",
+    "confirm_delete_desc": "\"{{name}}\" akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan."
   },
   "teams_section": {
     "error_title": "Kesalahan",
@@ -3568,7 +3574,10 @@
     "kind_document": "dokumen",
     "kind_file": "file",
     "copied_title": "Disalin",
-    "copied_description": "Tautan disalin ke clipboard."
+    "copied_description": "Tautan disalin ke clipboard.",
+    "select": "Pilih",
+    "download": "Unduh",
+    "share": "Bagikan"
   },
   "iframe_section": {
     "default_menu_title": "Iframe",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Workspace",
       "manage": "Kelola",
-      "live_chat": "Live Chat",
+      "live_chat": "Kotak Masuk",
       "theme": "Tema",
       "manage_user": "Kelola Pengguna",
       "roles_permissions": "Peran & Izin",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Mengobrol melalui saluran",
       "channel_fallback": "saluran",
       "in_smart_flow": "Dalam Smart Flow",
-      "not_in_smart_flow": "Kontak ini saat ini tidak termasuk dalam Smart Flow apa pun.",
+      "not_in_smart_flow": "Saat ini tidak termasuk dalam Smart Flow.",
       "remove": "Hapus",
       "pause_automated_messages": "Jeda Pesan Otomatis",
       "pause_smart_flow": "Jeda Smart Flow",
@@ -6861,7 +6870,11 @@
       "delivered": "Sampai",
       "read": "Dibaca",
       "sent_by_automation": "Dikirim oleh otomasi",
-      "agent_fallback": "Agen"
+      "agent_fallback": "Agen",
+      "more_options": "Opsi lainnya",
+      "copy": "Salin",
+      "copied": "Disalin",
+      "save_as": "Simpan sebagai"
     },
     "template_card": {
       "label": "Template"
@@ -6880,7 +6893,7 @@
       "note_tab": "Catatan",
       "note_internal_hint": "Internal — tidak dikirim ke pelanggan",
       "mention_agent": "Sebutkan seorang agen",
-      "note_placeholder": "Tulis catatan internal… (@ untuk menyebut)",
+      "note_placeholder": "Buat catatan untuk anggota tim Anda...",
       "reply_placeholder": "Ketik pesan…",
       "format_text": "Format teks",
       "bold": "Tebal",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Kirim pesan suara",
       "geolocation_not_supported": "Geolokasi tidak didukung oleh browser ini",
       "instagram_unsupported_files": "Instagram tidak mendukung file dokumen. Hanya gambar, video, dan audio yang dapat dikirim.",
-      "file_size_limit_exceeded": "Batas ukuran file terlampaui: {{labels}}"
+      "file_size_limit_exceeded": "Batas ukuran file terlampaui: {{labels}}",
+      "drag_to_resize": "Seret untuk mengubah ukuran",
+      "add_note_button": "Tambah catatan",
+      "send_button": "Kirim"
     },
     "locked": {
       "assigned_to_other": "Percakapan ini ditugaskan ke {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Gagal menghapus",
       "folder_updated": "Folder diperbarui",
       "couldnt_move": "Tidak dapat memindahkan",
-      "downloading": "Mengunduh..."
+      "downloading": "Mengunduh...",
+      "media_attached": "Media dilampirkan"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "Hapus"
     },
     "toast": {
-      "created_title": "Siaran dibuat",
-      "created_desc": "Siaran Anda berhasil dibuat.",
-      "updated_title": "Siaran diperbarui",
-      "updated_desc": "Siaran Anda berhasil diperbarui.",
-      "deleted_title": "Siaran dihapus",
-      "deleted_desc": "Siaran berhasil dihapus.",
+      "created_title": "Kampanye dibuat",
+      "created_desc": "Kampanye Anda berhasil dibuat.",
+      "updated_title": "Kampanye diperbarui",
+      "updated_desc": "Kampanye Anda berhasil diperbarui.",
+      "deleted_title": "Kampanye dihapus",
+      "deleted_desc": "Kampanye berhasil dihapus.",
       "delete_failed": "Gagal menghapus",
-      "cloned_title": "Siaran diduplikasi",
+      "cloned_title": "Kampanye diduplikasi",
       "cloned_desc": "{{name}} telah diduplikasi sebagai draf.",
-      "archived_title": "Siaran diarsipkan",
+      "archived_title": "Kampanye diarsipkan",
       "archived_desc": "{{name}} telah diarsipkan.",
-      "bulk_archived_title": "Siaran diarsipkan",
-      "bulk_archived_desc_one": "{{count}} siaran telah diarsipkan.",
-      "bulk_archived_desc_other": "{{count}} siaran telah diarsipkan.",
-      "bulk_deleted_title": "Siaran dihapus",
-      "bulk_deleted_desc_one": "{{count}} siaran telah dihapus.",
-      "bulk_deleted_desc_other": "{{count}} siaran telah dihapus.",
+      "bulk_archived_title": "Kampanye diarsipkan",
+      "bulk_archived_desc_one": "{{count}} kampanye telah diarsipkan.",
+      "bulk_archived_desc_other": "{{count}} kampanye telah diarsipkan.",
+      "bulk_deleted_title": "Kampanye dihapus",
+      "bulk_deleted_desc_one": "{{count}} kampanye telah dihapus.",
+      "bulk_deleted_desc_other": "{{count}} kampanye telah dihapus.",
       "missing_details_title": "Detail belum lengkap",
       "missing_details_desc": "Tambahkan nama dan pilih saluran terlebih dahulu.",
       "complete_highlighted": "Harap lengkapi kolom yang ditandai",
       "unsupported_condition_title": "Kondisi audiens tidak didukung",
       "unsupported_condition_desc": "{{fields}} belum dapat digunakan untuk menargetkan audiens. Hapus kondisi tersebut, atau filter berdasarkan nama depan / belakang / lengkap, tag, atau kolom khusus.",
       "no_whatsapp_title": "Tidak ada akun WhatsApp",
-      "no_whatsapp_desc": "Hubungkan akun WhatsApp sebelum membuat siaran.",
-      "queued_title": "Siaran masuk antrean",
+      "no_whatsapp_desc": "Hubungkan akun WhatsApp sebelum membuat kampanye.",
+      "queued_title": "Kampanye masuk antrean",
       "queued_desc": "Akan dijalankan dalam satu menit ke depan.",
       "send_failed": "Gagal mengirim"
     },
     "composer": {
       "back": "Kembali",
       "channel_fallback": "Saluran",
-      "untitled_broadcast": "Siaran",
-      "performance_broadcast": "Siaran berperforma tinggi",
+      "untitled_broadcast": "Kampanye",
+      "performance_broadcast": "Kampanye berperforma tinggi",
       "badge_edit": "Edit",
       "badge_draft": "Draf",
       "subtitle": "Pesan massal berperforma tinggi untuk audiens Anda",
       "save_as_draft": "Simpan sebagai draf",
-      "send_broadcast": "Kirim siaran",
+      "send_broadcast": "Kirim kampanye",
       "schedule_action": "Jadwalkan",
       "step_audience": "Audiens",
       "step_template": "Templat",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "Tambahkan kondisi untuk menargetkan kontak",
       "audience_hint_unsupported": "Kondisi ini belum dapat digunakan",
       "audience_hint_ready": "Akan menerima pesan",
-      "no_audience_error": "Tidak ada audiens untuk siaran ini.",
+      "no_audience_error": "Tidak ada audiens untuk kampanye ini.",
       "section_configuration": "02 · Konfigurasi",
       "message_and_schedule": "Pesan & jadwal",
       "template": "Templat",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "Kolom kontak diganti dengan data masing-masing penerima saat pengiriman.",
       "fill_all_variables": "Isi semua variabel templat",
       "pause_marketing_title": "Jeda jika Meta mengubah klasifikasi menjadi Marketing",
-      "pause_marketing_desc": "Sistem akan memeriksa apakah Meta secara otomatis mengubah jenis pesan menjadi Marketing. Jika ya, siaran tidak akan dikirim.",
+      "pause_marketing_desc": "Sistem akan memeriksa apakah Meta secara otomatis mengubah jenis pesan menjadi Marketing. Jika ya, kampanye tidak akan dikirim.",
       "schedule": "Jadwal",
       "schedule_hint": "Pilih tanggal & waktu",
       "send_now": "Kirim sekarang",
@@ -7515,21 +7532,21 @@
       "interval": "Interval"
     },
     "list": {
-      "title": "Siaran",
-      "subtitle": "Jangkau kontak Anda dalam hitungan menit dengan layanan siaran berperforma tinggi kami",
+      "title": "Kampanye",
+      "subtitle": "Jangkau kontak Anda dalam hitungan menit dengan layanan kampanye berperforma tinggi kami",
       "refresh": "Segarkan",
-      "new_broadcast": "Siaran baru",
-      "all_broadcasts": "Semua siaran",
+      "new_broadcast": "Kampanye baru",
+      "all_broadcasts": "Semua kampanye",
       "search_placeholder": "Cari berdasarkan nama atau saluran",
-      "loading": "Memuat siaran...",
-      "empty_title": "Tidak ada siaran ditemukan",
-      "empty_desc": "Buat siaran pertama Anda untuk menjangkau pelanggan dalam hitungan menit",
+      "loading": "Memuat kampanye...",
+      "empty_title": "Tidak ada kampanye ditemukan",
+      "empty_desc": "Buat kampanye pertama Anda untuk menjangkau pelanggan dalam hitungan menit",
       "create_one_now": "Buat sekarang",
       "failed_count_one": "· {{count}} gagal",
       "failed_count_other": "· {{count}} gagal",
-      "edit_broadcast": "Edit siaran",
-      "delete_broadcast": "Hapus siaran",
-      "view_broadcast": "Lihat siaran",
+      "edit_broadcast": "Edit kampanye",
+      "delete_broadcast": "Hapus kampanye",
+      "view_broadcast": "Lihat kampanye",
       "more_actions": "Tindakan lain",
       "clone": "Duplikat",
       "send_now": "Kirim sekarang",
@@ -7571,7 +7588,7 @@
       "action": "Tindakan"
     },
     "create_dialog": {
-      "title": "Buat siaran",
+      "title": "Buat kampanye",
       "subtitle": "Beri nama dan pilih saluran pengirimannya.",
       "name": "Nama",
       "name_placeholder": "mis. Peluncuran Juni - daftar Brasil",
@@ -7579,18 +7596,18 @@
       "select_channel": "Pilih saluran",
       "no_channels": "Belum ada saluran terhubung",
       "no_channels_hint": "Hubungkan saluran WhatsApp / Telegram / Messenger dari Pengaturan untuk mulai menyiarkan.",
-      "payment_warning": "Pastikan metode pembayaran sudah ditambahkan ke akun WhatsApp Anda di Meta Business Manager, jika tidak siaran bisa gagal.",
-      "ready_hint": "Siap — klik Buat siaran untuk melanjutkan.",
+      "payment_warning": "Pastikan metode pembayaran sudah ditambahkan ke akun WhatsApp Anda di Meta Business Manager, jika tidak kampanye bisa gagal.",
+      "ready_hint": "Siap — klik Buat kampanye untuk melanjutkan.",
       "choose_channel_hint": "Pilih saluran untuk melanjutkan.",
-      "create_broadcast": "Buat siaran"
+      "create_broadcast": "Buat kampanye"
     },
     "clone": {
-      "title": "Duplikat siaran",
-      "campaign_name": "Nama siaran",
-      "name_placeholder": "Masukkan nama siaran..."
+      "title": "Duplikat kampanye",
+      "campaign_name": "Nama kampanye",
+      "name_placeholder": "Masukkan nama kampanye..."
     },
     "delete": {
-      "title": "Hapus siaran",
+      "title": "Hapus kampanye",
       "confirm_prefix": "Yakin ingin menghapus",
       "confirm_suffix": "? Tindakan ini tidak dapat dibatalkan."
     },
@@ -7691,7 +7708,7 @@
       "is_false": "bernilai salah"
     },
     "stats": {
-      "total_broadcasts": "Total siaran",
+      "total_broadcasts": "Total kampanye",
       "this_month": "bulan ini",
       "total_contacts": "Total kontak",
       "reachable_audience": "audiens terjangkau",

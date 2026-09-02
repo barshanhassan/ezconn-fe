@@ -39,7 +39,9 @@ import {
     StopCircle,
     Plus,
     ExternalLink,
-    Zap
+    Zap,
+    PanelRightClose,
+    PanelRightOpen
 } from "lucide-react";
 import {
     Tooltip,
@@ -117,6 +119,14 @@ interface ContactProfileSidebarProps {
     } | null;
 
     onRefreshProfile?: () => void;
+
+    // Closes/hides this panel — a close icon in the header lets the agent
+    // dismiss it without hunting for the toggle button in the chat toolbar.
+    onClose?: () => void;
+    // When true, renders as a slim collapsed strip (icon only) instead of the
+    // full card — replyagent parity: closing the panel doesn't remove it from
+    // the layout, it shrinks to a thin re-openable edge.
+    collapsed?: boolean;
 }
 
 // Helper function to get display name - defaults to phone number if displayName not set
@@ -151,6 +161,8 @@ export default function ContactProfileSidebar({
     onScrollToMessage,
     profileData,
     onRefreshProfile,
+    onClose,
+    collapsed = false,
 }: ContactProfileSidebarProps) {
     const { t } = useTranslation();
     const workspaceTz = useWorkspaceTimezone();
@@ -452,32 +464,52 @@ export default function ContactProfileSidebar({
     };
     const initials = getInitials(displayName);
 
+    // Collapsed — a thin re-openable edge instead of removing the panel
+    // entirely, so the toggle icon stays reachable in one fixed spot.
+    if (collapsed) {
+        return (
+            <div
+                className="w-8 shrink-0 border-l h-full flex flex-col items-center pt-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={onClose}
+                data-testid="contact-panel-collapsed"
+            >
+                <PanelRightOpen size={18} className="text-muted-foreground" />
+            </div>
+        );
+    }
+
     return (
         <>
-            <Card className="w-[28rem] border-l-0 rounded-l-none" data-testid="contact-panel">
-                <CardContent className="space-y-3 pt-5">
-                    {/* Header — replyagent: rounded-square avatar, name, handle,
-                        then a bordered "Profile" button (opens the full contact modal). */}
-                    <div className="flex flex-col items-center gap-1.5">
-                        <div className={`h-16 w-16 rounded-lg flex items-center justify-center text-xl font-semibold text-white ${getAvatarColor(displayName)}`}>
-                            {initials}
+            <Card className="w-[24rem] border-l-0 rounded-l-none h-full flex flex-col" data-testid="contact-panel">
+                <CardContent className="space-y-3 pt-5 overflow-y-auto flex-1">
+                    {/* Header — round avatar + name/phone on one row (not stacked)
+                        so the panel doesn't burn vertical space up top; the whole
+                        block opens the full contact profile modal when the agent
+                        has view_profile access. */}
+                    <div className="flex items-center gap-2">
+                        <div
+                            className={`flex items-center gap-3 min-w-0 flex-1 ${canViewProfile ? "cursor-pointer" : ""}`}
+                            onClick={() => { if (canViewProfile && (profileData as any)?.contact?.id) setIsDetailsModalOpen(true); }}
+                            data-testid="button-open-profile"
+                        >
+                            <div className={`h-11 w-11 shrink-0 rounded-full flex items-center justify-center text-sm font-semibold text-white ${getAvatarColor(displayName)}`}>
+                                {initials}
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="font-semibold text-[14px] truncate">{displayName}</h3>
+                                {canSeeChannels && (
+                                    <p className="text-xs text-muted-foreground truncate">{conversation?.phoneNumber}</p>
+                                )}
+                            </div>
                         </div>
-                        <div className="text-center">
-                            <h3 className="font-semibold text-lg">{displayName}</h3>
-                            {canSeeChannels && (
-                                <p className="text-sm text-muted-foreground">{conversation?.phoneNumber}</p>
-                            )}
-                        </div>
-                        {canViewProfile && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-xs gap-1.5 mt-1 btn-outline-primary font-normal"
-                                onClick={() => { if ((profileData as any)?.contact?.id) setIsDetailsModalOpen(true); }}
-                                data-testid="button-open-profile"
+                        {onClose && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                                data-testid="button-close-contact-panel"
                             >
-                                <ExternalLink size={13} /> {t("contact_profile_sidebar.profile_button")}
-                            </Button>
+                                <PanelRightClose size={18} />
+                            </button>
                         )}
                     </div>
 

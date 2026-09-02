@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Validação",
     "tooltip_archive": "Arquivar",
     "tooltip_edit_role": "Editar função",
-    "tooltip_restore": "Restaurar"
+    "tooltip_restore": "Restaurar",
+    "select_all": "Selecionar tudo",
+    "label_enable_disable_all": "Ativar / desativar tudo",
+    "tooltip_delete": "Excluir",
+    "toast_deleted_desc": "Função excluída permanentemente.",
+    "confirm_delete_title": "Excluir esta função permanentemente?",
+    "confirm_delete_desc": "\"{{name}}\" será excluída permanentemente. Isso não pode ser desfeito."
   },
   "teams_section": {
     "error_title": "Erro",
@@ -3568,7 +3574,10 @@
     "kind_document": "documento",
     "kind_file": "arquivo",
     "copied_title": "Copiado",
-    "copied_description": "Link copiado para a área de transferência."
+    "copied_description": "Link copiado para a área de transferência.",
+    "select": "Selecionar",
+    "download": "Baixar",
+    "share": "Compartilhar"
   },
   "iframe_section": {
     "default_menu_title": "Iframes",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Workspace",
       "manage": "Gerenciar",
-      "live_chat": "Chat ao vivo",
+      "live_chat": "Caixa de entrada",
       "theme": "Tema",
       "manage_user": "Gerenciar usuário",
       "roles_permissions": "Funções e permissões",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Conversando pelo canal",
       "channel_fallback": "canal",
       "in_smart_flow": "No Smart Flow",
-      "not_in_smart_flow": "Este contato não faz parte de nenhum Smart Flow no momento.",
+      "not_in_smart_flow": "Não faz parte de nenhum Smart Flow.",
       "remove": "Remover",
       "pause_automated_messages": "Pausar Mensagens Automatizadas",
       "pause_smart_flow": "Pausar Smart Flow",
@@ -6861,7 +6870,11 @@
       "delivered": "Entregue",
       "read": "Lida",
       "sent_by_automation": "Enviada por automação",
-      "agent_fallback": "Agente"
+      "agent_fallback": "Agente",
+      "more_options": "Mais opções",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "save_as": "Salvar como"
     },
     "template_card": {
       "label": "Modelo"
@@ -6880,7 +6893,7 @@
       "note_tab": "Nota",
       "note_internal_hint": "Interna — não enviada ao cliente",
       "mention_agent": "Mencionar um agente",
-      "note_placeholder": "Escreva uma nota interna… (@ para mencionar)",
+      "note_placeholder": "Crie uma nota para os membros da sua equipe...",
       "reply_placeholder": "Digite uma mensagem…",
       "format_text": "Formatar texto",
       "bold": "Negrito",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Enviar mensagem de voz",
       "geolocation_not_supported": "Geolocalização não suportada por este navegador",
       "instagram_unsupported_files": "O Instagram não suporta arquivos de documento. Apenas imagens, vídeos e áudios podem ser enviados.",
-      "file_size_limit_exceeded": "Limite de tamanho de arquivo excedido: {{labels}}"
+      "file_size_limit_exceeded": "Limite de tamanho de arquivo excedido: {{labels}}",
+      "drag_to_resize": "Arraste para redimensionar",
+      "add_note_button": "Adicionar nota",
+      "send_button": "Enviar"
     },
     "locked": {
       "assigned_to_other": "Esta conversa está atribuída a {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Falha ao excluir",
       "folder_updated": "Pasta atualizada",
       "couldnt_move": "Não foi possível mover",
-      "downloading": "Baixando..."
+      "downloading": "Baixando...",
+      "media_attached": "Mídia anexada"
     }
   },
   "contact_profile_modal": {
@@ -7392,22 +7409,22 @@
       "remove": "Remover"
     },
     "toast": {
-      "created_title": "Transmissão criada",
-      "created_desc": "Sua transmissão foi criada com sucesso.",
-      "updated_title": "Transmissão atualizada",
-      "updated_desc": "Sua transmissão foi atualizada com sucesso.",
-      "deleted_title": "Transmissão excluída",
-      "deleted_desc": "A transmissão foi removida com sucesso.",
+      "created_title": "Campanha criada",
+      "created_desc": "Sua campanha foi criada com sucesso.",
+      "updated_title": "Campanha atualizada",
+      "updated_desc": "Sua campanha foi atualizada com sucesso.",
+      "deleted_title": "Campanha excluída",
+      "deleted_desc": "A campanha foi removida com sucesso.",
       "delete_failed": "Falha ao excluir",
-      "cloned_title": "Transmissão clonada",
+      "cloned_title": "Campanha clonada",
       "cloned_desc": "{{name}} foi clonada como rascunho.",
-      "archived_title": "Transmissão arquivada",
+      "archived_title": "Campanha arquivada",
       "archived_desc": "{{name}} foi arquivada.",
       "bulk_archived_title": "Transmissões arquivadas",
-      "bulk_archived_desc_one": "{{count}} transmissão foi arquivada.",
+      "bulk_archived_desc_one": "{{count}} campanha foi arquivada.",
       "bulk_archived_desc_other": "{{count}} transmissões foram arquivadas.",
       "bulk_deleted_title": "Transmissões excluídas",
-      "bulk_deleted_desc_one": "{{count}} transmissão foi excluída.",
+      "bulk_deleted_desc_one": "{{count}} campanha foi excluída.",
       "bulk_deleted_desc_other": "{{count}} transmissões foram excluídas.",
       "missing_details_title": "Dados faltando",
       "missing_details_desc": "Adicione um nome e escolha um canal primeiro.",
@@ -7416,20 +7433,20 @@
       "unsupported_condition_desc": "{{fields}} ainda não pode ser usado para segmentar um público. Remova ou filtre por nome, sobrenome, nome completo, tag ou um campo personalizado.",
       "no_whatsapp_title": "Nenhuma conta do WhatsApp",
       "no_whatsapp_desc": "Conecte uma conta do WhatsApp antes de criar transmissões.",
-      "queued_title": "Transmissão na fila",
+      "queued_title": "Campanha na fila",
       "queued_desc": "Será executada no próximo minuto.",
       "send_failed": "Falha no envio"
     },
     "composer": {
       "back": "Voltar",
       "channel_fallback": "Canal",
-      "untitled_broadcast": "Transmissão",
-      "performance_broadcast": "Transmissão de alta performance",
+      "untitled_broadcast": "Campanha",
+      "performance_broadcast": "Campanha de alta performance",
       "badge_edit": "Editar",
       "badge_draft": "Rascunho",
       "subtitle": "Mensagens em massa de alta performance para o seu público",
       "save_as_draft": "Salvar como rascunho",
-      "send_broadcast": "Enviar transmissão",
+      "send_broadcast": "Enviar campanha",
       "schedule_action": "Agendar",
       "step_audience": "Público",
       "step_template": "Modelo",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "Adicione uma condição para segmentar contatos",
       "audience_hint_unsupported": "Esta condição ainda não pode ser usada",
       "audience_hint_ready": "Vão receber a mensagem",
-      "no_audience_error": "Não há público para enviar esta transmissão.",
+      "no_audience_error": "Não há público para enviar esta campanha.",
       "section_configuration": "02 · Configuração",
       "message_and_schedule": "Mensagem e agendamento",
       "template": "Modelo",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "No envio, os campos de contato são substituídos pelos dados de cada destinatário.",
       "fill_all_variables": "Preencha todas as variáveis do modelo",
       "pause_marketing_title": "Pausar se a Meta reclassificar como Marketing",
-      "pause_marketing_desc": "O sistema verificará se a Meta reclassificou automaticamente o tipo de mensagem como Marketing. Se sim, a transmissão não será enviada.",
+      "pause_marketing_desc": "O sistema verificará se a Meta reclassificou automaticamente o tipo de mensagem como Marketing. Se sim, a campanha não será enviada.",
       "schedule": "Agendamento",
       "schedule_hint": "Escolha data e hora",
       "send_now": "Enviar agora",
@@ -7515,21 +7532,21 @@
       "interval": "Intervalo"
     },
     "list": {
-      "title": "Transmissões",
-      "subtitle": "Alcance seus contatos em minutos com nosso serviço de transmissão de alta performance",
+      "title": "Campanhas",
+      "subtitle": "Alcance seus contatos em minutos com nosso serviço de campanha de alta performance",
       "refresh": "Atualizar",
-      "new_broadcast": "Nova transmissão",
+      "new_broadcast": "Nova campanha",
       "all_broadcasts": "Todas as transmissões",
       "search_placeholder": "Buscar por nome ou canal",
       "loading": "Carregando transmissões...",
-      "empty_title": "Nenhuma transmissão encontrada",
-      "empty_desc": "Crie sua primeira transmissão para alcançar seus clientes em minutos",
+      "empty_title": "Nenhuma campanha encontrada",
+      "empty_desc": "Crie sua primeira campanha para alcançar seus clientes em minutos",
       "create_one_now": "Criar uma agora",
       "failed_count_one": "· {{count}} com falha",
       "failed_count_other": "· {{count}} com falha",
-      "edit_broadcast": "Editar transmissão",
-      "delete_broadcast": "Excluir transmissão",
-      "view_broadcast": "Ver transmissão",
+      "edit_broadcast": "Editar campanha",
+      "delete_broadcast": "Excluir campanha",
+      "view_broadcast": "Ver campanha",
       "more_actions": "Mais ações",
       "clone": "Clonar",
       "send_now": "Enviar agora",
@@ -7571,7 +7588,7 @@
       "action": "Ação"
     },
     "create_dialog": {
-      "title": "Criar uma transmissão",
+      "title": "Criar uma campanha",
       "subtitle": "Dê um nome e escolha o canal de envio.",
       "name": "Nome",
       "name_placeholder": "ex.: Lançamento de junho - lista Brasil",
@@ -7579,18 +7596,18 @@
       "select_channel": "Selecione um canal",
       "no_channels": "Nenhum canal conectado ainda",
       "no_channels_hint": "Conecte um canal do WhatsApp / Telegram / Messenger em Configurações para começar a transmitir.",
-      "payment_warning": "Certifique-se de que há uma forma de pagamento adicionada à sua conta do WhatsApp no Meta Business Manager, caso contrário a transmissão pode falhar.",
-      "ready_hint": "Pronto — clique em Criar transmissão para continuar.",
+      "payment_warning": "Certifique-se de que há uma forma de pagamento adicionada à sua conta do WhatsApp no Meta Business Manager, caso contrário a campanha pode falhar.",
+      "ready_hint": "Pronto — clique em Criar campanha para continuar.",
       "choose_channel_hint": "Escolha um canal para continuar.",
-      "create_broadcast": "Criar transmissão"
+      "create_broadcast": "Criar campanha"
     },
     "clone": {
-      "title": "Clonar transmissão",
-      "campaign_name": "Nome da transmissão",
-      "name_placeholder": "Digite o nome da transmissão..."
+      "title": "Clonar campanha",
+      "campaign_name": "Nome da campanha",
+      "name_placeholder": "Digite o nome da campanha..."
     },
     "delete": {
-      "title": "Excluir transmissão",
+      "title": "Excluir campanha",
       "confirm_prefix": "Tem certeza de que deseja excluir",
       "confirm_suffix": "? Esta ação não pode ser desfeita."
     },

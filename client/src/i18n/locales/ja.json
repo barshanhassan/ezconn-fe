@@ -3351,7 +3351,13 @@
     "toast_validation_title": "検証",
     "tooltip_archive": "アーカイブ",
     "tooltip_edit_role": "役割を編集",
-    "tooltip_restore": "復元"
+    "tooltip_restore": "復元",
+    "select_all": "すべて選択",
+    "label_enable_disable_all": "すべて有効化／無効化",
+    "tooltip_delete": "削除",
+    "toast_deleted_desc": "ロールを完全に削除しました。",
+    "confirm_delete_title": "このロールを完全に削除しますか？",
+    "confirm_delete_desc": "「{{name}}」は完全に削除されます。この操作は元に戻せません。"
   },
   "teams_section": {
     "error_title": "エラー",
@@ -3568,7 +3574,10 @@
     "kind_document": "ドキュメント",
     "kind_file": "ファイル",
     "copied_title": "コピーしました",
-    "copied_description": "リンクをクリップボードにコピーしました。"
+    "copied_description": "リンクをクリップボードにコピーしました。",
+    "select": "選択",
+    "download": "ダウンロード",
+    "share": "共有"
   },
   "iframe_section": {
     "default_menu_title": "iframe",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "ワークスペース",
       "manage": "管理",
-      "live_chat": "ライブチャット",
+      "live_chat": "受信箱",
       "theme": "テーマ",
       "manage_user": "ユーザー管理",
       "roles_permissions": "役割と権限",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "チャネル経由でチャット中",
       "channel_fallback": "チャネル",
       "in_smart_flow": "スマートフローに含まれています",
-      "not_in_smart_flow": "この連絡先は現在どのスマートフローにも含まれていません。",
+      "not_in_smart_flow": "現在どのスマートフローにも含まれていません。",
       "remove": "削除",
       "pause_automated_messages": "自動メッセージを一時停止",
       "pause_smart_flow": "スマートフローを一時停止",
@@ -6861,7 +6870,11 @@
       "delivered": "配信済み",
       "read": "既読",
       "sent_by_automation": "自動化により送信",
-      "agent_fallback": "エージェント"
+      "agent_fallback": "エージェント",
+      "more_options": "その他のオプション",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "save_as": "名前を付けて保存"
     },
     "template_card": {
       "label": "テンプレート"
@@ -6880,7 +6893,7 @@
       "note_tab": "メモ",
       "note_internal_hint": "社内用 — 顧客には送信されません",
       "mention_agent": "エージェントをメンション",
-      "note_placeholder": "社内メモを入力…(@でメンション)",
+      "note_placeholder": "チームメンバー向けのメモを作成...",
       "reply_placeholder": "メッセージを入力…",
       "format_text": "テキストを書式設定",
       "bold": "太字",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "ボイスメッセージを送信",
       "geolocation_not_supported": "このブラウザは位置情報に対応していません",
       "instagram_unsupported_files": "Instagramはドキュメントファイルに対応していません。送信できるのは画像、動画、音声のみです。",
-      "file_size_limit_exceeded": "ファイルサイズの上限を超えています: {{labels}}"
+      "file_size_limit_exceeded": "ファイルサイズの上限を超えています: {{labels}}",
+      "drag_to_resize": "ドラッグしてサイズ変更",
+      "add_note_button": "ノートを追加",
+      "send_button": "送信"
     },
     "locked": {
       "assigned_to_other": "この会話は{{name}}に割り当てられています。",
@@ -7088,7 +7104,8 @@
       "delete_failed": "削除に失敗しました",
       "folder_updated": "フォルダを更新しました",
       "couldnt_move": "移動できませんでした",
-      "downloading": "ダウンロード中..."
+      "downloading": "ダウンロード中...",
+      "media_attached": "メディアを添付しました"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "削除"
     },
     "toast": {
-      "created_title": "ブロードキャストを作成しました",
-      "created_desc": "ブロードキャストが正常に作成されました。",
-      "updated_title": "ブロードキャストを更新しました",
-      "updated_desc": "ブロードキャストが正常に更新されました。",
-      "deleted_title": "ブロードキャストを削除しました",
-      "deleted_desc": "ブロードキャストが正常に削除されました。",
+      "created_title": "キャンペーンを作成しました",
+      "created_desc": "キャンペーンが正常に作成されました。",
+      "updated_title": "キャンペーンを更新しました",
+      "updated_desc": "キャンペーンが正常に更新されました。",
+      "deleted_title": "キャンペーンを削除しました",
+      "deleted_desc": "キャンペーンが正常に削除されました。",
       "delete_failed": "削除に失敗しました",
-      "cloned_title": "ブロードキャストを複製しました",
+      "cloned_title": "キャンペーンを複製しました",
       "cloned_desc": "{{name}} を下書きとして複製しました。",
-      "archived_title": "ブロードキャストをアーカイブしました",
+      "archived_title": "キャンペーンをアーカイブしました",
       "archived_desc": "{{name}} をアーカイブしました。",
-      "bulk_archived_title": "ブロードキャストをアーカイブしました",
-      "bulk_archived_desc_one": "{{count}} 件のブロードキャストをアーカイブしました。",
-      "bulk_archived_desc_other": "{{count}} 件のブロードキャストをアーカイブしました。",
-      "bulk_deleted_title": "ブロードキャストを削除しました",
-      "bulk_deleted_desc_one": "{{count}} 件のブロードキャストを削除しました。",
-      "bulk_deleted_desc_other": "{{count}} 件のブロードキャストを削除しました。",
+      "bulk_archived_title": "キャンペーンをアーカイブしました",
+      "bulk_archived_desc_one": "{{count}} 件のキャンペーンをアーカイブしました。",
+      "bulk_archived_desc_other": "{{count}} 件のキャンペーンをアーカイブしました。",
+      "bulk_deleted_title": "キャンペーンを削除しました",
+      "bulk_deleted_desc_one": "{{count}} 件のキャンペーンを削除しました。",
+      "bulk_deleted_desc_other": "{{count}} 件のキャンペーンを削除しました。",
       "missing_details_title": "情報が不足しています",
       "missing_details_desc": "まず名前を入力し、チャネルを選択してください。",
       "complete_highlighted": "ハイライトされた項目を入力してください",
       "unsupported_condition_title": "未対応のオーディエンス条件",
       "unsupported_condition_desc": "{{fields}} はまだオーディエンスの絞り込みに使用できません。削除するか、姓・名・フルネーム、タグ、カスタムフィールドで絞り込んでください。",
       "no_whatsapp_title": "WhatsApp アカウントがありません",
-      "no_whatsapp_desc": "ブロードキャストを作成する前に WhatsApp アカウントを接続してください。",
-      "queued_title": "ブロードキャストをキューに追加しました",
+      "no_whatsapp_desc": "キャンペーンを作成する前に WhatsApp アカウントを接続してください。",
+      "queued_title": "キャンペーンをキューに追加しました",
       "queued_desc": "1 分以内に実行されます。",
       "send_failed": "送信に失敗しました"
     },
     "composer": {
       "back": "戻る",
       "channel_fallback": "チャネル",
-      "untitled_broadcast": "ブロードキャスト",
-      "performance_broadcast": "高性能ブロードキャスト",
+      "untitled_broadcast": "キャンペーン",
+      "performance_broadcast": "高性能キャンペーン",
       "badge_edit": "編集",
       "badge_draft": "下書き",
       "subtitle": "オーディエンス向けの高性能な一斉配信",
       "save_as_draft": "下書きとして保存",
-      "send_broadcast": "ブロードキャストを送信",
+      "send_broadcast": "キャンペーンを送信",
       "schedule_action": "スケジュール",
       "step_audience": "オーディエンス",
       "step_template": "テンプレート",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "条件を追加して連絡先を絞り込みます",
       "audience_hint_unsupported": "この条件はまだ使用できません",
       "audience_hint_ready": "メッセージを受信します",
-      "no_audience_error": "このブロードキャストを送信するオーディエンスがありません。",
+      "no_audience_error": "このキャンペーンを送信するオーディエンスがありません。",
       "section_configuration": "02 · 設定",
       "message_and_schedule": "メッセージとスケジュール",
       "template": "テンプレート",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "送信時に連絡先フィールドは各受信者のデータに置き換えられます。",
       "fill_all_variables": "すべてのテンプレート変数を入力してください",
       "pause_marketing_title": "Meta がマーケティングに再分類した場合は停止",
-      "pause_marketing_desc": "Meta がメッセージタイプを自動的にマーケティングへ再分類したかを確認します。再分類された場合、ブロードキャストは送信されません。",
+      "pause_marketing_desc": "Meta がメッセージタイプを自動的にマーケティングへ再分類したかを確認します。再分類された場合、キャンペーンは送信されません。",
       "schedule": "スケジュール",
       "schedule_hint": "日時を選択",
       "send_now": "今すぐ送信",
@@ -7515,21 +7532,21 @@
       "interval": "間隔"
     },
     "list": {
-      "title": "ブロードキャスト",
-      "subtitle": "高性能なブロードキャストサービスで数分のうちに連絡先へリーチ",
+      "title": "キャンペーン",
+      "subtitle": "高性能なキャンペーンサービスで数分のうちに連絡先へリーチ",
       "refresh": "更新",
-      "new_broadcast": "新規ブロードキャスト",
-      "all_broadcasts": "すべてのブロードキャスト",
+      "new_broadcast": "新規キャンペーン",
+      "all_broadcasts": "すべてのキャンペーン",
       "search_placeholder": "名前またはチャネルで検索",
-      "loading": "ブロードキャストを取得中...",
-      "empty_title": "ブロードキャストが見つかりません",
-      "empty_desc": "最初のブロードキャストを作成して、数分で顧客にリーチしましょう",
+      "loading": "キャンペーンを取得中...",
+      "empty_title": "キャンペーンが見つかりません",
+      "empty_desc": "最初のキャンペーンを作成して、数分で顧客にリーチしましょう",
       "create_one_now": "今すぐ作成",
       "failed_count_one": "· {{count}} 件失敗",
       "failed_count_other": "· {{count}} 件失敗",
-      "edit_broadcast": "ブロードキャストを編集",
-      "delete_broadcast": "ブロードキャストを削除",
-      "view_broadcast": "ブロードキャストを表示",
+      "edit_broadcast": "キャンペーンを編集",
+      "delete_broadcast": "キャンペーンを削除",
+      "view_broadcast": "キャンペーンを表示",
       "more_actions": "その他の操作",
       "clone": "複製",
       "send_now": "今すぐ送信",
@@ -7571,7 +7588,7 @@
       "action": "操作"
     },
     "create_dialog": {
-      "title": "ブロードキャストを作成",
+      "title": "キャンペーンを作成",
       "subtitle": "名前を付けて、送信元のチャネルを選択します。",
       "name": "名前",
       "name_placeholder": "例: 6月ローンチ - ブラジルリスト",
@@ -7579,18 +7596,18 @@
       "select_channel": "チャネルを選択",
       "no_channels": "接続済みのチャネルがありません",
       "no_channels_hint": "設定から WhatsApp / Telegram / Messenger チャネルを接続すると配信を開始できます。",
-      "payment_warning": "Meta Business Manager の WhatsApp アカウントに支払い方法が登録されていることを確認してください。未登録の場合、ブロードキャストが失敗することがあります。",
-      "ready_hint": "準備完了 — 「ブロードキャストを作成」をクリックして続行します。",
+      "payment_warning": "Meta Business Manager の WhatsApp アカウントに支払い方法が登録されていることを確認してください。未登録の場合、キャンペーンが失敗することがあります。",
+      "ready_hint": "準備完了 — 「キャンペーンを作成」をクリックして続行します。",
       "choose_channel_hint": "続行するにはチャネルを選択してください。",
-      "create_broadcast": "ブロードキャストを作成"
+      "create_broadcast": "キャンペーンを作成"
     },
     "clone": {
-      "title": "ブロードキャストを複製",
-      "campaign_name": "ブロードキャスト名",
-      "name_placeholder": "ブロードキャスト名を入力..."
+      "title": "キャンペーンを複製",
+      "campaign_name": "キャンペーン名",
+      "name_placeholder": "キャンペーン名を入力..."
     },
     "delete": {
-      "title": "ブロードキャストを削除",
+      "title": "キャンペーンを削除",
       "confirm_prefix": "本当に削除しますか:",
       "confirm_suffix": "? この操作は元に戻せません。"
     },
@@ -7691,7 +7708,7 @@
       "is_false": "が false である"
     },
     "stats": {
-      "total_broadcasts": "ブロードキャスト総数",
+      "total_broadcasts": "キャンペーン総数",
       "this_month": "今月",
       "total_contacts": "連絡先総数",
       "reachable_audience": "到達可能なオーディエンス",

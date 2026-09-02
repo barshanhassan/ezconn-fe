@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Doğrulama",
     "tooltip_archive": "Arşivle",
     "tooltip_edit_role": "Rolü Düzenle",
-    "tooltip_restore": "Geri Yükle"
+    "tooltip_restore": "Geri Yükle",
+    "select_all": "Tümünü Seç",
+    "label_enable_disable_all": "Tümünü Etkinleştir / Devre Dışı Bırak",
+    "tooltip_delete": "Sil",
+    "toast_deleted_desc": "Rol kalıcı olarak silindi.",
+    "confirm_delete_title": "Bu rol kalıcı olarak silinsin mi?",
+    "confirm_delete_desc": "\"{{name}}\" kalıcı olarak silinecek. Bu işlem geri alınamaz."
   },
   "teams_section": {
     "error_title": "Hata",
@@ -3568,7 +3574,10 @@
     "kind_document": "belge",
     "kind_file": "dosya",
     "copied_title": "Kopyalandı",
-    "copied_description": "Bağlantı panoya kopyalandı."
+    "copied_description": "Bağlantı panoya kopyalandı.",
+    "select": "Seç",
+    "download": "İndir",
+    "share": "Paylaş"
   },
   "iframe_section": {
     "default_menu_title": "Iframe'ler",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Çalışma Alanı",
       "manage": "Yönet",
-      "live_chat": "Canlı Sohbet",
+      "live_chat": "Gelen Kutusu",
       "theme": "Tema",
       "manage_user": "Kullanıcıyı Yönet",
       "roles_permissions": "Roller ve İzinler",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Kanal üzerinden sohbet ediyor",
       "channel_fallback": "kanal",
       "in_smart_flow": "Akıllı Akışta",
-      "not_in_smart_flow": "Bu kişi şu anda herhangi bir Akıllı Akış içinde değil.",
+      "not_in_smart_flow": "Şu anda herhangi bir Smart Flow'da değil.",
       "remove": "Kaldır",
       "pause_automated_messages": "Otomatik Mesajları Duraklat",
       "pause_smart_flow": "Akıllı Akışı Duraklat",
@@ -6861,7 +6870,11 @@
       "delivered": "İletildi",
       "read": "Okundu",
       "sent_by_automation": "Otomasyon tarafından gönderildi",
-      "agent_fallback": "Temsilci"
+      "agent_fallback": "Temsilci",
+      "more_options": "Diğer seçenekler",
+      "copy": "Kopyala",
+      "copied": "Kopyalandı",
+      "save_as": "Farklı kaydet"
     },
     "template_card": {
       "label": "Şablon"
@@ -6880,7 +6893,7 @@
       "note_tab": "Not",
       "note_internal_hint": "Dahili — müşteriye gönderilmez",
       "mention_agent": "Bir temsilciden bahset",
-      "note_placeholder": "Dahili bir not yazın… (bahsetmek için @)",
+      "note_placeholder": "Ekip üyeleriniz için bir not oluşturun...",
       "reply_placeholder": "Bir mesaj yazın…",
       "format_text": "Metni biçimlendir",
       "bold": "Kalın",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Sesli mesaj gönder",
       "geolocation_not_supported": "Bu tarayıcı konum belirlemeyi desteklemiyor",
       "instagram_unsupported_files": "Instagram belge dosyalarını desteklemiyor. Yalnızca görsel, video ve ses gönderilebilir.",
-      "file_size_limit_exceeded": "Dosya boyutu sınırı aşıldı: {{labels}}"
+      "file_size_limit_exceeded": "Dosya boyutu sınırı aşıldı: {{labels}}",
+      "drag_to_resize": "Yeniden boyutlandırmak için sürükleyin",
+      "add_note_button": "Not ekle",
+      "send_button": "Gönder"
     },
     "locked": {
       "assigned_to_other": "Bu konuşma {{name}} kişisine atanmış.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Silme başarısız",
       "folder_updated": "Klasör güncellendi",
       "couldnt_move": "Taşınamadı",
-      "downloading": "İndiriliyor..."
+      "downloading": "İndiriliyor...",
+      "media_attached": "Medya eklendi"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "Kaldır"
     },
     "toast": {
-      "created_title": "Yayın oluşturuldu",
-      "created_desc": "Yayınınız başarıyla oluşturuldu.",
-      "updated_title": "Yayın güncellendi",
-      "updated_desc": "Yayınınız başarıyla güncellendi.",
-      "deleted_title": "Yayın silindi",
-      "deleted_desc": "Yayın başarıyla kaldırıldı.",
+      "created_title": "Kampanya oluşturuldu",
+      "created_desc": "Kampanyaınız başarıyla oluşturuldu.",
+      "updated_title": "Kampanya güncellendi",
+      "updated_desc": "Kampanyaınız başarıyla güncellendi.",
+      "deleted_title": "Kampanya silindi",
+      "deleted_desc": "Kampanya başarıyla kaldırıldı.",
       "delete_failed": "Silme başarısız",
-      "cloned_title": "Yayın kopyalandı",
+      "cloned_title": "Kampanya kopyalandı",
       "cloned_desc": "{{name}} taslak olarak kopyalandı.",
-      "archived_title": "Yayın arşivlendi",
+      "archived_title": "Kampanya arşivlendi",
       "archived_desc": "{{name}} arşivlendi.",
-      "bulk_archived_title": "Yayınlar arşivlendi",
-      "bulk_archived_desc_one": "{{count}} yayın arşivlendi.",
-      "bulk_archived_desc_other": "{{count}} yayın arşivlendi.",
-      "bulk_deleted_title": "Yayınlar silindi",
-      "bulk_deleted_desc_one": "{{count}} yayın silindi.",
-      "bulk_deleted_desc_other": "{{count}} yayın silindi.",
+      "bulk_archived_title": "Kampanyalar arşivlendi",
+      "bulk_archived_desc_one": "{{count}} kampanya arşivlendi.",
+      "bulk_archived_desc_other": "{{count}} kampanya arşivlendi.",
+      "bulk_deleted_title": "Kampanyalar silindi",
+      "bulk_deleted_desc_one": "{{count}} kampanya silindi.",
+      "bulk_deleted_desc_other": "{{count}} kampanya silindi.",
       "missing_details_title": "Eksik bilgi",
       "missing_details_desc": "Önce bir ad girin ve bir kanal seçin.",
       "complete_highlighted": "Lütfen vurgulanan alanları doldurun",
       "unsupported_condition_title": "Desteklenmeyen hedef kitle koşulu",
       "unsupported_condition_desc": "{{fields}} henüz hedef kitle seçiminde kullanılamıyor. Bu koşulu kaldırın ya da ad, soyad, tam ad, etiket veya özel alana göre filtreleyin.",
       "no_whatsapp_title": "WhatsApp hesabı yok",
-      "no_whatsapp_desc": "Yayın oluşturmadan önce bir WhatsApp hesabı bağlayın.",
-      "queued_title": "Yayın sıraya alındı",
+      "no_whatsapp_desc": "Kampanya oluşturmadan önce bir WhatsApp hesabı bağlayın.",
+      "queued_title": "Kampanya sıraya alındı",
       "queued_desc": "Önümüzdeki bir dakika içinde gönderilecek.",
       "send_failed": "Gönderim başarısız"
     },
     "composer": {
       "back": "Geri",
       "channel_fallback": "Kanal",
-      "untitled_broadcast": "Yayın",
-      "performance_broadcast": "Yüksek performanslı yayın",
+      "untitled_broadcast": "Kampanya",
+      "performance_broadcast": "Yüksek performanslı kampanya",
       "badge_edit": "Düzenle",
       "badge_draft": "Taslak",
       "subtitle": "Hedef kitleniz için yüksek performanslı toplu mesajlaşma",
       "save_as_draft": "Taslak olarak kaydet",
-      "send_broadcast": "Yayını gönder",
+      "send_broadcast": "Kampanyaı gönder",
       "schedule_action": "Planla",
       "step_audience": "Hedef kitle",
       "step_template": "Şablon",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "Kişileri hedeflemek için bir koşul ekleyin",
       "audience_hint_unsupported": "Bu koşul henüz kullanılamıyor",
       "audience_hint_ready": "Mesajı alacak",
-      "no_audience_error": "Bu yayının gönderileceği bir hedef kitle yok.",
+      "no_audience_error": "Bu kampanyaın gönderileceği bir hedef kitle yok.",
       "section_configuration": "02 · Yapılandırma",
       "message_and_schedule": "Mesaj ve planlama",
       "template": "Şablon",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "Gönderim sırasında kişi alanları her alıcının kendi verisiyle değiştirilir.",
       "fill_all_variables": "Tüm şablon değişkenlerini doldurun",
       "pause_marketing_title": "Meta, Pazarlama olarak yeniden sınıflandırırsa duraklat",
-      "pause_marketing_desc": "Sistem, Meta'nın mesaj türünü otomatik olarak Pazarlama şeklinde yeniden sınıflandırıp sınıflandırmadığını kontrol eder. Sınıflandırdıysa yayın gönderilmez.",
+      "pause_marketing_desc": "Sistem, Meta'nın mesaj türünü otomatik olarak Pazarlama şeklinde yeniden sınıflandırıp sınıflandırmadığını kontrol eder. Sınıflandırdıysa kampanya gönderilmez.",
       "schedule": "Planlama",
       "schedule_hint": "Tarih ve saat seçin",
       "send_now": "Şimdi gönder",
@@ -7515,21 +7532,21 @@
       "interval": "Aralık"
     },
     "list": {
-      "title": "Yayınlar",
-      "subtitle": "Yüksek performanslı yayın hizmetimizle kişilerinize dakikalar içinde ulaşın",
+      "title": "Kampanyalar",
+      "subtitle": "Yüksek performanslı kampanya hizmetimizle kişilerinize dakikalar içinde ulaşın",
       "refresh": "Yenile",
-      "new_broadcast": "Yeni yayın",
-      "all_broadcasts": "Tüm yayınlar",
+      "new_broadcast": "Yeni kampanya",
+      "all_broadcasts": "Tüm kampanyalar",
       "search_placeholder": "Ada veya kanala göre ara",
-      "loading": "Yayınlar getiriliyor...",
-      "empty_title": "Yayın bulunamadı",
-      "empty_desc": "Müşterilerinize dakikalar içinde ulaşmak için ilk yayınınızı oluşturun",
+      "loading": "Kampanyalar getiriliyor...",
+      "empty_title": "Kampanya bulunamadı",
+      "empty_desc": "Müşterilerinize dakikalar içinde ulaşmak için ilk kampanyaınızı oluşturun",
       "create_one_now": "Şimdi oluştur",
       "failed_count_one": "· {{count}} başarısız",
       "failed_count_other": "· {{count}} başarısız",
-      "edit_broadcast": "Yayını düzenle",
-      "delete_broadcast": "Yayını sil",
-      "view_broadcast": "Yayını görüntüle",
+      "edit_broadcast": "Kampanyaı düzenle",
+      "delete_broadcast": "Kampanyaı sil",
+      "view_broadcast": "Kampanyaı görüntüle",
       "more_actions": "Diğer işlemler",
       "clone": "Kopyala",
       "send_now": "Şimdi gönder",
@@ -7571,26 +7588,26 @@
       "action": "İşlem"
     },
     "create_dialog": {
-      "title": "Yayın oluştur",
+      "title": "Kampanya oluştur",
       "subtitle": "Bir ad verin ve göndereceğiniz kanalı seçin.",
       "name": "Ad",
       "name_placeholder": "örn. Haziran lansmanı - Brezilya listesi",
       "name_hint": "Bu adı yalnızca siz ve ekibiniz görür.",
       "select_channel": "Bir kanal seçin",
       "no_channels": "Henüz bağlı kanal yok",
-      "no_channels_hint": "Yayına başlamak için Ayarlar'dan bir WhatsApp / Telegram / Messenger kanalı bağlayın.",
-      "payment_warning": "Meta Business Manager'daki WhatsApp hesabınıza bir ödeme yöntemi eklendiğinden emin olun, aksi hâlde yayın başarısız olabilir.",
-      "ready_hint": "Hazır — devam etmek için Yayın oluştur'a tıklayın.",
+      "no_channels_hint": "Kampanyaa başlamak için Ayarlar'dan bir WhatsApp / Telegram / Messenger kanalı bağlayın.",
+      "payment_warning": "Meta Business Manager'daki WhatsApp hesabınıza bir ödeme yöntemi eklendiğinden emin olun, aksi hâlde kampanya başarısız olabilir.",
+      "ready_hint": "Hazır — devam etmek için Kampanya oluştur'a tıklayın.",
       "choose_channel_hint": "Devam etmek için bir kanal seçin.",
-      "create_broadcast": "Yayın oluştur"
+      "create_broadcast": "Kampanya oluştur"
     },
     "clone": {
-      "title": "Yayını kopyala",
-      "campaign_name": "Yayın adı",
-      "name_placeholder": "Yayın adını girin..."
+      "title": "Kampanyaı kopyala",
+      "campaign_name": "Kampanya adı",
+      "name_placeholder": "Kampanya adını girin..."
     },
     "delete": {
-      "title": "Yayını sil",
+      "title": "Kampanyaı sil",
       "confirm_prefix": "Şunu silmek istediğinizden emin misiniz:",
       "confirm_suffix": "? Bu işlem geri alınamaz."
     },
@@ -7691,7 +7708,7 @@
       "is_false": "yanlış"
     },
     "stats": {
-      "total_broadcasts": "Toplam yayın",
+      "total_broadcasts": "Toplam kampanya",
       "this_month": "bu ay",
       "total_contacts": "Toplam kişi",
       "reachable_audience": "ulaşılabilir kitle",

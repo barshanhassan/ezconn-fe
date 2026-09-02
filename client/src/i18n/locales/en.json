@@ -2608,7 +2608,13 @@
     "toast_validation_title": "Validation",
     "tooltip_archive": "Archive",
     "tooltip_edit_role": "Edit Role",
-    "tooltip_restore": "Restore"
+    "tooltip_restore": "Restore",
+    "select_all": "Select All",
+    "label_enable_disable_all": "Enable / Disable all",
+    "tooltip_delete": "Delete",
+    "toast_deleted_desc": "Role deleted permanently.",
+    "confirm_delete_title": "Delete this role permanently?",
+    "confirm_delete_desc": "\"{{name}}\" will be permanently removed. This cannot be undone."
   },
   "teams_section": {
     "error_title": "Error",
@@ -2825,7 +2831,10 @@
     "kind_document": "document",
     "kind_file": "file",
     "copied_title": "Copied",
-    "copied_description": "Link copied to clipboard."
+    "copied_description": "Link copied to clipboard.",
+    "select": "Select",
+    "download": "Download",
+    "share": "Share"
   },
   "iframe_section": {
     "default_menu_title": "Iframes",
@@ -5002,7 +5011,7 @@
     "sidebar": {
       "workspace": "Workspace",
       "manage": "Manage",
-      "live_chat": "Live Chat",
+      "live_chat": "Inbox",
       "theme": "Theme",
       "manage_user": "Manage User",
       "roles_permissions": "Roles & Permissions",
@@ -5870,7 +5879,7 @@
       "chatting_with_channel": "Chatting with channel",
       "channel_fallback": "channel",
       "in_smart_flow": "In Smart Flow",
-      "not_in_smart_flow": "This contact is not currently part of any Smart Flow.",
+      "not_in_smart_flow": "Not currently part of any Smart Flow.",
       "remove": "Remove",
       "pause_automated_messages": "Pause Automated Messages",
       "pause_smart_flow": "Pause Smart Flow",
@@ -6118,7 +6127,11 @@
       "delivered": "Delivered",
       "read": "Read",
       "sent_by_automation": "Sent by automation",
-      "agent_fallback": "Agent"
+      "agent_fallback": "Agent",
+      "more_options": "More options",
+      "copy": "Copy",
+      "copied": "Copied",
+      "save_as": "Save as"
     },
     "template_card": {
       "label": "Template"
@@ -6137,7 +6150,7 @@
       "note_tab": "Note",
       "note_internal_hint": "Internal — not sent to customer",
       "mention_agent": "Mention an agent",
-      "note_placeholder": "Write an internal note… (@ to mention)",
+      "note_placeholder": "Create a note for your team members...",
       "reply_placeholder": "Type a message…",
       "format_text": "Format text",
       "bold": "Bold",
@@ -6161,7 +6174,10 @@
       "send_voice_message": "Send voice message",
       "geolocation_not_supported": "Geolocation not supported by this browser",
       "instagram_unsupported_files": "Instagram does not support document files. Only images, videos, and audio can be sent.",
-      "file_size_limit_exceeded": "File size limit exceeded: {{labels}}"
+      "file_size_limit_exceeded": "File size limit exceeded: {{labels}}",
+      "drag_to_resize": "Drag to resize",
+      "add_note_button": "Add a note",
+      "send_button": "Send"
     },
     "locked": {
       "assigned_to_other": "This conversation is assigned to {{name}}.",
@@ -6345,7 +6361,8 @@
       "delete_failed": "Delete failed",
       "folder_updated": "Folder updated",
       "couldnt_move": "Couldn't move",
-      "downloading": "Downloading..."
+      "downloading": "Downloading...",
+      "media_attached": "Media attached"
     }
   },
   "contact_profile_modal": {
@@ -6649,44 +6666,44 @@
       "remove": "Remove"
     },
     "toast": {
-      "created_title": "Broadcast created",
-      "created_desc": "Your broadcast has been created successfully.",
-      "updated_title": "Broadcast updated",
-      "updated_desc": "Your broadcast has been updated successfully.",
-      "deleted_title": "Broadcast deleted",
-      "deleted_desc": "The broadcast has been removed successfully.",
+      "created_title": "Campaign created",
+      "created_desc": "Your campaign has been created successfully.",
+      "updated_title": "Campaign updated",
+      "updated_desc": "Your campaign has been updated successfully.",
+      "deleted_title": "Campaign deleted",
+      "deleted_desc": "The campaign has been removed successfully.",
       "delete_failed": "Delete failed",
-      "cloned_title": "Broadcast cloned",
+      "cloned_title": "Campaign cloned",
       "cloned_desc": "{{name}} has been cloned to Draft.",
-      "archived_title": "Broadcast archived",
+      "archived_title": "Campaign archived",
       "archived_desc": "{{name}} has been archived.",
-      "bulk_archived_title": "Broadcasts archived",
-      "bulk_archived_desc_one": "{{count}} broadcast has been archived.",
-      "bulk_archived_desc_other": "{{count}} broadcasts have been archived.",
-      "bulk_deleted_title": "Broadcasts deleted",
-      "bulk_deleted_desc_one": "{{count}} broadcast has been deleted.",
-      "bulk_deleted_desc_other": "{{count}} broadcasts have been deleted.",
+      "bulk_archived_title": "Campaigns archived",
+      "bulk_archived_desc_one": "{{count}} campaign has been archived.",
+      "bulk_archived_desc_other": "{{count}} campaigns have been archived.",
+      "bulk_deleted_title": "Campaigns deleted",
+      "bulk_deleted_desc_one": "{{count}} campaign has been deleted.",
+      "bulk_deleted_desc_other": "{{count}} campaigns have been deleted.",
       "missing_details_title": "Missing details",
       "missing_details_desc": "Add a name and pick a channel first.",
       "complete_highlighted": "Please complete the highlighted fields",
       "unsupported_condition_title": "Unsupported audience condition",
       "unsupported_condition_desc": "{{fields}} can't be used to target an audience yet. Remove it, or filter by First / Last / Full name, Tag, or a custom field.",
       "no_whatsapp_title": "No WhatsApp account",
-      "no_whatsapp_desc": "Connect a WhatsApp account before creating broadcasts.",
-      "queued_title": "Broadcast queued",
+      "no_whatsapp_desc": "Connect a WhatsApp account before creating campaigns.",
+      "queued_title": "Campaign queued",
       "queued_desc": "It will be executed within the next minute.",
       "send_failed": "Send failed"
     },
     "composer": {
       "back": "Back",
       "channel_fallback": "Channel",
-      "untitled_broadcast": "Broadcast",
-      "performance_broadcast": "Performance broadcast",
+      "untitled_broadcast": "Campaign",
+      "performance_broadcast": "Performance campaign",
       "badge_edit": "Edit",
       "badge_draft": "Draft",
       "subtitle": "High-performance bulk messaging for your audience",
       "save_as_draft": "Save as draft",
-      "send_broadcast": "Send broadcast",
+      "send_broadcast": "Send campaign",
       "schedule_action": "Schedule",
       "step_audience": "Audience",
       "step_template": "Template",
@@ -6708,7 +6725,7 @@
       "audience_hint_empty": "Add a condition to target contacts",
       "audience_hint_unsupported": "This condition can't be used yet",
       "audience_hint_ready": "Will receive the message",
-      "no_audience_error": "There is no audience to send this broadcast to.",
+      "no_audience_error": "There is no audience to send this campaign to.",
       "section_configuration": "02 · Configuration",
       "message_and_schedule": "Message & schedule",
       "template": "Template",
@@ -6721,7 +6738,7 @@
       "contact_fields_note": "Contact fields are replaced with each recipient's own data when sending.",
       "fill_all_variables": "Fill every template variable",
       "pause_marketing_title": "Pause if Meta reclassifies to Marketing",
-      "pause_marketing_desc": "The system will verify whether Meta has automatically reclassified the message type as Marketing. If so, the broadcast will not be sent.",
+      "pause_marketing_desc": "The system will verify whether Meta has automatically reclassified the message type as Marketing. If so, the campaign will not be sent.",
       "schedule": "Schedule",
       "schedule_hint": "Pick date & time",
       "send_now": "Send now",
@@ -6772,21 +6789,21 @@
       "interval": "Interval"
     },
     "list": {
-      "title": "Broadcasts",
-      "subtitle": "Reach your contacts in minutes with our high-performance broadcast service",
+      "title": "Campaigns",
+      "subtitle": "Reach your contacts in minutes with our high-performance campaign service",
       "refresh": "Refresh",
-      "new_broadcast": "New broadcast",
-      "all_broadcasts": "All broadcasts",
+      "new_broadcast": "New campaign",
+      "all_broadcasts": "All campaigns",
       "search_placeholder": "Search by name or channel",
-      "loading": "Fetching broadcasts...",
-      "empty_title": "No broadcasts found",
-      "empty_desc": "Create your first broadcast to reach your customers in minutes",
+      "loading": "Fetching campaigns...",
+      "empty_title": "No campaigns found",
+      "empty_desc": "Create your first campaign to reach your customers in minutes",
       "create_one_now": "Create one now",
       "failed_count_one": "· {{count}} failed",
       "failed_count_other": "· {{count}} failed",
-      "edit_broadcast": "Edit broadcast",
-      "delete_broadcast": "Delete broadcast",
-      "view_broadcast": "View broadcast",
+      "edit_broadcast": "Edit campaign",
+      "delete_broadcast": "Delete campaign",
+      "view_broadcast": "View campaign",
       "more_actions": "More actions",
       "clone": "Clone",
       "send_now": "Send now",
@@ -6828,26 +6845,26 @@
       "action": "Action"
     },
     "create_dialog": {
-      "title": "Create a broadcast",
+      "title": "Create a campaign",
       "subtitle": "Name it and pick the channel you'll send from.",
       "name": "Name",
       "name_placeholder": "e.g. June launch - Brazil list",
       "name_hint": "Only you and your team will see this name.",
       "select_channel": "Select a channel",
       "no_channels": "No channels connected yet",
-      "no_channels_hint": "Connect a WhatsApp / Telegram / Messenger channel from Settings to start broadcasting.",
-      "payment_warning": "Make sure a payment method is added to your WhatsApp account in Meta Business Manager, otherwise the broadcast may fail.",
-      "ready_hint": "Ready — click Create broadcast to continue.",
+      "no_channels_hint": "Connect a WhatsApp / Telegram / Messenger channel from Settings to start campaigning.",
+      "payment_warning": "Make sure a payment method is added to your WhatsApp account in Meta Business Manager, otherwise the campaign may fail.",
+      "ready_hint": "Ready — click Create campaign to continue.",
       "choose_channel_hint": "Choose a channel to continue.",
-      "create_broadcast": "Create broadcast"
+      "create_broadcast": "Create campaign"
     },
     "clone": {
-      "title": "Clone broadcast",
-      "campaign_name": "Broadcast name",
-      "name_placeholder": "Enter broadcast name..."
+      "title": "Clone campaign",
+      "campaign_name": "Campaign name",
+      "name_placeholder": "Enter campaign name..."
     },
     "delete": {
-      "title": "Delete broadcast",
+      "title": "Delete campaign",
       "confirm_prefix": "Are you sure you want to delete",
       "confirm_suffix": "? This action cannot be undone."
     },
@@ -6948,7 +6965,7 @@
       "is_false": "is false"
     },
     "stats": {
-      "total_broadcasts": "Total broadcasts",
+      "total_broadcasts": "Total campaigns",
       "this_month": "this month",
       "total_contacts": "Total contacts",
       "reachable_audience": "reachable audience",

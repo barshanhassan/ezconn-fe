@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Xác thực",
     "tooltip_archive": "Lưu trữ",
     "tooltip_edit_role": "Chỉnh Sửa Vai Trò",
-    "tooltip_restore": "Khôi phục"
+    "tooltip_restore": "Khôi phục",
+    "select_all": "Chọn tất cả",
+    "label_enable_disable_all": "Bật / Tắt tất cả",
+    "tooltip_delete": "Xóa",
+    "toast_deleted_desc": "Đã xóa vĩnh viễn vai trò.",
+    "confirm_delete_title": "Xóa vĩnh viễn vai trò này?",
+    "confirm_delete_desc": "\"{{name}}\" sẽ bị xóa vĩnh viễn. Không thể hoàn tác."
   },
   "teams_section": {
     "error_title": "Lỗi",
@@ -3568,7 +3574,10 @@
     "kind_document": "tài liệu",
     "kind_file": "tệp",
     "copied_title": "Đã sao chép",
-    "copied_description": "Đã sao chép liên kết vào khay nhớ tạm."
+    "copied_description": "Đã sao chép liên kết vào khay nhớ tạm.",
+    "select": "Chọn",
+    "download": "Tải xuống",
+    "share": "Chia sẻ"
   },
   "iframe_section": {
     "default_menu_title": "Iframe",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Không gian làm việc",
       "manage": "Quản lý",
-      "live_chat": "Trò chuyện trực tiếp",
+      "live_chat": "Hộp thư đến",
       "theme": "Giao diện",
       "manage_user": "Quản lý người dùng",
       "roles_permissions": "Vai trò & Quyền",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Đang trò chuyện qua kênh",
       "channel_fallback": "kênh",
       "in_smart_flow": "Trong Smart Flow",
-      "not_in_smart_flow": "Liên hệ này hiện không thuộc bất kỳ Smart Flow nào.",
+      "not_in_smart_flow": "Hiện không thuộc Smart Flow nào.",
       "remove": "Xóa",
       "pause_automated_messages": "Tạm dừng tin nhắn tự động",
       "pause_smart_flow": "Tạm dừng Smart Flow",
@@ -6861,7 +6870,11 @@
       "delivered": "Đã nhận",
       "read": "Đã đọc",
       "sent_by_automation": "Được gửi tự động",
-      "agent_fallback": "Nhân viên"
+      "agent_fallback": "Nhân viên",
+      "more_options": "Tùy chọn khác",
+      "copy": "Sao chép",
+      "copied": "Đã sao chép",
+      "save_as": "Lưu dưới dạng"
     },
     "template_card": {
       "label": "Mẫu"
@@ -6880,7 +6893,7 @@
       "note_tab": "Ghi chú",
       "note_internal_hint": "Nội bộ — không gửi cho khách hàng",
       "mention_agent": "Gắn thẻ một nhân viên",
-      "note_placeholder": "Viết ghi chú nội bộ… (@ để gắn thẻ)",
+      "note_placeholder": "Tạo ghi chú cho các thành viên trong nhóm của bạn...",
       "reply_placeholder": "Nhập tin nhắn…",
       "format_text": "Định dạng văn bản",
       "bold": "In đậm",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Gửi tin nhắn thoại",
       "geolocation_not_supported": "Trình duyệt này không hỗ trợ định vị",
       "instagram_unsupported_files": "Instagram không hỗ trợ tệp tài liệu. Chỉ có thể gửi hình ảnh, video và âm thanh.",
-      "file_size_limit_exceeded": "Vượt quá giới hạn dung lượng tệp: {{labels}}"
+      "file_size_limit_exceeded": "Vượt quá giới hạn dung lượng tệp: {{labels}}",
+      "drag_to_resize": "Kéo để thay đổi kích thước",
+      "add_note_button": "Thêm ghi chú",
+      "send_button": "Gửi"
     },
     "locked": {
       "assigned_to_other": "Cuộc trò chuyện này đã được phân công cho {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Xóa thất bại",
       "folder_updated": "Đã cập nhật thư mục",
       "couldnt_move": "Không thể chuyển",
-      "downloading": "Đang tải xuống..."
+      "downloading": "Đang tải xuống...",
+      "media_attached": "Đã đính kèm phương tiện"
     }
   },
   "contact_profile_modal": {
@@ -7392,39 +7409,39 @@
       "remove": "Gỡ bỏ"
     },
     "toast": {
-      "created_title": "Đã tạo chiến dịch phát",
-      "created_desc": "Chiến dịch phát của bạn đã được tạo thành công.",
-      "updated_title": "Đã cập nhật chiến dịch phát",
-      "updated_desc": "Chiến dịch phát của bạn đã được cập nhật thành công.",
-      "deleted_title": "Đã xóa chiến dịch phát",
-      "deleted_desc": "Chiến dịch phát đã được xóa thành công.",
+      "created_title": "Đã tạo chiến dịch",
+      "created_desc": "Chiến dịch của bạn đã được tạo thành công.",
+      "updated_title": "Đã cập nhật chiến dịch",
+      "updated_desc": "Chiến dịch của bạn đã được cập nhật thành công.",
+      "deleted_title": "Đã xóa chiến dịch",
+      "deleted_desc": "Chiến dịch đã được xóa thành công.",
       "delete_failed": "Xóa không thành công",
-      "cloned_title": "Đã nhân bản chiến dịch phát",
+      "cloned_title": "Đã nhân bản chiến dịch",
       "cloned_desc": "{{name}} đã được nhân bản thành bản nháp.",
-      "archived_title": "Đã lưu trữ chiến dịch phát",
+      "archived_title": "Đã lưu trữ chiến dịch",
       "archived_desc": "{{name}} đã được lưu trữ.",
-      "bulk_archived_title": "Đã lưu trữ các chiến dịch phát",
-      "bulk_archived_desc_one": "Đã lưu trữ {{count}} chiến dịch phát.",
-      "bulk_archived_desc_other": "Đã lưu trữ {{count}} chiến dịch phát.",
-      "bulk_deleted_title": "Đã xóa các chiến dịch phát",
-      "bulk_deleted_desc_one": "Đã xóa {{count}} chiến dịch phát.",
-      "bulk_deleted_desc_other": "Đã xóa {{count}} chiến dịch phát.",
+      "bulk_archived_title": "Đã lưu trữ các chiến dịch",
+      "bulk_archived_desc_one": "Đã lưu trữ {{count}} chiến dịch.",
+      "bulk_archived_desc_other": "Đã lưu trữ {{count}} chiến dịch.",
+      "bulk_deleted_title": "Đã xóa các chiến dịch",
+      "bulk_deleted_desc_one": "Đã xóa {{count}} chiến dịch.",
+      "bulk_deleted_desc_other": "Đã xóa {{count}} chiến dịch.",
       "missing_details_title": "Thiếu thông tin",
       "missing_details_desc": "Hãy nhập tên và chọn kênh trước.",
       "complete_highlighted": "Vui lòng hoàn tất các trường được đánh dấu",
       "unsupported_condition_title": "Điều kiện đối tượng chưa được hỗ trợ",
       "unsupported_condition_desc": "{{fields}} chưa thể dùng để nhắm đối tượng. Hãy gỡ bỏ, hoặc lọc theo tên, họ, họ tên đầy đủ, thẻ hoặc trường tùy chỉnh.",
       "no_whatsapp_title": "Chưa có tài khoản WhatsApp",
-      "no_whatsapp_desc": "Hãy kết nối một tài khoản WhatsApp trước khi tạo chiến dịch phát.",
-      "queued_title": "Chiến dịch phát đã vào hàng đợi",
+      "no_whatsapp_desc": "Hãy kết nối một tài khoản WhatsApp trước khi tạo chiến dịch.",
+      "queued_title": "Chiến dịch đã vào hàng đợi",
       "queued_desc": "Sẽ được thực thi trong vòng một phút tới.",
       "send_failed": "Gửi không thành công"
     },
     "composer": {
       "back": "Quay lại",
       "channel_fallback": "Kênh",
-      "untitled_broadcast": "Chiến dịch phát",
-      "performance_broadcast": "Chiến dịch phát hiệu năng cao",
+      "untitled_broadcast": "Chiến dịch",
+      "performance_broadcast": "Chiến dịch hiệu năng cao",
       "badge_edit": "Chỉnh sửa",
       "badge_draft": "Bản nháp",
       "subtitle": "Nhắn tin hàng loạt hiệu năng cao cho đối tượng của bạn",
@@ -7515,21 +7532,21 @@
       "interval": "Khoảng cách"
     },
     "list": {
-      "title": "Chiến dịch phát",
+      "title": "Chiến dịch",
       "subtitle": "Tiếp cận liên hệ của bạn trong vài phút với dịch vụ phát hiệu năng cao",
       "refresh": "Làm mới",
-      "new_broadcast": "Chiến dịch phát mới",
-      "all_broadcasts": "Tất cả chiến dịch phát",
+      "new_broadcast": "Chiến dịch mới",
+      "all_broadcasts": "Tất cả chiến dịch",
       "search_placeholder": "Tìm theo tên hoặc kênh",
-      "loading": "Đang tải chiến dịch phát...",
-      "empty_title": "Không tìm thấy chiến dịch phát nào",
-      "empty_desc": "Tạo chiến dịch phát đầu tiên để tiếp cận khách hàng trong vài phút",
+      "loading": "Đang tải chiến dịch...",
+      "empty_title": "Không tìm thấy chiến dịch nào",
+      "empty_desc": "Tạo chiến dịch đầu tiên để tiếp cận khách hàng trong vài phút",
       "create_one_now": "Tạo ngay",
       "failed_count_one": "· {{count}} thất bại",
       "failed_count_other": "· {{count}} thất bại",
-      "edit_broadcast": "Chỉnh sửa chiến dịch phát",
-      "delete_broadcast": "Xóa chiến dịch phát",
-      "view_broadcast": "Xem chiến dịch phát",
+      "edit_broadcast": "Chỉnh sửa chiến dịch",
+      "delete_broadcast": "Xóa chiến dịch",
+      "view_broadcast": "Xem chiến dịch",
       "more_actions": "Thao tác khác",
       "clone": "Nhân bản",
       "send_now": "Gửi ngay",
@@ -7571,7 +7588,7 @@
       "action": "Thao tác"
     },
     "create_dialog": {
-      "title": "Tạo chiến dịch phát",
+      "title": "Tạo chiến dịch",
       "subtitle": "Đặt tên và chọn kênh bạn sẽ gửi đi.",
       "name": "Tên",
       "name_placeholder": "ví dụ: Ra mắt tháng 6 - danh sách Brazil",
@@ -7580,17 +7597,17 @@
       "no_channels": "Chưa kết nối kênh nào",
       "no_channels_hint": "Kết nối kênh WhatsApp / Telegram / Messenger trong Cài đặt để bắt đầu phát tin.",
       "payment_warning": "Hãy đảm bảo tài khoản WhatsApp của bạn trong Meta Business Manager đã thêm phương thức thanh toán, nếu không chiến dịch có thể thất bại.",
-      "ready_hint": "Đã sẵn sàng — nhấn Tạo chiến dịch phát để tiếp tục.",
+      "ready_hint": "Đã sẵn sàng — nhấn Tạo chiến dịch để tiếp tục.",
       "choose_channel_hint": "Chọn một kênh để tiếp tục.",
-      "create_broadcast": "Tạo chiến dịch phát"
+      "create_broadcast": "Tạo chiến dịch"
     },
     "clone": {
-      "title": "Nhân bản chiến dịch phát",
-      "campaign_name": "Tên chiến dịch phát",
-      "name_placeholder": "Nhập tên chiến dịch phát..."
+      "title": "Nhân bản chiến dịch",
+      "campaign_name": "Tên chiến dịch",
+      "name_placeholder": "Nhập tên chiến dịch..."
     },
     "delete": {
-      "title": "Xóa chiến dịch phát",
+      "title": "Xóa chiến dịch",
       "confirm_prefix": "Bạn có chắc muốn xóa",
       "confirm_suffix": "? Hành động này không thể hoàn tác."
     },
@@ -7691,7 +7708,7 @@
       "is_false": "là sai"
     },
     "stats": {
-      "total_broadcasts": "Tổng số chiến dịch phát",
+      "total_broadcasts": "Tổng số chiến dịch",
       "this_month": "tháng này",
       "total_contacts": "Tổng số liên hệ",
       "reachable_audience": "đối tượng có thể tiếp cận",

@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Validation",
     "tooltip_archive": "Archiver",
     "tooltip_edit_role": "Modifier le rôle",
-    "tooltip_restore": "Restaurer"
+    "tooltip_restore": "Restaurer",
+    "select_all": "Tout sélectionner",
+    "label_enable_disable_all": "Activer / désactiver tout",
+    "tooltip_delete": "Supprimer",
+    "toast_deleted_desc": "Rôle supprimé définitivement.",
+    "confirm_delete_title": "Supprimer définitivement ce rôle ?",
+    "confirm_delete_desc": "\"{{name}}\" sera définitivement supprimé. Cette action est irréversible."
   },
   "teams_section": {
     "error_title": "Erreur",
@@ -3568,7 +3574,10 @@
     "kind_document": "document",
     "kind_file": "fichier",
     "copied_title": "Copié",
-    "copied_description": "Lien copié dans le presse-papiers."
+    "copied_description": "Lien copié dans le presse-papiers.",
+    "select": "Sélectionner",
+    "download": "Télécharger",
+    "share": "Partager"
   },
   "iframe_section": {
     "default_menu_title": "Iframes",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Espace de travail",
       "manage": "Gérer",
-      "live_chat": "Chat en direct",
+      "live_chat": "Boîte de réception",
       "theme": "Thème",
       "manage_user": "Gérer l'utilisateur",
       "roles_permissions": "Rôles et autorisations",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Discute via le canal",
       "channel_fallback": "canal",
       "in_smart_flow": "Dans un flux intelligent",
-      "not_in_smart_flow": "Ce contact ne fait actuellement partie d'aucun flux intelligent.",
+      "not_in_smart_flow": "Ne fait partie d'aucun Smart Flow.",
       "remove": "Retirer",
       "pause_automated_messages": "Suspendre les messages automatisés",
       "pause_smart_flow": "Suspendre le flux intelligent",
@@ -6861,7 +6870,11 @@
       "delivered": "Livré",
       "read": "Lu",
       "sent_by_automation": "Envoyé par automatisation",
-      "agent_fallback": "Agent"
+      "agent_fallback": "Agent",
+      "more_options": "Plus d'options",
+      "copy": "Copier",
+      "copied": "Copié",
+      "save_as": "Enregistrer sous"
     },
     "template_card": {
       "label": "Modèle"
@@ -6880,7 +6893,7 @@
       "note_tab": "Note",
       "note_internal_hint": "Interne — non envoyé au client",
       "mention_agent": "Mentionner un agent",
-      "note_placeholder": "Rédigez une note interne… (@ pour mentionner)",
+      "note_placeholder": "Créez une note pour les membres de votre équipe...",
       "reply_placeholder": "Écrivez un message…",
       "format_text": "Mettre en forme le texte",
       "bold": "Gras",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Envoyer le message vocal",
       "geolocation_not_supported": "La géolocalisation n'est pas prise en charge par ce navigateur",
       "instagram_unsupported_files": "Instagram ne prend pas en charge les fichiers documents. Seuls les images, vidéos et fichiers audio peuvent être envoyés.",
-      "file_size_limit_exceeded": "Limite de taille de fichier dépassée : {{labels}}"
+      "file_size_limit_exceeded": "Limite de taille de fichier dépassée : {{labels}}",
+      "drag_to_resize": "Faites glisser pour redimensionner",
+      "add_note_button": "Ajouter une note",
+      "send_button": "Envoyer"
     },
     "locked": {
       "assigned_to_other": "Cette conversation est assignée à {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Échec de la suppression",
       "folder_updated": "Dossier mis à jour",
       "couldnt_move": "Impossible de déplacer",
-      "downloading": "Téléchargement en cours..."
+      "downloading": "Téléchargement en cours...",
+      "media_attached": "Média joint"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "Retirer"
     },
     "toast": {
-      "created_title": "Diffusion créée",
-      "created_desc": "Votre diffusion a été créée avec succès.",
-      "updated_title": "Diffusion mise à jour",
-      "updated_desc": "Votre diffusion a été mise à jour avec succès.",
-      "deleted_title": "Diffusion supprimée",
-      "deleted_desc": "La diffusion a été supprimée avec succès.",
+      "created_title": "Campagne créée",
+      "created_desc": "Votre campagne a été créée avec succès.",
+      "updated_title": "Campagne mise à jour",
+      "updated_desc": "Votre campagne a été mise à jour avec succès.",
+      "deleted_title": "Campagne supprimée",
+      "deleted_desc": "La campagne a été supprimée avec succès.",
       "delete_failed": "Échec de la suppression",
-      "cloned_title": "Diffusion dupliquée",
+      "cloned_title": "Campagne dupliquée",
       "cloned_desc": "{{name}} a été dupliquée en brouillon.",
-      "archived_title": "Diffusion archivée",
+      "archived_title": "Campagne archivée",
       "archived_desc": "{{name}} a été archivée.",
-      "bulk_archived_title": "Diffusions archivées",
-      "bulk_archived_desc_one": "{{count}} diffusion a été archivée.",
-      "bulk_archived_desc_other": "{{count}} diffusions ont été archivées.",
-      "bulk_deleted_title": "Diffusions supprimées",
-      "bulk_deleted_desc_one": "{{count}} diffusion a été supprimée.",
-      "bulk_deleted_desc_other": "{{count}} diffusions ont été supprimées.",
+      "bulk_archived_title": "Campagnes archivées",
+      "bulk_archived_desc_one": "{{count}} campagne a été archivée.",
+      "bulk_archived_desc_other": "{{count}} campagnes ont été archivées.",
+      "bulk_deleted_title": "Campagnes supprimées",
+      "bulk_deleted_desc_one": "{{count}} campagne a été supprimée.",
+      "bulk_deleted_desc_other": "{{count}} campagnes ont été supprimées.",
       "missing_details_title": "Informations manquantes",
       "missing_details_desc": "Ajoutez d'abord un nom et choisissez un canal.",
       "complete_highlighted": "Veuillez compléter les champs en surbrillance",
       "unsupported_condition_title": "Condition d'audience non prise en charge",
       "unsupported_condition_desc": "{{fields}} ne peut pas encore servir à cibler une audience. Retirez-la, ou filtrez par prénom / nom / nom complet, étiquette ou champ personnalisé.",
       "no_whatsapp_title": "Aucun compte WhatsApp",
-      "no_whatsapp_desc": "Connectez un compte WhatsApp avant de créer des diffusions.",
-      "queued_title": "Diffusion mise en file d'attente",
+      "no_whatsapp_desc": "Connectez un compte WhatsApp avant de créer des campagnes.",
+      "queued_title": "Campagne mise en file d'attente",
       "queued_desc": "Elle sera exécutée dans la minute qui vient.",
       "send_failed": "Échec de l'envoi"
     },
     "composer": {
       "back": "Retour",
       "channel_fallback": "Canal",
-      "untitled_broadcast": "Diffusion",
-      "performance_broadcast": "Diffusion haute performance",
+      "untitled_broadcast": "Campagne",
+      "performance_broadcast": "Campagne haute performance",
       "badge_edit": "Modifier",
       "badge_draft": "Brouillon",
       "subtitle": "Messagerie de masse haute performance pour votre audience",
       "save_as_draft": "Enregistrer comme brouillon",
-      "send_broadcast": "Envoyer la diffusion",
+      "send_broadcast": "Envoyer la campagne",
       "schedule_action": "Planifier",
       "step_audience": "Audience",
       "step_template": "Modèle",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "Ajoutez une condition pour cibler des contacts",
       "audience_hint_unsupported": "Cette condition n'est pas encore utilisable",
       "audience_hint_ready": "Recevront le message",
-      "no_audience_error": "Aucune audience à qui envoyer cette diffusion.",
+      "no_audience_error": "Aucune audience à qui envoyer cette campagne.",
       "section_configuration": "02 · Configuration",
       "message_and_schedule": "Message et planification",
       "template": "Modèle",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "Les champs de contact sont remplacés par les données propres à chaque destinataire lors de l'envoi.",
       "fill_all_variables": "Remplissez toutes les variables du modèle",
       "pause_marketing_title": "Suspendre si Meta reclasse en Marketing",
-      "pause_marketing_desc": "Le système vérifiera si Meta a automatiquement reclassé le type de message en Marketing. Si c'est le cas, la diffusion ne sera pas envoyée.",
+      "pause_marketing_desc": "Le système vérifiera si Meta a automatiquement reclassé le type de message en Marketing. Si c'est le cas, la campagne ne sera pas envoyée.",
       "schedule": "Planification",
       "schedule_hint": "Choisir la date et l'heure",
       "send_now": "Envoyer maintenant",
@@ -7515,21 +7532,21 @@
       "interval": "Intervalle"
     },
     "list": {
-      "title": "Diffusions",
-      "subtitle": "Touchez vos contacts en quelques minutes grâce à notre service de diffusion haute performance",
+      "title": "Campagnes",
+      "subtitle": "Touchez vos contacts en quelques minutes grâce à notre service de campagne haute performance",
       "refresh": "Actualiser",
-      "new_broadcast": "Nouvelle diffusion",
-      "all_broadcasts": "Toutes les diffusions",
+      "new_broadcast": "Nouvelle campagne",
+      "all_broadcasts": "Toutes les campagnes",
       "search_placeholder": "Rechercher par nom ou canal",
-      "loading": "Chargement des diffusions...",
-      "empty_title": "Aucune diffusion trouvée",
-      "empty_desc": "Créez votre première diffusion pour toucher vos clients en quelques minutes",
+      "loading": "Chargement des campagnes...",
+      "empty_title": "Aucune campagne trouvée",
+      "empty_desc": "Créez votre première campagne pour toucher vos clients en quelques minutes",
       "create_one_now": "En créer une maintenant",
       "failed_count_one": "· {{count}} échec",
       "failed_count_other": "· {{count}} échecs",
-      "edit_broadcast": "Modifier la diffusion",
-      "delete_broadcast": "Supprimer la diffusion",
-      "view_broadcast": "Voir la diffusion",
+      "edit_broadcast": "Modifier la campagne",
+      "delete_broadcast": "Supprimer la campagne",
+      "view_broadcast": "Voir la campagne",
       "more_actions": "Plus d'actions",
       "clone": "Dupliquer",
       "send_now": "Envoyer maintenant",
@@ -7571,7 +7588,7 @@
       "action": "Action"
     },
     "create_dialog": {
-      "title": "Créer une diffusion",
+      "title": "Créer une campagne",
       "subtitle": "Donnez-lui un nom et choisissez le canal d'envoi.",
       "name": "Nom",
       "name_placeholder": "ex. Lancement de juin - liste Brésil",
@@ -7579,18 +7596,18 @@
       "select_channel": "Sélectionner un canal",
       "no_channels": "Aucun canal connecté pour l'instant",
       "no_channels_hint": "Connectez un canal WhatsApp / Telegram / Messenger depuis les Paramètres pour commencer à diffuser.",
-      "payment_warning": "Vérifiez qu'un moyen de paiement est bien ajouté à votre compte WhatsApp dans Meta Business Manager, sinon la diffusion risque d'échouer.",
-      "ready_hint": "Prêt — cliquez sur Créer la diffusion pour continuer.",
+      "payment_warning": "Vérifiez qu'un moyen de paiement est bien ajouté à votre compte WhatsApp dans Meta Business Manager, sinon la campagne risque d'échouer.",
+      "ready_hint": "Prêt — cliquez sur Créer la campagne pour continuer.",
       "choose_channel_hint": "Choisissez un canal pour continuer.",
-      "create_broadcast": "Créer la diffusion"
+      "create_broadcast": "Créer la campagne"
     },
     "clone": {
-      "title": "Dupliquer la diffusion",
-      "campaign_name": "Nom de la diffusion",
-      "name_placeholder": "Saisissez le nom de la diffusion..."
+      "title": "Dupliquer la campagne",
+      "campaign_name": "Nom de la campagne",
+      "name_placeholder": "Saisissez le nom de la campagne..."
     },
     "delete": {
-      "title": "Supprimer la diffusion",
+      "title": "Supprimer la campagne",
       "confirm_prefix": "Voulez-vous vraiment supprimer",
       "confirm_suffix": " ? Cette action est irréversible."
     },
@@ -7691,7 +7708,7 @@
       "is_false": "est faux"
     },
     "stats": {
-      "total_broadcasts": "Diffusions totales",
+      "total_broadcasts": "Campagnes totales",
       "this_month": "ce mois-ci",
       "total_contacts": "Contacts totaux",
       "reachable_audience": "audience joignable",

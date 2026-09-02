@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Convalida",
     "tooltip_archive": "Archivia",
     "tooltip_edit_role": "Modifica ruolo",
-    "tooltip_restore": "Ripristina"
+    "tooltip_restore": "Ripristina",
+    "select_all": "Seleziona tutto",
+    "label_enable_disable_all": "Abilita / disabilita tutto",
+    "tooltip_delete": "Elimina",
+    "toast_deleted_desc": "Ruolo eliminato definitivamente.",
+    "confirm_delete_title": "Eliminare definitivamente questo ruolo?",
+    "confirm_delete_desc": "\"{{name}}\" verrà eliminato definitivamente. Questa azione non può essere annullata."
   },
   "teams_section": {
     "error_title": "Errore",
@@ -3568,7 +3574,10 @@
     "kind_document": "documento",
     "kind_file": "file",
     "copied_title": "Copiato",
-    "copied_description": "Link copiato negli appunti."
+    "copied_description": "Link copiato negli appunti.",
+    "select": "Seleziona",
+    "download": "Scarica",
+    "share": "Condividi"
   },
   "iframe_section": {
     "default_menu_title": "Iframe",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Area di lavoro",
       "manage": "Gestisci",
-      "live_chat": "Chat dal vivo",
+      "live_chat": "Posta in arrivo",
       "theme": "Tema",
       "manage_user": "Gestisci utente",
       "roles_permissions": "Ruoli e permessi",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Chat tramite canale",
       "channel_fallback": "canale",
       "in_smart_flow": "In uno Smart Flow",
-      "not_in_smart_flow": "Questo contatto al momento non fa parte di alcuno Smart Flow.",
+      "not_in_smart_flow": "Non fa parte di alcun Smart Flow.",
       "remove": "Rimuovi",
       "pause_automated_messages": "Metti in pausa i messaggi automatici",
       "pause_smart_flow": "Metti in pausa lo Smart Flow",
@@ -6861,7 +6870,11 @@
       "delivered": "Consegnato",
       "read": "Letto",
       "sent_by_automation": "Inviato da automazione",
-      "agent_fallback": "Agente"
+      "agent_fallback": "Agente",
+      "more_options": "Altre opzioni",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "save_as": "Salva con nome"
     },
     "template_card": {
       "label": "Modello"
@@ -6880,7 +6893,7 @@
       "note_tab": "Nota",
       "note_internal_hint": "Interna — non inviata al cliente",
       "mention_agent": "Menziona un agente",
-      "note_placeholder": "Scrivi una nota interna… (@ per menzionare)",
+      "note_placeholder": "Crea una nota per i membri del tuo team...",
       "reply_placeholder": "Scrivi un messaggio…",
       "format_text": "Formatta testo",
       "bold": "Grassetto",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Invia messaggio vocale",
       "geolocation_not_supported": "Geolocalizzazione non supportata da questo browser",
       "instagram_unsupported_files": "Instagram non supporta i file di documento. Puoi inviare solo immagini, video e audio.",
-      "file_size_limit_exceeded": "Limite dimensione file superato: {{labels}}"
+      "file_size_limit_exceeded": "Limite dimensione file superato: {{labels}}",
+      "drag_to_resize": "Trascina per ridimensionare",
+      "add_note_button": "Aggiungi nota",
+      "send_button": "Invia"
     },
     "locked": {
       "assigned_to_other": "Questa conversazione è assegnata a {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Eliminazione non riuscita",
       "folder_updated": "Cartella aggiornata",
       "couldnt_move": "Impossibile spostare",
-      "downloading": "Download in corso..."
+      "downloading": "Download in corso...",
+      "media_attached": "Media allegato"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "Rimuovi"
     },
     "toast": {
-      "created_title": "Broadcast creato",
-      "created_desc": "Il tuo broadcast è stato creato correttamente.",
-      "updated_title": "Broadcast aggiornato",
-      "updated_desc": "Il tuo broadcast è stato aggiornato correttamente.",
-      "deleted_title": "Broadcast eliminato",
-      "deleted_desc": "Il broadcast è stato rimosso correttamente.",
+      "created_title": "Campagna creato",
+      "created_desc": "Il tuo campagna è stato creato correttamente.",
+      "updated_title": "Campagna aggiornato",
+      "updated_desc": "Il tuo campagna è stato aggiornato correttamente.",
+      "deleted_title": "Campagna eliminato",
+      "deleted_desc": "Il campagna è stato rimosso correttamente.",
       "delete_failed": "Eliminazione non riuscita",
-      "cloned_title": "Broadcast duplicato",
+      "cloned_title": "Campagna duplicato",
       "cloned_desc": "{{name}} è stato duplicato come bozza.",
-      "archived_title": "Broadcast archiviato",
+      "archived_title": "Campagna archiviato",
       "archived_desc": "{{name}} è stato archiviato.",
-      "bulk_archived_title": "Broadcast archiviati",
-      "bulk_archived_desc_one": "{{count}} broadcast è stato archiviato.",
-      "bulk_archived_desc_other": "{{count}} broadcast sono stati archiviati.",
-      "bulk_deleted_title": "Broadcast eliminati",
-      "bulk_deleted_desc_one": "{{count}} broadcast è stato eliminato.",
-      "bulk_deleted_desc_other": "{{count}} broadcast sono stati eliminati.",
+      "bulk_archived_title": "Campagna archiviati",
+      "bulk_archived_desc_one": "{{count}} campagna è stato archiviato.",
+      "bulk_archived_desc_other": "{{count}} campagna sono stati archiviati.",
+      "bulk_deleted_title": "Campagna eliminati",
+      "bulk_deleted_desc_one": "{{count}} campagna è stato eliminato.",
+      "bulk_deleted_desc_other": "{{count}} campagna sono stati eliminati.",
       "missing_details_title": "Dati mancanti",
       "missing_details_desc": "Aggiungi prima un nome e scegli un canale.",
       "complete_highlighted": "Completa i campi evidenziati",
       "unsupported_condition_title": "Condizione di pubblico non supportata",
       "unsupported_condition_desc": "{{fields}} non può ancora essere usato per targettizzare un pubblico. Rimuovilo oppure filtra per nome, cognome, nome completo, tag o un campo personalizzato.",
       "no_whatsapp_title": "Nessun account WhatsApp",
-      "no_whatsapp_desc": "Collega un account WhatsApp prima di creare broadcast.",
-      "queued_title": "Broadcast in coda",
+      "no_whatsapp_desc": "Collega un account WhatsApp prima di creare campagna.",
+      "queued_title": "Campagna in coda",
       "queued_desc": "Verrà eseguito entro il prossimo minuto.",
       "send_failed": "Invio non riuscito"
     },
     "composer": {
       "back": "Indietro",
       "channel_fallback": "Canale",
-      "untitled_broadcast": "Broadcast",
-      "performance_broadcast": "Broadcast ad alte prestazioni",
+      "untitled_broadcast": "Campagna",
+      "performance_broadcast": "Campagna ad alte prestazioni",
       "badge_edit": "Modifica",
       "badge_draft": "Bozza",
       "subtitle": "Messaggistica di massa ad alte prestazioni per il tuo pubblico",
       "save_as_draft": "Salva come bozza",
-      "send_broadcast": "Invia broadcast",
+      "send_broadcast": "Invia campagna",
       "schedule_action": "Pianifica",
       "step_audience": "Pubblico",
       "step_template": "Modello",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "Aggiungi una condizione per targettizzare i contatti",
       "audience_hint_unsupported": "Questa condizione non è ancora utilizzabile",
       "audience_hint_ready": "Riceveranno il messaggio",
-      "no_audience_error": "Non c'è alcun pubblico a cui inviare questo broadcast.",
+      "no_audience_error": "Non c'è alcun pubblico a cui inviare questo campagna.",
       "section_configuration": "02 · Configurazione",
       "message_and_schedule": "Messaggio e pianificazione",
       "template": "Modello",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "In fase di invio i campi contatto vengono sostituiti con i dati di ciascun destinatario.",
       "fill_all_variables": "Compila tutte le variabili del modello",
       "pause_marketing_title": "Sospendi se Meta riclassifica come Marketing",
-      "pause_marketing_desc": "Il sistema verificherà se Meta ha riclassificato automaticamente il tipo di messaggio come Marketing. In tal caso il broadcast non verrà inviato.",
+      "pause_marketing_desc": "Il sistema verificherà se Meta ha riclassificato automaticamente il tipo di messaggio come Marketing. In tal caso il campagna non verrà inviato.",
       "schedule": "Pianificazione",
       "schedule_hint": "Scegli data e ora",
       "send_now": "Invia ora",
@@ -7515,21 +7532,21 @@
       "interval": "Intervallo"
     },
     "list": {
-      "title": "Broadcast",
-      "subtitle": "Raggiungi i tuoi contatti in pochi minuti con il nostro servizio broadcast ad alte prestazioni",
+      "title": "Campagne",
+      "subtitle": "Raggiungi i tuoi contatti in pochi minuti con il nostro servizio campagna ad alte prestazioni",
       "refresh": "Aggiorna",
-      "new_broadcast": "Nuovo broadcast",
-      "all_broadcasts": "Tutti i broadcast",
+      "new_broadcast": "Nuovo campagna",
+      "all_broadcasts": "Tutti i campagna",
       "search_placeholder": "Cerca per nome o canale",
-      "loading": "Caricamento dei broadcast...",
-      "empty_title": "Nessun broadcast trovato",
-      "empty_desc": "Crea il tuo primo broadcast per raggiungere i clienti in pochi minuti",
+      "loading": "Caricamento dei campagna...",
+      "empty_title": "Nessun campagna trovato",
+      "empty_desc": "Crea il tuo primo campagna per raggiungere i clienti in pochi minuti",
       "create_one_now": "Creane uno ora",
       "failed_count_one": "· {{count}} non riuscito",
       "failed_count_other": "· {{count}} non riusciti",
-      "edit_broadcast": "Modifica broadcast",
-      "delete_broadcast": "Elimina broadcast",
-      "view_broadcast": "Visualizza broadcast",
+      "edit_broadcast": "Modifica campagna",
+      "delete_broadcast": "Elimina campagna",
+      "view_broadcast": "Visualizza campagna",
       "more_actions": "Altre azioni",
       "clone": "Duplica",
       "send_now": "Invia ora",
@@ -7571,26 +7588,26 @@
       "action": "Azione"
     },
     "create_dialog": {
-      "title": "Crea un broadcast",
+      "title": "Crea un campagna",
       "subtitle": "Assegnagli un nome e scegli il canale da cui inviare.",
       "name": "Nome",
       "name_placeholder": "es. Lancio di giugno - lista Brasile",
       "name_hint": "Solo tu e il tuo team vedrete questo nome.",
       "select_channel": "Seleziona un canale",
       "no_channels": "Nessun canale ancora collegato",
-      "no_channels_hint": "Collega un canale WhatsApp / Telegram / Messenger dalle Impostazioni per iniziare a inviare broadcast.",
-      "payment_warning": "Assicurati che sia stato aggiunto un metodo di pagamento al tuo account WhatsApp in Meta Business Manager, altrimenti il broadcast potrebbe fallire.",
-      "ready_hint": "Pronto — clicca su Crea broadcast per continuare.",
+      "no_channels_hint": "Collega un canale WhatsApp / Telegram / Messenger dalle Impostazioni per iniziare a inviare campagna.",
+      "payment_warning": "Assicurati che sia stato aggiunto un metodo di pagamento al tuo account WhatsApp in Meta Business Manager, altrimenti il campagna potrebbe fallire.",
+      "ready_hint": "Pronto — clicca su Crea campagna per continuare.",
       "choose_channel_hint": "Scegli un canale per continuare.",
-      "create_broadcast": "Crea broadcast"
+      "create_broadcast": "Crea campagna"
     },
     "clone": {
-      "title": "Duplica broadcast",
-      "campaign_name": "Nome del broadcast",
-      "name_placeholder": "Inserisci il nome del broadcast..."
+      "title": "Duplica campagna",
+      "campaign_name": "Nome del campagna",
+      "name_placeholder": "Inserisci il nome del campagna..."
     },
     "delete": {
-      "title": "Elimina broadcast",
+      "title": "Elimina campagna",
       "confirm_prefix": "Vuoi davvero eliminare",
       "confirm_suffix": "? Questa azione non può essere annullata."
     },
@@ -7691,7 +7708,7 @@
       "is_false": "è falso"
     },
     "stats": {
-      "total_broadcasts": "Broadcast totali",
+      "total_broadcasts": "Campagna totali",
       "this_month": "questo mese",
       "total_contacts": "Contatti totali",
       "reachable_audience": "pubblico raggiungibile",

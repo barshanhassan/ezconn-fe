@@ -36,7 +36,11 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface MediaGallerySectionProps {
-  onSelect?: (file: any) => void;
+  // May be async (the composer picker awaits a server-side download before
+  // resolving) — awaited here so the item's Select button can show a
+  // loading state instead of leaving the agent guessing whether the click
+  // registered.
+  onSelect?: (file: any) => void | Promise<void>;
 }
 
 export default function MediaGallerySection({ onSelect }: MediaGallerySectionProps) {
@@ -521,59 +525,66 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                           getIcon(item.type, "w-10 h-10")}
                       </div>
 
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-primary/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      {/* Hover overlay — clicking anywhere on the tile itself
+                          selects/opens it (the outer div's onClick); this is
+                          just the "..." menu for secondary actions, sitting
+                          on top of the media itself — not a full tint over
+                          the thumbnail. */}
+                      <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         {item.type !== "folder" && (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                downloadObject(item.id, item.name);
-                              }}
-                              className="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                            >
-                              <Download size={14} strokeWidth={2.5} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(item.url);
-                                toast({ title: t("media_gallery_section.copied_title"), description: t("media_gallery_section.copied_description") });
-                              }}
-                              className="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                            >
-                              <Share2 size={14} strokeWidth={2.5} />
-                            </button>
-                          </>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center hover:scale-110 transition-transform shadow-md"
+                              >
+                                <MoreHorizontal size={14} strokeWidth={2.5} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            {/* z-[70]: this component now also renders inside
+                                the composer's Media Gallery Dialog (z-[60]) —
+                                the base DropdownMenu z-50 would render behind
+                                it, same issue fixed earlier for the country
+                                picker inside the Add Contact dialog. */}
+                            <DropdownMenuContent className={cn("rounded-xl p-1.5 min-w-[140px] z-[70]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
+                              <DropdownMenuItem
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  downloadObject(item.id, item.name);
+                                }}
+                              >
+                                <Download size={12} /> {t("media_gallery_section.download")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(item.url);
+                                  toast({ title: t("media_gallery_section.copied_title"), description: t("media_gallery_section.copied_description") });
+                                }}
+                              >
+                                <Share2 size={12} /> {t("media_gallery_section.share")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setRenamingId(item.id);
+                                  setRenameValue(item.name);
+                                }}
+                              >
+                                <Pencil size={12} /> {t("media_gallery_section.rename")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                onClick={(e) => { e.stopPropagation(); setDeleteId(item.id); }}
+                              >
+                                <Trash2 size={12} /> {t("media_gallery_section.delete")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center hover:scale-110 transition-transform shadow-md"
-                            >
-                              <MoreHorizontal size={14} strokeWidth={2.5} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className={cn("rounded-xl p-1.5 min-w-[140px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
-                            <DropdownMenuItem
-                              className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setRenamingId(item.id);
-                                setRenameValue(item.name);
-                              }}
-                            >
-                              <Pencil size={12} /> {t("media_gallery_section.rename")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
-                              onClick={(e) => { e.stopPropagation(); setDeleteId(item.id); }}
-                            >
-                              <Trash2 size={12} /> {t("media_gallery_section.delete")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                     </div>
 

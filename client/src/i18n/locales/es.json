@@ -3351,7 +3351,13 @@
     "toast_validation_title": "Validación",
     "tooltip_archive": "Archivar",
     "tooltip_edit_role": "Editar rol",
-    "tooltip_restore": "Restaurar"
+    "tooltip_restore": "Restaurar",
+    "select_all": "Seleccionar todo",
+    "label_enable_disable_all": "Habilitar / deshabilitar todo",
+    "tooltip_delete": "Eliminar",
+    "toast_deleted_desc": "Rol eliminado permanentemente.",
+    "confirm_delete_title": "¿Eliminar este rol permanentemente?",
+    "confirm_delete_desc": "\"{{name}}\" se eliminará permanentemente. Esto no se puede deshacer."
   },
   "teams_section": {
     "error_title": "Error",
@@ -3568,7 +3574,10 @@
     "kind_document": "documento",
     "kind_file": "archivo",
     "copied_title": "Copiado",
-    "copied_description": "Enlace copiado al portapapeles."
+    "copied_description": "Enlace copiado al portapapeles.",
+    "select": "Seleccionar",
+    "download": "Descargar",
+    "share": "Compartir"
   },
   "iframe_section": {
     "default_menu_title": "Iframes",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "Espacio de trabajo",
       "manage": "Administrar",
-      "live_chat": "Chat en vivo",
+      "live_chat": "Bandeja de entrada",
       "theme": "Tema",
       "manage_user": "Administrar usuario",
       "roles_permissions": "Roles y permisos",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "Conversando por el canal",
       "channel_fallback": "canal",
       "in_smart_flow": "En un flujo inteligente",
-      "not_in_smart_flow": "Este contacto no forma parte actualmente de ningún flujo inteligente.",
+      "not_in_smart_flow": "No forma parte de ningún Smart Flow.",
       "remove": "Eliminar",
       "pause_automated_messages": "Pausar mensajes automáticos",
       "pause_smart_flow": "Pausar flujo inteligente",
@@ -6861,7 +6870,11 @@
       "delivered": "Entregado",
       "read": "Leído",
       "sent_by_automation": "Enviado por automatización",
-      "agent_fallback": "Agente"
+      "agent_fallback": "Agente",
+      "more_options": "Más opciones",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "save_as": "Guardar como"
     },
     "template_card": {
       "label": "Plantilla"
@@ -6880,7 +6893,7 @@
       "note_tab": "Nota",
       "note_internal_hint": "Interno — no se envía al cliente",
       "mention_agent": "Mencionar a un agente",
-      "note_placeholder": "Escribe una nota interna… (@ para mencionar)",
+      "note_placeholder": "Crea una nota para los miembros de tu equipo...",
       "reply_placeholder": "Escribe un mensaje…",
       "format_text": "Formatear texto",
       "bold": "Negrita",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "Enviar mensaje de voz",
       "geolocation_not_supported": "Este navegador no admite geolocalización",
       "instagram_unsupported_files": "Instagram no admite archivos de documentos. Solo se pueden enviar imágenes, videos y audio.",
-      "file_size_limit_exceeded": "Se superó el límite de tamaño de archivo: {{labels}}"
+      "file_size_limit_exceeded": "Se superó el límite de tamaño de archivo: {{labels}}",
+      "drag_to_resize": "Arrastra para cambiar el tamaño",
+      "add_note_button": "Añadir nota",
+      "send_button": "Enviar"
     },
     "locked": {
       "assigned_to_other": "Esta conversación está asignada a {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "Error al eliminar",
       "folder_updated": "Carpeta actualizada",
       "couldnt_move": "No se pudo mover",
-      "downloading": "Descargando..."
+      "downloading": "Descargando...",
+      "media_attached": "Medio adjuntado"
     }
   },
   "contact_profile_modal": {
@@ -7392,22 +7409,22 @@
       "remove": "Quitar"
     },
     "toast": {
-      "created_title": "Difusión creada",
-      "created_desc": "Tu difusión se creó correctamente.",
-      "updated_title": "Difusión actualizada",
-      "updated_desc": "Tu difusión se actualizó correctamente.",
-      "deleted_title": "Difusión eliminada",
-      "deleted_desc": "La difusión se eliminó correctamente.",
+      "created_title": "Campaña creada",
+      "created_desc": "Tu campaña se creó correctamente.",
+      "updated_title": "Campaña actualizada",
+      "updated_desc": "Tu campaña se actualizó correctamente.",
+      "deleted_title": "Campaña eliminada",
+      "deleted_desc": "La campaña se eliminó correctamente.",
       "delete_failed": "Error al eliminar",
-      "cloned_title": "Difusión clonada",
+      "cloned_title": "Campaña clonada",
       "cloned_desc": "{{name}} se clonó como borrador.",
-      "archived_title": "Difusión archivada",
+      "archived_title": "Campaña archivada",
       "archived_desc": "{{name}} se archivó.",
       "bulk_archived_title": "Difusiones archivadas",
-      "bulk_archived_desc_one": "Se archivó {{count}} difusión.",
+      "bulk_archived_desc_one": "Se archivó {{count}} campaña.",
       "bulk_archived_desc_other": "Se archivaron {{count}} difusiones.",
       "bulk_deleted_title": "Difusiones eliminadas",
-      "bulk_deleted_desc_one": "Se eliminó {{count}} difusión.",
+      "bulk_deleted_desc_one": "Se eliminó {{count}} campaña.",
       "bulk_deleted_desc_other": "Se eliminaron {{count}} difusiones.",
       "missing_details_title": "Faltan datos",
       "missing_details_desc": "Primero añade un nombre y elige un canal.",
@@ -7416,20 +7433,20 @@
       "unsupported_condition_desc": "{{fields}} todavía no se puede usar para segmentar una audiencia. Quítalo o filtra por nombre, apellido, nombre completo, etiqueta o un campo personalizado.",
       "no_whatsapp_title": "Sin cuenta de WhatsApp",
       "no_whatsapp_desc": "Conecta una cuenta de WhatsApp antes de crear difusiones.",
-      "queued_title": "Difusión en cola",
+      "queued_title": "Campaña en cola",
       "queued_desc": "Se ejecutará en el próximo minuto.",
       "send_failed": "Error al enviar"
     },
     "composer": {
       "back": "Atrás",
       "channel_fallback": "Canal",
-      "untitled_broadcast": "Difusión",
-      "performance_broadcast": "Difusión de alto rendimiento",
+      "untitled_broadcast": "Campaña",
+      "performance_broadcast": "Campaña de alto rendimiento",
       "badge_edit": "Editar",
       "badge_draft": "Borrador",
       "subtitle": "Mensajería masiva de alto rendimiento para tu audiencia",
       "save_as_draft": "Guardar como borrador",
-      "send_broadcast": "Enviar difusión",
+      "send_broadcast": "Enviar campaña",
       "schedule_action": "Programar",
       "step_audience": "Audiencia",
       "step_template": "Plantilla",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "Añade una condición para segmentar contactos",
       "audience_hint_unsupported": "Esta condición aún no se puede usar",
       "audience_hint_ready": "Recibirán el mensaje",
-      "no_audience_error": "No hay audiencia a la que enviar esta difusión.",
+      "no_audience_error": "No hay audiencia a la que enviar esta campaña.",
       "section_configuration": "02 · Configuración",
       "message_and_schedule": "Mensaje y programación",
       "template": "Plantilla",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "Los campos de contacto se sustituyen por los datos de cada destinatario al enviar.",
       "fill_all_variables": "Completa todas las variables de la plantilla",
       "pause_marketing_title": "Pausar si Meta la reclasifica como Marketing",
-      "pause_marketing_desc": "El sistema comprobará si Meta reclasificó automáticamente el tipo de mensaje como Marketing. En ese caso, la difusión no se enviará.",
+      "pause_marketing_desc": "El sistema comprobará si Meta reclasificó automáticamente el tipo de mensaje como Marketing. En ese caso, la campaña no se enviará.",
       "schedule": "Programación",
       "schedule_hint": "Elige fecha y hora",
       "send_now": "Enviar ahora",
@@ -7515,21 +7532,21 @@
       "interval": "Intervalo"
     },
     "list": {
-      "title": "Difusiones",
-      "subtitle": "Llega a tus contactos en minutos con nuestro servicio de difusión de alto rendimiento",
+      "title": "Campañas",
+      "subtitle": "Llega a tus contactos en minutos con nuestro servicio de campaña de alto rendimiento",
       "refresh": "Actualizar",
-      "new_broadcast": "Nueva difusión",
+      "new_broadcast": "Nueva campaña",
       "all_broadcasts": "Todas las difusiones",
       "search_placeholder": "Buscar por nombre o canal",
       "loading": "Cargando difusiones...",
       "empty_title": "No se encontraron difusiones",
-      "empty_desc": "Crea tu primera difusión para llegar a tus clientes en minutos",
+      "empty_desc": "Crea tu primera campaña para llegar a tus clientes en minutos",
       "create_one_now": "Crear una ahora",
       "failed_count_one": "· {{count}} fallido",
       "failed_count_other": "· {{count}} fallidos",
-      "edit_broadcast": "Editar difusión",
-      "delete_broadcast": "Eliminar difusión",
-      "view_broadcast": "Ver difusión",
+      "edit_broadcast": "Editar campaña",
+      "delete_broadcast": "Eliminar campaña",
+      "view_broadcast": "Ver campaña",
       "more_actions": "Más acciones",
       "clone": "Clonar",
       "send_now": "Enviar ahora",
@@ -7571,7 +7588,7 @@
       "action": "Acción"
     },
     "create_dialog": {
-      "title": "Crear una difusión",
+      "title": "Crear una campaña",
       "subtitle": "Ponle nombre y elige el canal desde el que enviarás.",
       "name": "Nombre",
       "name_placeholder": "p. ej. Lanzamiento de junio - lista de Brasil",
@@ -7579,18 +7596,18 @@
       "select_channel": "Selecciona un canal",
       "no_channels": "Aún no hay canales conectados",
       "no_channels_hint": "Conecta un canal de WhatsApp / Telegram / Messenger desde Ajustes para empezar a difundir.",
-      "payment_warning": "Asegúrate de haber añadido un método de pago a tu cuenta de WhatsApp en Meta Business Manager; de lo contrario, la difusión puede fallar.",
-      "ready_hint": "Listo — haz clic en Crear difusión para continuar.",
+      "payment_warning": "Asegúrate de haber añadido un método de pago a tu cuenta de WhatsApp en Meta Business Manager; de lo contrario, la campaña puede fallar.",
+      "ready_hint": "Listo — haz clic en Crear campaña para continuar.",
       "choose_channel_hint": "Elige un canal para continuar.",
-      "create_broadcast": "Crear difusión"
+      "create_broadcast": "Crear campaña"
     },
     "clone": {
-      "title": "Clonar difusión",
-      "campaign_name": "Nombre de la difusión",
-      "name_placeholder": "Introduce el nombre de la difusión..."
+      "title": "Clonar campaña",
+      "campaign_name": "Nombre de la campaña",
+      "name_placeholder": "Introduce el nombre de la campaña..."
     },
     "delete": {
-      "title": "Eliminar difusión",
+      "title": "Eliminar campaña",
       "confirm_prefix": "¿Seguro que quieres eliminar",
       "confirm_suffix": "? Esta acción no se puede deshacer."
     },

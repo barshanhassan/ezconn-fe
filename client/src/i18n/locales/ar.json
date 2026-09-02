@@ -3351,7 +3351,13 @@
     "toast_validation_title": "التحقق",
     "tooltip_archive": "أرشفة",
     "tooltip_edit_role": "تعديل الدور",
-    "tooltip_restore": "استعادة"
+    "tooltip_restore": "استعادة",
+    "select_all": "تحديد الكل",
+    "label_enable_disable_all": "تفعيل / تعطيل الكل",
+    "tooltip_delete": "حذف",
+    "toast_deleted_desc": "تم حذف الدور نهائيًا.",
+    "confirm_delete_title": "حذف هذا الدور نهائيًا؟",
+    "confirm_delete_desc": "سيتم حذف \"{{name}}\" نهائيًا. لا يمكن التراجع عن هذا."
   },
   "teams_section": {
     "error_title": "خطأ",
@@ -3568,7 +3574,10 @@
     "kind_document": "المستند",
     "kind_file": "الملف",
     "copied_title": "تم النسخ",
-    "copied_description": "تم نسخ الرابط إلى الحافظة."
+    "copied_description": "تم نسخ الرابط إلى الحافظة.",
+    "select": "اختر",
+    "download": "تنزيل",
+    "share": "مشاركة"
   },
   "iframe_section": {
     "default_menu_title": "الإطارات المضمّنة",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "مساحة العمل",
       "manage": "إدارة",
-      "live_chat": "الدردشة المباشرة",
+      "live_chat": "صندوق الوارد",
       "theme": "السمة",
       "manage_user": "إدارة المستخدمين",
       "roles_permissions": "الأدوار والصلاحيات",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "يتحدث عبر القناة",
       "channel_fallback": "قناة",
       "in_smart_flow": "في تدفق ذكي",
-      "not_in_smart_flow": "هذا العميل ليس حاليًا ضمن أي تدفق ذكي.",
+      "not_in_smart_flow": "ليس ضمن أي مسار عمل حاليًا.",
       "remove": "إزالة",
       "pause_automated_messages": "إيقاف الرسائل الآلية مؤقتًا",
       "pause_smart_flow": "إيقاف التدفق الذكي مؤقتًا",
@@ -6861,7 +6870,11 @@
       "delivered": "تم التسليم",
       "read": "تمت القراءة",
       "sent_by_automation": "تم الإرسال بواسطة الأتمتة",
-      "agent_fallback": "الوكيل"
+      "agent_fallback": "الوكيل",
+      "more_options": "خيارات إضافية",
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "save_as": "حفظ باسم"
     },
     "template_card": {
       "label": "قالب"
@@ -6880,7 +6893,7 @@
       "note_tab": "ملاحظة",
       "note_internal_hint": "داخلي — لا يُرسل إلى العميل",
       "mention_agent": "الإشارة إلى وكيل",
-      "note_placeholder": "اكتب ملاحظة داخلية… (استخدم @ للإشارة)",
+      "note_placeholder": "أنشئ ملاحظة لأعضاء فريقك...",
       "reply_placeholder": "اكتب رسالة…",
       "format_text": "تنسيق النص",
       "bold": "غامق",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "إرسال رسالة صوتية",
       "geolocation_not_supported": "تحديد الموقع الجغرافي غير مدعوم في هذا المتصفح",
       "instagram_unsupported_files": "لا يدعم Instagram ملفات المستندات. يمكن إرسال الصور ومقاطع الفيديو والصوت فقط.",
-      "file_size_limit_exceeded": "تم تجاوز الحد الأقصى لحجم الملف: {{labels}}"
+      "file_size_limit_exceeded": "تم تجاوز الحد الأقصى لحجم الملف: {{labels}}",
+      "drag_to_resize": "اسحب لتغيير الحجم",
+      "add_note_button": "إضافة ملاحظة",
+      "send_button": "إرسال"
     },
     "locked": {
       "assigned_to_other": "هذه المحادثة معيّنة إلى {{name}}.",
@@ -7088,7 +7104,8 @@
       "delete_failed": "فشل الحذف",
       "folder_updated": "تم تحديث المجلد",
       "couldnt_move": "تعذّر النقل",
-      "downloading": "جارٍ التنزيل..."
+      "downloading": "جارٍ التنزيل...",
+      "media_attached": "تم إرفاق الوسائط"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "إزالة"
     },
     "toast": {
-      "created_title": "تم إنشاء البث",
-      "created_desc": "تم إنشاء البث بنجاح.",
-      "updated_title": "تم تحديث البث",
-      "updated_desc": "تم تحديث البث بنجاح.",
-      "deleted_title": "تم حذف البث",
-      "deleted_desc": "تمت إزالة البث بنجاح.",
+      "created_title": "تم إنشاء الحملة",
+      "created_desc": "تم إنشاء الحملة بنجاح.",
+      "updated_title": "تم تحديث الحملة",
+      "updated_desc": "تم تحديث الحملة بنجاح.",
+      "deleted_title": "تم حذف الحملة",
+      "deleted_desc": "تمت إزالة الحملة بنجاح.",
       "delete_failed": "فشل الحذف",
-      "cloned_title": "تم استنساخ البث",
+      "cloned_title": "تم استنساخ الحملة",
       "cloned_desc": "تم استنساخ {{name}} كمسودة.",
-      "archived_title": "تمت أرشفة البث",
+      "archived_title": "تمت أرشفة الحملة",
       "archived_desc": "تمت أرشفة {{name}}.",
-      "bulk_archived_title": "تمت أرشفة عمليات البث",
-      "bulk_archived_desc_one": "تمت أرشفة بث واحد.",
-      "bulk_archived_desc_other": "تمت أرشفة {{count}} من عمليات البث.",
-      "bulk_deleted_title": "تم حذف عمليات البث",
-      "bulk_deleted_desc_one": "تم حذف بث واحد.",
-      "bulk_deleted_desc_other": "تم حذف {{count}} من عمليات البث.",
+      "bulk_archived_title": "تمت أرشفة عمليات الحملة",
+      "bulk_archived_desc_one": "تمت أرشفة حملة واحد.",
+      "bulk_archived_desc_other": "تمت أرشفة {{count}} من عمليات الحملة.",
+      "bulk_deleted_title": "تم حذف عمليات الحملة",
+      "bulk_deleted_desc_one": "تم حذف حملة واحد.",
+      "bulk_deleted_desc_other": "تم حذف {{count}} من عمليات الحملة.",
       "missing_details_title": "بيانات ناقصة",
       "missing_details_desc": "أضف اسمًا واختر قناة أولًا.",
       "complete_highlighted": "يرجى إكمال الحقول المميّزة",
       "unsupported_condition_desc": "لا يمكن استخدام {{fields}} لاستهداف جمهور بعد. احذفه، أو صفِّ حسب الاسم الأول / الأخير / الكامل، أو الوسم، أو حقل مخصص.",
       "unsupported_condition_title": "شرط جمهور غير مدعوم",
       "no_whatsapp_title": "لا يوجد حساب WhatsApp",
-      "no_whatsapp_desc": "اربط حساب WhatsApp قبل إنشاء عمليات البث.",
-      "queued_title": "تمت جدولة البث في قائمة الانتظار",
+      "no_whatsapp_desc": "اربط حساب WhatsApp قبل إنشاء عمليات الحملة.",
+      "queued_title": "تمت جدولة الحملة في قائمة الانتظار",
       "queued_desc": "سيتم تنفيذه خلال الدقيقة القادمة.",
       "send_failed": "فشل الإرسال"
     },
     "composer": {
       "back": "رجوع",
       "channel_fallback": "القناة",
-      "untitled_broadcast": "بث",
-      "performance_broadcast": "بث عالي الأداء",
+      "untitled_broadcast": "حملة",
+      "performance_broadcast": "حملة عالي الأداء",
       "badge_edit": "تعديل",
       "badge_draft": "مسودة",
       "subtitle": "مراسلة جماعية عالية الأداء لجمهورك",
       "save_as_draft": "حفظ كمسودة",
-      "send_broadcast": "إرسال البث",
+      "send_broadcast": "إرسال الحملة",
       "schedule_action": "جدولة",
       "step_audience": "الجمهور",
       "step_template": "القالب",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "أضف شرطًا لاستهداف جهات الاتصال",
       "audience_hint_unsupported": "لا يمكن استخدام هذا الشرط بعد",
       "audience_hint_ready": "سيستلمون الرسالة",
-      "no_audience_error": "لا يوجد جمهور لإرسال هذا البث إليه.",
+      "no_audience_error": "لا يوجد جمهور لإرسال هذا الحملة إليه.",
       "section_configuration": "02 · الإعدادات",
       "message_and_schedule": "الرسالة والجدولة",
       "template": "القالب",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "يتم استبدال حقول جهة الاتصال ببيانات كل مستلم عند الإرسال.",
       "fill_all_variables": "املأ كل متغيرات القالب",
       "pause_marketing_title": "الإيقاف إذا أعادت Meta تصنيفها كتسويقية",
-      "pause_marketing_desc": "سيتحقق النظام مما إذا كانت Meta قد أعادت تصنيف نوع الرسالة تلقائيًا كتسويقية. في هذه الحالة لن يتم إرسال البث.",
+      "pause_marketing_desc": "سيتحقق النظام مما إذا كانت Meta قد أعادت تصنيف نوع الرسالة تلقائيًا كتسويقية. في هذه الحالة لن يتم إرسال الحملة.",
       "schedule": "الجدولة",
       "schedule_hint": "اختر التاريخ والوقت",
       "send_now": "إرسال الآن",
@@ -7515,21 +7532,21 @@
       "interval": "الفاصل"
     },
     "list": {
-      "title": "عمليات البث",
-      "subtitle": "تواصل مع جهات اتصالك خلال دقائق عبر خدمة البث عالية الأداء",
+      "title": "الحملات",
+      "subtitle": "تواصل مع جهات اتصالك خلال دقائق عبر خدمة الحملة عالية الأداء",
       "refresh": "تحديث",
-      "new_broadcast": "بث جديد",
-      "all_broadcasts": "كل عمليات البث",
+      "new_broadcast": "حملة جديد",
+      "all_broadcasts": "كل عمليات الحملة",
       "search_placeholder": "ابحث بالاسم أو القناة",
-      "loading": "جارٍ جلب عمليات البث...",
-      "empty_title": "لا توجد عمليات بث",
-      "empty_desc": "أنشئ أول بث لك للوصول إلى عملائك خلال دقائق",
+      "loading": "جارٍ جلب عمليات الحملة...",
+      "empty_title": "لا توجد عمليات حملة",
+      "empty_desc": "أنشئ أول حملة لك للوصول إلى عملائك خلال دقائق",
       "create_one_now": "أنشئ واحدًا الآن",
       "failed_count_one": "· فشل واحد",
       "failed_count_other": "· {{count}} فشل",
-      "edit_broadcast": "تعديل البث",
-      "delete_broadcast": "حذف البث",
-      "view_broadcast": "عرض البث",
+      "edit_broadcast": "تعديل الحملة",
+      "delete_broadcast": "حذف الحملة",
+      "view_broadcast": "عرض الحملة",
       "more_actions": "إجراءات أخرى",
       "clone": "استنساخ",
       "send_now": "إرسال الآن",
@@ -7571,26 +7588,26 @@
       "action": "إجراء"
     },
     "create_dialog": {
-      "title": "إنشاء بث",
+      "title": "إنشاء حملة",
       "subtitle": "سمِّه واختر القناة التي سترسل منها.",
       "name": "الاسم",
       "name_placeholder": "مثال: إطلاق يونيو - قائمة البرازيل",
       "name_hint": "أنت وفريقك فقط من سيرى هذا الاسم.",
       "select_channel": "اختر قناة",
       "no_channels": "لا توجد قنوات متصلة بعد",
-      "no_channels_hint": "اربط قناة WhatsApp / Telegram / Messenger من الإعدادات لبدء البث.",
-      "payment_warning": "تأكد من إضافة وسيلة دفع إلى حساب WhatsApp الخاص بك في Meta Business Manager، وإلا فقد يفشل البث.",
-      "ready_hint": "جاهز — انقر على إنشاء البث للمتابعة.",
+      "no_channels_hint": "اربط قناة WhatsApp / Telegram / Messenger من الإعدادات لبدء الحملة.",
+      "payment_warning": "تأكد من إضافة وسيلة دفع إلى حساب WhatsApp الخاص بك في Meta Business Manager، وإلا فقد يفشل الحملة.",
+      "ready_hint": "جاهز — انقر على إنشاء الحملة للمتابعة.",
       "choose_channel_hint": "اختر قناة للمتابعة.",
-      "create_broadcast": "إنشاء البث"
+      "create_broadcast": "إنشاء الحملة"
     },
     "clone": {
-      "title": "استنساخ البث",
-      "campaign_name": "اسم البث",
-      "name_placeholder": "أدخل اسم البث..."
+      "title": "استنساخ الحملة",
+      "campaign_name": "اسم الحملة",
+      "name_placeholder": "أدخل اسم الحملة..."
     },
     "delete": {
-      "title": "حذف البث",
+      "title": "حذف الحملة",
       "confirm_prefix": "هل أنت متأكد من حذف",
       "confirm_suffix": "؟ لا يمكن التراجع عن هذا الإجراء."
     },
@@ -7691,7 +7708,7 @@
       "is_false": "خطأ"
     },
     "stats": {
-      "total_broadcasts": "إجمالي عمليات البث",
+      "total_broadcasts": "إجمالي عمليات الحملة",
       "this_month": "هذا الشهر",
       "total_contacts": "إجمالي جهات الاتصال",
       "reachable_audience": "الجمهور القابل للوصول",

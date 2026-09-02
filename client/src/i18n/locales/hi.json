@@ -3351,7 +3351,13 @@
     "toast_validation_title": "सत्यापन",
     "tooltip_archive": "संग्रहित करें",
     "tooltip_edit_role": "भूमिका संपादित करें",
-    "tooltip_restore": "पुनर्स्थापित करें"
+    "tooltip_restore": "पुनर्स्थापित करें",
+    "select_all": "सभी चुनें",
+    "label_enable_disable_all": "सभी सक्षम / अक्षम करें",
+    "tooltip_delete": "हटाएं",
+    "toast_deleted_desc": "भूमिका स्थायी रूप से हटा दी गई।",
+    "confirm_delete_title": "क्या इस भूमिका को स्थायी रूप से हटाना है?",
+    "confirm_delete_desc": "\"{{name}}\" स्थायी रूप से हटा दी जाएगी। इसे पूर्ववत नहीं किया जा सकता।"
   },
   "teams_section": {
     "error_title": "त्रुटि",
@@ -3568,7 +3574,10 @@
     "kind_document": "दस्तावेज़",
     "kind_file": "फ़ाइल",
     "copied_title": "कॉपी किया गया",
-    "copied_description": "लिंक क्लिपबोर्ड पर कॉपी किया गया।"
+    "copied_description": "लिंक क्लिपबोर्ड पर कॉपी किया गया।",
+    "select": "चुनें",
+    "download": "डाउनलोड",
+    "share": "साझा करें"
   },
   "iframe_section": {
     "default_menu_title": "आईफ्रेम",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "वर्कस्पेस",
       "manage": "प्रबंधित करें",
-      "live_chat": "लाइव चैट",
+      "live_chat": "इनबॉक्स",
       "theme": "थीम",
       "manage_user": "उपयोगकर्ता प्रबंधित करें",
       "roles_permissions": "भूमिकाएं और अनुमतियां",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "चैनल के माध्यम से चैट कर रहे हैं",
       "channel_fallback": "चैनल",
       "in_smart_flow": "स्मार्ट फ़्लो में",
-      "not_in_smart_flow": "यह संपर्क वर्तमान में किसी भी स्मार्ट फ़्लो का हिस्सा नहीं है।",
+      "not_in_smart_flow": "फ़िलहाल किसी स्मार्ट फ़्लो का हिस्सा नहीं।",
       "remove": "हटाएं",
       "pause_automated_messages": "स्वचालित संदेश रोकें",
       "pause_smart_flow": "स्मार्ट फ़्लो रोकें",
@@ -6861,7 +6870,11 @@
       "delivered": "डिलीवर हो गया",
       "read": "पढ़ लिया गया",
       "sent_by_automation": "ऑटोमेशन द्वारा भेजा गया",
-      "agent_fallback": "एजेंट"
+      "agent_fallback": "एजेंट",
+      "more_options": "अधिक विकल्प",
+      "copy": "कॉपी करें",
+      "copied": "कॉपी हो गया",
+      "save_as": "इस रूप में सहेजें"
     },
     "template_card": {
       "label": "टेम्पलेट"
@@ -6880,7 +6893,7 @@
       "note_tab": "नोट",
       "note_internal_hint": "आंतरिक — ग्राहक को नहीं भेजा जाता",
       "mention_agent": "किसी एजेंट का उल्लेख करें",
-      "note_placeholder": "एक आंतरिक नोट लिखें… (उल्लेख के लिए @)",
+      "note_placeholder": "अपनी टीम के सदस्यों के लिए एक नोट बनाएं...",
       "reply_placeholder": "एक संदेश टाइप करें…",
       "format_text": "टेक्स्ट फ़ॉर्मैट करें",
       "bold": "बोल्ड",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "वॉइस मैसेज भेजें",
       "geolocation_not_supported": "इस ब्राउज़र द्वारा जियोलोकेशन समर्थित नहीं है",
       "instagram_unsupported_files": "Instagram डॉक्यूमेंट फ़ाइलों को सपोर्ट नहीं करता। केवल इमेज, वीडियो और ऑडियो भेजे जा सकते हैं।",
-      "file_size_limit_exceeded": "फ़ाइल आकार सीमा पार हो गई: {{labels}}"
+      "file_size_limit_exceeded": "फ़ाइल आकार सीमा पार हो गई: {{labels}}",
+      "drag_to_resize": "आकार बदलने के लिए खींचें",
+      "add_note_button": "नोट जोड़ें",
+      "send_button": "भेजें"
     },
     "locked": {
       "assigned_to_other": "यह वार्तालाप {{name}} को असाइन किया गया है।",
@@ -7088,7 +7104,8 @@
       "delete_failed": "हटाना विफल",
       "folder_updated": "फ़ोल्डर अपडेट किया गया",
       "couldnt_move": "ले जाया नहीं जा सका",
-      "downloading": "डाउनलोड हो रहा है..."
+      "downloading": "डाउनलोड हो रहा है...",
+      "media_attached": "मीडिया संलग्न किया गया"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "हटाएँ"
     },
     "toast": {
-      "created_title": "ब्रॉडकास्ट बनाया गया",
-      "created_desc": "आपका ब्रॉडकास्ट सफलतापूर्वक बना दिया गया है।",
-      "updated_title": "ब्रॉडकास्ट अपडेट हुआ",
-      "updated_desc": "आपका ब्रॉडकास्ट सफलतापूर्वक अपडेट हो गया है।",
-      "deleted_title": "ब्रॉडकास्ट हटाया गया",
-      "deleted_desc": "ब्रॉडकास्ट सफलतापूर्वक हटा दिया गया है।",
+      "created_title": "अभियान बनाया गया",
+      "created_desc": "आपका अभियान सफलतापूर्वक बना दिया गया है।",
+      "updated_title": "अभियान अपडेट हुआ",
+      "updated_desc": "आपका अभियान सफलतापूर्वक अपडेट हो गया है।",
+      "deleted_title": "अभियान हटाया गया",
+      "deleted_desc": "अभियान सफलतापूर्वक हटा दिया गया है।",
       "delete_failed": "हटाना विफल रहा",
-      "cloned_title": "ब्रॉडकास्ट की प्रतिलिपि बनी",
+      "cloned_title": "अभियान की प्रतिलिपि बनी",
       "cloned_desc": "{{name}} की प्रतिलिपि ड्राफ़्ट के रूप में बनाई गई।",
-      "archived_title": "ब्रॉडकास्ट संग्रहीत",
+      "archived_title": "अभियान संग्रहीत",
       "archived_desc": "{{name}} संग्रहीत कर दिया गया है।",
-      "bulk_archived_title": "ब्रॉडकास्ट संग्रहीत",
-      "bulk_archived_desc_one": "{{count}} ब्रॉडकास्ट संग्रहीत किया गया।",
-      "bulk_archived_desc_other": "{{count}} ब्रॉडकास्ट संग्रहीत किए गए।",
-      "bulk_deleted_title": "ब्रॉडकास्ट हटाए गए",
-      "bulk_deleted_desc_one": "{{count}} ब्रॉडकास्ट हटाया गया।",
-      "bulk_deleted_desc_other": "{{count}} ब्रॉडकास्ट हटाए गए।",
+      "bulk_archived_title": "अभियान संग्रहीत",
+      "bulk_archived_desc_one": "{{count}} अभियान संग्रहीत किया गया।",
+      "bulk_archived_desc_other": "{{count}} अभियान संग्रहीत किए गए।",
+      "bulk_deleted_title": "अभियान हटाए गए",
+      "bulk_deleted_desc_one": "{{count}} अभियान हटाया गया।",
+      "bulk_deleted_desc_other": "{{count}} अभियान हटाए गए।",
       "missing_details_title": "विवरण अधूरा है",
       "missing_details_desc": "पहले एक नाम जोड़ें और चैनल चुनें।",
       "complete_highlighted": "कृपया चिह्नित फ़ील्ड पूरे करें",
       "unsupported_condition_title": "असमर्थित ऑडियंस शर्त",
       "unsupported_condition_desc": "{{fields}} का उपयोग अभी ऑडियंस चुनने के लिए नहीं किया जा सकता। इसे हटाएँ, या पहला / अंतिम / पूरा नाम, टैग या कस्टम फ़ील्ड से फ़िल्टर करें।",
       "no_whatsapp_title": "कोई WhatsApp खाता नहीं",
-      "no_whatsapp_desc": "ब्रॉडकास्ट बनाने से पहले एक WhatsApp खाता जोड़ें।",
-      "queued_title": "ब्रॉडकास्ट कतार में है",
+      "no_whatsapp_desc": "अभियान बनाने से पहले एक WhatsApp खाता जोड़ें।",
+      "queued_title": "अभियान कतार में है",
       "queued_desc": "यह अगले एक मिनट के भीतर भेजा जाएगा।",
       "send_failed": "भेजना विफल रहा"
     },
     "composer": {
       "back": "वापस",
       "channel_fallback": "चैनल",
-      "untitled_broadcast": "ब्रॉडकास्ट",
-      "performance_broadcast": "हाई-परफ़ॉर्मेंस ब्रॉडकास्ट",
+      "untitled_broadcast": "अभियान",
+      "performance_broadcast": "हाई-परफ़ॉर्मेंस अभियान",
       "badge_edit": "संपादित करें",
       "badge_draft": "ड्राफ़्ट",
       "subtitle": "आपकी ऑडियंस के लिए तेज़ और भरोसेमंद बल्क मैसेजिंग",
       "save_as_draft": "ड्राफ़्ट के रूप में सहेजें",
-      "send_broadcast": "ब्रॉडकास्ट भेजें",
+      "send_broadcast": "अभियान भेजें",
       "schedule_action": "शेड्यूल करें",
       "step_audience": "ऑडियंस",
       "step_template": "टेम्पलेट",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "संपर्कों को लक्षित करने के लिए शर्त जोड़ें",
       "audience_hint_unsupported": "यह शर्त अभी उपयोग नहीं की जा सकती",
       "audience_hint_ready": "संदेश प्राप्त करेंगे",
-      "no_audience_error": "इस ब्रॉडकास्ट को भेजने के लिए कोई ऑडियंस नहीं है।",
+      "no_audience_error": "इस अभियान को भेजने के लिए कोई ऑडियंस नहीं है।",
       "section_configuration": "02 · कॉन्फ़िगरेशन",
       "message_and_schedule": "संदेश और शेड्यूल",
       "template": "टेम्पलेट",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "भेजते समय संपर्क फ़ील्ड प्रत्येक प्राप्तकर्ता के अपने डेटा से बदल दिए जाते हैं।",
       "fill_all_variables": "सभी टेम्पलेट वेरिएबल भरें",
       "pause_marketing_title": "यदि Meta इसे Marketing में बदले तो रोकें",
-      "pause_marketing_desc": "सिस्टम जाँचेगा कि क्या Meta ने संदेश प्रकार को स्वतः Marketing में बदल दिया है। ऐसा होने पर ब्रॉडकास्ट नहीं भेजा जाएगा।",
+      "pause_marketing_desc": "सिस्टम जाँचेगा कि क्या Meta ने संदेश प्रकार को स्वतः Marketing में बदल दिया है। ऐसा होने पर अभियान नहीं भेजा जाएगा।",
       "schedule": "शेड्यूल",
       "schedule_hint": "तारीख़ और समय चुनें",
       "send_now": "अभी भेजें",
@@ -7515,21 +7532,21 @@
       "interval": "अंतराल"
     },
     "list": {
-      "title": "ब्रॉडकास्ट",
-      "subtitle": "हमारी हाई-परफ़ॉर्मेंस ब्रॉडकास्ट सेवा से मिनटों में अपने संपर्कों तक पहुँचें",
+      "title": "अभियान",
+      "subtitle": "हमारी हाई-परफ़ॉर्मेंस अभियान सेवा से मिनटों में अपने संपर्कों तक पहुँचें",
       "refresh": "रीफ़्रेश करें",
-      "new_broadcast": "नया ब्रॉडकास्ट",
-      "all_broadcasts": "सभी ब्रॉडकास्ट",
+      "new_broadcast": "नया अभियान",
+      "all_broadcasts": "सभी अभियान",
       "search_placeholder": "नाम या चैनल से खोजें",
-      "loading": "ब्रॉडकास्ट लोड हो रहे हैं...",
-      "empty_title": "कोई ब्रॉडकास्ट नहीं मिला",
-      "empty_desc": "मिनटों में अपने ग्राहकों तक पहुँचने के लिए अपना पहला ब्रॉडकास्ट बनाएँ",
+      "loading": "अभियान लोड हो रहे हैं...",
+      "empty_title": "कोई अभियान नहीं मिला",
+      "empty_desc": "मिनटों में अपने ग्राहकों तक पहुँचने के लिए अपना पहला अभियान बनाएँ",
       "create_one_now": "अभी बनाएँ",
       "failed_count_one": "· {{count}} विफल",
       "failed_count_other": "· {{count}} विफल",
-      "edit_broadcast": "ब्रॉडकास्ट संपादित करें",
-      "delete_broadcast": "ब्रॉडकास्ट हटाएँ",
-      "view_broadcast": "ब्रॉडकास्ट देखें",
+      "edit_broadcast": "अभियान संपादित करें",
+      "delete_broadcast": "अभियान हटाएँ",
+      "view_broadcast": "अभियान देखें",
       "more_actions": "और कार्रवाइयाँ",
       "clone": "प्रतिलिपि बनाएँ",
       "send_now": "अभी भेजें",
@@ -7571,26 +7588,26 @@
       "action": "कार्रवाई"
     },
     "create_dialog": {
-      "title": "ब्रॉडकास्ट बनाएँ",
+      "title": "अभियान बनाएँ",
       "subtitle": "इसे नाम दें और वह चैनल चुनें जिससे आप भेजेंगे।",
       "name": "नाम",
       "name_placeholder": "जैसे: जून लॉन्च - ब्राज़ील सूची",
       "name_hint": "यह नाम केवल आप और आपकी टीम देखेगी।",
       "select_channel": "चैनल चुनें",
       "no_channels": "अभी कोई चैनल कनेक्ट नहीं है",
-      "no_channels_hint": "ब्रॉडकास्टिंग शुरू करने के लिए सेटिंग्स से WhatsApp / Telegram / Messenger चैनल कनेक्ट करें।",
-      "payment_warning": "सुनिश्चित करें कि Meta Business Manager में आपके WhatsApp खाते में भुगतान विधि जोड़ी गई है, अन्यथा ब्रॉडकास्ट विफल हो सकता है।",
-      "ready_hint": "तैयार — जारी रखने के लिए ब्रॉडकास्ट बनाएँ पर क्लिक करें।",
+      "no_channels_hint": "अभियानिंग शुरू करने के लिए सेटिंग्स से WhatsApp / Telegram / Messenger चैनल कनेक्ट करें।",
+      "payment_warning": "सुनिश्चित करें कि Meta Business Manager में आपके WhatsApp खाते में भुगतान विधि जोड़ी गई है, अन्यथा अभियान विफल हो सकता है।",
+      "ready_hint": "तैयार — जारी रखने के लिए अभियान बनाएँ पर क्लिक करें।",
       "choose_channel_hint": "जारी रखने के लिए चैनल चुनें।",
-      "create_broadcast": "ब्रॉडकास्ट बनाएँ"
+      "create_broadcast": "अभियान बनाएँ"
     },
     "clone": {
-      "title": "ब्रॉडकास्ट की प्रतिलिपि बनाएँ",
-      "campaign_name": "ब्रॉडकास्ट का नाम",
-      "name_placeholder": "ब्रॉडकास्ट का नाम दर्ज करें..."
+      "title": "अभियान की प्रतिलिपि बनाएँ",
+      "campaign_name": "अभियान का नाम",
+      "name_placeholder": "अभियान का नाम दर्ज करें..."
     },
     "delete": {
-      "title": "ब्रॉडकास्ट हटाएँ",
+      "title": "अभियान हटाएँ",
       "confirm_prefix": "क्या आप वाकई हटाना चाहते हैं",
       "confirm_suffix": "? यह कार्रवाई पूर्ववत नहीं की जा सकती।"
     },
@@ -7691,7 +7708,7 @@
       "is_false": "ग़लत है"
     },
     "stats": {
-      "total_broadcasts": "कुल ब्रॉडकास्ट",
+      "total_broadcasts": "कुल अभियान",
       "this_month": "इस महीने",
       "total_contacts": "कुल संपर्क",
       "reachable_audience": "पहुँच योग्य ऑडियंस",

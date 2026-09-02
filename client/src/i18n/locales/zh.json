@@ -3351,7 +3351,13 @@
     "toast_validation_title": "验证",
     "tooltip_archive": "归档",
     "tooltip_edit_role": "编辑角色",
-    "tooltip_restore": "恢复"
+    "tooltip_restore": "恢复",
+    "select_all": "全选",
+    "label_enable_disable_all": "启用/禁用全部",
+    "tooltip_delete": "删除",
+    "toast_deleted_desc": "角色已永久删除。",
+    "confirm_delete_title": "永久删除此角色？",
+    "confirm_delete_desc": "\"{{name}}\" 将被永久删除，此操作无法撤销。"
   },
   "teams_section": {
     "error_title": "错误",
@@ -3568,7 +3574,10 @@
     "kind_document": "文档",
     "kind_file": "文件",
     "copied_title": "已复制",
-    "copied_description": "链接已复制到剪贴板。"
+    "copied_description": "链接已复制到剪贴板。",
+    "select": "选择",
+    "download": "下载",
+    "share": "分享"
   },
   "iframe_section": {
     "default_menu_title": "Iframe",
@@ -5745,7 +5754,7 @@
     "sidebar": {
       "workspace": "工作区",
       "manage": "管理",
-      "live_chat": "实时聊天",
+      "live_chat": "收件箱",
       "theme": "主题",
       "manage_user": "管理用户",
       "roles_permissions": "角色与权限",
@@ -6613,7 +6622,7 @@
       "chatting_with_channel": "正在通过该渠道聊天",
       "channel_fallback": "渠道",
       "in_smart_flow": "在智能流程中",
-      "not_in_smart_flow": "该联系人当前不属于任何智能流程。",
+      "not_in_smart_flow": "当前不属于任何智能流程。",
       "remove": "移除",
       "pause_automated_messages": "暂停自动消息",
       "pause_smart_flow": "暂停智能流程",
@@ -6861,7 +6870,11 @@
       "delivered": "已送达",
       "read": "已读",
       "sent_by_automation": "由自动化发送",
-      "agent_fallback": "客服"
+      "agent_fallback": "客服",
+      "more_options": "更多选项",
+      "copy": "复制",
+      "copied": "已复制",
+      "save_as": "另存为"
     },
     "template_card": {
       "label": "模板"
@@ -6880,7 +6893,7 @@
       "note_tab": "备注",
       "note_internal_hint": "内部备注——不会发送给客户",
       "mention_agent": "提及一名客服",
-      "note_placeholder": "输入内部备注……（输入 @ 可提及）",
+      "note_placeholder": "为团队成员创建一条备注...",
       "reply_placeholder": "输入消息……",
       "format_text": "文本格式",
       "bold": "加粗",
@@ -6904,7 +6917,10 @@
       "send_voice_message": "发送语音消息",
       "geolocation_not_supported": "此浏览器不支持地理定位",
       "instagram_unsupported_files": "Instagram 不支持文档文件，仅可发送图片、视频和音频。",
-      "file_size_limit_exceeded": "超出文件大小限制：{{labels}}"
+      "file_size_limit_exceeded": "超出文件大小限制：{{labels}}",
+      "drag_to_resize": "拖动以调整大小",
+      "add_note_button": "添加备注",
+      "send_button": "发送"
     },
     "locked": {
       "assigned_to_other": "此对话已分配给 {{name}}。",
@@ -7088,7 +7104,8 @@
       "delete_failed": "删除失败",
       "folder_updated": "文件夹已更新",
       "couldnt_move": "无法移动",
-      "downloading": "下载中……"
+      "downloading": "下载中……",
+      "media_attached": "已附加媒体"
     }
   },
   "contact_profile_modal": {
@@ -7392,44 +7409,44 @@
       "remove": "移除"
     },
     "toast": {
-      "created_title": "群发已创建",
-      "created_desc": "您的群发已成功创建。",
-      "updated_title": "群发已更新",
-      "updated_desc": "您的群发已成功更新。",
-      "deleted_title": "群发已删除",
-      "deleted_desc": "该群发已成功移除。",
+      "created_title": "活动已创建",
+      "created_desc": "您的活动已成功创建。",
+      "updated_title": "活动已更新",
+      "updated_desc": "您的活动已成功更新。",
+      "deleted_title": "活动已删除",
+      "deleted_desc": "该活动已成功移除。",
       "delete_failed": "删除失败",
-      "cloned_title": "群发已复制",
+      "cloned_title": "活动已复制",
       "cloned_desc": "{{name}} 已复制为草稿。",
-      "archived_title": "群发已归档",
+      "archived_title": "活动已归档",
       "archived_desc": "{{name}} 已归档。",
-      "bulk_archived_title": "群发已归档",
-      "bulk_archived_desc_one": "已归档 {{count}} 条群发。",
-      "bulk_archived_desc_other": "已归档 {{count}} 条群发。",
-      "bulk_deleted_title": "群发已删除",
-      "bulk_deleted_desc_one": "已删除 {{count}} 条群发。",
-      "bulk_deleted_desc_other": "已删除 {{count}} 条群发。",
+      "bulk_archived_title": "活动已归档",
+      "bulk_archived_desc_one": "已归档 {{count}} 条活动。",
+      "bulk_archived_desc_other": "已归档 {{count}} 条活动。",
+      "bulk_deleted_title": "活动已删除",
+      "bulk_deleted_desc_one": "已删除 {{count}} 条活动。",
+      "bulk_deleted_desc_other": "已删除 {{count}} 条活动。",
       "missing_details_title": "信息不完整",
       "missing_details_desc": "请先填写名称并选择渠道。",
       "complete_highlighted": "请填写高亮显示的字段",
       "unsupported_condition_title": "不支持的受众条件",
       "unsupported_condition_desc": "{{fields}} 暂时无法用于筛选受众。请移除该条件，或改用名字、姓氏、全名、标签或自定义字段进行筛选。",
       "no_whatsapp_title": "没有 WhatsApp 账号",
-      "no_whatsapp_desc": "创建群发前请先连接一个 WhatsApp 账号。",
-      "queued_title": "群发已加入队列",
+      "no_whatsapp_desc": "创建活动前请先连接一个 WhatsApp 账号。",
+      "queued_title": "活动已加入队列",
       "queued_desc": "将在一分钟内执行。",
       "send_failed": "发送失败"
     },
     "composer": {
       "back": "返回",
       "channel_fallback": "渠道",
-      "untitled_broadcast": "群发",
-      "performance_broadcast": "高性能群发",
+      "untitled_broadcast": "活动",
+      "performance_broadcast": "高性能活动",
       "badge_edit": "编辑",
       "badge_draft": "草稿",
       "subtitle": "面向受众的高性能批量消息服务",
       "save_as_draft": "保存为草稿",
-      "send_broadcast": "发送群发",
+      "send_broadcast": "发送活动",
       "schedule_action": "定时发送",
       "step_audience": "受众",
       "step_template": "模板",
@@ -7451,7 +7468,7 @@
       "audience_hint_empty": "添加条件以筛选联系人",
       "audience_hint_unsupported": "该条件暂时无法使用",
       "audience_hint_ready": "将收到该消息",
-      "no_audience_error": "没有可发送此群发的受众。",
+      "no_audience_error": "没有可发送此活动的受众。",
       "section_configuration": "02 · 配置",
       "message_and_schedule": "消息与发送时间",
       "template": "模板",
@@ -7464,7 +7481,7 @@
       "contact_fields_note": "发送时联系人字段会替换为每位收件人各自的数据。",
       "fill_all_variables": "请填写全部模板变量",
       "pause_marketing_title": "若 Meta 重新归类为营销类则暂停",
-      "pause_marketing_desc": "系统会检查 Meta 是否自动将消息类型重新归类为营销类。若是，则不会发送该群发。",
+      "pause_marketing_desc": "系统会检查 Meta 是否自动将消息类型重新归类为营销类。若是，则不会发送该活动。",
       "schedule": "发送时间",
       "schedule_hint": "选择日期和时间",
       "send_now": "立即发送",
@@ -7515,21 +7532,21 @@
       "interval": "间隔"
     },
     "list": {
-      "title": "群发",
-      "subtitle": "借助高性能群发服务，几分钟内触达您的联系人",
+      "title": "活动",
+      "subtitle": "借助高性能活动服务，几分钟内触达您的联系人",
       "refresh": "刷新",
-      "new_broadcast": "新建群发",
-      "all_broadcasts": "全部群发",
+      "new_broadcast": "新建活动",
+      "all_broadcasts": "全部活动",
       "search_placeholder": "按名称或渠道搜索",
-      "loading": "正在获取群发...",
-      "empty_title": "未找到群发",
-      "empty_desc": "创建第一条群发，几分钟内触达您的客户",
+      "loading": "正在获取活动...",
+      "empty_title": "未找到活动",
+      "empty_desc": "创建第一条活动，几分钟内触达您的客户",
       "create_one_now": "立即创建",
       "failed_count_one": "· {{count}} 条失败",
       "failed_count_other": "· {{count}} 条失败",
-      "edit_broadcast": "编辑群发",
-      "delete_broadcast": "删除群发",
-      "view_broadcast": "查看群发",
+      "edit_broadcast": "编辑活动",
+      "delete_broadcast": "删除活动",
+      "view_broadcast": "查看活动",
       "more_actions": "更多操作",
       "clone": "复制",
       "send_now": "立即发送",
@@ -7571,26 +7588,26 @@
       "action": "操作"
     },
     "create_dialog": {
-      "title": "创建群发",
+      "title": "创建活动",
       "subtitle": "为其命名并选择发送所用的渠道。",
       "name": "名称",
       "name_placeholder": "例如：六月上新 - 巴西名单",
       "name_hint": "只有您和您的团队能看到这个名称。",
       "select_channel": "选择渠道",
       "no_channels": "尚未连接任何渠道",
-      "no_channels_hint": "在设置中连接 WhatsApp / Telegram / Messenger 渠道即可开始群发。",
-      "payment_warning": "请确认已在 Meta Business Manager 中为您的 WhatsApp 账号添加付款方式，否则群发可能失败。",
-      "ready_hint": "已就绪 — 点击“创建群发”继续。",
+      "no_channels_hint": "在设置中连接 WhatsApp / Telegram / Messenger 渠道即可开始活动。",
+      "payment_warning": "请确认已在 Meta Business Manager 中为您的 WhatsApp 账号添加付款方式，否则活动可能失败。",
+      "ready_hint": "已就绪 — 点击“创建活动”继续。",
       "choose_channel_hint": "请选择一个渠道以继续。",
-      "create_broadcast": "创建群发"
+      "create_broadcast": "创建活动"
     },
     "clone": {
-      "title": "复制群发",
-      "campaign_name": "群发名称",
-      "name_placeholder": "输入群发名称..."
+      "title": "复制活动",
+      "campaign_name": "活动名称",
+      "name_placeholder": "输入活动名称..."
     },
     "delete": {
-      "title": "删除群发",
+      "title": "删除活动",
       "confirm_prefix": "确定要删除",
       "confirm_suffix": " 吗？此操作无法撤销。"
     },
@@ -7691,7 +7708,7 @@
       "is_false": "为假"
     },
     "stats": {
-      "total_broadcasts": "群发总数",
+      "total_broadcasts": "活动总数",
       "this_month": "本月",
       "total_contacts": "联系人总数",
       "reachable_audience": "可触达受众",

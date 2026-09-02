@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, Inbox as InboxIcon, NotebookPen, History } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -51,6 +54,7 @@ import PreviewV2 from "@/components/PreviewV2";
 import { Textarea } from "@/components/ui/textarea";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import ContactProfileSidebar from "@/components/ContactProfileSidebar";
+import MediaGallerySection from "@/components/workspace/MediaGallerySection";
 
 interface Conversation {
   id: number;
@@ -82,15 +86,19 @@ const WA_SIZE_LIMITS: Record<string, number> = {
 };
 const WA_DOC_LIMIT = 100 * 1024 * 1024; // 100 MB for documents
 
+// Sticker / Location composer options — hidden from the "+" menu for now.
+// Kept (not deleted) so re-enabling later is a one-line flip.
+const COMPOSER_STICKER_LOCATION_ENABLED = false;
+
 // Chat-thread message-mode filter (replyagent header dropdown — 5 modes).
 // ALL/AUTOMATION/INBOX map to communication_mode; NOTE shows note_action/note
 // rows; OLD_DATA shows messages older than 3 months (replyagent archive view).
 const CHAT_MODES = [
-  { value: "ALL", labelKey: "conversations_inbox.chat_modes.all" },
-  { value: "AUTOMATION", labelKey: "conversations_inbox.chat_modes.automation" },
-  { value: "INBOX", labelKey: "conversations_inbox.chat_modes.inbox" },
-  { value: "NOTE", labelKey: "conversations_inbox.chat_modes.note" },
-  { value: "OLD_DATA", labelKey: "conversations_inbox.chat_modes.old_data" },
+  { value: "ALL", labelKey: "conversations_inbox.chat_modes.all", icon: MessageSquare },
+  { value: "AUTOMATION", labelKey: "conversations_inbox.chat_modes.automation", icon: Bot },
+  { value: "INBOX", labelKey: "conversations_inbox.chat_modes.inbox", icon: InboxIcon },
+  { value: "NOTE", labelKey: "conversations_inbox.chat_modes.note", icon: NotebookPen },
+  { value: "OLD_DATA", labelKey: "conversations_inbox.chat_modes.old_data", icon: History },
 ] as const;
 
 // Target languages for the AI translate picker (replyagent language list).
@@ -315,6 +323,118 @@ const MessageStatusTick: React.FC<{ status: MessageStatus }> = ({ status }) => {
   return null;
 };
 
+// WhatsApp-style voice-note player — custom play button + waveform bars
+// instead of the plain browser <audio controls> widget. The waveform itself
+// is decorative (deterministic per-URL, not decoded from real amplitude
+// data — matches how most chat clones approximate this), but play/pause,
+// scrubbing and the progress fill are all real, driven by the actual
+// <audio> element.
+// Module-level (not React state) so every VoiceMessagePlayer instance on the
+// page shares one "who's playing" slot — WhatsApp only ever plays one voice
+// note at a time; starting a new one pauses whichever was already playing.
+let activelyPlayingAudio: HTMLAudioElement | null = null;
+
+const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNode }> = ({ url, timestampSlot }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const bars = useMemo(() => {
+    let seed = 0;
+    for (let i = 0; i < url.length; i++) seed = (seed * 31 + url.charCodeAt(i)) >>> 0;
+    const next = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed % 1000) / 1000; };
+    return Array.from({ length: 32 }, () => 0.25 + next() * 0.75);
+  }, [url]);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      if (activelyPlayingAudio && activelyPlayingAudio !== audio) {
+        activelyPlayingAudio.pause();
+      }
+      activelyPlayingAudio = audio;
+      audio.play().catch(() => {});
+    }
+  };
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = ratio * duration;
+  };
+
+  const formatT = (s: number) => {
+    if (!isFinite(s) || s < 0) s = 0;
+    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  };
+
+  const progress = duration > 0 ? currentTime / duration : 0;
+
+  return (
+    <div className="min-w-[250px]">
+      <audio
+        ref={audioRef}
+        src={url}
+        // <audio> can load and play a cross-origin URL without any CORS
+        // headers from the server (fetch()/XHR cannot — that's why an
+        // earlier fetch-then-blob attempt here just hung forever against
+        // this bucket's CORS setup). preload="auto" tells the browser to
+        // buffer the whole file up front instead of only metadata.
+        preload="auto"
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={(e) => {
+          setIsPlaying(false);
+          e.currentTarget.currentTime = 0;
+          setCurrentTime(0);
+        }}
+        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onError={(e) => {
+          const err = e.currentTarget.error;
+          console.error('[VoiceMessagePlayer] playback error', err?.code, err?.message, url);
+          setIsPlaying(false);
+        }}
+        onStalled={() => console.warn('[VoiceMessagePlayer] stalled — network could not supply data', url)}
+        className="hidden"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/15 transition-colors"
+        >
+          {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+        </button>
+        <div
+          onClick={(e) => { e.stopPropagation(); seek(e); }}
+          className="flex-1 flex items-end gap-[2px] h-5 cursor-pointer min-w-0"
+        >
+          {bars.map((h, i) => (
+            <div
+              key={i}
+              className={`flex-1 rounded-full transition-colors ${i / bars.length < progress ? "bg-emerald-700 dark:bg-emerald-300" : "bg-black/20 dark:bg-white/25"}`}
+              style={{ height: `${h * 100}%` }}
+            />
+          ))}
+        </div>
+      </div>
+      {/* Duration (left) + the message's sent-at time/ticks (right) share
+          one row below the waveform — matches WhatsApp's own layout. */}
+      <div className="flex items-center justify-between mt-0.5 pl-9">
+        <span className="text-[11px] tabular-nums opacity-70">
+          {formatT(isPlaying || currentTime > 0 ? currentTime : duration)}
+        </span>
+        {timestampSlot}
+      </div>
+    </div>
+  );
+};
+
 export default function ConversationsInbox() {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -402,6 +522,20 @@ export default function ConversationsInbox() {
               }],
             };
           });
+        }
+        // New message in the open conversation — jump to the bottom like
+        // WhatsApp does, instead of leaving the agent to scroll manually.
+        setTimeout(() => {
+          const el = messagesEndRef.current;
+          if (el) el.scrollTop = el.scrollHeight;
+        }, 50);
+
+        // Conversation is already open when this arrives, so the normal
+        // "mark seen on select" flow never re-fires for it — call it here too
+        // so the WhatsApp blue tick still goes out for a message that lands
+        // while the agent is already looking at the thread.
+        if (msg?.direction !== 'OUTGOING') {
+          apiRequest("POST", `/api/inbox/seen/${selectedConversation}`).catch(() => {});
         }
       }
 
@@ -759,6 +893,11 @@ export default function ConversationsInbox() {
   const [agentStatus, setAgentStatus] = useState<"available" | "away">("available");
   const [sidebarWidth, setSidebarWidth] = useState(384);
   const [isDragging, setIsDragging] = useState(false);
+  // Composer box height — drag the handle at the top of the reply/note box
+  // to make it taller/shorter. null = default (min/max-height classes drive it).
+  const [composerHeight, setComposerHeight] = useState<number | null>(null);
+  const [isResizingComposer, setIsResizingComposer] = useState(false);
+  const composerResizeStartRef = useRef<{ y: number; height: number } | null>(null);
   const [assignedAgent, setAssignedAgent] = useState<string | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -847,6 +986,15 @@ export default function ConversationsInbox() {
     shouldScrollToBottomRef.current = true;
     setIsChatVisible(false);
     setChatMode("ALL"); // reset thread mode-filter on conversation switch
+
+    // Opening this conversation means the agent has seen its messages —
+    // clear any unread bell notifications tied to it so the badge count
+    // doesn't keep including messages already visible in the thread.
+    if (selectedConversation) {
+      apiRequest("POST", `/api/notifications/read-by-inbox/${selectedConversation}`)
+        .then(() => queryClient.invalidateQueries({ queryKey: ["/api/notifications"] }))
+        .catch(() => {});
+    }
   }, [selectedConversation]);
 
   // Mode-filter changes the same cache entry (key stays 2-element), so force a
@@ -880,7 +1028,12 @@ export default function ConversationsInbox() {
     return undefined;
   };
 
-  const messages: Message[] = (messagesResponse?.messages || []).map((m: BackendMessage, index: number) => {
+  // Wrapped in useMemo so this only recomputes when the fetched data actually
+  // changes — without it, every render (composer keystrokes, the 3s message
+  // poll ticking, socket events) rebuilt brand-new message/audio objects,
+  // which was the likely cause of voice-note playback stopping mid-way: any
+  // re-render landing during playback recreated the audio element's props.
+  const messages: Message[] = useMemo(() => (messagesResponse?.messages || []).map((m: BackendMessage, index: number) => {
     const raw = m as any;
 
     // System messages (replyagent note_action pills) — rendered as centered
@@ -990,7 +1143,7 @@ export default function ConversationsInbox() {
       vcards: vcards && vcards.length ? vcards : null,
       reply,
     };
-  });
+  }), [messagesResponse]);
 
   // Send message mutation
   // Mark a conversation read on the backend (mirrors replyagent's
@@ -1285,19 +1438,23 @@ export default function ConversationsInbox() {
     setLocLat(""); setLocLng(""); setLocName(""); setLocAddress("");
   };
 
-  // Attach a gallery file into the composer (fetch its signed URL → File).
-  const attachGalleryFile = async (f: any) => {
-    if (!f?.file_url) return;
-    try {
-      const res = await fetch(f.file_url);
-      const blob = await res.blob();
-      const ext = f.extension ? `.${f.extension}` : "";
-      const name = f.name || `gallery-media${ext}`;
-      setAttachedFiles((prev) => [...prev, new File([blob], name, { type: f.mime_type || blob.type || "application/octet-stream" })]);
-      setGalleryDialogOpen(false);
-    } catch {
-      toast({ title: t("conversations_inbox.toasts.couldnt_attach_title"), description: t("conversations_inbox.toasts.couldnt_attach_desc"), variant: "destructive" });
-    }
+
+  // Attaches a picked gallery item BY REFERENCE — no download here at all.
+  // The file is already sitting on S3; downloading it into the browser just
+  // to re-upload it on send was a redundant round trip through S3 twice,
+  // which is what made this feel slow. The backend re-signs the same S3 key
+  // when the message actually sends (see gallery_media_ids in sendMessage).
+  const attachFromMediaGallerySection = (item: any) => {
+    if (!item?.id || item.type === "folder") return;
+    setAttachedGalleryItems((prev) => [...prev, {
+      id: item.id,
+      name: item.name || "gallery-media",
+      size: typeof item.size === "string" ? parseFloat(item.size) * 1024 : Number(item.size ?? 0),
+      mime: item.mime_type || "application/octet-stream",
+      thumb: item.thumb ?? (item.media_type === "IMAGE" ? item.url : null),
+    }]);
+    setGalleryDialogOpen(false);
+    toast({ description: t("conversations_inbox.toasts.media_attached") });
   };
 
   const transformAiMutation = useMutation({
@@ -1491,7 +1648,7 @@ export default function ConversationsInbox() {
   }, [inboxResponse, isLoadingInbox, selectedConversation]);
 
   const sendMessageMutation = useMutation({
-    mutationFn: async (input: string | { text: string; compose_mode?: string; reply_to_message_id?: number | null; files?: File[]; audio?: Blob | null; mentions?: string[]; is_sticker?: boolean; type?: string; location?: any; gif?: any }) => {
+    mutationFn: async (input: string | { text: string; compose_mode?: string; reply_to_message_id?: number | null; files?: File[]; gallery_media_ids?: string[]; audio?: Blob | null; mentions?: string[]; is_sticker?: boolean; type?: string; location?: any; gif?: any }) => {
       const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
 
       if (hasFiles && typeof input !== "string") {
@@ -1502,11 +1659,16 @@ export default function ConversationsInbox() {
         if (input.reply_to_message_id != null) form.append("reply_to_message_id", String(input.reply_to_message_id));
         if (input.mentions && input.mentions.length) form.append("mentions", input.mentions.join(","));
         if (input.is_sticker) form.append("is_sticker", "true");
+        if (input.gallery_media_ids && input.gallery_media_ids.length) form.append("gallery_media_ids", JSON.stringify(input.gallery_media_ids));
         if (input.files) {
           for (const f of input.files) form.append("files", f);
         }
         if (input.audio) {
           form.append("files", new File([input.audio], "voice-message.webm", { type: "audio/webm" }));
+          // Distinguishes a live mic recording from a regular audio-file
+          // attachment — only this one should render as a WhatsApp voice
+          // note (waveform bubble) instead of a generic audio-file player.
+          form.append("is_voice_note", "true");
         }
         const res = await fetch(`/api/inbox/send-message/${selectedConversation}`, {
           method: "POST",
@@ -1529,6 +1691,7 @@ export default function ConversationsInbox() {
               ...(input.type ? { type: input.type } : {}),
               ...(input.location ? { location: JSON.stringify(input.location) } : {}),
               ...(input.gif ? { gif: JSON.stringify(input.gif) } : {}),
+              ...(input.gallery_media_ids && input.gallery_media_ids.length ? { gallery_media_ids: JSON.stringify(input.gallery_media_ids) } : {}),
             };
       const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, payload);
       return res.json();
@@ -1538,7 +1701,7 @@ export default function ConversationsInbox() {
       await queryClient.cancelQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       const previousData = queryClient.getQueryData(["/api/inbox/messages", selectedConversation]);
       const text = typeof input === "string" ? input : (input.text || "");
-      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
+      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio || (input.gallery_media_ids && input.gallery_media_ids.length > 0));
       const tempId = `opt_${Date.now()}`;
       const optimisticMsg = {
         id: tempId,
@@ -1990,6 +2153,33 @@ export default function ConversationsInbox() {
     setIsDragging(true);
   };
 
+  // Composer resize — drag the handle bar at the top of the reply/note box
+  // up (bigger) or down (smaller). Bounded so it can't disappear or take
+  // over the whole thread.
+  const handleComposerResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    composerResizeStartRef.current = { y: e.clientY, height: composerHeight ?? 80 };
+    setIsResizingComposer(true);
+  };
+
+  React.useEffect(() => {
+    if (!isResizingComposer) return;
+    const onMove = (e: MouseEvent) => {
+      const start = composerResizeStartRef.current;
+      if (!start) return;
+      const delta = start.y - e.clientY; // dragging up increases height
+      const next = Math.min(Math.max(start.height + delta, 40), 320);
+      setComposerHeight(next);
+    };
+    const onUp = () => setIsResizingComposer(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [isResizingComposer]);
+
   const handleMouseUp = () => {
     setIsDragging(false);
   };
@@ -2266,6 +2456,20 @@ export default function ConversationsInbox() {
   const [messageText, setMessageText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  // Files picked from the Media Gallery — referenced by id, not downloaded
+  // into a local File object. They're already on S3; sending by reference
+  // (gallery_media_ids) skips the download-then-re-upload round trip that
+  // used to make gallery attachments feel slow.
+  const [attachedGalleryItems, setAttachedGalleryItems] = useState<{ id: string; name: string; size: number; mime: string; thumb?: string | null }[]>([]);
+  // Local object-URL thumbnails for image attachments in the composer
+  // preview — shows the actual picture instead of a generic paperclip icon.
+  // Recomputed (and old URLs revoked) whenever the attached-file list changes.
+  const [attachedImagePreviews, setAttachedImagePreviews] = useState<(string | null)[]>([]);
+  useEffect(() => {
+    const urls = attachedFiles.map((f) => (f.type.startsWith("image/") ? URL.createObjectURL(f) : null));
+    setAttachedImagePreviews(urls);
+    return () => { urls.forEach((u) => u && URL.revokeObjectURL(u)); };
+  }, [attachedFiles]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -2421,16 +2625,18 @@ export default function ConversationsInbox() {
   // context so the backend can persist this as a real reply, an internal note
   // (Note tab), or a reply-quoted message.
   const handleSendMessage = () => {
-    const hasContent = messageText.trim() || attachedFiles.length > 0 || recordedAudio;
+    const hasContent = messageText.trim() || attachedFiles.length > 0 || attachedGalleryItems.length > 0 || recordedAudio;
     if (!hasContent) return;
     sendMessageMutation.mutate({
       text: messageText,
       compose_mode: composeMode,
       reply_to_message_id: replyingTo?.id ?? null,
       files: attachedFiles.length > 0 ? attachedFiles : undefined,
+      gallery_media_ids: attachedGalleryItems.length > 0 ? attachedGalleryItems.map((g) => g.id) : undefined,
       audio: recordedAudio ?? undefined,
       mentions: composeMode === "note" && mentions.length > 0 ? mentions : undefined,
     } as any);
+    setAttachedGalleryItems([]);
     setReplyingTo(null);
     setMentions([]);
   };
@@ -3336,18 +3542,17 @@ export default function ConversationsInbox() {
             </ScrollArea>
           </Card>
 
-          {/* Resize Handle Pill */}
-          <button
+          {/* Resize handle — a thin bar, same minimal style as the composer's
+              drag handle, not a chunky dotted button. */}
+          <div
             onMouseDown={handleMouseDown}
-            className={`absolute top-1/2 flex items-center justify-center py-3 rounded-full transition-all z-10 ${isDragging
-              ? "bg-primary text-primary-foreground shadow-md"
-              : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+            className={`absolute w-1.5 h-10 rounded-full transition-colors z-10 ${isDragging
+              ? "bg-primary"
+              : "bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
               }`}
-            style={{ cursor: "col-resize", right: "-8px", top: "50%", transform: "translateY(-50%)" }}
+            style={{ cursor: "col-resize", right: "-4px", top: "50%", transform: "translateY(-50%)" }}
             title={t("conversations_inbox.list.drag_to_resize")}
-          >
-            <GripVertical size={16} />
-          </button>
+          />
         </div>
 
         {/* Main Content Area */}
@@ -3361,23 +3566,6 @@ export default function ConversationsInbox() {
             ) : (
             <Card className="flex-1 flex flex-col border-l-0 rounded-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarFallback className={getAvatarColor(getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation)))}>
-                      {(() => {
-                        const name = getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation));
-                        const parts = name.trim().split(/\s+/).filter((p: string) => p.length > 0);
-                        if (parts.length === 0) return "U";
-                        if (parts.length === 1) return parts[0][0].toUpperCase();
-                        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                      })()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="text-sm font-semibold">{getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation))}</h3>
-                    <p className="text-xs text-muted-foreground">{t("conversations_inbox.header.active_now")}</p>
-                  </div>
-                </div>
                 <div className="flex items-center gap-2">
                   {/* Folder ▾ — move THIS conversation into / out of a folder
                       (replyagent header Folder dropdown). */}
@@ -3443,23 +3631,18 @@ export default function ConversationsInbox() {
                       {CHAT_MODES.map((m) => (
                         <DropdownMenuItem
                           key={m.value}
-                          className={chatMode === m.value ? "font-semibold text-primary" : ""}
+                          className={chatMode === m.value ? "font-semibold text-primary gap-2" : "gap-2"}
                           onClick={() => setChatMode(m.value)}
                         >
+                          <m.icon size={16} />
                           {t(m.labelKey)}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                </div>
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="hover-elevate" onClick={handleToggleContactPanel} data-testid="button-view-contact">
-                        {showContactPanel ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{showContactPanel ? t("conversations_inbox.header.hide_contact_profile") : t("conversations_inbox.header.show_contact_profile")}</TooltipContent>
-                  </Tooltip>
+                <div className="flex items-center gap-2">
                   {/* Mark as Done / Move to Inbox toggle — mirrors replyagent behaviour:
                       active/unassigned → "Mark as done" (COMPLETED)
                       completed         → "Move to Inbox" (ACTIVE)         */}
@@ -3576,7 +3759,11 @@ export default function ConversationsInbox() {
 
 
 
-              <div ref={messagesEndRef} className={`flex-1 min-h-0 p-4 overflow-y-auto transition-opacity duration-150 ${isChatVisible ? "opacity-100" : "opacity-0"}`}>
+              <div
+                ref={messagesEndRef}
+                className={`flex-1 min-h-0 p-4 overflow-y-auto transition-opacity duration-150 bg-slate-50 dark:bg-slate-950 ${isChatVisible ? "opacity-100" : "opacity-0"}`}
+                style={{ backgroundImage: "url(/images/chat-doodle-bg.svg)", backgroundRepeat: "repeat" }}
+              >
                 <div className="space-y-4">
                   {(messages || []).map((msg: Message, index: number, allMessages: Message[]) => {
                     // System message (replyagent note_action): centered divider pill.
@@ -3595,6 +3782,47 @@ export default function ConversationsInbox() {
                       );
                     }
                     const showDateDivider = index === 0 || formatMessageDate(msg.time, workspaceTz) !== formatMessageDate(allMessages[index - 1].time, workspaceTz);
+                    // Plain text (no media/template/location/etc) gets the
+                    // WhatsApp treatment of the timestamp sitting inline at
+                    // the end of the text instead of on its own line below.
+                    const isPlainTextOnly = !!msg.text &&
+                      !(msg.images && msg.images.length) &&
+                      !(msg.attachments && msg.attachments.length) &&
+                      !msg.video && !msg.audio && !msg.location &&
+                      !(msg as any).vcards && !(msg as any).template && !msg.reply;
+                    // Voice messages show their own sent-at time inline with
+                    // the duration (inside VoiceMessagePlayer), so the bubble's
+                    // separate bottom timestamp row is skipped for them too.
+                    const hideBottomTimestamp = isPlainTextOnly || !!msg.audio;
+                    const statusAndReactions = (
+                      <>
+                        {msg.from === "agent" && msg.status && (
+                          msg.status === "failed" ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <a
+                                  href="https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MessageStatusTick status={msg.status} />
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs break-words">
+                                {msg.errorData || t("conversations_inbox.messages.failed_to_send")}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <MessageStatusTick status={msg.status} />
+                          )
+                        )}
+                        {Array.isArray((msg as any).reactions) && (msg as any).reactions.map((r: any, ri: number) => (
+                          <span key={ri} className="text-base leading-none">{r.reaction ?? r.emoji ?? ''}</span>
+                        ))}
+                      </>
+                    );
                     return (
                       <React.Fragment key={msg.id}>
                         {showDateDivider && (
@@ -3611,84 +3839,113 @@ export default function ConversationsInbox() {
                               </div>
                             </div>
                           )}
-                          {/* Action icons (reply arrow + emoji react) — appear
-                              OUTSIDE the bubble on hover, on the side opposite
-                              to the bubble (left of agent, right of user) so
-                              they don't overlap content. The emoji picker uses
-                              Radix Popover so it (a) renders in a portal at
-                              document.body (escapes the ScrollArea's overflow
-                              clipping) and (b) flips to the opposite side
-                              automatically when there isn't room. */}
+
+                          {/* Quick-react emoji — sits OUTSIDE the bubble on
+                              hover, on whichever side has room (left of the
+                              bubble for our own messages, right of it for the
+                              customer's) — matches WhatsApp's own pattern.
+                              Everything else (reply/copy/save/delete) lives in
+                              the in-bubble chevron menu below. */}
                           {msg.from === "agent" && selectedConversation && (
-                            <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity flex items-center gap-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReplyingTo(msg);
-                                }}
-                                className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                title={t("conversations_inbox.messages.reply_to_this")}
-                                data-testid={`button-reply-${msg.id}`}
-                              >
-                                <CornerUpLeft size={13} className="text-muted-foreground" />
-                              </button>
-                              <Popover
-                                open={reactionPickerFor === msg.id}
-                                onOpenChange={(open) => setReactionPickerFor(open ? msg.id : null)}
-                              >
-                                <PopoverTrigger asChild>
-                                  <button
-                                    className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                    title={t("conversations_inbox.messages.add_reaction")}
-                                    data-testid={`button-react-${msg.id}`}
-                                  >
-                                    <Smile size={13} className="text-muted-foreground" />
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  side="top"
-                                  align="end"
-                                  sideOffset={8}
-                                  collisionPadding={16}
-                                  className="p-0 border-0 bg-transparent shadow-none w-auto"
-                                >
-                                  <Picker
-                                    data={data}
-                                    onEmojiSelect={(emoji: any) => {
-                                      reactMutation.mutate({
-                                        inboxId: selectedConversation,
-                                        messageId: msg.id,
-                                        reaction: emoji.native,
-                                      });
-                                      setReactionPickerFor(null);
-                                    }}
-                                    theme="light"
-                                    previewPosition="none"
-                                    skinTonePosition="search"
-                                    maxFrequentRows={1}
-                                    perLine={8}
-                                    set="native"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              {canDeleteMessage && (
+                            <Popover open={reactionPickerFor === msg.id} onOpenChange={(open) => setReactionPickerFor(open ? msg.id : null)}>
+                              <PopoverTrigger asChild>
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const ch = conversations.find((c: Conversation) => c.id === selectedConversation)?.channel || "whatsapp";
-                                    deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
-                                  }}
-                                  className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                  title={t("conversations_inbox.messages.delete_message")}
-                                  data-testid={`button-delete-${msg.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="opacity-0 group-hover/msg:opacity-100 transition-opacity h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform shrink-0 self-center"
+                                  title={t("conversations_inbox.messages.add_reaction")}
+                                  data-testid={`button-react-${msg.id}`}
                                 >
-                                  <Trash2 size={13} className="text-muted-foreground" />
+                                  <Smile size={13} className="text-muted-foreground" />
                                 </button>
-                              )}
-                            </div>
+                              </PopoverTrigger>
+                              <PopoverContent side="top" align="end" sideOffset={8} collisionPadding={16} className="p-0 border-0 bg-transparent shadow-none w-auto">
+                                <Picker
+                                  data={data}
+                                  onEmojiSelect={(emoji: any) => {
+                                    reactMutation.mutate({ inboxId: selectedConversation, messageId: msg.id, reaction: emoji.native });
+                                    setReactionPickerFor(null);
+                                  }}
+                                  theme="light"
+                                  previewPosition="none"
+                                  skinTonePosition="search"
+                                  maxFrequentRows={1}
+                                  perLine={8}
+                                  set="native"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           )}
 
-                          <div id={`message-${msg.id}`} className={`relative max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
+                          {/* WhatsApp-style bubble colors: our outgoing messages
+                              (agent) are light green, the customer's incoming
+                              messages are white — matching WhatsApp itself so
+                              the two are visually unmistakable at a glance.
+                              Compact padding/text (WhatsApp-tight, not roomy). */}
+                          <div id={`message-${msg.id}`} className={`relative max-w-[70%] rounded-lg px-2.5 py-1.5 text-[14px] leading-snug ${msg.from === "user" ? "bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100 border border-black/5 dark:border-white/10" : "bg-[#dcf8c6] text-gray-900 dark:bg-emerald-900/40 dark:text-emerald-50"}`} data-testid={`message-${msg.id}`}>
+                            {/* Message options — a single chevron trigger inside
+                                the bubble corner (WhatsApp pattern), instead of
+                                separate floating icons. Opens quick-react emojis
+                                + Reply/Copy/Save as/Delete, whichever apply. */}
+                            {selectedConversation && (
+                              <div className="absolute top-1 right-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity z-10">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="h-5 w-5 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/15"
+                                      title={t("conversations_inbox.messages.more_options")}
+                                      data-testid={`button-message-options-${msg.id}`}
+                                    >
+                                      <ChevronDown size={14} className="opacity-70" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-background">
+                                    <div className="flex items-center justify-around px-1 py-1.5">
+                                      {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji) => (
+                                        <button
+                                          key={emoji}
+                                          onClick={() => reactMutation.mutate({ inboxId: selectedConversation, messageId: msg.id, reaction: emoji })}
+                                          className="text-base leading-none hover:scale-125 transition-transform"
+                                        >
+                                          {emoji}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => setReplyingTo(msg)}>
+                                      <CornerUpLeft size={14} className="mr-2" /> {t("conversations_inbox.messages.reply_to_this")}
+                                    </DropdownMenuItem>
+                                    {msg.text && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(msg.text || "");
+                                          toast({ description: t("conversations_inbox.messages.copied") });
+                                        }}
+                                      >
+                                        <Copy size={14} className="mr-2" /> {t("conversations_inbox.messages.copy")}
+                                      </DropdownMenuItem>
+                                    )}
+                                    {msg.audio && (
+                                      <DropdownMenuItem onClick={() => handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`)}>
+                                        <Download size={14} className="mr-2" /> {t("conversations_inbox.messages.save_as")}
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canDeleteMessage && (
+                                      <DropdownMenuItem
+                                        className="text-red-600 focus:text-red-600"
+                                        onClick={() => {
+                                          const ch = conversations.find((c: Conversation) => c.id === selectedConversation)?.channel || "whatsapp";
+                                          deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
+                                        }}
+                                      >
+                                        <Trash2 size={14} className="mr-2" /> {t("conversations_inbox.messages.delete_message")}
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            )}
+
                             {/* Quoted reply — the message this one is replying to.
                                 Click scrolls to the original bubble. */}
                             {msg.reply && (
@@ -3753,7 +4010,18 @@ export default function ConversationsInbox() {
                               </div>
                             )}
 
-                            {msg.text && <p className="text-sm">{msg.text}</p>}
+                            {isPlainTextOnly ? (
+                              <p className="text-sm [overflow-wrap:anywhere]">
+                                {msg.text}
+                                <span className="inline-block w-14" />
+                                <span className={`float-right inline-flex items-center gap-1 text-[11px] translate-y-1 ${msg.from === "agent" ? "text-gray-700 dark:text-slate-400" : "text-gray-600 dark:text-slate-500"}`}>
+                                  {formatMessageTime(msg.time, workspaceTz)}
+                                  {statusAndReactions}
+                                </span>
+                              </p>
+                            ) : (
+                              msg.text && <p className="text-sm">{msg.text}</p>
+                            )}
 
                             {/* Images */}
                             {msg.images && msg.images.length > 0 && (
@@ -3829,140 +4097,60 @@ export default function ConversationsInbox() {
                               </div>
                             )}
 
-                            {/* Voice message */}
+                            {/* Voice message — custom WhatsApp-style waveform
+                                player, sitting directly in the bubble. */}
                             {msg.audio && (
-                              <div className="mt-2 space-y-2">
-                                <div className="bg-black/10 dark:bg-white/10 rounded p-3 max-w-sm">
-                                  <audio
-                                    controls
-                                    className="h-12 rounded"
-                                    style={{
-                                      accentColor: "hsl(var(--primary))",
-                                    }}
-                                    controlsList="nodownload"
-                                  >
-                                    <source src={msg.audio!.url} type={msg.audio!.url?.includes('.m4a') ? 'audio/mp4' : msg.audio!.url?.includes('.mp4') ? 'video/mp4' : 'audio/webm'} />
-                                    {t("conversations_inbox.messages.audio_not_supported")}
-                                  </audio>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <p className="text-xs font-medium">{t("conversations_inbox.messages.voice_message")}</p>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`);
-                                      }}
-                                      className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                      title={t("conversations_inbox.messages.download_voice_message")}
-                                    >
-                                      <Download size={14} />
-                                    </button>
-                                  </div>
-                                </div>
+                              <div className="mt-1">
+                                <VoiceMessagePlayer
+                                  url={msg.audio!.url}
+                                  timestampSlot={
+                                    <span className={`flex items-center gap-1 text-[11px] ${msg.from === "agent" ? "text-gray-700 dark:text-slate-400" : "text-gray-600 dark:text-slate-500"}`}>
+                                      {formatMessageTime(msg.time, workspaceTz)}
+                                      {statusAndReactions}
+                                    </span>
+                                  }
+                                />
                               </div>
                             )}
 
-                            <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
-                              <span>{formatMessageTime(msg.time, workspaceTz)}</span>
-                              {msg.from === "agent" && msg.status && (
-                                msg.status === "failed" ? (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <a
-                                        href="https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <MessageStatusTick status={msg.status} />
-                                      </a>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs break-words">
-                                      {msg.errorData || t("conversations_inbox.messages.failed_to_send")}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ) : (
-                                  <MessageStatusTick status={msg.status} />
-                                )
-                              )}
-                              {Array.isArray((msg as any).reactions) && (msg as any).reactions.map((r: any, ri: number) => (
-                                <span key={ri} className="text-base leading-none">{r.reaction ?? r.emoji ?? ''}</span>
-                              ))}
-                            </p>
+                            {!hideBottomTimestamp && (
+                              <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
+                                <span>{formatMessageTime(msg.time, workspaceTz)}</span>
+                                {statusAndReactions}
+                              </p>
+                            )}
                           </div>
 
-                          {/* Action icons for INCOMING (user) bubbles —
-                              positioned to the RIGHT of the bubble. Picker
-                              uses Radix Popover (portal + auto collision
-                              flip) so it never gets clipped by the scroll
-                              area, regardless of where the message sits. */}
+                          {/* Quick-react emoji for INCOMING (user) bubbles —
+                              mirrors the agent-side one above, on the right. */}
                           {msg.from === "user" && selectedConversation && (
-                            <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity flex items-center gap-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReplyingTo(msg);
-                                }}
-                                className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                title={t("conversations_inbox.messages.reply_to_this")}
-                                data-testid={`button-reply-${msg.id}`}
-                              >
-                                <CornerUpLeft size={13} className="text-muted-foreground" />
-                              </button>
-                              <Popover
-                                open={reactionPickerFor === msg.id}
-                                onOpenChange={(open) => setReactionPickerFor(open ? msg.id : null)}
-                              >
-                                <PopoverTrigger asChild>
-                                  <button
-                                    className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                    title={t("conversations_inbox.messages.add_reaction")}
-                                    data-testid={`button-react-${msg.id}`}
-                                  >
-                                    <Smile size={13} className="text-muted-foreground" />
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  side="top"
-                                  align="start"
-                                  sideOffset={8}
-                                  collisionPadding={16}
-                                  className="p-0 border-0 bg-transparent shadow-none w-auto"
-                                >
-                                  <Picker
-                                    data={data}
-                                    onEmojiSelect={(emoji: any) => {
-                                      reactMutation.mutate({
-                                        inboxId: selectedConversation,
-                                        messageId: msg.id,
-                                        reaction: emoji.native,
-                                      });
-                                      setReactionPickerFor(null);
-                                    }}
-                                    theme="light"
-                                    previewPosition="none"
-                                    skinTonePosition="search"
-                                    maxFrequentRows={1}
-                                    perLine={8}
-                                    set="native"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              {canDeleteMessage && (
+                            <Popover open={reactionPickerFor === msg.id} onOpenChange={(open) => setReactionPickerFor(open ? msg.id : null)}>
+                              <PopoverTrigger asChild>
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const ch = conversations.find((c: Conversation) => c.id === selectedConversation)?.channel || "whatsapp";
-                                    deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
-                                  }}
-                                  className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
-                                  title={t("conversations_inbox.messages.delete_message")}
-                                  data-testid={`button-delete-${msg.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="opacity-0 group-hover/msg:opacity-100 transition-opacity h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform shrink-0 self-center"
+                                  title={t("conversations_inbox.messages.add_reaction")}
+                                  data-testid={`button-react-${msg.id}`}
                                 >
-                                  <Trash2 size={13} className="text-muted-foreground" />
+                                  <Smile size={13} className="text-muted-foreground" />
                                 </button>
-                              )}
-                            </div>
+                              </PopoverTrigger>
+                              <PopoverContent side="top" align="start" sideOffset={8} collisionPadding={16} className="p-0 border-0 bg-transparent shadow-none w-auto">
+                                <Picker
+                                  data={data}
+                                  onEmojiSelect={(emoji: any) => {
+                                    reactMutation.mutate({ inboxId: selectedConversation, messageId: msg.id, reaction: emoji.native });
+                                    setReactionPickerFor(null);
+                                  }}
+                                  theme="light"
+                                  previewPosition="none"
+                                  skinTonePosition="search"
+                                  maxFrequentRows={1}
+                                  perLine={8}
+                                  set="native"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           )}
 
                           {/* Outgoing: agent avatar (INBOX) or bot icon
@@ -4002,12 +4190,39 @@ export default function ConversationsInbox() {
               ) : canReply ? (
                 <div className="p-4 flex-shrink-0 relative">
                   {/* Attached files preview */}
-                  {(attachedFiles.length > 0 || recordedAudio) && (
+                  {(attachedFiles.length > 0 || attachedGalleryItems.length > 0 || recordedAudio) && (
                     <div className="mb-3 p-3 bg-muted rounded-lg space-y-2">
+                      {attachedGalleryItems.map((item, index) => (
+                        <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {item.thumb ? (
+                              <img src={item.thumb} alt={item.name} className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                            ) : (
+                              <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
+                            )}
+                            <span className="truncate text-foreground">{item.name}</span>
+                            {item.size > 0 && <span className="text-xs text-muted-foreground flex-shrink-0">({(item.size / 1024).toFixed(1)}KB)</span>}
+                          </div>
+                          <button
+                            onClick={() => setAttachedGalleryItems((prev) => prev.filter((_, i) => i !== index))}
+                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
                       {attachedFiles.map((file, index) => (
                         <div key={index} className="flex items-center justify-between gap-2 text-sm">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
+                            {attachedImagePreviews[index] ? (
+                              <img
+                                src={attachedImagePreviews[index]!}
+                                alt={file.name}
+                                className="w-7 h-7 rounded object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
+                            )}
                             <span className="truncate text-foreground">{file.name}</span>
                             <span className="text-xs text-muted-foreground flex-shrink-0">({(file.size / 1024).toFixed(1)}KB)</span>
                           </div>
@@ -4131,14 +4346,14 @@ export default function ConversationsInbox() {
                       the outgoing record with type='note' so it shows on the
                       thread as an internal annotation without sending to the
                       customer. */}
-                  <div className="flex items-center gap-4 border-b mb-2 pb-1 text-xs font-medium">
+                  <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold">
                     {(["reply", "note"] as const).map((m) => (
                       <button
                         key={m}
                         onClick={() => setComposeMode(m)}
-                        className={`pb-1 transition-colors ${
+                        className={`px-3 py-1.5 rounded-full transition-colors ${
                           composeMode === m
-                            ? "border-b-2 border-primary text-foreground"
+                            ? "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                         data-testid={`tab-compose-${m}`}
@@ -4183,12 +4398,26 @@ export default function ConversationsInbox() {
                     );
                   })()}
 
-                  <div className="flex gap-2 items-end">
+                  <div className={cn(
+                    "relative border rounded-2xl transition-colors",
+                    "[border-color:hsl(var(--input))]"
+                  )}>
+                    {/* Drag handle — grab and move up/down to resize the box. */}
+                    <div
+                      onMouseDown={handleComposerResizeStart}
+                      title={t("conversations_inbox.composer.drag_to_resize")}
+                      className="absolute -top-[3px] left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 cursor-row-resize z-10"
+                    />
+
                     <Textarea
                       ref={composerTextareaRef}
                       placeholder={composeMode === "note" ? t("conversations_inbox.composer.note_placeholder") : t("conversations_inbox.composer.reply_placeholder")}
                       rows={1}
-                      className={`flex-1 min-h-[2.5rem] max-h-40 resize-none ${composeMode === "note" ? "bg-amber-50 dark:bg-amber-900/10" : ""}`}
+                      style={composerHeight ? { height: `${composerHeight}px` } : undefined}
+                      className={cn(
+                        "w-full !border-0 !shadow-none !ring-0 !ring-offset-0 focus-visible:!outline-none resize-none rounded-2xl rounded-b-none px-4 pt-4 pb-1 bg-transparent",
+                        !composerHeight && "min-h-[2.5rem] max-h-40"
+                      )}
                       data-testid="input-message"
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
@@ -4214,183 +4443,195 @@ export default function ConversationsInbox() {
                       }}
                     />
 
-                    {/* Text styling — wraps the selected text in WhatsApp
-                        markdown (replyagent addBodyStyle). */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 [border-color:hsl(var(--input))]" title={t("conversations_inbox.composer.format_text")} data-testid="composer-format">
-                          <TypeIcon size={18} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="bg-white dark:bg-background">
-                        <DropdownMenuItem onClick={() => applyTextStyle("*")}><Bold size={14} className="mr-2" /> {t("conversations_inbox.composer.bold")}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => applyTextStyle("_")}><Italic size={14} className="mr-2" /> {t("conversations_inbox.composer.italic")}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => applyTextStyle("~")}><Strikethrough size={14} className="mr-2" /> {t("conversations_inbox.composer.strikethrough")}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => applyTextStyle("```")}><Code size={14} className="mr-2" /> {t("conversations_inbox.composer.monospace")}</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center justify-between px-2.5 pb-2 pt-0.5">
+                      <div className="flex items-center gap-0.5">
+                        {composeMode === "reply" ? (
+                          <>
+                            {/* "+" menu — attachments, gallery, sticker/location, start automation. */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9" title={t("conversations_inbox.composer.more")} data-testid="composer-plus">
+                                  <Plus size={18} />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" side="top" className="bg-white dark:bg-background">
+                                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                                  <Paperclip size={14} className="mr-2" /> {t("conversations_inbox.composer.attach_file")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setGalleryDialogOpen(true)}>
+                                  <Image size={14} className="mr-2" /> {t("conversations_inbox.composer.media_gallery")}
+                                </DropdownMenuItem>
+                                {/* Sticker / Location — hidden for now (COMPOSER_STICKER_LOCATION_ENABLED),
+                                    not deleted, so they're easy to re-enable later. */}
+                                {COMPOSER_STICKER_LOCATION_ENABLED && selectedConvObj?.channel === "whatsapp" && (
+                                  <DropdownMenuItem onClick={() => setStickerDialogOpen(true)}>
+                                    <Smile size={14} className="mr-2" /> {t("conversations_inbox.composer.sticker")}
+                                  </DropdownMenuItem>
+                                )}
+                                {COMPOSER_STICKER_LOCATION_ENABLED && selectedConvObj?.channel === "whatsapp" && (
+                                  <DropdownMenuItem onClick={() => setLocationDialogOpen(true)}>
+                                    <MapPin size={14} className="mr-2" /> {t("conversations_inbox.composer.location")}
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={() => setAutomationDialogOpen(true)}>
+                                  <Bot size={14} className="mr-2" /> {t("conversations_inbox.composer.start_automation")}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
 
-                    {/* "+" menu — Media gallery + Start automation (replyagent). */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 [border-color:hsl(var(--input))]" title={t("conversations_inbox.composer.more")} data-testid="composer-plus">
-                          <Plus size={18} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="bg-white dark:bg-background">
-                        <DropdownMenuItem onClick={() => setGalleryDialogOpen(true)}>
-                          <Image size={14} className="mr-2" /> {t("conversations_inbox.composer.media_gallery")}
-                        </DropdownMenuItem>
-                        {selectedConvObj?.channel === "whatsapp" && (
-                          <DropdownMenuItem onClick={() => setStickerDialogOpen(true)}>
-                            <Smile size={14} className="mr-2" /> {t("conversations_inbox.composer.sticker")}
-                          </DropdownMenuItem>
-                        )}
-                        {selectedConvObj?.channel === "whatsapp" && (
-                          <DropdownMenuItem onClick={() => setLocationDialogOpen(true)}>
-                            <MapPin size={14} className="mr-2" /> {t("conversations_inbox.composer.location")}
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => setAutomationDialogOpen(true)}>
-                          <Bot size={14} className="mr-2" /> {t("conversations_inbox.composer.start_automation")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* AI Transform — translate / correct / expand / shorten */}
-                    <div className="relative">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 [border-color:hsl(var(--input))]"
-                        title={t("conversations_inbox.composer.ai_helper")}
-                        disabled={!messageText.trim() || transformAiMutation.isPending}
-                        onClick={() => setAiTransformOpen((v) => !v)}
-                      >
-                        {transformAiMutation.isPending ? (
-                          <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                          <span className="text-xs font-bold">AI</span>
-                        )}
-                      </Button>
-                      {aiTransformOpen && (
-                        <div className="absolute bottom-12 right-0 z-50 bg-white dark:bg-slate-900 border rounded-md shadow-lg p-1 w-48">
-                          {[
-                            { mode: "correct", label: t("conversations_inbox.composer.correct") },
-                            { mode: "expand", label: t("conversations_inbox.composer.expand") },
-                            { mode: "shorten", label: t("conversations_inbox.composer.shorten") },
-                          ].map((opt) => (
-                            <button
-                              key={opt.mode}
-                              onClick={() => transformAiMutation.mutate({ text: messageText, mode: opt.mode })}
-                              className="w-full text-left text-xs px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                          <div className="border-t my-1" />
-                          <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{t("conversations_inbox.composer.translate_to")}</div>
-                          <div className="max-h-44 overflow-auto">
-                            {AI_LANGUAGES.map((lang) => (
-                              <button
-                                key={lang}
-                                onClick={() => transformAiMutation.mutate({ text: messageText, mode: "translate", language: lang })}
-                                className="w-full text-left text-xs px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                                data-testid={`ai-translate-${lang}`}
+                            {/* Emoji */}
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9"
+                                title={t("conversations_inbox.composer.add_emoji")}
+                                onClick={() => setShowEmojiPicker((v) => !v)}
                               >
-                                {lang}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 [border-color:hsl(var(--input))]"
-                        title={t("conversations_inbox.composer.add_emoji")}
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      >
-                        <Smile size={18} />
-                      </Button>
-                      {showEmojiPicker && (
-                        <div
-                          ref={emojiPickerRef}
-                          className="absolute bottom-12 right-0 z-50"
+                                <Smile size={18} />
+                              </Button>
+                              {showEmojiPicker && (
+                                <div ref={emojiPickerRef} className="absolute bottom-12 left-0 z-50">
+                                  <Picker
+                                    data={data}
+                                    onEmojiSelect={handleEmojiSelect}
+                                    theme="light"
+                                    previewPosition="none"
+                                    skinTonePosition="none"
+                                    maxFrequentRows={1}
+                                    perLine={8}
+                                    set="native"
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* AI helper — translate / correct / expand / shorten */}
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9"
+                                title={t("conversations_inbox.composer.ai_helper")}
+                                disabled={!messageText.trim() || transformAiMutation.isPending}
+                                onClick={() => setAiTransformOpen((v) => !v)}
+                              >
+                                {transformAiMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <span className="text-xs font-bold">AI</span>}
+                              </Button>
+                              {aiTransformOpen && (
+                                <div className="absolute bottom-12 left-0 z-50 bg-white dark:bg-slate-900 border rounded-md shadow-lg p-1 w-48">
+                                  {[
+                                    { mode: "correct", label: t("conversations_inbox.composer.correct") },
+                                    { mode: "expand", label: t("conversations_inbox.composer.expand") },
+                                    { mode: "shorten", label: t("conversations_inbox.composer.shorten") },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.mode}
+                                      onClick={() => transformAiMutation.mutate({ text: messageText, mode: opt.mode })}
+                                      className="w-full text-left text-xs px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                  <div className="border-t my-1" />
+                                  <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{t("conversations_inbox.composer.translate_to")}</div>
+                                  <div className="max-h-44 overflow-auto">
+                                    {AI_LANGUAGES.map((lang) => (
+                                      <button
+                                        key={lang}
+                                        onClick={() => transformAiMutation.mutate({ text: messageText, mode: "translate", language: lang })}
+                                        className="w-full text-left text-xs px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
+                                        data-testid={`ai-translate-${lang}`}
+                                      >
+                                        {lang}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Format text — bold / italic / strikethrough / monospace */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9" title={t("conversations_inbox.composer.format_text")} data-testid="composer-format">
+                                  <TypeIcon size={18} />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="bg-white dark:bg-background">
+                                <DropdownMenuItem onClick={() => applyTextStyle("*")}><Bold size={14} className="mr-2" /> {t("conversations_inbox.composer.bold")}</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => applyTextStyle("_")}><Italic size={14} className="mr-2" /> {t("conversations_inbox.composer.italic")}</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => applyTextStyle("~")}><Strikethrough size={14} className="mr-2" /> {t("conversations_inbox.composer.strikethrough")}</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => applyTextStyle("```")}><Code size={14} className="mr-2" /> {t("conversations_inbox.composer.monospace")}</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        ) : (
+                          <>
+                            {/* Note mode — lighter action set: emoji, picture, upload. No +/AI/mic. */}
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9"
+                                title={t("conversations_inbox.composer.add_emoji")}
+                                onClick={() => setShowEmojiPicker((v) => !v)}
+                              >
+                                <Smile size={18} />
+                              </Button>
+                              {showEmojiPicker && (
+                                <div ref={emojiPickerRef} className="absolute bottom-12 left-0 z-50">
+                                  <Picker
+                                    data={data}
+                                    onEmojiSelect={handleEmojiSelect}
+                                    theme="light"
+                                    previewPosition="none"
+                                    skinTonePosition="none"
+                                    maxFrequentRows={1}
+                                    perLine={8}
+                                    set="native"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-9 w-9" title={t("conversations_inbox.composer.send_picture")} onClick={() => imageInputRef.current?.click()}>
+                              <Image size={18} />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-9 w-9" title={t("conversations_inbox.composer.attach_file")} onClick={() => fileInputRef.current?.click()}>
+                              <Paperclip size={18} />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        {composeMode === "reply" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-9 w-9 ${isRecording ? "bg-red-100 text-red-600" : ""}`}
+                            title={isRecording ? t("conversations_inbox.composer.stop_recording") : t("conversations_inbox.composer.send_voice_message")}
+                            onClick={isRecording ? handleStopRecording : handleStartRecording}
+                          >
+                            <Mic size={18} />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          className="gap-1.5 rounded-full"
+                          data-testid="button-send"
+                          onClick={handleSendMessage}
+                          disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
                         >
-                          <Picker
-                            data={data}
-                            onEmojiSelect={handleEmojiSelect}
-                            theme="light"
-                            previewPosition="none"
-                            skinTonePosition="none"
-                            maxFrequentRows={1}
-                            perLine={8}
-                            set="native"
-                          />
-                        </div>
-                      )}
+                          <Send size={14} color="white" />
+                          {composeMode === "note" ? t("conversations_inbox.composer.add_note_button") : t("conversations_inbox.composer.send_button")}
+                        </Button>
+                      </div>
                     </div>
 
-                    {/* File attachment */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      className="hidden"
-                      onChange={handleFileAttach}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 [border-color:hsl(var(--input))]"
-                      title={t("conversations_inbox.composer.attach_file")}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Paperclip size={18} />
-                    </Button>
-
-                    {/* Image attachment */}
-                    <input
-                      ref={imageInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={handleImageAttach}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 [border-color:hsl(var(--input))]"
-                      title={t("conversations_inbox.composer.send_picture")}
-                      onClick={() => imageInputRef.current?.click()}
-                    >
-                      <Image size={18} />
-                    </Button>
-
-                    {/* Voice message */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-9 w-9 [border-color:hsl(var(--input))] ${isRecording ? "bg-red-100 text-red-600" : ""}`}
-                      title={isRecording ? t("conversations_inbox.composer.stop_recording") : t("conversations_inbox.composer.send_voice_message")}
-                      onClick={isRecording ? handleStopRecording : handleStartRecording}
-                    >
-                      <Mic size={18} />
-                    </Button>
-
-                    {/* Send button */}
-                    <Button
-                      size="icon"
-                      data-testid="button-send"
-                      onClick={handleSendMessage}
-                      disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
-                    >
-                      <Send size={18} color="white" />
-                    </Button>
+                    {/* File / image attachment inputs — shared by both modes' menus. */}
+                    <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileAttach} />
+                    <input ref={imageInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageAttach} />
                   </div>
                 </div>
               ) : (() => {
@@ -4458,8 +4699,9 @@ export default function ConversationsInbox() {
         </Dialog>
 
         {
-          showContactPanel && (
+          selectedConversation && (
             <ContactProfileSidebar
+              collapsed={!showContactPanel}
               conversation={conversations.find((c: Conversation) => c.id === selectedConversation)}
               conversations={conversations}
               basicDetails={currentBasicDetails}
@@ -4486,6 +4728,7 @@ export default function ConversationsInbox() {
               onScrollToMessage={handleScrollToMessage}
               profileData={profileData}
               onRefreshProfile={() => refetchProfileData()}
+              onClose={handleToggleContactPanel}
             />
           )
         }
@@ -5102,37 +5345,17 @@ export default function ConversationsInbox() {
         </DialogContent>
       </Dialog>
 
-      {/* Composer "+" → Media gallery picker (replyagent Gallery). */}
+      {/* Composer "+" → Media gallery picker — the real gallery (folders,
+          filters, upload) reused here via onSelect instead of the old
+          bare-bones grid, so the agent picks straight from the actual
+          workspace media library. */}
       <Dialog open={galleryDialogOpen} onOpenChange={setGalleryDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-5xl h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{t("conversations_inbox.dialogs.gallery.title")}</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-auto">
-            {galleryFiles.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-10 text-center">{t("conversations_inbox.dialogs.gallery.empty")}</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {galleryFiles.map((f) => (
-                  <button
-                    key={f.id}
-                    className="group relative aspect-square rounded-md overflow-hidden border hover:ring-2 hover:ring-primary"
-                    onClick={() => attachGalleryFile(f)}
-                    title={f.name}
-                    data-testid={`gallery-item-${f.id}`}
-                  >
-                    {f.media_type === "IMAGE" ? (
-                      <img src={f.thumb} alt={f.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground p-1">
-                        <FileText size={20} />
-                        <span className="text-[9px] truncate w-full text-center mt-1">{f.name}</span>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="flex-1 min-h-0 overflow-auto">
+            <MediaGallerySection onSelect={attachFromMediaGallerySection} />
           </div>
         </DialogContent>
       </Dialog>
