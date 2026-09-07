@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, Inbox as InboxIcon, NotebookPen, History } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, Inbox as InboxIcon, NotebookPen, History } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, apiUploadWithProgress } from "@/lib/queryClient";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 import { useSocket } from "@/hooks/use-socket";
@@ -334,7 +334,7 @@ const MessageStatusTick: React.FC<{ status: MessageStatus }> = ({ status }) => {
 // note at a time; starting a new one pauses whichever was already playing.
 let activelyPlayingAudio: HTMLAudioElement | null = null;
 
-const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNode }> = ({ url, timestampSlot }) => {
+const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNode; avatar?: React.ReactNode }> = ({ url, timestampSlot, avatar }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -406,9 +406,9 @@ const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNod
       <div className="flex items-center gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/15 transition-colors"
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/15 transition-colors"
         >
-          {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+          {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
         </button>
         <div
           onClick={(e) => { e.stopPropagation(); seek(e); }}
@@ -422,6 +422,7 @@ const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNod
             />
           ))}
         </div>
+        {avatar}
       </div>
       {/* Duration (left) + the message's sent-at time/ticks (right) share
           one row below the waveform — matches WhatsApp's own layout. */}
@@ -551,11 +552,12 @@ export default function ConversationsInbox() {
     const handleMessageStatus = (data: {
       wa_message_id?: string;
       insta_message_id?: string;
+      zapi_message_id?: string;
       wamid?: string;
       status: MessageStatus;
     }) => {
       if (!selectedConversation) return;
-      const rawId = data.wa_message_id ?? data.insta_message_id;
+      const rawId = data.wa_message_id ?? data.insta_message_id ?? data.zapi_message_id;
       const targetId = Number(rawId);
       if (!Number.isFinite(targetId)) return;
 
@@ -1203,6 +1205,13 @@ export default function ConversationsInbox() {
   // (selectedChannels + activeFolderId are declared earlier — before the
   // inbox list query that consumes them.)
 
+  // Composer "+" → Quick Reply picker — phone-preview picker matching the
+  // Send Template dialog's pattern.
+  const [quickReplyPickerOpen, setQuickReplyPickerOpen] = useState(false);
+  const [quickReplyPickerCollectionId, setQuickReplyPickerCollectionId] = useState<string | null>(null);
+  const [quickReplySearch, setQuickReplySearch] = useState("");
+  const [selectedCannedId, setSelectedCannedId] = useState<string>("");
+
   // Template-send dialog (24h-window CTA opens this) + channels chip dropdown
   // + folders CRUD modals state.
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -1455,6 +1464,32 @@ export default function ConversationsInbox() {
     }]);
     setGalleryDialogOpen(false);
     toast({ description: t("conversations_inbox.toasts.media_attached") });
+  };
+
+  // "Attach file" / "Send picture" now upload straight to the Media Gallery
+  // (same endpoint the Gallery page itself uses) instead of staying private
+  // to this one message — every upload should land in the Gallery first and
+  // get attached by reference from there, per the agreed workspace-wide rule.
+  const uploadFilesToGalleryAndAttach = async (files: File[]) => {
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append("files", file);
+        const res = await apiUploadWithProgress("POST", "/api/gallery/upload", formData);
+        const data = await res.json();
+        const uploaded = data?.data?.[0] ?? data?.media?.[0];
+        if (!uploaded) continue;
+        setAttachedGalleryItems((prev) => [...prev, {
+          id: String(uploaded.object_id ?? uploaded.id),
+          name: uploaded.object_name || file.name,
+          size: Number(uploaded.file_size ?? file.size),
+          mime: uploaded.mime_type || file.type || "application/octet-stream",
+          thumb: null,
+        }]);
+      } catch {
+        toast({ title: t("conversations_inbox.composer.attach_upload_failed", { name: file.name }), variant: "destructive" });
+      }
+    }
   };
 
   const transformAiMutation = useMutation({
@@ -2292,10 +2327,18 @@ export default function ConversationsInbox() {
       .filter((r) => r.parent_id != null && (r.text || r.title || (r.mediaList?.length ?? 0) > 0))
       .map((r) => ({
         id: String(r.id),
+        parent_id: String(r.parent_id),
         title: r.title ?? "",
         text: r.text ?? "",
         media: Array.isArray(r.mediaList) ? r.mediaList.map((m: any) => m.media).filter(Boolean) : [],
       }));
+  }, [quickResponsesData]);
+
+  // Collections (folders) for the Quick Reply picker — same
+  // `/api/quick-response` payload already carries them under `folders`.
+  const quickReplyCollections = useMemo(() => {
+    const folders: any[] = quickResponsesData?.folders ?? [];
+    return folders.map((f) => ({ id: String(f.id), name: f.title ?? "" }));
   }, [quickResponsesData]);
 
   // Apply a canned reply (replyagent messageSelected): set the text + attach any
@@ -2423,7 +2466,7 @@ export default function ConversationsInbox() {
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
   // Image Preview State
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   // Add conversation modals
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
@@ -2529,63 +2572,61 @@ export default function ConversationsInbox() {
     setShowEmojiPicker(false);
   };
 
-  // Handle file attachment
+  // Handle file attachment — uploads straight to Media Gallery, then attaches
+  // by reference (see uploadFilesToGalleryAndAttach above).
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
-    if (files && files.length > 0) {
-      const isInstagram = selectedConvObj?.channel === 'instagram';
-      const isWhatsApp = selectedConvObj?.channel === 'whatsapp';
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!files || files.length === 0) return;
 
-      if (isInstagram) {
-        const unsupported = Array.from(files).filter((f) => {
-          const m = f.type;
-          return !m.startsWith('image/') && !m.startsWith('video/') && !m.startsWith('audio/');
-        });
-        if (unsupported.length > 0) {
-          toast({ title: t("conversations_inbox.composer.instagram_unsupported_files"), variant: 'destructive' });
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          return;
-        }
-      }
+    const isInstagram = selectedConvObj?.channel === 'instagram';
+    const isWhatsApp = selectedConvObj?.channel === 'whatsapp';
+    let candidates = Array.from(files);
 
-      if (isWhatsApp) {
-        const tooBig = Array.from(files).filter(f => f.size > getWaLimit(f));
-        const valid = Array.from(files).filter(f => f.size <= getWaLimit(f));
-        if (tooBig.length > 0) {
-          const labels = tooBig.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB — limit ${waLimitLabel(f)})`).join(', ');
-          toast({ title: t("conversations_inbox.composer.file_size_limit_exceeded", { labels }), variant: 'destructive' });
-        }
-        if (valid.length > 0) setAttachedFiles(prev => [...prev, ...valid]);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+    if (isInstagram) {
+      const unsupported = candidates.filter((f) => {
+        const m = f.type;
+        return !m.startsWith('image/') && !m.startsWith('video/') && !m.startsWith('audio/');
+      });
+      if (unsupported.length > 0) {
+        toast({ title: t("conversations_inbox.composer.instagram_unsupported_files"), variant: 'destructive' });
         return;
       }
-
-      setAttachedFiles([...attachedFiles, ...Array.from(files)]);
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (isWhatsApp) {
+      const tooBig = candidates.filter(f => f.size > getWaLimit(f));
+      const valid = candidates.filter(f => f.size <= getWaLimit(f));
+      if (tooBig.length > 0) {
+        const labels = tooBig.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB — limit ${waLimitLabel(f)})`).join(', ');
+        toast({ title: t("conversations_inbox.composer.file_size_limit_exceeded", { labels }), variant: 'destructive' });
+      }
+      candidates = valid;
+    }
+
+    if (candidates.length > 0) uploadFilesToGalleryAndAttach(candidates);
   };
 
-  // Handle image attachment
+  // Handle image attachment — same reference-based flow as handleFileAttach.
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
-    if (files && files.length > 0) {
-      const isWhatsApp = selectedConvObj?.channel === 'whatsapp';
-
-      if (isWhatsApp) {
-        const tooBig = Array.from(files).filter(f => f.size > getWaLimit(f));
-        const valid = Array.from(files).filter(f => f.size <= getWaLimit(f));
-        if (tooBig.length > 0) {
-          const labels = tooBig.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB — limit ${waLimitLabel(f)})`).join(', ');
-          toast({ title: t("conversations_inbox.composer.file_size_limit_exceeded", { labels }), variant: 'destructive' });
-        }
-        if (valid.length > 0) setAttachedFiles(prev => [...prev, ...valid]);
-        if (imageInputRef.current) imageInputRef.current.value = '';
-        return;
-      }
-
-      setAttachedFiles([...attachedFiles, ...Array.from(files)]);
-    }
     if (imageInputRef.current) imageInputRef.current.value = "";
+    if (!files || files.length === 0) return;
+
+    const isWhatsApp = selectedConvObj?.channel === 'whatsapp';
+    let candidates = Array.from(files);
+
+    if (isWhatsApp) {
+      const tooBig = candidates.filter(f => f.size > getWaLimit(f));
+      const valid = candidates.filter(f => f.size <= getWaLimit(f));
+      if (tooBig.length > 0) {
+        const labels = tooBig.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB — limit ${waLimitLabel(f)})`).join(', ');
+        toast({ title: t("conversations_inbox.composer.file_size_limit_exceeded", { labels }), variant: 'destructive' });
+      }
+      candidates = valid;
+    }
+
+    if (candidates.length > 0) uploadFilesToGalleryAndAttach(candidates);
   };
 
   // Handle voice recording
@@ -3790,10 +3831,21 @@ export default function ConversationsInbox() {
                       !(msg.attachments && msg.attachments.length) &&
                       !msg.video && !msg.audio && !msg.location &&
                       !(msg as any).vcards && !(msg as any).template && !msg.reply;
+                    // Image (+ optional short caption) bubbles shouldn't
+                    // stretch to the 70% cap the way long text does — the
+                    // bubble should hug the image's own width, or the
+                    // caption sits above a much narrower image with an ugly
+                    // gap of empty bubble to its right.
+                    const isImageMessage = !!(msg.images && msg.images.length) &&
+                      !(msg.attachments && msg.attachments.length) &&
+                      !msg.video && !msg.audio && !msg.location &&
+                      !(msg as any).vcards && !(msg as any).template;
                     // Voice messages show their own sent-at time inline with
                     // the duration (inside VoiceMessagePlayer), so the bubble's
                     // separate bottom timestamp row is skipped for them too.
-                    const hideBottomTimestamp = isPlainTextOnly || !!msg.audio;
+                    // Image messages with a caption render time inline with
+                    // the caption below the picture (WhatsApp-style) instead.
+                    const hideBottomTimestamp = isPlainTextOnly || !!msg.audio || (isImageMessage && !!msg.text);
                     const statusAndReactions = (
                       <>
                         {msg.from === "agent" && msg.status && (
@@ -3831,8 +3883,12 @@ export default function ConversationsInbox() {
                           </div>
                         )}
                         <div className={`group/msg flex items-center gap-2 ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
-                          {/* Incoming: contact avatar on the LEFT (replyagent). */}
-                          {msg.from === "user" && (
+                          {/* Incoming: contact avatar on the LEFT (replyagent).
+                              Voice messages render this same avatar INSIDE the
+                              bubble instead (see VoiceMessagePlayer avatar prop
+                              below), and plain-text-only bubbles skip it
+                              entirely (text alone doesn't need one). */}
+                          {msg.from === "user" && !msg.audio && !isPlainTextOnly && !isImageMessage && (
                             <div className="self-end mb-5 flex-shrink-0">
                               <div className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white ${getAvatarColor(getDisplayName(selectedConvObj))}`} title={getDisplayName(selectedConvObj)}>
                                 {getInitials(getDisplayName(selectedConvObj))}
@@ -3881,7 +3937,7 @@ export default function ConversationsInbox() {
                               messages are white — matching WhatsApp itself so
                               the two are visually unmistakable at a glance.
                               Compact padding/text (WhatsApp-tight, not roomy). */}
-                          <div id={`message-${msg.id}`} className={`relative max-w-[70%] rounded-lg px-2.5 py-1.5 text-[14px] leading-snug ${msg.from === "user" ? "bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100 border border-black/5 dark:border-white/10" : "bg-[#dcf8c6] text-gray-900 dark:bg-emerald-900/40 dark:text-emerald-50"}`} data-testid={`message-${msg.id}`}>
+                          <div id={`message-${msg.id}`} className={`relative max-w-[70%] ${isImageMessage ? "w-fit" : ""} rounded-lg px-2.5 py-1.5 text-[14px] leading-snug ${msg.from === "user" ? "bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100 border border-black/5 dark:border-white/10" : "bg-[#dcf8c6] text-gray-900 dark:bg-emerald-900/40 dark:text-emerald-50"}`} data-testid={`message-${msg.id}`}>
                             {/* Message options — a single chevron trigger inside
                                 the bubble corner (WhatsApp pattern), instead of
                                 separate floating icons. Opens quick-react emojis
@@ -3899,7 +3955,7 @@ export default function ConversationsInbox() {
                                       <ChevronDown size={14} className="opacity-70" />
                                     </button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-background">
+                                  <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-background">
                                     <div className="flex items-center justify-around px-1 py-1.5">
                                       {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji) => (
                                         <button
@@ -3912,11 +3968,12 @@ export default function ConversationsInbox() {
                                       ))}
                                     </div>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => setReplyingTo(msg)}>
+                                    <DropdownMenuItem className="py-2.5" onClick={() => setReplyingTo(msg)}>
                                       <CornerUpLeft size={14} className="mr-2" /> {t("conversations_inbox.messages.reply_to_this")}
                                     </DropdownMenuItem>
                                     {msg.text && (
                                       <DropdownMenuItem
+                                        className="py-2.5"
                                         onClick={() => {
                                           navigator.clipboard.writeText(msg.text || "");
                                           toast({ description: t("conversations_inbox.messages.copied") });
@@ -3926,13 +3983,13 @@ export default function ConversationsInbox() {
                                       </DropdownMenuItem>
                                     )}
                                     {msg.audio && (
-                                      <DropdownMenuItem onClick={() => handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`)}>
+                                      <DropdownMenuItem className="py-2.5" onClick={() => handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`)}>
                                         <Download size={14} className="mr-2" /> {t("conversations_inbox.messages.save_as")}
                                       </DropdownMenuItem>
                                     )}
                                     {canDeleteMessage && (
                                       <DropdownMenuItem
-                                        className="text-red-600 focus:text-red-600"
+                                        className="py-2.5 text-red-600 focus:text-red-600"
                                         onClick={() => {
                                           const ch = conversations.find((c: Conversation) => c.id === selectedConversation)?.channel || "whatsapp";
                                           deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
@@ -4020,39 +4077,39 @@ export default function ConversationsInbox() {
                                 </span>
                               </p>
                             ) : (
-                              msg.text && <p className="text-sm">{msg.text}</p>
+                              !isImageMessage && msg.text && <p className="text-sm">{msg.text}</p>
                             )}
 
-                            {/* Images */}
+                            {/* Images — just the picture, WhatsApp-style. No
+                                filename/size bar; download lives in the
+                                full-size preview (click the image) instead. */}
                             {msg.images && msg.images.length > 0 && (
                               <div className="mt-2 space-y-2">
                                 {msg.images.map((image: { url: string; name: string; size: number; thumb?: string | null }, idx: number) => (
-                                  <div key={idx} className="space-y-1">
+                                  <div key={idx}>
                                     <img
                                       src={image.thumb || image.url}
                                       alt={image.name}
                                       loading="lazy"
                                       className="max-w-full h-auto rounded max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                      onClick={() => setPreviewImage(image.url)}
+                                      onClick={() => setPreviewImage({ url: image.url, name: image.name })}
                                     />
-                                    <div className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
-                                      <div className="flex items-center gap-1 flex-1 min-w-0">
-                                        <span className="truncate">{image.name}</span>
-                                        <span className="opacity-70 flex-shrink-0">({(image.size / 1024).toFixed(1)}KB)</span>
-                                      </div>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDownload(image.url, image.name);
-                                        }}
-                                        className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                        title={t("conversations_inbox.messages.download_image")}
-                                      >
-                                        <Download size={14} />
-                                      </button>
-                                    </div>
                                   </div>
                                 ))}
+                                {/* Caption goes BELOW the image, sharing its
+                                    line with the sent-at time — matches
+                                    WhatsApp (a caption above the photo, like
+                                    a headline, isn't how it displays there). */}
+                                {msg.text && (
+                                  <p className="text-sm [overflow-wrap:anywhere]">
+                                    {msg.text}
+                                    <span className="inline-block w-14" />
+                                    <span className={`float-right inline-flex items-center gap-1 text-[11px] translate-y-1 ${msg.from === "agent" ? "text-gray-700 dark:text-slate-400" : "text-gray-600 dark:text-slate-500"}`}>
+                                      {formatMessageTime(msg.time, workspaceTz)}
+                                      {statusAndReactions}
+                                    </span>
+                                  </p>
+                                )}
                               </div>
                             )}
 
@@ -4109,6 +4166,21 @@ export default function ConversationsInbox() {
                                       {statusAndReactions}
                                     </span>
                                   }
+                                  avatar={
+                                    msg.from === "user" ? (
+                                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0 ${getAvatarColor(getDisplayName(selectedConvObj))}`} title={getDisplayName(selectedConvObj)}>
+                                        {getInitials(getDisplayName(selectedConvObj))}
+                                      </div>
+                                    ) : msg.communicationMode && msg.communicationMode !== "INBOX" ? (
+                                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0" title={t("conversations_inbox.messages.sent_by_automation")}>
+                                        <Bot size={14} className="text-primary" />
+                                      </div>
+                                    ) : (
+                                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0 ${getAvatarColor(msg.senderName || t("conversations_inbox.messages.agent_fallback"))}`} title={msg.senderName || t("conversations_inbox.messages.agent_fallback")}>
+                                        {getInitials(msg.senderName || t("conversations_inbox.messages.agent_fallback"))}
+                                      </div>
+                                    )
+                                  }
                                 />
                               </div>
                             )}
@@ -4154,8 +4226,12 @@ export default function ConversationsInbox() {
                           )}
 
                           {/* Outgoing: agent avatar (INBOX) or bot icon
-                              (automation) on the RIGHT (replyagent). */}
-                          {msg.from === "agent" && (
+                              (automation) on the RIGHT (replyagent). Voice
+                              messages render this same avatar INSIDE the
+                              bubble instead (see VoiceMessagePlayer avatar prop
+                              below), and plain-text-only bubbles skip it
+                              entirely (text alone doesn't need one). */}
+                          {msg.from === "agent" && !msg.audio && !isPlainTextOnly && !isImageMessage && (
                             <div className="self-end mb-5 flex-shrink-0">
                               {msg.communicationMode && msg.communicationMode !== "INBOX" ? (
                                 <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={t("conversations_inbox.messages.sent_by_automation")}>
@@ -4461,6 +4537,14 @@ export default function ConversationsInbox() {
                                 <DropdownMenuItem onClick={() => setGalleryDialogOpen(true)}>
                                   <Image size={14} className="mr-2" /> {t("conversations_inbox.composer.media_gallery")}
                                 </DropdownMenuItem>
+                                {selectedConvObj?.channel === "whatsapp" && (
+                                  <DropdownMenuItem onClick={() => setTemplateDialogOpen(true)}>
+                                    <FileText size={14} className="mr-2" /> {t("conversations_inbox.composer.send_template")}
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={() => { setSelectedCannedId(""); setQuickReplySearch(""); setQuickReplyPickerCollectionId(null); setQuickReplyPickerOpen(true); }}>
+                                  <MessageSquare size={14} className="mr-2" /> {t("conversations_inbox.composer.quick_reply")}
+                                </DropdownMenuItem>
                                 {/* Sticker / Location — hidden for now (COMPOSER_STICKER_LOCATION_ENABLED),
                                     not deleted, so they're easy to re-enable later. */}
                                 {COMPOSER_STICKER_LOCATION_ENABLED && selectedConvObj?.channel === "whatsapp" && (
@@ -4621,7 +4705,7 @@ export default function ConversationsInbox() {
                           className="gap-1.5 rounded-full"
                           data-testid="button-send"
                           onClick={handleSendMessage}
-                          disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
+                          disabled={!messageText.trim() && attachedFiles.length === 0 && attachedGalleryItems.length === 0 && !recordedAudio}
                         >
                           <Send size={14} color="white" />
                           {composeMode === "note" ? t("conversations_inbox.composer.add_note_button") : t("conversations_inbox.composer.send_button")}
@@ -4683,10 +4767,17 @@ export default function ConversationsInbox() {
             {previewImage && (
               <div className="relative">
                 <img
-                  src={previewImage}
+                  src={previewImage.url}
                   alt="Preview"
                   className="max-w-[80vw] max-h-[80vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
                 />
+                <button
+                  onClick={() => handleDownload(previewImage.url, previewImage.name)}
+                  className="absolute top-2 right-12 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                  title={t("conversations_inbox.messages.download_image")}
+                >
+                  <Download size={20} />
+                </button>
                 <button
                   onClick={() => setPreviewImage(null)}
                   className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
@@ -5532,6 +5623,24 @@ export default function ConversationsInbox() {
                 )}
               </SelectContent>
             </Select>
+            {(() => {
+              const selectedWaTemplate = waTemplates.find((t: any) => String(t.id) === selectedTemplateId);
+              if (!selectedWaTemplate) return null;
+              const components: any[] = Array.isArray(selectedWaTemplate.components) ? selectedWaTemplate.components : [];
+              const headerText = components.find((c: any) => c.type === "HEADER")?.text || "";
+              const bodyText = components.find((c: any) => c.type === "BODY")?.text || "";
+              const footerText = components.find((c: any) => c.type === "FOOTER")?.text || "";
+              return (
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block">{t("conversations_inbox.dialogs.send_template.preview_label")}</label>
+                  <div className="rounded-md bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/40 p-3 space-y-1">
+                    {headerText && <p className="text-sm font-semibold">{headerText}</p>}
+                    <p className="text-sm whitespace-pre-wrap">{bodyText}</p>
+                    {footerText && <p className="text-xs text-muted-foreground">{footerText}</p>}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
@@ -5542,6 +5651,144 @@ export default function ConversationsInbox() {
               disabled={!selectedTemplateId || sendTemplateMutation.isPending}
             >
               {sendTemplateMutation.isPending ? t("conversations_inbox.dialogs.send_template.sending") : t("conversations_inbox.dialogs.send_template.send")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Composer "+" → Quick Reply picker. Left: searchable list of the
+          workspace's canned/quick replies (same data as the "/" trigger).
+          Right: phone-frame preview (PreviewV2) of the selected reply, so
+          the agent sees exactly what the customer will see before sending. */}
+      <Dialog open={quickReplyPickerOpen} onOpenChange={setQuickReplyPickerOpen}>
+        <DialogContent className="sm:max-w-3xl flex flex-col">
+          <DialogHeader className="mb-2">
+            <div className="flex items-center justify-between gap-4 pr-6">
+              <DialogTitle className="flex items-center gap-2">
+                {quickReplyPickerCollectionId && (
+                  <button
+                    type="button"
+                    onClick={() => { setQuickReplyPickerCollectionId(null); setQuickReplySearch(""); }}
+                    className="text-muted-foreground hover:text-foreground -ml-1"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                )}
+                {quickReplyPickerCollectionId
+                  ? quickReplyCollections.find((f) => f.id === quickReplyPickerCollectionId)?.name
+                  : t("conversations_inbox.dialogs.quick_reply_picker.title")}
+                <span className="text-primary text-sm font-semibold">
+                  {quickReplyPickerCollectionId
+                    ? cannedMessages.filter((c) => c.parent_id === quickReplyPickerCollectionId).length
+                    : quickReplyCollections.length}
+                </span>
+              </DialogTitle>
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                <Input
+                  placeholder={t("conversations_inbox.dialogs.quick_reply_picker.search_placeholder")}
+                  value={quickReplySearch}
+                  onChange={(e) => setQuickReplySearch(e.target.value)}
+                  className="pl-8 h-9"
+                />
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden grid grid-cols-2 gap-6 min-h-0">
+            <div className="overflow-y-auto -ml-1 pr-1 divide-y max-h-[55vh]">
+              {quickReplyPickerCollectionId === null ? (
+                // ── Collections list ──
+                quickReplyCollections
+                  .filter((f) => {
+                    const q = quickReplySearch.trim().toLowerCase();
+                    return !q || f.name.toLowerCase().includes(q);
+                  })
+                  .map((f) => {
+                    const count = cannedMessages.filter((c) => c.parent_id === f.id).length;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => { setQuickReplyPickerCollectionId(f.id); setQuickReplySearch(""); }}
+                        className="w-full text-left px-2 py-2.5 flex items-center gap-3 hover:bg-muted transition-colors"
+                        data-testid={`quick-reply-collection-${f.id}`}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FolderIcon size={14} className="text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{f.name}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">{count}</span>
+                      </button>
+                    );
+                  })
+              ) : (
+                // ── Messages inside the selected collection ──
+                cannedMessages
+                  .filter((c) => c.parent_id === quickReplyPickerCollectionId)
+                  .filter((c) => {
+                    const q = quickReplySearch.trim().toLowerCase();
+                    return !q || c.title.toLowerCase().includes(q) || c.text.toLowerCase().includes(q);
+                  })
+                  .map((c, idx) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCannedId(c.id)}
+                      className={cn(
+                        "w-full text-left px-2 py-2.5 flex items-start gap-3 hover:bg-muted transition-colors",
+                        selectedCannedId === c.id && "bg-primary/5",
+                      )}
+                      data-testid={`quick-reply-option-${c.id}`}
+                    >
+                      <span className="text-xs text-muted-foreground mt-0.5 w-4 shrink-0">{idx + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{c.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {c.text || t("conversations_inbox.dialogs.quick_reply_picker.media_only")}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+              )}
+              {quickReplyPickerCollectionId === null && quickReplyCollections.length === 0 && (
+                <p className="text-sm text-muted-foreground py-6 text-center">
+                  {t("conversations_inbox.dialogs.quick_reply_picker.no_results")}
+                </p>
+              )}
+              {quickReplyPickerCollectionId !== null &&
+                cannedMessages.filter((c) => c.parent_id === quickReplyPickerCollectionId).length === 0 && (
+                  <p className="text-sm text-muted-foreground py-6 text-center">
+                    {t("conversations_inbox.dialogs.quick_reply_picker.no_results")}
+                  </p>
+                )}
+            </div>
+
+            <div className="flex flex-col items-center justify-center">
+              <div className="h-full max-h-[55vh] w-full max-w-[28vh]">
+                <PreviewV2
+                  mode="chat"
+                  bodyText={cannedMessages.find((c) => c.id === selectedCannedId)?.text || ""}
+                  selectedMediaFile={cannedMessages.find((c) => c.id === selectedCannedId)?.media?.[0]?.file_url || null}
+                  placeholderText={t("conversations_inbox.dialogs.quick_reply_picker.preview_placeholder")}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={() => setQuickReplyPickerOpen(false)}>
+              {t("conversations_inbox.dialogs.quick_reply_picker.cancel")}
+            </Button>
+            <Button
+              disabled={!selectedCannedId}
+              onClick={() => {
+                const c = cannedMessages.find((x) => x.id === selectedCannedId);
+                if (c) applyCanned(c);
+                setQuickReplyPickerOpen(false);
+              }}
+            >
+              {t("conversations_inbox.dialogs.quick_reply_picker.select")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -49,23 +49,28 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 /**
- * QR Code (Z-API) manage view — full replyagent `Zapi.vue` parity.
+ * QR Code (UazAPI) manage view — full replyagent `Zapi.vue` parity, now
+ * pointed at UazAPI (src/uazapi in agentawk-core) instead of legacy Z-API.
+ * Both providers share the same zapi_instances/zapi_chats/zapi_messages
+ * tables, so this view didn't need any data-shape changes — only the API
+ * base path moved from /api/zapi to /api/uazapi. There is no `provider`
+ * column on this schema, so the provider/legacy badges below are cosmetic
+ * only and always render as "legacy" — not a functional signal.
  *
  * Backend routes:
- *   GET    /api/zapi/instances
- *   POST   /api/zapi/create-instance
- *   POST   /api/zapi/update-instance/:id    (rename / auto_reply / etc.)
- *   DELETE /api/zapi/delete-instance/:id
- *   POST   /api/zapi/connect-instance/:id   ({qr} or {connected})
- *   POST   /api/zapi/disconnect-instance/:id
- *   POST   /api/zapi/resubscribe-instance/:id   (restart)
- *   POST   /api/zapi/toggle-feeder/:id
- *   GET    /api/zapi/refresh-avatar/:id
- *   GET    /api/zapi/get-queue-items-count/:id
- *   DELETE /api/zapi/delete-queue-items/:id
+ *   GET    /api/uazapi/instances
+ *   POST   /api/uazapi/create-instance
+ *   POST   /api/uazapi/update-instance/:id    (rename / auto_reply / etc.)
+ *   DELETE /api/uazapi/delete-instance/:id
+ *   POST   /api/uazapi/connect-instance/:id   ({qrcode} or {connected})
+ *   POST   /api/uazapi/disconnect-instance/:id
+ *   POST   /api/uazapi/toggle-feeder/:id
+ *   GET    /api/uazapi/refresh-avatar/:id
+ *   GET    /api/uazapi/get-queue-items-count/:id   (no UazAPI equivalent — always 0)
+ *   DELETE /api/uazapi/delete-queue-items/:id      (no UazAPI equivalent — no-op)
  *
  * Mirrors replyagent's flow: instance list with avatar + status + provider
- * badge, 3-dot menu per instance (Migrate / Auto-reply / Connect / Disconnect /
+ * badge, 3-dot menu per instance (Auto-reply / Connect / Disconnect /
  * Rename / Delete / Clear Queue / Feeder), create form, QR modal with 20s
  * auto-refresh polling, default-reply modal, multiple confirmation prompts.
  */
@@ -164,9 +169,9 @@ export default function QrCodeManageView({
 
   // ─── Data ──────────────────────────────────────────────────────
   const { data: instances = [] } = useQuery<ZapiInstance[]>({
-    queryKey: ["/api/zapi/instances"],
+    queryKey: ["/api/uazapi/instances"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/zapi/instances");
+      const res = await apiRequest("GET", "/api/uazapi/instances");
       const json = await res.json();
       return Array.isArray(json) ? json : json?.instances ?? [];
     },
@@ -193,11 +198,11 @@ export default function QrCodeManageView({
   // ─── Mutations ─────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: async (payload: { name: string }) => {
-      const res = await apiRequest("POST", "/api/zapi/create-instance", payload);
+      const res = await apiRequest("POST", "/api/uazapi/create-instance", payload);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
       toast({ title: t("qr_code_manage_view.toast_instance_created_title"), description: t("qr_code_manage_view.toast_instance_created_description") });
       resetCreateForm();
       setMode("list");
@@ -209,13 +214,13 @@ export default function QrCodeManageView({
 
   const renameMutation = useMutation({
     mutationFn: async (payload: { id: string | number; name: string }) => {
-      const res = await apiRequest("POST", `/api/zapi/update-instance/${payload.id}`, {
+      const res = await apiRequest("POST", `/api/uazapi/update-instance/${payload.id}`, {
         name: payload.name,
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
       toast({ title: t("qr_code_manage_view.toast_renamed_title"), description: t("qr_code_manage_view.toast_renamed_description") });
       setRenameInstance(null);
       setRenameValue("");
@@ -232,14 +237,14 @@ export default function QrCodeManageView({
       auto_reply_automation_id: string | null;
       auto_reply_interval: string;
     }) => {
-      const res = await apiRequest("POST", `/api/zapi/update-instance/${payload.id}`, {
+      const res = await apiRequest("POST", `/api/uazapi/update-instance/${payload.id}`, {
         auto_reply_automation_id: payload.auto_reply_automation_id,
         auto_reply_interval: payload.auto_reply_interval,
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
       toast({ title: t("qr_code_manage_view.toast_saved_title"), description: t("qr_code_manage_view.toast_auto_reply_updated_description") });
       setDrInstance(null);
     },
@@ -251,10 +256,10 @@ export default function QrCodeManageView({
   const deleteMutation = useMutation({
     mutationFn: async (id: string | number) => {
       // Send the delete-media choice (replyagent passes delete_media in the body).
-      await apiRequest("DELETE", `/api/zapi/delete-instance/${id}`, { delete_media: deleteMedia });
+      await apiRequest("DELETE", `/api/uazapi/delete-instance/${id}`, { delete_media: deleteMedia });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
       toast({ title: t("qr_code_manage_view.toast_deleted_title"), description: t("qr_code_manage_view.toast_deleted_description") });
       setDeleteInstance(null);
       setDeleteMedia(false);
@@ -266,11 +271,11 @@ export default function QrCodeManageView({
 
   const disconnectMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("POST", `/api/zapi/disconnect-instance/${id}`);
+      const res = await apiRequest("POST", `/api/uazapi/disconnect-instance/${id}`);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
       toast({ title: t("qr_code_manage_view.toast_disconnected_title"), description: t("qr_code_manage_view.toast_disconnected_description") });
       setDisconnectInstance(null);
     },
@@ -281,30 +286,30 @@ export default function QrCodeManageView({
 
   const feederMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("POST", `/api/zapi/toggle-feeder/${id}`);
+      const res = await apiRequest("POST", `/api/uazapi/toggle-feeder/${id}`);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
     },
   });
 
   const queueCountMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("GET", `/api/zapi/get-queue-items-count/${id}`);
+      const res = await apiRequest("GET", `/api/uazapi/get-queue-items-count/${id}`);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
     },
   });
 
   const clearQueueMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      await apiRequest("DELETE", `/api/zapi/delete-queue-items/${id}`);
+      await apiRequest("DELETE", `/api/uazapi/delete-queue-items/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
       toast({ title: t("qr_code_manage_view.toast_queue_cleared_title") });
       setClearQueueInstance(null);
     },
@@ -312,7 +317,7 @@ export default function QrCodeManageView({
 
   const avatarRefreshMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("GET", `/api/zapi/refresh-avatar/${id}`);
+      const res = await apiRequest("GET", `/api/uazapi/refresh-avatar/${id}`);
       return res.json();
     },
     onSuccess: (_data, id) => {
@@ -321,7 +326,7 @@ export default function QrCodeManageView({
         next.delete(String(id));
         return next;
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
     },
   });
 
@@ -393,19 +398,19 @@ export default function QrCodeManageView({
   async function fetchQr(instance: ZapiInstance) {
     setQrLoading(true);
     try {
-      const res = await apiRequest("POST", `/api/zapi/connect-instance/${instance.id}`);
+      const res = await apiRequest("POST", `/api/uazapi/connect-instance/${instance.id}`);
       const json = await res.json();
       if (json?.connected) {
         // Instance just paired — close modal + refresh list.
         setQrInstance(null);
         setQrImage(null);
-        queryClient.invalidateQueries({ queryKey: ["/api/zapi/instances"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/uazapi/instances"] });
         toast({ title: t("qr_code_manage_view.toast_connected_title"), description: t("qr_code_manage_view.toast_connected_description", { name: instance.name }) });
         return;
       }
-      if (json?.qr) {
-        // Backend returns either an image URL or a base64 data URL.
-        setQrImage(typeof json.qr === "string" ? json.qr : json.qr?.value ?? null);
+      if (json?.qrcode) {
+        // UazAPI returns a base64 data: URL directly.
+        setQrImage(json.qrcode);
       }
     } catch (e: any) {
       toast({

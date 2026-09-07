@@ -6,7 +6,12 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 3000 // Auto-dismiss after 3 seconds
+// How long a toast stays on screen before it closes itself.
+const TOAST_AUTO_DISMISS_DELAY = 4000
+// Delay between a toast closing (dismiss) and it being removed from the
+// array entirely — gives the close animation room to finish. Not an
+// auto-dismiss timer itself; see TOAST_AUTO_DISMISS_DELAY above for that.
+const TOAST_REMOVE_DELAY = 300
 
 type ToasterToast = ToastProps & {
   id: string
@@ -160,6 +165,12 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // `TOAST_REMOVE_DELAY` above only ever ran once something ELSE called
+  // dismiss() first (a manual close click) — nothing called dismiss() just
+  // because a toast appeared, so every toast sat there until the user
+  // closed it by hand. This is the actual auto-dismiss timer.
+  setTimeout(dismiss, TOAST_AUTO_DISMISS_DELAY)
 
   return {
     id: id,

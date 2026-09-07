@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
+import { ArrowLeft, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
 import { Forward, Briefcase, Shapes, MapPin, Mail, Globe, MessageSquare } from 'lucide-react';
 import { MdMic, MdAttachFile, MdSend, MdDoneAll } from 'react-icons/md';
 import { format } from 'date-fns';
@@ -295,18 +295,15 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       }}
     >
       {showTopBar && (
-        <div className='w-full max-h-[35px] h-full bg-gray-900 rounded-t-[14px] flex items-center justify-between px-[16px] text-white'>
-          <span className="text-[14.5px] font-semibold">9:41</span>
-          <div className="flex items-center space-x-[4px]">
-            <Wifi size={17} />
-            <Battery size={17} fill="white" />
-          </div>
+        <div className='relative w-full h-[30px] shrink-0 flex items-center justify-center'>
+          {/* Dynamic Island — floats directly on the phone bezel, no status-bar strip behind it */}
+          <div className="w-[90px] h-[24px] bg-black rounded-full" />
         </div>
       )}
 
       {mode === 'chat' && (
         <>
-          <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
+          <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] rounded-t-[14px]`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
             <div className="flex items-center">
               <ArrowLeft size={24} color="#111B21" />
               <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt={t("preview_v2.profile_picture_alt")} />
@@ -566,7 +563,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       {mode === 'profile' && (
         <>
           <div className={`pb-[30px] w-full h-full bg-white -mt-px px-[16px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
-            <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
+            <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between rounded-t-[14px]`}>
               <ArrowLeft size={24} />
               <img src={profilePfpUrl} className="w-[130px] h-[130px] rounded-full object-cover" alt={t("preview_v2.profile_alt")} />
               <MoreVertical size={24} />
@@ -675,10 +672,8 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       )}
 
       {showBottomBar && (
-        <div className='z-20 w-full max-h-[55px] h-full bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
-          <ChevronLeft size={28} />
-          <Circle size={20} />
-          <Square size={20} />
+        <div className='z-20 w-full max-h-[34px] h-full bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-center'>
+          <div className="w-[120px] h-[5px] bg-white/80 rounded-full" />
         </div>
       )}
     </div>

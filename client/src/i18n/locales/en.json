@@ -3348,6 +3348,12 @@
     "attached_media_title": "Attached media",
     "attached_media_desc": "Paste a Gallery media ID — find it in Media Gallery. Supported formats: image, document, video, audio.",
     "media_id_placeholder": "Gallery media ID",
+    "file_label": "File",
+    "select_from_computer": "Select from computer",
+    "select_from_gallery": "Select from Media Gallery",
+    "uploading": "Uploading…",
+    "upload_failed_title": "Upload failed",
+    "caption_label": "Caption (optional)",
     "add_button": "Add",
     "edit_collection_modal_desc": "Update name, sharing and agents.",
     "sharing_label": "Sharing",
@@ -6142,6 +6148,7 @@
       "untitled": "Untitled",
       "whatsapp_window_notice": "Last interaction was {{hours}}h ago. WhatsApp requires an approved template to reach this contact now.",
       "send_template": "Send Template",
+      "quick_reply": "Quick Reply",
       "replying_to_your_message": "Replying to your message",
       "replying_to_this_message": "Replying to this message",
       "media_placeholder": "(media)",
@@ -6175,6 +6182,7 @@
       "geolocation_not_supported": "Geolocation not supported by this browser",
       "instagram_unsupported_files": "Instagram does not support document files. Only images, videos, and audio can be sent.",
       "file_size_limit_exceeded": "File size limit exceeded: {{labels}}",
+      "attach_upload_failed": "Failed to upload {{name}}",
       "drag_to_resize": "Drag to resize",
       "add_note_button": "Add a note",
       "send_button": "Send"
@@ -6289,9 +6297,19 @@
         "description": "Pick an approved template to reach this contact outside the 24-hour reply window.",
         "choose_template": "Choose a template…",
         "no_approved_templates": "No approved templates",
+        "preview_label": "Preview",
         "cancel": "Cancel",
         "send": "Send",
         "sending": "Sending…"
+      },
+      "quick_reply_picker": {
+        "title": "Quick Replies",
+        "search_placeholder": "Search",
+        "media_only": "(media)",
+        "no_results": "No quick replies found",
+        "preview_placeholder": "Pick a quick reply to preview it",
+        "cancel": "Cancel",
+        "select": "Select"
       },
       "folder": {
         "rename_title": "Rename folder",

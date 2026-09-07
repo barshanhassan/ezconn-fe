@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
@@ -215,6 +216,9 @@ export default function CampaignManager() {
   const [campaignEndDate, setCampaignEndDate] = useState<Date | undefined>(undefined);
   const [selectedWhatsAppTemplate, setSelectedWhatsAppTemplate] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
+  // Plain-text message for non-template channels (UazAPI/QR WhatsApp has no
+  // Meta template concept — it's a personal number, not the Business API).
+  const [composerZapiMessage, setComposerZapiMessage] = useState("");
   // Static values for the selected template's body placeholders ({{1}}, {{2}}…),
   // keyed by placeholder number ("1", "2") to match PreviewV2's lookup. The same
   // value is sent to every recipient (no per-contact personalisation yet).
@@ -250,6 +254,11 @@ export default function CampaignManager() {
   // live here so switching back to the list keeps its state intact.
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerAudienceMatch, setComposerAudienceMatch] = useState<"any" | "all">("any");
+  // Quick "send to everyone" toggle — an empty filter already means "every
+  // workspace contact" on the backend (getAudienceContactIds), but the
+  // composer used to treat zero conditions as an error state instead of a
+  // valid choice, forcing a throwaway condition just to reach "everyone".
+  const [composerSelectAll, setComposerSelectAll] = useState(false);
   // Send-attempt tracking so inline error strings only surface AFTER the
   // user has clicked "Send broadcast". Freshly opened composer keeps the
   // fields clean; once an attempt is blocked the errors persist per-field
@@ -301,19 +310,26 @@ export default function CampaignManager() {
   // random inter-message delay range (min → max seconds).
   const [composerBatchSize, setComposerBatchSize] = useState(10);
   const [composerBatchPause, setComposerBatchPause] = useState(60);
-  const [composerIntervalMin, setComposerIntervalMin] = useState(2);
-  const [composerIntervalMax, setComposerIntervalMax] = useState(7);
+  // Default is a conservative 1-10 MINUTES (60-600s), not seconds — a
+  // personal WhatsApp (QR) number sending in a tight few-second cadence is
+  // exactly the pattern WhatsApp bans numbers for.
+  const [composerIntervalMin, setComposerIntervalMin] = useState(60);
+  const [composerIntervalMax, setComposerIntervalMax] = useState(600);
   // Applying a preset writes the four values above so the user can drop
   // into a curve and tweak from there. "custom" doesn't reset — it just
   // marks the active pill.
   const applyDeliveryPreset = (preset: "conservative" | "standard" | "aggressive" | "custom") => {
     setComposerDeliveryPreset(preset);
+    // The full 1-10 minute band (60-600s) is split across the three presets
+    // so none of them can ever fall back into second-level cadence — the
+    // exact bulk-send pattern that gets a personal WhatsApp number banned.
+    // Only "how slow/fast within that band" differs.
     if (preset === "conservative") {
-      setComposerBatchSize(5); setComposerBatchPause(120); setComposerIntervalMin(5); setComposerIntervalMax(15);
+      setComposerBatchSize(5); setComposerBatchPause(120); setComposerIntervalMin(360); setComposerIntervalMax(600);
     } else if (preset === "standard") {
-      setComposerBatchSize(10); setComposerBatchPause(60); setComposerIntervalMin(2); setComposerIntervalMax(7);
+      setComposerBatchSize(10); setComposerBatchPause(60); setComposerIntervalMin(180); setComposerIntervalMax(360);
     } else if (preset === "aggressive") {
-      setComposerBatchSize(25); setComposerBatchPause(20); setComposerIntervalMin(1); setComposerIntervalMax(3);
+      setComposerBatchSize(25); setComposerBatchPause(20); setComposerIntervalMin(60); setComposerIntervalMax(180);
     }
   };
 
@@ -1247,13 +1263,15 @@ export default function CampaignManager() {
       });
       return res.json();
     },
-    // Only meaningful once the composer is open with at least one usable
-    // condition; an empty item list would count the whole workspace.
-    enabled: composerOpen && audienceFilterPayload.items.length > 0,
+    // Meaningful once the composer is open with either a usable condition or
+    // "select all" on — an empty item list with select-all OFF would just
+    // count the whole workspace by accident, which is why this used to skip
+    // the query entirely for zero conditions.
+    enabled: composerOpen && (audienceFilterPayload.items.length > 0 || composerSelectAll),
     staleTime: 15_000,
   });
   const audienceCount =
-    audienceFilterPayload.items.length > 0 ? (audiencePreview?.count ?? 0) : 0;
+    audienceFilterPayload.items.length > 0 || composerSelectAll ? (audiencePreview?.count ?? 0) : 0;
 
   const buildComposerPayload = (uiStatus: "draft" | "scheduled") => {
     const templateRow = whatsappTemplates.find((tpl: any) => tpl.name === selectedWhatsAppTemplate);
@@ -1273,22 +1291,28 @@ export default function CampaignManager() {
       scheduled_at = d.toISOString();
     }
 
+    const isZapi = active?.channel_type === "zapi";
     return {
       name: campaignName,
       channel_type: active?.channel_type ?? "whatsapp",
       channelable_id: active?.channelable_id ?? null,
       channelable_type: active?.channelable_type ?? null,
-      wa_template_id,
+      wa_template_id: isZapi ? null : wa_template_id,
+      message: isZapi ? composerZapiMessage : undefined,
       scheduled_at,
       status: uiStatus,
-      // The audience the user built. Without this the backend sees no filters
-      // and targets EVERY contact in the workspace.
-      filters: {
-        condition: composerAudienceMatch,
-        items: composerConditions
-          .map(toBackendFilter)
-          .filter((f): f is NonNullable<typeof f> => f !== null),
-      },
+      // The audience the user built. An empty item list here IS what "every
+      // contact in the workspace" means to the backend — composerSelectAll
+      // deliberately sends one so that's an explicit, intentional choice
+      // rather than conditions silently failing to translate.
+      filters: composerSelectAll
+        ? { condition: "any", items: [] }
+        : {
+            condition: composerAudienceMatch,
+            items: composerConditions
+              .map(toBackendFilter)
+              .filter((f): f is NonNullable<typeof f> => f !== null),
+          },
       metadata: {
         type: "Broadcast",
         messageType: composerScheduleMode === "now" ? "Immediate" : "Scheduled",
@@ -1405,7 +1429,12 @@ export default function CampaignManager() {
     // this early-return just stops the network call. Once the user
     // fills the missing pieces the errors clear automatically since
     // they read the current values live.
+    const sendChannel = channels.find(
+      (c: any) => `${c.channel_type}:${c.channelable_id}` === newBroadcastChannelKey,
+    );
+    const isZapiSend = sendChannel?.channel_type === "zapi";
     const templateVarsMissing =
+      !isZapiSend &&
       !!selectedTemplate &&
       (selectedTemplate.variables?.length ?? 0) > 0 &&
       selectedTemplate.variables.some(
@@ -1414,9 +1443,9 @@ export default function CampaignManager() {
     const anyMissing =
       !campaignName.trim() ||
       !newBroadcastChannelKey ||
-      !selectedWhatsAppTemplate ||
+      (isZapiSend ? !composerZapiMessage.trim() : !selectedWhatsAppTemplate) ||
       templateVarsMissing ||
-      composerConditions.length === 0 ||
+      (!composerSelectAll && composerConditions.length === 0) ||
       (composerScheduleMode === "later" && !composerScheduleDate);
     if (anyMissing) {
       setComposerSendAttempted(true);
@@ -1610,20 +1639,24 @@ export default function CampaignManager() {
     // sensible defaults).
     const steps = [
       { key: "audience", label: t("campaign_manager.composer.step_audience"), ready: !!campaignName.trim() && !!newBroadcastChannelKey },
-      { key: "template", label: t("campaign_manager.composer.step_template"), ready: !!selectedWhatsAppTemplate },
+      { key: "template", label: t("campaign_manager.composer.step_template"), ready: activeChannelType === "zapi" ? !!composerZapiMessage.trim() : !!selectedWhatsAppTemplate },
       { key: "schedule", label: t("campaign_manager.composer.step_schedule"), ready: composerScheduleMode === "now" || !!composerScheduleDate },
       { key: "delivery", label: t("campaign_manager.composer.step_delivery"), ready: true },
     ];
     const readyCount = steps.filter((s) => s.ready).length;
     const remaining = steps.length - readyCount;
 
-    // Est. duration = time to deliver AUDIENCE messages given batch size
-    // + inter-batch pause + per-message interval (using the midpoint of
-    // the random range). Falls back to a dash while audience is 0.
+    // Est. duration mirrors the actual send loop in runZapiBroadcast():
+    // (audience - 1) gaps of the per-message interval (midpoint of the
+    // random range), plus one extra batch pause every `batchSize` messages
+    // — both skipped after the very last recipient, so a small audience
+    // (fewer than one batch) never triggers a batch pause at all. Using
+    // composerBatchSize as a flat multiplier here (as the old formula did)
+    // overstated the estimate whenever audience < batch size.
     const midInterval = (composerIntervalMin + composerIntervalMax) / 2;
-    const secondsPerBatch = composerBatchSize * midInterval + composerBatchPause;
-    const numBatches = audienceCount > 0 ? Math.ceil(audienceCount / composerBatchSize) : 0;
-    const totalSeconds = Math.max(0, numBatches * secondsPerBatch - composerBatchPause);
+    const gaps = Math.max(0, audienceCount - 1);
+    const batchPauses = composerBatchSize > 0 ? Math.floor(gaps / composerBatchSize) : 0;
+    const totalSeconds = audienceCount > 0 ? gaps * midInterval + batchPauses * composerBatchPause : 0;
     const formatDuration = (s: number) => {
       if (s <= 0) return "—";
       const hh = Math.floor(s / 3600);
@@ -1785,6 +1818,49 @@ export default function CampaignManager() {
                   <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.segment_name_required")}</p>
                 )}
               </div>
+              {/* Select all — a plain empty filter already means "every
+                  workspace contact" to the backend; this just makes that an
+                  explicit, one-click choice instead of forcing a throwaway
+                  condition just to reach "everyone". Turning it on hides the
+                  condition builder below since it would otherwise be unclear
+                  which one actually wins. */}
+              <button
+                type="button"
+                onClick={() => setComposerSelectAll((v) => !v)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 text-left transition-all",
+                  composerSelectAll
+                    ? "border-primary bg-primary/[0.06] shadow-sm shadow-primary/10"
+                    : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40",
+                )}
+              >
+                <span className={cn(
+                  "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+                  composerSelectAll ? "bg-primary/10 text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-400",
+                )}>
+                  <UsersRound size={16} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-slate-900 dark:text-white">
+                    {t("campaign_manager.composer.select_all_contacts", "Select all contacts")}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {t("campaign_manager.composer.select_all_contacts_hint", "Send to every contact in the workspace — no conditions needed")}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "shrink-0 h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center transition-all",
+                    composerSelectAll
+                      ? "border-primary bg-primary"
+                      : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900",
+                  )}
+                >
+                  {composerSelectAll && <span className="h-2 w-2 rounded-full bg-white" />}
+                </span>
+              </button>
+              {!composerSelectAll && (
+                <>
               {/* Match */}
               <div className="space-y-1.5">
                 <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.match")}</label>
@@ -1858,6 +1934,8 @@ export default function CampaignManager() {
               >
                 {t("campaign_manager.composer.add_condition")}
               </button>
+                </>
+              )}
               {/* Total audience — replyagent uses a warm rose→pink accent
                   so this row stands out from the emerald + slate chrome
                   around it. Number becomes a gradient text; a filled
@@ -1870,13 +1948,15 @@ export default function CampaignManager() {
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1.5">{t("campaign_manager.composer.total_audience")}</p>
                 <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
-                  {composerConditions.length === 0
-                    ? t("campaign_manager.composer.audience_hint_empty")
-                    : unsupportedConditions.length > 0
-                      ? t("campaign_manager.composer.audience_hint_unsupported")
-                      : t("campaign_manager.composer.audience_hint_ready")}
+                  {composerSelectAll
+                    ? t("campaign_manager.composer.audience_hint_select_all", "Every contact in this workspace")
+                    : composerConditions.length === 0
+                      ? t("campaign_manager.composer.audience_hint_empty")
+                      : unsupportedConditions.length > 0
+                        ? t("campaign_manager.composer.audience_hint_unsupported")
+                        : t("campaign_manager.composer.audience_hint_ready")}
                 </p>
-                {composerSendAttempted && composerConditions.length === 0 && (
+                {composerSendAttempted && !composerSelectAll && composerConditions.length === 0 && (
                   <p className="text-[10.5px] text-rose-500 italic mt-1.5">
                     {t("campaign_manager.composer.no_audience_error")}
                   </p>
@@ -1898,7 +1978,55 @@ export default function CampaignManager() {
                   <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">{t("campaign_manager.composer.message_and_schedule")}</h3>
                 </div>
               </div>
-              {/* Template */}
+              {/* Template (WhatsApp Cloud) vs plain message (UazAPI/QR WhatsApp —
+                  a personal number has no Meta template concept). */}
+              {activeChannelType === "zapi" ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.message_label", "Message")}</label>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          title={t("campaign_manager.composer.insert_contact_field")}
+                          className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-[10.5px] font-semibold text-slate-500 hover:text-primary shrink-0"
+                        >
+                          <User className="h-3 w-3" /> {t("campaign_manager.composer.insert_contact_field")}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-xl p-1.5 min-w-[190px]">
+                        {CONTACT_TOKENS.map((tok) => (
+                          <DropdownMenuItem
+                            key={tok.token}
+                            className="rounded-lg py-2 cursor-pointer font-medium text-[11px]"
+                            onClick={() => setComposerZapiMessage((prev) => `${prev}${tok.token}`)}
+                          >
+                            {t(`campaign_manager.contact_tokens.${tok.labelKey}`)}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <Textarea
+                    value={composerZapiMessage}
+                    onChange={(e) => setComposerZapiMessage(e.target.value)}
+                    rows={4}
+                    placeholder={t("campaign_manager.composer.zapi_message_placeholder", "Type the message to send…")}
+                    className={cn(
+                      "rounded-xl bg-white dark:bg-slate-900 text-[13px]",
+                      composerSendAttempted && !composerZapiMessage.trim()
+                        ? "border-rose-300 dark:border-rose-800 focus-visible:ring-rose-300"
+                        : "border-slate-200 dark:border-slate-800",
+                    )}
+                  />
+                  {composerSendAttempted && !composerZapiMessage.trim() && (
+                    <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.message_required", "Message is required")}</p>
+                  )}
+                  <p className="text-[10.5px] text-amber-600 dark:text-amber-400 leading-snug">
+                    {t("campaign_manager.composer.zapi_unofficial_hint", "This is a personal WhatsApp number, not the official Business API — messages send one at a time with a random pause (set below) to avoid the number getting banned.")}
+                  </p>
+                </div>
+              ) : (
               <div className="space-y-1.5">
                 <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.template")}</label>
                 <Select
@@ -1935,9 +2063,10 @@ export default function CampaignManager() {
                   <p className="text-[11px] text-rose-500 italic">{t("campaign_manager.composer.template_required")}</p>
                 )}
               </div>
+              )}
 
               {/* Template variables ({{1}}, {{2}}…) — static values, same for every recipient */}
-              {selectedTemplate && (selectedTemplate.variables?.length ?? 0) > 0 && (
+              {activeChannelType !== "zapi" && selectedTemplate && (selectedTemplate.variables?.length ?? 0) > 0 && (
                 <div className="space-y-2">
                   <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">
                     {t("campaign_manager.composer.template_variables")}
@@ -2233,10 +2362,10 @@ export default function CampaignManager() {
             {/* Preset cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
               {([
-                { key: "conservative", label: t("campaign_manager.presets.conservative"), desc: t("campaign_manager.presets.conservative_desc"), Icon: CheckCircle2, iconBg: "bg-sky-500", batch: 5, pause: 120, interval: "5-15s" },
-                { key: "standard",     label: t("campaign_manager.presets.standard"),     desc: t("campaign_manager.presets.standard_desc"),    Icon: CheckCircle2, iconBg: "bg-emerald-500", batch: 10, pause: 60, interval: "2-7s" },
-                { key: "aggressive",   label: t("campaign_manager.presets.aggressive"),   desc: t("campaign_manager.presets.aggressive_desc"), Icon: Zap,        iconBg: "bg-orange-500", batch: 25, pause: 20, interval: "1-3s" },
-                { key: "custom",       label: t("campaign_manager.presets.custom"),       desc: t("campaign_manager.presets.custom_desc"),  Icon: Activity,   iconBg: "bg-violet-500", batch: composerBatchSize, pause: composerBatchPause, interval: `${composerIntervalMin}-${composerIntervalMax}s` },
+                { key: "conservative", label: t("campaign_manager.presets.conservative"), desc: t("campaign_manager.presets.conservative_desc"), Icon: CheckCircle2, iconBg: "bg-sky-500", batch: 5, pause: 120, interval: "6-10 min" },
+                { key: "standard",     label: t("campaign_manager.presets.standard"),     desc: t("campaign_manager.presets.standard_desc"),    Icon: CheckCircle2, iconBg: "bg-emerald-500", batch: 10, pause: 60, interval: "3-6 min" },
+                { key: "aggressive",   label: t("campaign_manager.presets.aggressive"),   desc: t("campaign_manager.presets.aggressive_desc"), Icon: Zap,        iconBg: "bg-orange-500", batch: 25, pause: 20, interval: "1-3 min" },
+                { key: "custom",       label: t("campaign_manager.presets.custom"),       desc: t("campaign_manager.presets.custom_desc"),  Icon: Activity,   iconBg: "bg-violet-500", batch: composerBatchSize, pause: composerBatchPause, interval: `${Math.round(composerIntervalMin/60)}-${Math.round(composerIntervalMax/60)} min` },
               ] as const).map((p) => (
                 <button
                   key={p.key}
@@ -2293,8 +2422,8 @@ export default function CampaignManager() {
                   <span className="text-[10px] text-slate-400 uppercase tracking-wider">{t("campaign_manager.composer.random_range")}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <StepperInput value={composerIntervalMin} onChange={(v) => { setComposerIntervalMin(v); setComposerDeliveryPreset("custom"); }} min={1} max={60} />
-                  <StepperInput value={composerIntervalMax} onChange={(v) => { setComposerIntervalMax(v); setComposerDeliveryPreset("custom"); }} min={1} max={60} />
+                  <StepperInput value={composerIntervalMin} onChange={(v) => { setComposerIntervalMin(v); setComposerDeliveryPreset("custom"); }} min={1} max={600} />
+                  <StepperInput value={composerIntervalMax} onChange={(v) => { setComposerIntervalMax(v); setComposerDeliveryPreset("custom"); }} min={1} max={600} />
                 </div>
                 <p className="text-[10.5px] text-slate-400">{t("campaign_manager.composer.random_delay_hint")}</p>
               </div>
@@ -3034,6 +3163,7 @@ export default function CampaignManager() {
                       ).map(([type, list]) => {
                         const typeLabel = ({
                           whatsapp: "WhatsApp",
+                          zapi: "WhatsApp (QR)",
                           telegram: "Telegram",
                           messenger: "Messenger",
                           instagram: "Instagram",
@@ -3048,6 +3178,7 @@ export default function CampaignManager() {
                         // groups visually separate at a glance.
                         const brand = ({
                           whatsapp:  { text: "text-emerald-600", tile: "bg-emerald-500", cardBg: "bg-emerald-50/50 hover:bg-emerald-50 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30", cardBorder: "border-emerald-100 dark:border-emerald-900/40", iconBg: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400" },
+                          zapi:      { text: "text-teal-600",    tile: "bg-teal-500",    cardBg: "bg-teal-50/50 hover:bg-teal-50 dark:bg-teal-950/20 dark:hover:bg-teal-950/30",             cardBorder: "border-teal-100 dark:border-teal-900/40",       iconBg: "bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400" },
                           telegram:  { text: "text-sky-600",     tile: "bg-sky-500",     cardBg: "bg-sky-50/50 hover:bg-sky-50 dark:bg-sky-950/20 dark:hover:bg-sky-950/30",             cardBorder: "border-sky-100 dark:border-sky-900/40",         iconBg: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400" },
                           messenger: { text: "text-blue-600",    tile: "bg-blue-500",    cardBg: "bg-blue-50/50 hover:bg-blue-50 dark:bg-blue-950/20 dark:hover:bg-blue-950/30",         cardBorder: "border-blue-100 dark:border-blue-900/40",       iconBg: "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400" },
                           instagram: { text: "text-fuchsia-600", tile: "bg-gradient-to-tr from-fuchsia-500 to-orange-400", cardBg: "bg-fuchsia-50/50 hover:bg-fuchsia-50 dark:bg-fuchsia-950/20 dark:hover:bg-fuchsia-950/30", cardBorder: "border-fuchsia-100 dark:border-fuchsia-900/40", iconBg: "bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/40 dark:text-fuchsia-400" },
@@ -3097,8 +3228,8 @@ export default function CampaignManager() {
                                       </p>
                                       {(() => {
                                         const sub =
-                                          type === "whatsapp"
-                                            ? c.phone_number ?? c.display_phone_number ?? ""
+                                          type === "whatsapp" || type === "zapi"
+                                            ? c.phone_number ?? c.display_phone_number ?? c.waba_id ?? ""
                                             : type === "messenger"
                                               ? "Facebook Page"
                                               : type === "telegram"
@@ -3873,6 +4004,18 @@ function StepperInput({
   max: number;
 }) {
   const bump = (delta: number) => onChange(Math.max(min, Math.min(max, value + delta)));
+  // Typing goes through its own local string so the field can hold an
+  // in-progress value (e.g. briefly empty while backspacing to type "600")
+  // without every keystroke being clamped back to `min`. Clamped/committed
+  // via onChange only on blur/Enter — the +/- buttons still commit instantly.
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+  const commit = () => {
+    const n = parseInt(draft, 10);
+    const clamped = Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : value;
+    setDraft(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
   return (
     <div className="flex items-stretch h-9 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
       <button
@@ -3882,9 +4025,15 @@ function StepperInput({
       >
         <Minus size={12} strokeWidth={2.5} />
       </button>
-      <div className="flex-1 flex items-center justify-center text-[13px] font-semibold text-slate-900 dark:text-white tabular-nums border-x border-slate-200 dark:border-slate-800">
-        {value}
-      </div>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ""))}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+        className="flex-1 min-w-0 text-center text-[13px] font-semibold text-slate-900 dark:text-white tabular-nums border-x border-slate-200 dark:border-slate-800 bg-transparent outline-none"
+      />
       <button
         type="button"
         onClick={() => bump(1)}

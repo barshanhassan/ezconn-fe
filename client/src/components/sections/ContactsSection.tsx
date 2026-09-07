@@ -287,14 +287,33 @@ export default function ContactsSection() {
   const contactTagOptions = realTags;
   const tagFilterOptions = [{ id: "__all__", name: t("contacts_section.filters.all") }, ...realTags];
 
-  // Fetch contacts
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Fetch contacts. `page`/`rowsPerPage` used to be collected purely for a
+  // decorative pagination bar (hardcoded "Page 1 of 1", disabled arrows) —
+  // the backend had a hard `take: 50` with no skip/count at all, so
+  // anything past the newest 50 contacts (e.g. right after a bulk import)
+  // was simply never fetched. Both are now real query params.
   const { data: contactsResponse, isLoading: isLoadingContacts } = useQuery({
-    queryKey: ["/api/contacts", { search, status: statusFilter }],
+    queryKey: ["/api/contacts", { search, status: statusFilter, page, rowsPerPage }],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/contacts?search=${search}`);
+      const res = await apiRequest(
+        "GET",
+        `/api/contacts?search=${encodeURIComponent(search)}&page=${page}&limit=${rowsPerPage}`,
+      );
       return res.json();
     }
   });
+  const contactsTotal: number = contactsResponse?.total ?? 0;
+  const contactsPages: number = contactsResponse?.pages ?? 1;
+
+  // Any change to what's being asked for (search text, status tab, or page
+  // size) invalidates which page makes sense — always land back on page 1
+  // rather than showing a now-meaningless "page 4 of 1".
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, rowsPerPage]);
 
   // Country dial codes for the Add Contact phone field. replyagent stores a
   // number as +<dialcode><national>, so we need the country to normalise local
@@ -310,6 +329,13 @@ export default function ContactsSection() {
   const countries: { id: string; name: string; phone_code: string }[] = Array.isArray(countriesResponse)
     ? countriesResponse
     : (countriesResponse?.data || countriesResponse?.countries || []);
+  // Same "PK" default the Add Contact flag chip uses, resolved to a real
+  // countries.id — used as the CSV import's default country until the user
+  // picks a different one.
+  const pkDialCode = STATIC_COUNTRIES.find((c) => c.code === "PK")?.dial;
+  const defaultImportCountryId = pkDialCode
+    ? countries.find((c) => `+${(c.phone_code || "").replace(/^\+/, "")}` === pkDialCode)?.id
+    : undefined;
 
   // Map backend contacts to frontend format
   const contacts: Contact[] = (contactsResponse?.contacts || contactsResponse || []).map((c: any) => ({
@@ -440,10 +466,17 @@ export default function ContactsSection() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<{ created: number; updated: number; total: number } | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  // Country assumed for any phone number in the file that isn't already in
+  // full international form (no leading + or 00) — e.g. a local "0300..."
+  // row. Defaults to Pakistan like the rest of this page (newContactCountryIso).
+  const [importCountryId, setImportCountryId] = useState<string>("");
 
   const importMutation = useMutation({
     mutationFn: async (csv: string) => {
-      const res = await apiRequest("POST", "/api/contacts/import/csv", { csv });
+      const res = await apiRequest("POST", "/api/contacts/import/csv", {
+        csv,
+        default_country_id: importCountryId || defaultImportCountryId || undefined,
+      });
       return res.json();
     },
     onSuccess: (data: any) => {
@@ -597,8 +630,6 @@ export default function ContactsSection() {
   });
 
   const currentUserName = "Demo User";
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sorts, setSorts] = useState<SortEntry[]>([]);
   const [filters, setFilters] = useState<FilterEntry[]>([]);
   const [showSort, setShowSort] = useState(false);
@@ -1801,7 +1832,7 @@ export default function ContactsSection() {
             <div className="py-3 px-5 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
               <div className="flex items-center gap-4">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  {t("contacts_section.pagination.results", { count: getFilteredAndSortedData().length })}
+                  {t("contacts_section.pagination.results", { count: contactsTotal })}
                 </span>
 
                 <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
@@ -1839,19 +1870,35 @@ export default function ContactsSection() {
 
               <div className="flex items-center gap-4">
                 <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  {t("contacts_section.pagination.page_prefix")} <span className="text-slate-900 dark:text-slate-200">1</span> {t("contacts_section.pagination.page_of_suffix")} 1
+                  {t("contacts_section.pagination.page_prefix")} <span className="text-slate-900 dark:text-slate-200">{page}</span> {t("contacts_section.pagination.page_of_suffix")} {contactsPages}
                 </div>
                 <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
-                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                  <button
+                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+                    disabled={page <= 1}
+                    onClick={() => setPage(1)}
+                  >
                     <ChevronsLeft size={13} className="text-slate-600 dark:text-slate-400" />
                   </button>
-                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                  <button
+                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
                     <ChevronLeft size={13} className="text-slate-600 dark:text-slate-400" />
                   </button>
-                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                  <button
+                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+                    disabled={page >= contactsPages}
+                    onClick={() => setPage((p) => Math.min(contactsPages, p + 1))}
+                  >
                     <ChevronRight size={13} className="text-slate-600 dark:text-slate-400" />
                   </button>
-                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                  <button
+                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+                    disabled={page >= contactsPages}
+                    onClick={() => setPage(contactsPages)}
+                  >
                     <ChevronsRight size={13} className="text-slate-600 dark:text-slate-400" />
                   </button>
                 </div>
@@ -1886,6 +1933,12 @@ export default function ContactsSection() {
                 <code className="text-[11px]">first_name, last_name, email, phone, tags</code>{" "}
                 {t("contacts_section.import_modal.instructions_suffix")}
               </p>
+              <p className="text-[10.5px] text-muted-foreground leading-snug">
+                {t(
+                  "contacts_section.import_modal.alias_hint",
+                  "A file exported from the old system (\"First name\", \"Last name\", \"Mobile number\", \"Emails\", \"Whatsapp\", \"Tags\") is also recognised automatically.",
+                )}
+              </p>
 
               <button
                 type="button"
@@ -1907,6 +1960,28 @@ export default function ContactsSection() {
                 {importFile && (
                   <p className="mt-1.5 text-[11px] text-muted-foreground truncate">{t("contacts_section.import_modal.selected_file", { name: importFile.name })}</p>
                 )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                  {t("contacts_section.import_modal.default_country_label", "Country for local numbers")}
+                </label>
+                <CustomDropdown
+                  options={countries.map((c) => ({
+                    id: c.id,
+                    name: `${c.name} (+${(c.phone_code || "").replace(/^\+/, "")})`,
+                  }))}
+                  selected={[importCountryId || defaultImportCountryId || ""].filter(Boolean)}
+                  onChange={(sel) => setImportCountryId(sel[0] ?? "")}
+                  placeholder={t("contacts_section.import_modal.select_country", "Select country")}
+                  width="100%"
+                />
+                <p className="text-[10.5px] text-muted-foreground leading-snug">
+                  {t(
+                    "contacts_section.import_modal.default_country_hint",
+                    "Only used for rows whose phone number has no country code (e.g. \"0300...\"). Numbers already written as +92... are left as-is.",
+                  )}
+                </p>
               </div>
 
               <div className="flex justify-end gap-2">

@@ -1735,13 +1735,6 @@ export default function TemplateManager() {
                                                 <p className="text-[14px] font-bold text-slate-900 dark:text-white">{t("template_manager.table.no_templates_title")}</p>
                                                 <p className="text-[11px] font-medium text-slate-400">{t("template_manager.table.no_templates_desc")}</p>
                                             </div>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setCreateTemplateOpen(true)}
-                                                className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
-                                            >
-                                                {t("template_manager.table.create_one_now")}
-                                            </Button>
                                         </div>
                                     </td>
                                 </tr>

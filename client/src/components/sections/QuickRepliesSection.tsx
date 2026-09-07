@@ -7,7 +7,6 @@ import {
   Edit2,
   MoreVertical,
   ChevronLeft,
-  Smile,
   MessageSquare,
   AlertCircle,
   Users,
@@ -36,6 +35,7 @@ import {
   AlertDialogContent,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import MediaGallerySection from "@/components/workspace/MediaGallerySection";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -68,11 +68,6 @@ interface WorkspaceMember {
   email: string;
 }
 
-interface CustomFieldOption {
-  slug: string;
-  label: string;
-}
-
 export default function QuickRepliesSection() {
   const { t } = useTranslation();
   const { mode } = useTheme();
@@ -94,15 +89,6 @@ export default function QuickRepliesSection() {
     queryFn: async () => (await apiRequest("GET", "/api/workspaces/members")).json(),
   });
 
-  // Custom fields — drive the in-textarea "insert variable" picker. Hardcoded
-  // Name/Email was misleading because the actual slugs are workspace-defined.
-  const { data: cfData } = useQuery<any>({
-    queryKey: ["/api/custom-fields", "for-picker"],
-    queryFn: async () =>
-      (await apiRequest("GET", "/api/custom-fields?folder_id=ALL")).json(),
-    staleTime: 30_000,
-  });
-
   const folders: any[] = qrData?.folders ?? [];
   const responses: any[] = qrData?.responses ?? [];
   const members: WorkspaceMember[] = useMemo(() => {
@@ -118,11 +104,6 @@ export default function QuickRepliesSection() {
       email: m.email ?? "",
     }));
   }, [membersData]);
-
-  const customFields: CustomFieldOption[] = useMemo(() => {
-    const list: any[] = cfData?.fields ?? [];
-    return list.map((f) => ({ slug: f.slug, label: f.label }));
-  }, [cfData]);
 
   const collections: QRCollection[] = useMemo(() => {
     return folders.map((f: any) => ({
@@ -200,12 +181,13 @@ export default function QuickRepliesSection() {
     type: "text" | "media";
     content: string;
     media: Array<{ gallery_media_id: string }>;
-    mediaInput: string;
-  }>({ id: null, title: "", type: "text", content: "", media: [], mediaInput: "" });
+    mediaFileName: string;
+  }>({ id: null, title: "", type: "text", content: "", media: [], mediaFileName: "" });
 
   const [showError, setShowError] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
 
   const currentCollection = collections.find((c) => c.id === currentCollectionId) || null;
 
@@ -258,7 +240,7 @@ export default function QuickRepliesSection() {
       type: "text",
       content: "",
       media: [],
-      mediaInput: "",
+      mediaFileName: "",
     });
 
   const handleCreateCollectionClick = () => {
@@ -333,7 +315,7 @@ export default function QuickRepliesSection() {
       media: msg.mediaList.map((m) => ({
         gallery_media_id: String(m.gallery_media_id),
       })),
-      mediaInput: "",
+      mediaFileName: "",
     });
     setView("create_message");
   };
@@ -392,30 +374,11 @@ export default function QuickRepliesSection() {
     });
   };
 
-  const insertField = (slug: string) => {
-    if (!slug) return;
-    const token = `{{${slug}}}`;
-    setMessageForm((p) => ({ ...p, content: (p.content + token).slice(0, 2000) }));
-  };
-
-  const addMediaId = () => {
-    const id = messageForm.mediaInput.trim();
-    if (!id) return;
-    if (messageForm.media.some((m) => m.gallery_media_id === id)) {
-      toast({ title: t("quick_replies_section.toast_already_added"), variant: "destructive" });
-      return;
-    }
-    setMessageForm((p) => ({
-      ...p,
-      media: [...p.media, { gallery_media_id: id }],
-      mediaInput: "",
-    }));
-  };
-
   const removeMedia = (id: string) =>
     setMessageForm((p) => ({
       ...p,
       media: p.media.filter((m) => m.gallery_media_id !== id),
+      mediaFileName: "",
     }));
 
   const toggleBinding = (userId: string) =>
@@ -652,8 +615,8 @@ export default function QuickRepliesSection() {
           {view === "create_collection" && (
             <div className="p-8">
               <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
-                <div className="max-w-xl space-y-6">
-                  <div className="space-y-2">
+                <div className="space-y-6">
+                  <div className="max-w-md space-y-2">
                     <label className={labelCls}>{t("quick_replies_section.create_collection_name_label")}</label>
                     <input
                       value={collectionForm.name}
@@ -671,7 +634,7 @@ export default function QuickRepliesSection() {
 
                   <div className="space-y-3">
                     <label className={labelCls}>{t("quick_replies_section.share_with_label")}</label>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <RadioRow
                         value="private"
                         current={collectionForm.share}
@@ -811,86 +774,56 @@ export default function QuickRepliesSection() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className={labelCls}>{t("quick_replies_section.response_text_label")}</label>
-                    <div className="relative">
-                      <textarea
-                        placeholder={t("quick_replies_section.response_text_placeholder")}
-                        rows={6}
-                        value={messageForm.content}
-                        onChange={(e) => setMessageForm((p) => ({ ...p, content: e.target.value.slice(0, 2000) }))}
-                        className={cn(textareaCls, "pr-10")}
-                      />
-                      <button
-                        type="button"
-                        className={cn("absolute bottom-3 right-3 transition-colors", sub, "hover:text-primary")}
-                        title={t("quick_replies_section.emoji_title")}
-                      >
-                        <Smile size={18} />
-                      </button>
+                  {messageForm.type === "media" && (
+                    <div className="space-y-2">
+                      <label className={labelCls}>{t("quick_replies_section.file_label")}</label>
+                      {messageForm.media.length > 0 ? (
+                        <div className="flex items-center gap-2 h-11 px-4 rounded-xl border border-primary/30 bg-primary/5 text-primary text-[12px] font-bold">
+                          <ImageIcon size={14} className="flex-shrink-0" />
+                          <span className="flex-1 truncate">
+                            {messageForm.mediaFileName || `#${messageForm.media[0].gallery_media_id}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeMedia(messageForm.media[0].gallery_media_id)}
+                            className="hover:text-rose-500 flex-shrink-0"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setGalleryPickerOpen(true)}
+                            className={cn(outlineBtn, "w-fit")}
+                          >
+                            <ImageIcon size={12} /> {t("quick_replies_section.select_from_gallery")}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between items-center">
-                      <select
-                        value=""
-                        onChange={(e) => insertField(e.target.value)}
-                        className={cn(selectCls, "h-9 max-w-[240px] text-[11px]")}
-                      >
-                        <option value="">{t("quick_replies_section.insert_field_placeholder")}</option>
-                        <option value="first_name">{`{{first_name}}`}</option>
-                        <option value="last_name">{`{{last_name}}`}</option>
-                        <option value="email">{`{{email}}`}</option>
-                        {customFields.map((f) => (
-                          <option key={f.slug} value={f.slug}>
-                            {`{{${f.slug}}} — ${f.label}`}
-                          </option>
-                        ))}
-                      </select>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className={labelCls}>
+                      {messageForm.type === "media"
+                        ? t("quick_replies_section.caption_label")
+                        : t("quick_replies_section.response_text_label")}
+                    </label>
+                    <textarea
+                      placeholder={t("quick_replies_section.response_text_placeholder")}
+                      rows={messageForm.type === "media" ? 4 : 6}
+                      value={messageForm.content}
+                      onChange={(e) => setMessageForm((p) => ({ ...p, content: e.target.value.slice(0, 2000) }))}
+                      className={textareaCls}
+                    />
+                    <div className="flex justify-end">
                       <span className="text-[11px] font-semibold text-primary">
                         {t("quick_replies_section.chars_remaining", { count: 2000 - messageForm.content.length })}
                       </span>
                     </div>
                   </div>
-
-                  {messageForm.type === "media" && (
-                    <div className={cn("rounded-xl border p-4 space-y-3", softBg, softBorder)}>
-                      <div>
-                        <p className={cn("text-[12px] font-black", text)}>{t("quick_replies_section.attached_media_title")}</p>
-                        <p className={cn("text-[11px] font-medium opacity-60", sub)}>
-                          {t("quick_replies_section.attached_media_desc")}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          placeholder={t("quick_replies_section.media_id_placeholder")}
-                          value={messageForm.mediaInput}
-                          onChange={(e) => setMessageForm((p) => ({ ...p, mediaInput: e.target.value }))}
-                          className={cn(inputCls, "flex-1 font-mono text-[12px]")}
-                        />
-                        <button onClick={addMediaId} className={primaryOutlineBtn} type="button">
-                          <Plus size={12} /> {t("quick_replies_section.add_button")}
-                        </button>
-                      </div>
-                      {messageForm.media.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {messageForm.media.map((m) => (
-                            <span
-                              key={m.gallery_media_id}
-                              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md border border-primary/30 bg-primary/5 text-primary text-[11px] font-black"
-                            >
-                              <ImageIcon size={11} /> #{m.gallery_media_id}
-                              <button
-                                onClick={() => removeMedia(m.gallery_media_id)}
-                                className="hover:text-rose-500"
-                                type="button"
-                              >
-                                <X size={11} />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
@@ -917,6 +850,28 @@ export default function QuickRepliesSection() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Media Gallery picker for message media (reuses the workspace
+          Media Gallery instead of a re-upload) ── */}
+      <Dialog open={galleryPickerOpen} onOpenChange={setGalleryPickerOpen}>
+        <DialogContent className="max-w-5xl h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t("quick_replies_section.select_from_gallery")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-auto">
+            <MediaGallerySection
+              onSelect={(file) => {
+                setMessageForm((p) => ({
+                  ...p,
+                  media: [{ gallery_media_id: String(file.id) }],
+                  mediaFileName: file.name ?? "",
+                }));
+                setGalleryPickerOpen(false);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Edit Collection Modal ── */}
       <Dialog
