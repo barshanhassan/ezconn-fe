@@ -303,7 +303,12 @@ export default function ContactsSection() {
         `/api/contacts?search=${encodeURIComponent(search)}&page=${page}&limit=${rowsPerPage}`,
       );
       return res.json();
-    }
+    },
+    // A bulk CSV import runs in the background and can take minutes for a
+    // large file — without this, newly-created contacts only ever appeared
+    // after a manual hard refresh. Polling here is cheap (one paginated
+    // query) and keeps the list current while an import is in progress.
+    refetchInterval: 5000,
   });
   const contactsTotal: number = contactsResponse?.total ?? 0;
   const contactsPages: number = contactsResponse?.pages ?? 1;
@@ -988,6 +993,7 @@ export default function ContactsSection() {
         description: t("contacts_section.toasts.tags_updated_for_count", { count: selectedContactIds.length }),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
       setShowBulkEditModal(false);
       setSelectedRows(new Set());
     } catch (error) {
