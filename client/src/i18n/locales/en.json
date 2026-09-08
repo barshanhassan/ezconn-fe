@@ -6819,6 +6819,7 @@
       "create_one_now": "Create one now",
       "failed_count_one": "· {{count}} failed",
       "failed_count_other": "· {{count}} failed",
+      "sending_progress": "{{sent}} sent · {{queued}} queued",
       "edit_broadcast": "Edit campaign",
       "delete_broadcast": "Delete campaign",
       "view_broadcast": "View campaign",

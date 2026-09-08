@@ -339,13 +339,21 @@ export default function CampaignManager() {
 
   const queryClient = useQueryClient();
 
-  // Fetch campaigns from backend
+  // Fetch campaigns from backend. Poll while any broadcast is actively
+  // sending so the sent/queued/failed counts in the list stay live —
+  // otherwise a zapi broadcast's progress (it can run for hours) only ever
+  // updates on a manual hard refresh.
   const { data: broadcastsData, isLoading: isLoadingCampaigns } = useQuery({
     queryKey: ["/api/broadcasts"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/broadcasts");
       return res.json();
-    }
+    },
+    refetchInterval: (query) => {
+      const broadcasts = (query.state.data as any)?.broadcasts;
+      const hasSending = Array.isArray(broadcasts) && broadcasts.some((b: any) => String(b.status).toLowerCase() === "in_progress");
+      return hasSending ? 8000 : false;
+    },
   });
 
   // Channels (WhatsApp accounts) — drives which channel the new broadcast
@@ -2907,16 +2915,30 @@ export default function CampaignManager() {
                                         </div>
                                     </td>
                                     {/* AUDIENCE — primary total with a small "failed" indicator
-                                        when present, matching replyagent's row layout. */}
+                                        when present, matching replyagent's row layout. While a
+                                        zapi broadcast is actively sending (it can take hours —
+                                        see the per-message delivery-profile interval), also show
+                                        a live sent/queued line so progress doesn't require
+                                        checking the DB by hand. */}
                                     <td className="py-2 px-3">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-[12px] font-semibold text-slate-900 dark:text-white tabular-nums">
-                                                {(campaign.audience ?? 0).toLocaleString()}
-                                            </span>
-                                            {(campaign.failed ?? 0) > 0 && (
-                                                <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
-                                                    {t("campaign_manager.list.failed_count", { count: campaign.failed })}
+                                        <div className="flex flex-col gap-0.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[12px] font-semibold text-slate-900 dark:text-white tabular-nums">
+                                                    {(campaign.audience ?? 0).toLocaleString()}
                                                 </span>
+                                                {(campaign.failed ?? 0) > 0 && (
+                                                    <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
+                                                        {t("campaign_manager.list.failed_count", { count: campaign.failed })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {campaign.status === "sending" && campaign.hasRealDeliveryStats && (
+                                                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 tabular-nums">
+                                                    {t("campaign_manager.list.sending_progress", {
+                                                        sent: campaign.sent ?? 0,
+                                                        queued: Math.max(0, (campaign.audience ?? 0) - (campaign.sent ?? 0) - (campaign.failed ?? 0)),
+                                                    })}
+                                                </p>
                                             )}
                                         </div>
                                     </td>
