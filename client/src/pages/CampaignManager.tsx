@@ -118,6 +118,10 @@ interface Campaign {
   audience?: number;
   /** Failed delivery count (used in row + stats). */
   failed?: number;
+  /** Read count (real for zapi/QR broadcasts; used for the Open Rate stat). */
+  read?: number;
+  /** True when delivered/read/failed above come from real per-message tracking (zapi) rather than the sent-count approximation (WA-Cloud, not wired yet). */
+  hasRealDeliveryStats?: boolean;
   /** Channel slug — whatsapp / telegram / messenger / instagram / etc. */
   channelType?: string;
   /** Display name of the connected channel account (e.g. WhatsApp number name). */
@@ -631,9 +635,15 @@ export default function CampaignManager() {
         type: metaType,
         messageType: metaMessageType,
         sent: b.total_sent || 0,
-        delivered: b.total_sent || 0, // Per-recipient delivery tracking not wired yet; falls back to total_sent
+        // Real per-message counts for zapi/QR broadcasts (backend aggregates
+        // zapi_messages by status via broadcast_id); WhatsApp Cloud broadcasts
+        // don't carry that link yet, so they fall back to the old sent-count
+        // approximation until agentawk-meta is updated too.
+        delivered: b.total_delivered != null ? b.total_delivered : (b.total_sent || 0),
+        read: b.total_read != null ? b.total_read : 0,
+        hasRealDeliveryStats: b.total_delivered != null,
         audience: b.total_audience || 0,
-        failed: b.total_failed || 0,
+        failed: b.total_failed != null ? b.total_failed : 0,
         channelType: b.channel_type || "whatsapp",
         channelName: b.channel?.name ?? b.channelable?.name ?? b.channel_name ?? "",
         channelableId: b.channelable_id != null ? String(b.channelable_id) : null,
@@ -4091,12 +4101,20 @@ function BroadcastStatsRow({ campaigns }: { campaigns: Campaign[] }) {
     (sum, c) => sum + (c.audience ?? 0),
     0,
   );
-  const totalSent = campaigns.reduce((sum, c) => sum + (c.sent ?? 0), 0);
+  // Real for zapi/QR broadcasts (aggregated from zapi_messages via
+  // broadcast_id); still an approximation for WhatsApp Cloud broadcasts
+  // until that channel's message-write path (agentawk-meta) is updated too
+  // — see the delivered/read/hasRealDeliveryStats mapping above.
+  const totalDelivered = campaigns.reduce((sum, c) => sum + (c.delivered ?? 0), 0);
+  const totalRead = campaigns.reduce((sum, c) => sum + (c.read ?? 0), 0);
   const deliveryRate =
     totalContacts > 0
-      ? Math.min(100, Math.round((totalSent / totalContacts) * 100))
+      ? Math.min(100, Math.round((totalDelivered / totalContacts) * 100))
       : 0;
-  const openRate = 0; // No read receipts wired yet.
+  const openRate =
+    totalContacts > 0
+      ? Math.min(100, Math.round((totalRead / totalContacts) * 100))
+      : 0;
 
   // Synthetic 8-bucket series for the mini bar charts. A hand-picked
   // sample shape (not random — random re-generates on every render and
