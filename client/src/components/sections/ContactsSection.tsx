@@ -908,7 +908,10 @@ export default function ContactsSection() {
   };
 
   const toggleAllRows = () => {
-    const data = getFilteredAndSortedData();
+    // Exclude optimistic "temp_..." rows (see the checkbox disabled-state
+    // comment below) — they don't have a real id yet, so bulk edit/delete
+    // can't act on them.
+    const data = getFilteredAndSortedData().filter((c) => !String(c.id).startsWith("temp_"));
     if (selectedRows.size === data.length) {
       setSelectedRows(new Set());
     } else {
@@ -985,9 +988,14 @@ export default function ContactsSection() {
   const handleSaveBulkEdit = async () => {
     const selectedContactIds = Array.from(selectedRows);
     try {
-      await Promise.all(selectedContactIds.map(id =>
-        apiRequest("PATCH", `/api/contacts/${id}`, { tags: bulkEditTags })
-      ));
+      // One request for the whole selection instead of one PATCH per
+      // contact — N concurrent round trips to the (remote) DB was what
+      // made a 50+ contact bulk edit take several seconds even after the
+      // per-contact save itself got fast.
+      await apiRequest("PATCH", "/api/contacts/bulk-tags", {
+        contact_ids: selectedContactIds,
+        tags: bulkEditTags,
+      });
       toast({
         title: t("contacts_section.toasts.contacts_updated"),
         description: t("contacts_section.toasts.tags_updated_for_count", { count: selectedContactIds.length }),
@@ -1674,7 +1682,7 @@ export default function ContactsSection() {
                   <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 backdrop-blur-md bg-opacity-95 dark:bg-opacity-95">
                     <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">
                       <Checkbox
-                        checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
+                        checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().filter((c) => !String(c.id).startsWith("temp_")).length}
                         onCheckedChange={toggleAllRows}
                       />
                     </th>
@@ -1757,7 +1765,17 @@ export default function ContactsSection() {
                         <td className="py-1.5 px-4">
                           <Checkbox
                             checked={selectedRows.has(contact.id)}
-                            onCheckedChange={() => toggleRowSelection(contact.id)}
+                            // A just-added contact shows up immediately via an optimistic
+                            // "temp_..." row (see the add-contact mutation) before the
+                            // server confirms and assigns a real numeric id. Selecting it
+                            // for bulk edit/delete would PATCH/DELETE that temp string
+                            // straight to the backend, which crashes trying to parse it
+                            // as a BigInt — block selection until it's a real contact.
+                            disabled={String(contact.id).startsWith("temp_")}
+                            onCheckedChange={() => {
+                              if (String(contact.id).startsWith("temp_")) return;
+                              toggleRowSelection(contact.id);
+                            }}
                           />
                         </td>
                         <td className="py-1.5 px-4">
@@ -1855,7 +1873,7 @@ export default function ContactsSection() {
                     {rowsDropdownOpen && (
                       <div className="absolute bottom-full mb-1.5 z-10 w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <ul className="py-1">
-                          {[10, 25, 50].map(option => (
+                          {[10, 25, 50, 100].map(option => (
                             <li
                               key={option}
                               className="px-3 py-2 text-[11px] font-bold cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
