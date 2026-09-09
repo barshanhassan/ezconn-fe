@@ -41,7 +41,8 @@ import {
     ExternalLink,
     Zap,
     PanelRightClose,
-    PanelRightOpen
+    PanelRightOpen,
+    MessageSquare,
 } from "lucide-react";
 import {
     Tooltip,
@@ -53,6 +54,18 @@ import CustomDropdown from "@/components/CustomDropdown";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import ContactProfileModal from "./ContactProfileModal";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
+
+// Same channel-icon asset set as the inbox's Channels filter (ConversationsInbox
+// channelOptions) — kept in sync manually since the two components don't share
+// a module. "zapi" (QR-code WhatsApp) reuses the WhatsApp mark, same as there.
+const CHANNEL_ICON_SRC: Record<string, string> = {
+    whatsapp: "/images/automations/whatsapp.svg",
+    zapi: "/images/automations/whatsapp.svg",
+    instagram: "/images/automations/instagram.svg",
+    messenger: "/images/automations/messenger.svg",
+    telegram: "/images/automations/telegram.svg",
+    sms: "/images/automations/sms.svg",
+};
 
 interface ContactProfileSidebarProps {
     // Conversation Data
@@ -612,18 +625,24 @@ export default function ContactProfileSidebar({
                                 <Separator className="my-2" />
 
                                 {/* Chatting with channel (replyagent shows this
-                                    next to the Smart Flow section). */}
+                                    next to the Smart Flow section) — single
+                                    icon badge, no duplicate text line. */}
                                 {profileData?.channel?.name && (
                                   <>
                                     <div>
                                         <h4 className="font-semibold text-sm mb-3">{t("contact_profile_sidebar.details.chatting_with_channel")}</h4>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <span className="capitalize">{profileData.channel.type ?? t("contact_profile_sidebar.details.channel_fallback")}</span>
-                                            <span>·</span>
-                                            <span>{profileData.channel.name}</span>
-                                            {profileData.channel.number && (
-                                              <span className="opacity-60">({profileData.channel.number})</span>
-                                            )}
+                                        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-muted/50 dark:bg-muted/20 w-fit">
+                                            <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                                                {CHANNEL_ICON_SRC[profileData.channel.type] ? (
+                                                    <img src={CHANNEL_ICON_SRC[profileData.channel.type]} alt={profileData.channel.type} className="w-4 h-4" />
+                                                ) : (
+                                                    <MessageSquare size={14} />
+                                                )}
+                                            </span>
+                                            <span className="text-xs font-medium text-foreground">
+                                                {profileData.channel.name}
+                                                {profileData.channel.number && ` · ${profileData.channel.number}`}
+                                            </span>
                                         </div>
                                     </div>
                                     <Separator className="my-2" />

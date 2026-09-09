@@ -42,7 +42,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -574,57 +573,87 @@ export default function QrCodeManageView({
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {instances.map((instance) => {
-              const provider = (instance.provider ?? "zapi").toLowerCase();
-              const isLegacy = provider === "zapi";
-              const failed = avatarFailed.has(String(instance.id));
-              const s = String(instance.status ?? "").toUpperCase();
-              return (
-                <div
-                  key={instance.id}
-                  className={cn("rounded-[1.5rem] border p-6 flex items-start gap-6", softBg, softBorder)}
-                >
-                  {/* Avatar */}
-                  <div className="relative shrink-0">
-                    {instance.profile_picture && !failed ? (
-                      <img
-                        src={instance.profile_picture}
-                        alt={instance.name}
-                        onError={() =>
-                          setAvatarFailed((prev) => new Set(prev).add(String(instance.id)))
-                        }
-                        className={cn("w-24 h-24 rounded-2xl object-cover border", softBorder)}
-                      />
-                    ) : (
-                      <div className={cn("w-24 h-24 rounded-2xl border flex items-center justify-center", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                        <QrCode size={36} className="text-primary" />
-                      </div>
-                    )}
-                    {failed && (
-                      <button
-                        onClick={() => avatarRefreshMutation.mutate(instance.id)}
-                        className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center text-white text-[11px] font-black"
-                      >
-                        <RefreshCw
-                          size={18}
-                          className={cn(avatarRefreshMutation.isPending && "animate-spin")}
-                        />
-                      </button>
-                    )}
-                  </div>
+          <div className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}>
+            {/* Section header — replyagent's "QR-linked numbers" + live counts */}
+            <div className="flex items-center gap-3">
+              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", "bg-primary/10 text-primary")}>
+                <Layers size={16} />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className={cn("text-[14px] font-black", text)}>{t("qr_code_manage_view.linked_numbers_heading")}</h3>
+                <Badge variant="outline" className={cn("h-5 px-2 rounded-md text-[10px] font-semibold", softBorder, sub)}>
+                  {t("qr_code_manage_view.numbers_count", { count: instances.length })}
+                </Badge>
+                {instances.some((i) => ["PENDING", "DISCONNECTED"].includes(String(i.status ?? "").toUpperCase())) && (
+                  <Badge variant="outline" className="h-5 px-2 rounded-md border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-[10px] font-semibold">
+                    {t("qr_code_manage_view.disconnected_count", {
+                      count: instances.filter((i) => ["PENDING", "DISCONNECTED"].includes(String(i.status ?? "").toUpperCase())).length,
+                    })}
+                  </Badge>
+                )}
+              </div>
+            </div>
 
-                  {/* Details column */}
-                  <div className="grow space-y-4">
-                    {/* Name + status row */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <p className={cn("text-[15px] font-black", text)}>{instance.name}</p>
-                      {statusBadge(instance.status)}
-                      {providerBadge(instance.provider)}
-                      <div className="grow" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {instances.map((instance) => {
+                const provider = (instance.provider ?? "zapi").toLowerCase();
+                const isLegacy = provider === "zapi";
+                const failed = avatarFailed.has(String(instance.id));
+                const s = String(instance.status ?? "").toUpperCase();
+                const isDisconnected = s === "PENDING" || s === "DISCONNECTED";
+                return (
+                  <div
+                    key={instance.id}
+                    className={cn(
+                      "rounded-2xl border p-5 space-y-4",
+                      isDisconnected ? "border-amber-500/30" : softBorder,
+                      dark ? "bg-slate-900/40" : "bg-white",
+                    )}
+                  >
+                    {/* Header: avatar + name + status + kebab */}
+                    <div className="flex items-start gap-3">
+                      <div className="relative shrink-0">
+                        {instance.profile_picture && !failed ? (
+                          <img
+                            src={instance.profile_picture}
+                            alt={instance.name}
+                            onError={() =>
+                              setAvatarFailed((prev) => new Set(prev).add(String(instance.id)))
+                            }
+                            className={cn("w-11 h-11 rounded-xl object-cover border", softBorder)}
+                          />
+                        ) : (
+                          <div className={cn("w-11 h-11 rounded-xl border flex items-center justify-center", softBorder, dark ? "bg-slate-950/40" : "bg-slate-50")}>
+                            <QrCode size={18} className="text-primary" />
+                          </div>
+                        )}
+                        {failed && (
+                          <button
+                            onClick={() => avatarRefreshMutation.mutate(instance.id)}
+                            className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center text-white"
+                          >
+                            <RefreshCw
+                              size={14}
+                              className={cn(avatarRefreshMutation.isPending && "animate-spin")}
+                            />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grow min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className={cn("text-[13px] font-black truncate", text)}>{instance.name}</p>
+                          {statusBadge(instance.status)}
+                          {isLegacy && providerBadge(instance.provider)}
+                        </div>
+                        {instance.phone_number && (
+                          <p className={cn("text-[11px] font-semibold mt-0.5", sub)}>{instance.phone_number}</p>
+                        )}
+                      </div>
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}>
+                          <button className={cn("w-8 h-8 rounded-lg border flex items-center justify-center transition-all shrink-0", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}>
                             <MoreVertical size={14} />
                           </button>
                         </DropdownMenuTrigger>
@@ -700,50 +729,69 @@ export default function QrCodeManageView({
                               <Layers size={13} /> {t("qr_code_manage_view.clear_queue_menu_item")}
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuSeparator className="my-1" />
-                          <DropdownMenuItem
-                            className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
-                            onSelect={(e) => {
-                              e.preventDefault();
-                              feederMutation.mutate(instance.id);
-                            }}
-                          >
-                            <ToggleLeft size={13} /> {t("qr_code_manage_view.enable_ai_feeder")}
-                            <Switch
-                              checked={!!instance.allow_in_feeder}
-                              onCheckedChange={() => feederMutation.mutate(instance.id)}
-                              className="ml-auto data-[state=checked]:bg-primary"
-                            />
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
 
-                    {/* Code field (read-only + copy) */}
-                    {instance.code && (
-                      <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                        <span className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.code_label")}</span>
-                        <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>{instance.code}</code>
+                    {/* Reconnect banner — mirrors replyagent's amber "Disconnected / Reconnect" strip */}
+                    {isDisconnected && (
+                      <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5">
+                        <PlugZap size={16} className="text-amber-500 shrink-0" />
+                        <div className="grow">
+                          <p className="text-[11px] font-black text-amber-700 dark:text-amber-400">{t("qr_code_manage_view.status_disconnected")}</p>
+                          <p className="text-[10px] font-medium text-amber-600/80 dark:text-amber-400/70">{t("qr_code_manage_view.reconnect_banner_description")}</p>
+                        </div>
                         <button
-                          onClick={() => copyCode(instance.code!)}
-                          className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-primary" : "hover:bg-slate-100 text-primary")}
+                          onClick={() => {
+                            setQrInstance(instance);
+                            setQrImage(null);
+                          }}
+                          className="h-8 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold flex items-center gap-1.5 shrink-0"
                         >
-                          <CopyIcon size={11} />
+                          <Plug size={12} /> {t("qr_code_manage_view.reconnect_button")}
                         </button>
                       </div>
                     )}
 
-                    {/* Phone number */}
-                    {instance.phone_number && (
-                      <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                        <span className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.phone_label")}</span>
-                        <span className={cn("text-[12px] font-bold", text)}>{instance.phone_number}</span>
+                    {/* Auto Reply row */}
+                    <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-950/30" : "bg-slate-50")}>
+                      <ReplyAll size={14} className={cn("shrink-0", sub)} />
+                      <div className="grow min-w-0">
+                        <p className={cn("text-[11px] font-semibold", text)}>{t("qr_code_manage_view.auto_reply_menu_item")}</p>
+                        <p className={cn("text-[10px] font-medium opacity-60 truncate", sub)}>
+                          {instance.auto_reply_automation_id
+                            ? automations.find((a) => String(a.id) === String(instance.auto_reply_automation_id))?.name ?? t("qr_code_manage_view.automation_fallback_name", { id: instance.auto_reply_automation_id })
+                            : t("qr_code_manage_view.auto_reply_not_set_up")}
+                        </p>
                       </div>
-                    )}
+                      <button
+                        onClick={() => openDefaultReply(instance)}
+                        className={cn(outlineBtn, "h-8 px-3 shrink-0")}
+                      >
+                        {t("qr_code_manage_view.set_up_button")}
+                      </button>
+                    </div>
 
-                    {/* Queue count */}
-                    <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}>
-                      <span className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.queue_label")}</span>
+                    {/* AI replies toggle row */}
+                    <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-950/30" : "bg-slate-50")}>
+                      <ToggleLeft size={14} className={cn("shrink-0", sub)} />
+                      <div className="grow min-w-0">
+                        <p className={cn("text-[11px] font-semibold", text)}>{t("qr_code_manage_view.ai_replies_row_label")}</p>
+                        <p className={cn("text-[10px] font-medium opacity-60", sub)}>
+                          {instance.allow_in_feeder ? t("qr_code_manage_view.ai_replies_enabled") : t("qr_code_manage_view.ai_replies_disabled")}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={!!instance.allow_in_feeder}
+                        onCheckedChange={() => feederMutation.mutate(instance.id)}
+                        className="shrink-0 data-[state=checked]:bg-primary"
+                      />
+                    </div>
+
+                    {/* Message queue row */}
+                    <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-950/30" : "bg-slate-50")}>
+                      <Layers size={14} className={cn("shrink-0", sub)} />
+                      <p className={cn("text-[11px] font-semibold grow", text)}>{t("qr_code_manage_view.queue_label")}</p>
                       {queueCountMutation.isPending && queueCountMutation.variables === instance.id ? (
                         <Loader2 size={14} className="animate-spin text-primary" />
                       ) : typeof instance.count !== "undefined" ? (
@@ -757,10 +805,42 @@ export default function QrCodeManageView({
                         </button>
                       )}
                     </div>
+
+                    {/* Instance Code row */}
+                    {instance.code && (
+                      <div className={cn("flex items-center gap-2 p-3 rounded-xl border", softBorder, dark ? "bg-slate-950/30" : "bg-slate-50")}>
+                        <span className={cn("text-[11px] font-semibold shrink-0", text)}>{t("qr_code_manage_view.code_label")}</span>
+                        <code className={cn("text-[11px] font-mono font-bold flex-1 truncate", sub)}>{instance.code}</code>
+                        <button
+                          onClick={() => copyCode(instance.code!)}
+                          className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-all shrink-0", dark ? "hover:bg-slate-800 text-primary" : "hover:bg-slate-100 text-primary")}
+                        >
+                          <CopyIcon size={11} />
+                        </button>
+                      </div>
+                    )}
                   </div>
+                );
+              })}
+
+              {/* Add-a-number placeholder — replyagent's dashed "Add a number" tile */}
+              <button
+                onClick={() => {
+                  resetCreateForm();
+                  setMode("new");
+                }}
+                className={cn(
+                  "rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 py-10 px-6 text-center transition-all min-h-[180px]",
+                  dark ? "border-slate-700 hover:border-primary/50 hover:bg-primary/5" : "border-slate-300 hover:border-primary/50 hover:bg-primary/5",
+                )}
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Plus size={18} />
                 </div>
-              );
-            })}
+                <p className={cn("text-[13px] font-black", text)}>{t("qr_code_manage_view.add_number_title")}</p>
+                <p className={cn("text-[11px] font-medium opacity-60 max-w-[220px]", sub)}>{t("qr_code_manage_view.add_number_description")}</p>
+              </button>
+            </div>
           </div>
         )
       )}

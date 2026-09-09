@@ -845,8 +845,15 @@ export default function ConversationsInbox() {
   // Map backend conversations to frontend format
   const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => {
     const rawName = item.contacts?.full_name || item.contacts?.first_name || '';
-    // If the stored name is a numeric Instagram user ID (profile fetch failed), show a friendlier label
-    const resolvedName = rawName && /^\d+$/.test(rawName) ? 'Instagram User' : rawName;
+    const channel = detectChannel(item.modelable_type);
+    // A purely-numeric stored name means no real profile name was ever
+    // resolved, so it's just the raw external ID the contact was created
+    // with. Only Instagram creates contacts keyed by a numeric user ID — for
+    // WhatsApp/Z-API/etc a numeric name is the phone number itself (no
+    // profile name returned), so it must NOT be relabelled "Instagram User"
+    // (that mislabel was showing up on real WhatsApp contacts whose phone
+    // never sent a profile name).
+    const resolvedName = rawName && channel === 'instagram' && /^\d+$/.test(rawName) ? 'Instagram User' : rawName;
     return {
       id: Number(item.id),
       name: resolvedName || 'Unknown',
@@ -863,7 +870,7 @@ export default function ConversationsInbox() {
       assignedAgentName: item.users
         ? (item.users.full_name || `${item.users.first_name || ''} ${item.users.last_name || ''}`.trim() || item.users.name || null)
         : null,
-      channel: detectChannel(item.modelable_type),
+      channel,
       isAssigned: !!item.is_assigned,
       folderId: item.folder_id != null ? String(item.folder_id) : null,
       // WhatsApp per-row badge data (M19) — which number the chat belongs to + opt-in.
