@@ -788,6 +788,10 @@ export default function TemplateManager() {
         description: t("template_manager.toasts.template_deleted_desc"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] });
+      // Every other mutation in this file also invalidates the stats panel —
+      // this one was missing it, leaving the total/approved/pending counts
+      // stale after a single-template delete.
+      queryClient.invalidateQueries({ queryKey: ["/api/waba/templates/stats"] });
       setShowDeleteTemplateModal(false);
       setTemplateToDelete(null);
     },
