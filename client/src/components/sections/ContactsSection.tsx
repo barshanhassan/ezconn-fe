@@ -304,11 +304,12 @@ export default function ContactsSection() {
       );
       return res.json();
     },
-    // A bulk CSV import runs in the background and can take minutes for a
-    // large file — without this, newly-created contacts only ever appeared
-    // after a manual hard refresh. Polling here is cheap (one paginated
-    // query) and keeps the list current while an import is in progress.
-    refetchInterval: 5000,
+    // No polling here — every mutation that changes this list (add, edit,
+    // delete, bulk-tag edit, CSV import) already calls invalidateQueries on
+    // this same key in its own onSuccess, so the list refreshes the moment
+    // something actually changes. A blind 5s interval used to fire this
+    // query continuously even while the tab sat idle, adding constant load
+    // on a DB reachable only over a slow cross-continent link for no benefit.
   });
   const contactsTotal: number = contactsResponse?.total ?? 0;
   const contactsPages: number = contactsResponse?.pages ?? 1;
@@ -486,6 +487,10 @@ export default function ContactsSection() {
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      // Import auto-creates tags from the CSV's tags column — without this,
+      // they're saved but missing from the "Available tags" picker until a
+      // hard refresh, same bug already fixed for the bulk-edit tag picker.
+      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
       setImportResult({
         created: data?.created ?? 0,
         updated: data?.updated ?? 0,
