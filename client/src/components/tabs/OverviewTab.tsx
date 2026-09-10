@@ -117,7 +117,6 @@ export default function OverviewTab() {
   }
 
   const stats = statsData || {};
-  const contacts = stats.contacts || { by_status: {}, by_source: {}, total: 0 };
   const channels = stats.channels || {};
 
   // Agent Capacity (real workspace data, not mocks)
@@ -139,10 +138,12 @@ export default function OverviewTab() {
     : 0;
 
   const kpiData = {
-    activeToday: contacts.by_status.active || 0,
-    activeWeek: contacts.total || 0,
-    activeMonth: contacts.total || 0,
-    totalUsers: contacts.total || 0,
+    // ─── User Activity — real, distinct today/week/month windows from
+    // /api/statistics/new-users (no longer all the same reused number). ──
+    activeToday: newUsersData?.activeToday ?? 0,
+    activeWeek: newUsersData?.activeWeek ?? 0,
+    activeMonth: newUsersData?.activeMonth ?? 0,
+    totalUsers: newUsersData?.totalContacts ?? 0,
     stickiness: stickinessFromSeries,
     // ─── New Users — real values from /api/statistics/new-users ──────────
     dailyNewUsers: newUsersData?.daily ?? 0,
@@ -151,7 +152,10 @@ export default function OverviewTab() {
     weeklyNewUsersChange: newUsersData?.weeklyChange ?? 0,
     monthlyNewUsers: newUsersData?.monthly ?? 0,
     monthlyNewUsersChange: newUsersData?.monthlyChange ?? 0,
-    currentMAU: contacts.total || 0,
+    // Current MAU now matches the exact same count `enforceContactsLimit()`
+    // uses (deleted_at: null, no date bound) instead of the date-range-scoped
+    // `contacts.total`, so Plan Usage never drifts from the real billing cap.
+    currentMAU: newUsersData?.totalContacts ?? 0,
     mauLimit: contactsLimitActive ? contactsLimitRaw : 0,
     activeAgents: activeAgentsCount,
     totalSeats: totalSeatsCount,
