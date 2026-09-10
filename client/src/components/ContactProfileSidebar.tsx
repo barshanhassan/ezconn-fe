@@ -33,6 +33,10 @@ import {
     BarChart3,
     Tag,
     ClipboardList,
+    PenLine,
+    LayoutGrid,
+    UserPlus,
+    Archive,
     Headset,
     RefreshCw,
     PauseCircle,
@@ -533,10 +537,10 @@ export default function ContactProfileSidebar({
                             {[
                                 { id: "details", icon: User, label: t("contact_profile_sidebar.tabs.details") },
                                 { id: "media", icon: ImageIcon, label: t("contact_profile_sidebar.tabs.media") },
-                                { id: "custom-fields", icon: NotebookPen, label: t("contact_profile_sidebar.tabs.custom_fields") },
-                                { id: "opportunities", icon: BarChart3, label: t("contact_profile_sidebar.tabs.opportunities") },
-                                { id: "tags", icon: Tag, label: t("contact_profile_sidebar.tabs.tags") },
-                                { id: "tasks", icon: ClipboardList, label: t("contact_profile_sidebar.tabs.tasks") },
+                                { id: "custom-fields", icon: PenLine, label: t("contact_profile_sidebar.tabs.custom_fields") },
+                                { id: "opportunities", icon: LayoutGrid, label: t("contact_profile_sidebar.tabs.opportunities") },
+                                { id: "tags", icon: UserPlus, label: t("contact_profile_sidebar.tabs.tags") },
+                                { id: "tasks", icon: Archive, label: t("contact_profile_sidebar.tabs.tasks") },
                             ].map((tab) => (
                                 <TooltipProvider key={tab.id}>
                                     <Tooltip>
