@@ -523,6 +523,10 @@ function BuilderInner() {
       apiPatch(`/api/automations/${automationId}`, { name }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+      // SmartFlowsPage lists flows under a different key ("/api/automations",
+      // {folder_id}) — without this, the old name lingers there until a hard
+      // refresh even though the builder itself shows the new one.
+      queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
     },
   });
 
@@ -533,6 +537,7 @@ function BuilderInner() {
       toast({ title: t("smart_flow_builder_page.toasts.published") });
       actions.setMode("published");
       queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
     },
     onError: (err: any) => {
       // Replyagent surfaces a `loop_error` shape — open the loop dialog when
@@ -552,6 +557,7 @@ function BuilderInner() {
       toast({ title: t("smart_flow_builder_page.toasts.unpublished") });
       actions.setMode("draft");
       queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
     },
   });
 
@@ -561,6 +567,10 @@ function BuilderInner() {
     onSuccess: () => {
       toast({ title: t("smart_flow_builder_page.toasts.queue_cleared") });
       setFlushQueueOpen(false);
+      // queue_count (drives the in-flight badge) lives on this same graph
+      // query — without this the badge keeps showing the pre-flush count
+      // until the user leaves and re-enters the builder.
+      queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
     },
   });
 
