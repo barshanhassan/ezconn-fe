@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -34,6 +35,7 @@ export default function WhatsAppOnboardPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -98,6 +100,12 @@ export default function WhatsAppOnboardPage() {
       });
       const data = await res.json();
       if (data?.success) {
+        // WhatsAppSection's own account list/limits queries have no polling —
+        // without this, a freshly-connected number is invisible there until
+        // a hard refresh, same as its manualOnboardMutation already handles.
+        queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/limits"] });
         toast({
           title: t("whats_app_onboard_page.connected_title"),
           description: data?.message ?? t("whats_app_onboard_page.connected_description"),
