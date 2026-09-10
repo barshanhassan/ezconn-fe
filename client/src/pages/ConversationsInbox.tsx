@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, Inbox as InboxIcon, NotebookPen, History } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, MessagesSquare, Inbox as InboxIcon, NotebookPen, FileCheck2, History } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,10 +94,10 @@ const COMPOSER_STICKER_LOCATION_ENABLED = false;
 // ALL/AUTOMATION/INBOX map to communication_mode; NOTE shows note_action/note
 // rows; OLD_DATA shows messages older than 3 months (replyagent archive view).
 const CHAT_MODES = [
-  { value: "ALL", labelKey: "conversations_inbox.chat_modes.all", icon: MessageSquare },
+  { value: "ALL", labelKey: "conversations_inbox.chat_modes.all", icon: MessagesSquare },
   { value: "AUTOMATION", labelKey: "conversations_inbox.chat_modes.automation", icon: Bot },
   { value: "INBOX", labelKey: "conversations_inbox.chat_modes.inbox", icon: InboxIcon },
-  { value: "NOTE", labelKey: "conversations_inbox.chat_modes.note", icon: NotebookPen },
+  { value: "NOTE", labelKey: "conversations_inbox.chat_modes.note", icon: FileCheck2 },
   { value: "OLD_DATA", labelKey: "conversations_inbox.chat_modes.old_data", icon: History },
 ] as const;
 
@@ -490,6 +490,14 @@ export default function ConversationsInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
 
       if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
+        // Profile data (has_opted_in, tags, etc.) is fetched once when the
+        // conversation is opened and otherwise never refreshed — an inbound
+        // message can flip has_opted_in server-side (backend now creates a
+        // fresh opt-in row on first message to a given WhatsApp number), so
+        // without this the composer kept showing "opted out" for a contact
+        // who had just proven otherwise by messaging in, until the agent
+        // closed and reopened the conversation.
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-profile-data", selectedConversation] });
         if (msg?.id && msg?.direction === 'OUTGOING') {
           // Outgoing: replace optimistic placeholder with real message from socket
           // (socket fires before HTTP response returns — no need to wait for API)
@@ -987,7 +995,13 @@ export default function ConversationsInbox() {
     },
     enabled: !!selectedConversation,
     staleTime: 0,
-    refetchInterval: 3000,
+    // New messages already arrive live via the `new_message` socket handler
+    // above, which patches this exact query's cache directly — no refetch
+    // needed for the common case. This interval is just a fallback safety
+    // net for a dropped/missed socket event, so it doesn't need to be
+    // anywhere near real-time; 3s meant refetching the whole thread from the
+    // DB continuously all day for every open conversation.
+    refetchInterval: 30_000,
   });
 
   // Flag to scroll only on conversation switch / initial load, not on every 5s refetch
@@ -3665,7 +3679,10 @@ export default function ConversationsInbox() {
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm" className="hover-elevate gap-1.5" data-testid="button-chat-mode">
-                            <ListFilter size={16} />
+                            {(() => {
+                              const SelectedModeIcon = CHAT_MODES.find((m) => m.value === chatMode)?.icon ?? CHAT_MODES[0].icon;
+                              return <SelectedModeIcon size={16} />;
+                            })()}
                             <span className="text-xs font-medium">
                               {t(CHAT_MODES.find((m) => m.value === chatMode)?.labelKey ?? CHAT_MODES[0].labelKey)}
                             </span>
