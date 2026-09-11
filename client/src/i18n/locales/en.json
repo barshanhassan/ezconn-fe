@@ -62,7 +62,12 @@
     "csat": "CSAT",
     "insights": "Insights",
     "dashboard": "Dashboard",
-    "subtitle": "Track performance, analyze trends, and optimize operations"
+    "subtitle": "Track performance, analyze trends, and optimize operations",
+    "range_start": "Start",
+    "range_end": "End",
+    "independent_range": "Independent range",
+    "independent_range_on_desc": "Only this tab uses this range",
+    "independent_range_off_desc": "Following the shared range"
   },
   "overview": {
     "user_activity": "User Activity",
