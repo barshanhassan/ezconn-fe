@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
+import InsightsDateRangePicker from "@/components/InsightsDateRangePicker";
 import MessagesSubTab from "./MessagesSubTab";
 import CallsSubTab from "./CallsSubTab";
 import { AlertCircle, MessageSquare, Phone, Globe, Filter } from "lucide-react";
@@ -89,6 +90,7 @@ export default function WhatsAppPricingTab() {
 
         {/* Right: High-density Filter */}
         <div className="flex items-center gap-3">
+          <InsightsDateRangePicker tab="whatsapp" />
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
             <Globe size={11} className="text-slate-400" />
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("whatsapp_pricing_tab.region_label")}</span>

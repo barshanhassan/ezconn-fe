@@ -3,12 +3,18 @@ import { Search, MessageSquare, Zap, List, ThumbsUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 const abbreviateNumber = (num: number) => num >= 1000000 ? (num/1000000).toFixed(1)+"M" : num >= 1000 ? (num/1000).toFixed(1)+"K" : num.toString();
 
-export default function AgentPerformanceMain() {
+interface AgentPerformanceMainProps {
+  teamIds?: string[];
+  agentIds?: string[];
+}
+
+export default function AgentPerformanceMain({ teamIds = [], agentIds = [] }: AgentPerformanceMainProps) {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
@@ -26,10 +32,18 @@ export default function AgentPerformanceMain() {
   // Real agent performance metrics — backend computes KPIs + availability +
   // per-agent metrics from inbox/users tables. Polls every 60 s so a fresh
   // workspace populates as soon as the first conversation lands.
+  const { from, to } = useDateRange().rangeFor("performance");
+  const params = new URLSearchParams();
+  if (teamIds.length) params.set("teamIds", teamIds.join(","));
+  if (agentIds.length) params.set("agentIds", agentIds.join(","));
+  params.set("from", from);
+  params.set("to", to);
+  const qs = params.toString();
+
   const { data: perfData } = useQuery<any>({
-    queryKey: ["/api/statistics/agent-performance-main"],
+    queryKey: ["/api/statistics/agent-performance-main", qs],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/agent-performance-main");
+      const res = await apiRequest("GET", `/api/statistics/agent-performance-main${qs ? `?${qs}` : ""}`);
       return res.json();
     },
     refetchInterval: 60_000,

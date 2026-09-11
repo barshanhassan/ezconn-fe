@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 
 type SortDirection = "asc" | "desc" | "default";
@@ -43,10 +44,11 @@ export default function VoiceOfCustomerDetails() {
 
   // Real sentiment details. Backend computes per-agent counts + per-conversation
   // sentiment classification (keyword-based, no NLP API).
+  const { from, to } = useDateRange().rangeFor("voice");
   const { data: vocDetails } = useQuery<any>({
-    queryKey: ["/api/statistics/sentiment-details"],
+    queryKey: ["/api/statistics/sentiment-details", from, to],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/sentiment-details");
+      const res = await apiRequest("GET", `/api/statistics/sentiment-details?from=${from}&to=${to}`);
       return res.json();
     },
     refetchInterval: 300_000,

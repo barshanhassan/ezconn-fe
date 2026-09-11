@@ -2,20 +2,34 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { TrendingUp, Phone, Activity } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const abbreviateNumber = (num: number) => num >= 1000 ? (num / 1000).toFixed(1) + "K" : num.toString();
 
-export default function AgentConversion() {
+interface AgentConversionProps {
+  teamIds?: string[];
+  agentIds?: string[];
+}
+
+export default function AgentConversion({ teamIds = [], agentIds = [] }: AgentConversionProps) {
   const { t } = useTranslation();
   // Real conversion analytics — KPIs, volume trend, call engagement trend,
   // and top tags. Backend reads inbox + twilio_call_logs + tag_links.
+  const { from, to } = useDateRange().rangeFor("performance");
+  const params = new URLSearchParams();
+  if (teamIds.length) params.set("teamIds", teamIds.join(","));
+  if (agentIds.length) params.set("agentIds", agentIds.join(","));
+  params.set("from", from);
+  params.set("to", to);
+  const qs = params.toString();
+
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/agent-conversion"],
+    queryKey: ["/api/statistics/agent-conversion", qs],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/agent-conversion");
+      const res = await apiRequest("GET", `/api/statistics/agent-conversion${qs ? `?${qs}` : ""}`);
       return res.json();
     },
     refetchInterval: 60_000,

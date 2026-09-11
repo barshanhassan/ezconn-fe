@@ -2,6 +2,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { Mail, Truck, Gift, CreditCard, DollarSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +12,7 @@ const LINES = [
   { key: "marketingLite", labelKey: "marketing_lite", stroke: "#3b82f6" },
   { key: "utility", labelKey: "utility", stroke: "#f59e0b" },
   { key: "authentication", labelKey: "authentication", stroke: "#8b5cf6" },
-  { key: "authenticationIntl", labelKey: "authentication_intl", stroke: "#ec4899" },
+  { key: "authenticationIntl", labelKey: "auth_intl", stroke: "#ec4899" },
   { key: "service", labelKey: "service", stroke: "#6366f1" },
 ];
 const LINES_FREE = [
@@ -23,13 +24,14 @@ const LINES_PAID = LINES.filter(l => l.key !== "service");
 export default function MessagesSubTab() {
   const { t } = useTranslation();
   const lbl = (labelKey: string) => t(`messages_sub_tab.labels.${labelKey}`);
+  const { from, to } = useDateRange().rangeFor("whatsapp");
   // Real WhatsApp Messages analytics. Backend aggregates wa_messages joined
   // with wa_templates.category, applies the Meta pricing matrix in
   // statistics.service for approximate $ charges.
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/whatsapp-messages"],
+    queryKey: ["/api/statistics/whatsapp-messages", from, to],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/whatsapp-messages");
+      const res = await apiRequest("GET", `/api/statistics/whatsapp-messages?from=${from}&to=${to}`);
       return res.json();
     },
     refetchInterval: 300_000,

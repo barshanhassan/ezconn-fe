@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { Star, Activity, BarChart3, Trophy } from "lucide-react";
 
@@ -13,9 +14,12 @@ interface CSATSummaryProps {
 
 export default function CSATSummary({ teamIds = [], agentIds = [] }: CSATSummaryProps) {
   const { t } = useTranslation();
+  const { from, to } = useDateRange().rangeFor("csat");
   const params = new URLSearchParams();
   if (teamIds.length) params.set("teamIds", teamIds.join(","));
   if (agentIds.length) params.set("agentIds", agentIds.join(","));
+  params.set("from", from);
+  params.set("to", to);
   const qs = params.toString();
 
   const { data } = useQuery<any>({

@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
+import InsightsDateRangePicker from "@/components/InsightsDateRangePicker";
 import AgentPerformanceMain from "./AgentPerformanceMain";
 import AgentConversion from "./AgentConversion";
 import { Users2, Target, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Filter options — to be fetched from workspace teams/agents endpoints.
-const teams: Array<{ id: string; name: string }> = [];
-const agents: Array<{ id: string; name: string }> = [];
 
 export default function AgentPerformanceTab() {
   const { t } = useTranslation();
@@ -17,6 +16,26 @@ export default function AgentPerformanceTab() {
   const [agentPerformanceTab, setAgentPerformanceTab] = useState(activeSubTab.agentPerformance);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+
+  // Real workspace teams/agents — these dropdowns used to be permanently
+  // empty (hardcoded `[]`) and the selection was never sent to the backend
+  // at all, same pattern already working correctly on the CSAT tab.
+  const { data: teamsData } = useQuery<any[]>({
+    queryKey: ["/api/teams/get-all"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/teams/get-all");
+      return res.json();
+    },
+  });
+  const { data: usersData } = useQuery<any>({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/users");
+      return res.json();
+    },
+  });
+  const teams: Array<{ id: string; name: string }> = (teamsData ?? []).map((tm: any) => ({ id: tm.id, name: tm.name }));
+  const agents: Array<{ id: string; name: string }> = (usersData?.users ?? []).map((u: any) => ({ id: u.id, name: u.name }));
 
   // Sync local state with context when context changes
   useEffect(() => {
@@ -57,6 +76,7 @@ export default function AgentPerformanceTab() {
 
         {/* Right: High-density Filters */}
         <div className="flex items-center gap-3">
+          <InsightsDateRangePicker tab="performance" />
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
             <Filter size={11} className="text-slate-400" />
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("agent_performance_tab.filters")}</span>
@@ -107,8 +127,8 @@ export default function AgentPerformanceTab() {
 
       {/* Tab Content with Entry Animation */}
       <div className="mt-2">
-        {agentPerformanceTab === "agent-performance-main" && <AgentPerformanceMain />}
-        {agentPerformanceTab === "agent-conversion" && <AgentConversion />}
+        {agentPerformanceTab === "agent-performance-main" && <AgentPerformanceMain teamIds={selectedTeams} agentIds={selectedAgents} />}
+        {agentPerformanceTab === "agent-conversion" && <AgentConversion teamIds={selectedTeams} agentIds={selectedAgents} />}
       </div>
     </div>
   );

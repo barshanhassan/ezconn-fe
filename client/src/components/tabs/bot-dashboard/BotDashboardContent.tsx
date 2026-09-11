@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import TimeHeatmap from "@/components/TimeHeatmap";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -95,10 +96,11 @@ export default function BotDashboardContent() {
   // Real Bot analytics — backend reads chatbot_chats/messages + automation_runs
   // + computes day-of-week × hour heatmap. The `topFilter` flows to the
   // backend so the popularity chart respects Top 5 / Top 10 / All.
+  const { from, to } = useDateRange().rangeFor("bot");
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/bot-analytics", topFilter],
+    queryKey: ["/api/statistics/bot-analytics", topFilter, from, to],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/statistics/bot-analytics?top=${encodeURIComponent(topFilter)}`);
+      const res = await apiRequest("GET", `/api/statistics/bot-analytics?top=${encodeURIComponent(topFilter)}&from=${from}&to=${to}`);
       return res.json();
     },
     refetchInterval: 60_000,

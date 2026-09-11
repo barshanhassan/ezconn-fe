@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
+import InsightsDateRangePicker from "@/components/InsightsDateRangePicker";
 import VoiceOfCustomerSummary from "./VoiceOfCustomerSummary";
 import VoiceOfCustomerDetails from "./VoiceOfCustomerDetails";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -63,6 +64,7 @@ export default function VoiceOfCustomerTab() {
 
         {/* Right side - Dropdowns */}
         <div className="flex items-center space-x-3">
+          <InsightsDateRangePicker tab="voice" />
           <CustomDropdown
             options={teams}
             selected={selectedTeams}

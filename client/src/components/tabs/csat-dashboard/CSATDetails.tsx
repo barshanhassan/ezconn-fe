@@ -5,6 +5,7 @@ import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 
 type SortDirection = "asc" | "desc" | "default";
@@ -44,9 +45,12 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const feedbackDropdownRef = useRef<HTMLDivElement>(null);
 
+  const { from, to } = useDateRange().rangeFor("csat");
   const filterParams = new URLSearchParams();
   if (teamIds.length) filterParams.set("teamIds", teamIds.join(","));
   if (agentIds.length) filterParams.set("agentIds", agentIds.join(","));
+  filterParams.set("from", from);
+  filterParams.set("to", to);
   const filterQs = filterParams.toString();
 
   const { data: csatDet } = useQuery<any>({

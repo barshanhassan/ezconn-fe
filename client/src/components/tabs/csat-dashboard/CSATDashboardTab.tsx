@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
+import InsightsDateRangePicker from "@/components/InsightsDateRangePicker";
 import CSATSummary from "./CSATSummary";
 import CSATDetails from "./CSATDetails";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -79,6 +80,7 @@ export default function CSATDashboardTab() {
 
         {/* Right side - Dropdowns */}
         <div className="flex items-center space-x-3">
+          <InsightsDateRangePicker tab="csat" />
           <CustomDropdown
             options={teams}
             selected={selectedTeams}

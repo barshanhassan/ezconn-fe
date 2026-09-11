@@ -2,19 +2,21 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { Smile, Meh, Frown, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function VoiceOfCustomerSummary() {
   const { t } = useTranslation();
+  const { from, to } = useDateRange().rangeFor("voice");
   // Real sentiment summary — backend classifies recent incoming messages
   // via keyword matching. No new tables, no NLP API, accuracy approximate
   // but data-driven instead of mocked.
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/sentiment-summary"],
+    queryKey: ["/api/statistics/sentiment-summary", from, to],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/sentiment-summary");
+      const res = await apiRequest("GET", `/api/statistics/sentiment-summary?from=${from}&to=${to}`);
       return res.json();
     },
     refetchInterval: 300_000,

@@ -2,20 +2,22 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
 import { Phone, Clock, DollarSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function CallsSubTab() {
   const { t } = useTranslation();
+  const { from, to } = useDateRange().rangeFor("whatsapp");
   // WhatsApp Business Calling API isn't yet wired in EZCONN, so the backend
   // returns honest zeros with zero-filled trends. Once Meta's Calling API is
   // integrated, the same endpoint will start returning real numbers without
   // any frontend changes.
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/whatsapp-calls"],
+    queryKey: ["/api/statistics/whatsapp-calls", from, to],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/statistics/whatsapp-calls");
+      const res = await apiRequest("GET", `/api/statistics/whatsapp-calls?from=${from}&to=${to}`);
       return res.json();
     },
     refetchInterval: 300_000,

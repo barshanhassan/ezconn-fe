@@ -69,7 +69,9 @@ function InsightsDashboardContent() {
           </div>
         </div>
 
-        {/* Tabs pill — pushed all the way to the right edge */}
+        {/* Date range picker + Tabs pill — pushed all the way to the right edge.
+            Applies to every tab except Overview (its DAU/MAU/WAU cards are
+            deliberately multi-scale, see GlobalDateRangePicker's comment). */}
         <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-1 border border-slate-200/50 dark:border-slate-700/50 w-fit shadow-sm">
           {tabs.map((tab) => (
             <button
