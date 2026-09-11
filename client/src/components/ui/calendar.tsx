@@ -39,7 +39,16 @@ function Calendar({
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
         ),
-        day_range_end: "day-range-end",
+        // Explicitly colored (not just the marker class) so the whole
+        // range — start, middle, end — reads as one consistent light band
+        // instead of the endpoints looking like a different, bolder
+        // "selected" state. `!` forces it to win even when a range
+        // endpoint is also today's date, which otherwise fought this for
+        // the same cell and rendered the day number invisible.
+        day_range_start:
+          "day-range-start !bg-accent !text-accent-foreground rounded-l-md",
+        day_range_end:
+          "day-range-end !bg-accent !text-accent-foreground rounded-r-md",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
