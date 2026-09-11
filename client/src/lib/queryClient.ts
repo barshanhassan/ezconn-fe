@@ -53,6 +53,17 @@ function handleApiError(error: unknown) {
     if (typeof window !== 'undefined' && publicPaths.some((p) => window.location.pathname.endsWith(p))) {
       return;
     }
+    // A 401 carrying LOGIN_BLOCKED isn't an expired session — the agent's
+    // login policy (allowed hours / IP) closed on them mid-session. Carry the
+    // reason across the redirect so /login can say why, instead of dumping
+    // them on a blank form. sessionStorage: one tab, one time, auto-cleared.
+    if (isApi && (error.body as any)?.error_code === 'LOGIN_BLOCKED') {
+      try {
+        sessionStorage.setItem('login_blocked_reason', error.message);
+      } catch {
+        /* private mode / storage disabled — the redirect still happens */
+      }
+    }
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_info');
     if (typeof window !== 'undefined') {

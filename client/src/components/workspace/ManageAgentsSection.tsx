@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Users, User, UserPlus, Settings, Phone, ShieldCheck,
@@ -85,7 +85,6 @@ export default function ManageAgentSection() {
   // True when editing the workspace owner — role is then locked (replyagent: is_owner).
   const [editingOwner, setEditingOwner] = useState(false);
   const [activeTab, setActiveTab] = useState("agent");
-  const [mobileAccess, setMobileAccess] = useState(false);
   const [limitIp, setLimitIp] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   // Login policy: per-weekday hours + ip (replyagent user_login_policies)
@@ -304,6 +303,43 @@ export default function ManageAgentSection() {
   const toggleItem = (item: string, list: string[], setter: (v: string[]) => void) =>
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
 
+  /**
+   * A NEW agent starts with every access scope granted.
+   *
+   * These tabs are enforced server-side now (deny-by-default, replyagent
+   * parity), so leaving them empty would create an agent who can't see a single
+   * conversation — with nothing on screen explaining why. Starting from
+   * "everything" makes restricting an explicit act, which is what an admin
+   * actually means when they open one of these tabs.
+   *
+   * The option lists arrive asynchronously, so each is seeded once, when it
+   * loads — never re-seeded, or it would undo the admin's un-ticks.
+   */
+  const seededScopes = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (view !== "add") {
+      seededScopes.current.clear();
+      return;
+    }
+    const seed = (key: string, list: any[], setter: (v: string[]) => void) => {
+      if (seededScopes.current.has(key) || !list.length) return;
+      seededScopes.current.add(key);
+      setter(list.map((i: any) => String(i.id)));
+    };
+    seed("system", systemFieldsList, setSelectedSystemFields);
+    seed("custom", customFieldsList, setSelectedCustomFields);
+    seed("tags", tagsList, setSelectedTags);
+    seed("agents", agentsList, setSelectedChatAgents);
+    seed("channels", channelList, setSelectedChatChannels);
+  }, [
+    view,
+    systemFieldsList.length,
+    customFieldsList.length,
+    tagsList.length,
+    agentsList.length,
+    channelList.length,
+  ]);
+
   const resetForm = () => {
     setFirstName("");
     setLastName("");
@@ -316,7 +352,6 @@ export default function ManageAgentSection() {
     setWhatsappCountry("US");
     setPhoneNotifications(false);
     setWhatsappNotifications(false);
-    setMobileAccess(false);
     setLimitIp(false);
     setLoginPolicy({});
     setTwoFA(false);
@@ -348,7 +383,6 @@ export default function ManageAgentSection() {
     setRole(o.role_id ? String(o.role_id) : "");
     setLanguage(o.locale || "en");
     setTwoFA(!!o.tfa_required);
-    setMobileAccess(o.mobile_access == 1 || o.mobile_access === true);
     setPhoneNumber(o.phone || "");
     setPhoneCountry(o.phone_country || "US");
     setWhatsappNumber(o.whatsapp || "");
@@ -421,7 +455,11 @@ export default function ManageAgentSection() {
       role_id: role || undefined, // real workspace role id (omitted if none picked)
       locale: language,
       tfa_required: twoFA,
-      mobile_access: mobileAccess,
+      // mobile_access is deliberately NOT sent: this build has no Mobile App tab
+      // and no mobile API, so there is no control backing it. Sending the unrendered
+      // state's default (false) wrote mobile_access = 0 on every newly created agent;
+      // omitting it lets the column keep its DB default on create and stay untouched
+      // on update, ready for whenever a mobile client actually exists.
       phone: phoneNumber,
       phone_country: phoneCountry,
       whatsapp: whatsappNumber,

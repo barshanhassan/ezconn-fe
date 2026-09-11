@@ -21,6 +21,11 @@ interface CustomDropdownProps {
   triggerContent?: React.ReactNode; // Add triggerContent prop
   popoutWidth?: string;
   popoutAlign?: 'left' | 'right';
+  // Controlled open state — when provided, this dropdown coordinates with
+  // sibling toolbar dropdowns (only one open at a time) instead of managing
+  // its open/closed state purely internally.
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -35,9 +40,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   triggerContent, // Destructure triggerContent
   popoutWidth,
   popoutAlign = 'left',
+  isOpen: controlledIsOpen,
+  onOpenChange,
 }) => {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isControlled = controlledIsOpen !== undefined;
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = (open: boolean) => {
+    if (onOpenChange) onOpenChange(open);
+    if (!isControlled) setInternalIsOpen(open);
+  };
   const [search, setSearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -150,8 +163,14 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 onClick={() => handleSelect(option.id)}
                 title={option.name}
               >
-                <span className="flex items-center w-5 h-5 mr-2 justify-center flex-shrink-0">
-                  {selected.includes(option.id) && <Check className="h-4 w-4 text-primary group-hover:text-white" />}
+                <span
+                  className="flex items-center w-5 h-5 mr-2 justify-center flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: selected.includes(option.id) ? "hsl(var(--primary))" : "transparent" }}
+                >
+                  <Check
+                    className="h-3 w-3"
+                    style={{ color: selected.includes(option.id) ? "#fff" : "transparent" }}
+                  />
                 </span>
                 {option.icon && <span className="mr-2 flex-shrink-0">{option.icon}</span>}
                 <span className="truncate overflow-hidden">{option.name}</span>

@@ -58,6 +58,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { WorkspaceTimezoneProvider } from "@/contexts/WorkspaceTimezoneContext";
 import { SiteProvider, useSite } from "@/contexts/SiteContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
+import SessionPolicyBanner from "@/components/SessionPolicyBanner";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./lib/i18n";
 
@@ -286,6 +287,9 @@ function AppContent() {
         <ThemeProvider>
         <WorkspaceTimezoneProvider>
           <GlobalBrandingFetcher />
+          {/* Login-policy countdown + force-logout heartbeat. Mounted once for
+              every layout so it keeps polling wherever the agent is. */}
+          <SessionPolicyBanner />
           <TooltipProvider>
             {isAuthRoute ? (
               <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />

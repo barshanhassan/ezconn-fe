@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, MessagesSquare, Inbox as InboxIcon, NotebookPen, FileCheck2, History } from "lucide-react";
+import { MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, MessagesSquare, Inbox as InboxIcon, NotebookPen, FileCheck2, History } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +49,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
+import ActivityFilterDropdown, { type ActivityGroup } from "@/components/ActivityFilterDropdown";
+import QuickFilterModal, { type FilterFieldGroup, type QuickFilterCondition } from "@/components/QuickFilterModal";
 import { AlertCircle } from "lucide-react";
 import PreviewV2 from "@/components/PreviewV2";
 import { Textarea } from "@/components/ui/textarea";
@@ -166,12 +168,7 @@ interface Team {
   name: string;
 }
 
-interface Filter {
-  id: string;
-  column: string;
-  operator: string;
-  value: string;
-}
+type Filter = QuickFilterCondition;
 
 interface BackendConversation {
   id: number | string;
@@ -648,8 +645,66 @@ export default function ConversationsInbox() {
   // Phase 2/3 filter state — must declare BEFORE the inbox list query that
   // reads them, otherwise React's TDZ throws "Cannot access X before
   // initialization" on first render.
-  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+
+  // "Select all activities" dropdown (replyagent InboxActivityFilter parity) —
+  // grouped by channel TYPE, one checkbox per configured instance. Same shape as
+  // the agent "Chat Channels" access tab, but /my-channels returns only what the
+  // signed-in agent is allowed to open (owners still get everything) — offering
+  // a channel here that the inbox query would then filter out would just look
+  // like an empty list for no reason.
+  const { data: allChannelsData } = useQuery<any>({
+    queryKey: ["/api/workspaces/my-channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/my-channels");
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+  const activityGroups: ActivityGroup[] = useMemo(() => {
+    const ch = allChannelsData?.channels ?? {};
+    const groups: ActivityGroup[] = [];
+    const push = (type: string, title: string, iconSrc: string, children: { id: string; title: string }[]) => {
+      if (children.length) groups.push({ type, title, iconSrc, children });
+    };
+    push("zapi", t("conversations_inbox.search.activities.types.zapi"), "/images/automations/whatsapp.svg",
+      (ch.zapi ?? []).map((z: any) => ({ id: String(z.id), title: z.phone_number || z.name || String(z.id) })));
+    push("whatsapp", t("conversations_inbox.search.activities.types.whatsapp"), "/images/automations/whatsapp.svg",
+      (ch.whatsapp ?? []).map((n: any) => ({ id: String(n.id), title: n.display_phone_number || n.verified_name || String(n.id) })));
+    push("webchat", t("conversations_inbox.search.activities.types.webchat"), "/images/automations/webchat.svg",
+      (ch.webchat ?? []).map((w: any) => ({ id: String(w.id), title: w.name || String(w.id) })));
+    push("instagram", t("conversations_inbox.search.activities.types.instagram"), "/images/automations/instagram.svg",
+      (ch.instagram ?? []).map((p: any) => ({ id: String(p.id), title: p.name || String(p.id) })));
+    push("messenger", t("conversations_inbox.search.activities.types.messenger"), "/images/automations/messenger.svg",
+      (ch.messenger ?? []).map((p: any) => ({ id: String(p.id), title: p.name || String(p.id) })));
+    push("telegram", t("conversations_inbox.search.activities.types.telegram"), "/images/automations/telegram.svg",
+      (ch.telegram ?? []).map((b: any) => ({ id: String(b.id), title: b.name || String(b.id) })));
+    push("sms", t("conversations_inbox.search.activities.types.sms"), "/images/automations/sms.svg",
+      (ch.twilio ?? []).map((n: any) => ({ id: String(n.id), title: n.twilio_phone_number || n.account_name || String(n.id) })));
+    return groups;
+  }, [allChannelsData, t]);
+
+  // "Add filter" field catalog (replyagent condition builder parity) — grouped
+  // General/System/Opportunity/Custom Fields/per-channel fields, sourced from
+  // the workspace's actual configuration (custom fields, connected channels).
+  const { data: filterFieldsData } = useQuery<any>({
+    queryKey: ["/api/inbox/filter-fields"],
+    queryFn: async () => (await apiRequest("GET", "/api/inbox/filter-fields")).json(),
+    staleTime: 60_000,
+  });
+  const filterFieldGroups: FilterFieldGroup[] = useMemo(() => filterFieldsData?.groups ?? [], [filterFieldsData]);
+
+  // Keys of unchecked instances, "<type>:<id>". Empty = every instance checked
+  // ("All activities") — no filter param is sent in that (default) state.
+  const [deselectedActivities, setDeselectedActivities] = useState<Set<string>>(new Set());
+  const channelInstanceIdsParam = useMemo(() => {
+    if (deselectedActivities.size === 0) return undefined;
+    const out: Record<string, string[]> = {};
+    for (const g of activityGroups) {
+      out[g.type] = g.children.filter((c) => !deselectedActivities.has(`${g.type}:${c.id}`)).map((c) => c.id);
+    }
+    return out;
+  }, [deselectedActivities, activityGroups]);
 
   // WhatsApp numbers for the per-number channel filter (multi-number ISOLATION).
   // Selecting a specific number scopes the inbox to that number's chats only,
@@ -684,16 +739,6 @@ export default function ConversationsInbox() {
     return list;
   }, [waAccountsForFilter]);
 
-  // Split the unified channel selection into channel-type ids and WhatsApp
-  // number ids (per-number chips are stored as "wa_num:<id>" in selectedChannels).
-  const channelTypesParam = useMemo(
-    () => selectedChannels.filter((s) => !s.startsWith("wa_num:")),
-    [selectedChannels],
-  );
-  const waNumberIdsParam = useMemo(
-    () => selectedChannels.filter((s) => s.startsWith("wa_num:")).map((s) => s.slice("wa_num:".length)),
-    [selectedChannels],
-  );
   // Header "Agents" dropdown (replyagent UserFilter). Declared here — before the
   // list/count queries that read it — to avoid the same TDZ trap as above.
   const [selectedFilterAgents, setSelectedFilterAgents] = useState<string[]>([]);
@@ -729,12 +774,20 @@ export default function ConversationsInbox() {
   // Advanced filter rows (filter-popover). Declared early — the list query sends
   // them as `advanced_filters` so filtering runs server-side over the full set.
   const [filters, setFilters] = useState<Filter[]>([]);
-  // Only complete rows are sent (value present unless an empty/not-empty op).
+  // Only complete rows are sent — {module, key, filter, value} matches
+  // AudienceFilterService's row shape exactly (shared with Broadcasts'
+  // audience builder), so the backend consumes these with no translation.
   const appliedFilters = useMemo(
     () =>
       filters
-        .filter((f) => ["is empty", "is not empty"].includes(f.operator) || (f.value ?? "").trim() !== "")
-        .map((f) => ({ column: f.column, operator: f.operator, value: f.value })),
+        .filter((f) => {
+          if (!f.module || !f.fieldKey || !f.operator) return false;
+          if (["has_value", "is_null"].includes(f.operator)) return true;
+          if (f.fieldType === "boolean") return f.value === true || f.value === false;
+          if (f.fieldType === "date" && f.operator === "between") return !!(f.value?.from && f.value?.to);
+          return f.value !== undefined && f.value !== null && String(f.value).trim() !== "";
+        })
+        .map((f) => ({ module: f.module, key: f.fieldKey, filter: f.operator, value: f.value })),
     [filters],
   );
 
@@ -744,12 +797,11 @@ export default function ConversationsInbox() {
   // switch to that tab because they were computed from the page's filtered
   // result set instead of the workspace-wide totals.
   const { data: countsResponse } = useQuery<any>({
-    queryKey: ["/api/inbox/count", { activeFolderId, selectedChannels, selectedFilterAgents }],
+    queryKey: ["/api/inbox/count", { activeFolderId, channelInstanceIdsParam, selectedFilterAgents }],
     queryFn: async () => {
       const res = await apiRequest("POST", "/api/inbox/count", {
         folder_id: activeFolderId ? activeFolderId : undefined,
-        channel_types: channelTypesParam.length ? channelTypesParam : undefined,
-        wa_number_ids: waNumberIdsParam.length ? waNumberIdsParam : undefined,
+        channel_instance_ids: channelInstanceIdsParam,
         users: selectedFilterAgents.length ? selectedFilterAgents : undefined,
       });
       return res.json();
@@ -783,7 +835,7 @@ export default function ConversationsInbox() {
   // UNASSIGNED). "my_chats" is purely client-side filtering (we ask the
   // backend for "all" and then filter to assignedAgent === me).
   const { data: inboxResponse, isLoading: isLoadingInbox } = useQuery({
-    queryKey: ["/api/inbox/list", { activeTab, searchQuery, searchType, activeFolderId, selectedChannels, selectedFilterAgents, sortBy, listLimit, appliedFilters }],
+    queryKey: ["/api/inbox/list", { activeTab, searchQuery, searchType, activeFolderId, channelInstanceIdsParam, selectedFilterAgents, sortBy, listLimit, appliedFilters }],
     queryFn: async () => {
       // Map the replyagent tab vocab onto the backend filter params.
       // - Read / Unread → `is_read` (1 / 0)
@@ -809,8 +861,7 @@ export default function ConversationsInbox() {
         search: searchQuery.trim().length >= searchMinChars ? searchQuery : "",
         search_type: searchType,
         folder_id: activeFolderId ? activeFolderId : undefined,
-        channel_types: channelTypesParam.length ? channelTypesParam : undefined,
-        wa_number_ids: waNumberIdsParam.length ? waNumberIdsParam : undefined,
+        channel_instance_ids: channelInstanceIdsParam,
         users: selectedFilterAgents.length ? selectedFilterAgents : undefined,
         sort: { column: sortBy.column, order: sortBy.order },
         limit: listLimit,
@@ -928,45 +979,18 @@ export default function ConversationsInbox() {
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
   const [bulkAssignAgent, setBulkAssignAgent] = useState<string>("");
 
+  // Which of the three list-toolbar popovers (Agents / Activities / Filter) is
+  // open — mutually exclusive, so opening one always closes the others instead
+  // of stacking on top of / behind each other.
+  const [openToolbarDropdown, setOpenToolbarDropdown] = useState<"agents" | "activities" | "filter" | "sort" | null>(null);
+
   // Filter State (`filters` is declared earlier with the query-driving state.)
-  const [showFilter, setShowFilter] = useState(false);
-  const [draggedFilterId, setDraggedFilterId] = useState<string | null>(null);
-  const [openFilterColumnDropdown, setOpenFilterColumnDropdown] = useState<string | null>(null);
-  const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
-  const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const showFilter = openToolbarDropdown === "filter";
+  const setShowFilter = (open: boolean) => setOpenToolbarDropdown(open ? "filter" : null);
 
   // (selectedFilterAgents is declared above with the other query-driving filter
-  // state. The header "Channels" dropdown binds directly to `selectedChannels`,
-  // so there's no separate selectedFilterChannels state anymore.)
-
-  // Full channel set (replyagent supports all of these). The header Channels
-  // dropdown drives `selectedChannels`, which is wired into the list/count API.
-  const channelImg = (src: string, alt: string) =>
-    React.createElement("img", { src, alt, className: "w-3.5 h-3.5" });
-  const channelOptions = useMemo(() => {
-    const base = [
-      { id: "whatsapp", name: "WhatsApp", icon: channelImg("/images/automations/whatsapp.svg", "WhatsApp") },
-      { id: "instagram", name: "Instagram", icon: channelImg("/images/automations/instagram.svg", "Instagram") },
-      { id: "messenger", name: "Messenger", icon: channelImg("/images/automations/messenger.svg", "Messenger") },
-      { id: "telegram", name: "Telegram", icon: channelImg("/images/automations/telegram.svg", "Telegram") },
-      { id: "sms", name: "SMS", icon: channelImg("/images/automations/sms.svg", "SMS") },
-      { id: "zapi", name: "Z-API", icon: channelImg("/images/automations/whatsapp.svg", "Z-API") },
-      { id: "webchat", name: "Webchat", icon: React.createElement(Mail, { size: 14 }) },
-    ];
-    // Per-number WhatsApp filter chips (multi-number isolation). Only shown when
-    // more than one number exists — with a single number there is nothing to
-    // isolate and the plain "WhatsApp" chip already covers it.
-    if (waFilterNumbers.length > 1) {
-      for (const n of waFilterNumbers) {
-        base.push({
-          id: `wa_num:${n.id}`,
-          name: `WhatsApp · ${n.label}`,
-          icon: channelImg("/images/automations/whatsapp.svg", "WhatsApp number"),
-        });
-      }
-    }
-    return base;
-  }, [waFilterNumbers]);
+  // state. The header "Select all activities" dropdown binds directly to
+  // `deselectedActivities`, which is wired into the list/count API.)
 
   // Fetch messages for selected conversation
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
@@ -1223,7 +1247,7 @@ export default function ConversationsInbox() {
   // mini reply-to preview above the compose input.
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
-  // (selectedChannels + activeFolderId are declared earlier — before the
+  // (deselectedActivities + activeFolderId are declared earlier — before the
   // inbox list query that consumes them.)
 
   // Composer "+" → Quick Reply picker — phone-preview picker matching the
@@ -1929,7 +1953,7 @@ export default function ConversationsInbox() {
   useEffect(() => {
     setSelectedInboxIds([]);
     setListLimit(20); // collapse back to one page when the visible set changes
-  }, [activeTab, activeFolderId, selectedChannels, selectedFilterAgents, searchQuery, searchType, sortBy, appliedFilters]);
+  }, [activeTab, activeFolderId, channelInstanceIdsParam, selectedFilterAgents, searchQuery, searchType, sortBy, appliedFilters]);
 
   // "Queue order" sort only makes sense on the Queue tab — reset to the default
   // (Latest message ↓) when navigating away so other tabs aren't sorted by queued_at.
@@ -1950,10 +1974,19 @@ export default function ConversationsInbox() {
       });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
-      toast({ title: t("conversations_inbox.toasts.folder_updated") });
+      // Name the folder in the toast instead of a generic "Folder updated" —
+      // the agent should see at a glance exactly where the conversation went.
+      const folderName = variables.folderId
+        ? folders.find((f: any) => String(f.id) === variables.folderId)?.name
+        : null;
+      toast({
+        title: folderName
+          ? t("conversations_inbox.toasts.moved_to_folder", { folder: folderName })
+          : t("conversations_inbox.toasts.removed_from_folder"),
+      });
     },
     onError: (err: Error) => toast({ title: t("conversations_inbox.toasts.couldnt_move"), description: err.message, variant: "destructive" }),
   });
@@ -1963,39 +1996,6 @@ export default function ConversationsInbox() {
     setSelectedInboxIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
-  };
-
-  // Filter Handlers
-  const addFilter = () => {
-    setFilters([...filters, { id: Date.now().toString(), column: "name", operator: "contains", value: "" }]);
-  };
-
-  const removeFilter = (id: string) => {
-    setFilters(filters.filter(f => f.id !== id));
-  };
-
-  const updateFilter = (id: string, column: string, operator: string, value: string) => {
-    setFilters(filters.map(f => f.id === id ? { ...f, column, operator, value } : f));
-  };
-
-  const handleFilterDragStart = (id: string) => {
-    setDraggedFilterId(id);
-  };
-
-  const handleFilterDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleFilterDrop = (targetId: string) => {
-    if (!draggedFilterId || draggedFilterId === targetId) return;
-
-    const draggedIndex = filters.findIndex(f => f.id === draggedFilterId);
-    const targetIndex = filters.findIndex(f => f.id === targetId);
-
-    const newFilters = [...filters];
-    [newFilters[draggedIndex], newFilters[targetIndex]] = [newFilters[targetIndex], newFilters[draggedIndex]];
-    setFilters(newFilters);
-    setDraggedFilterId(null);
   };
 
   // Current user — real identity from localStorage (set at login by auth.service).
@@ -2046,10 +2046,13 @@ export default function ConversationsInbox() {
 
   // Fetch workspace members — inbox is workspace-scoped. Workspace users lack
   // agency.users.* permission, so calling /agencies/:id/members would 403.
+  // /my-agents applies the caller's "Chat Agents" access scope (owners get the
+  // whole workspace), so the Agents dropdown lists only colleagues whose
+  // conversations this agent is actually allowed to see.
   const { data: membersResponse } = useQuery({
-    queryKey: ["/api/workspaces/members"],
+    queryKey: ["/api/workspaces/my-agents"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/workspaces/members");
+      const res = await apiRequest("GET", "/api/workspaces/my-agents");
       return res.json();
     }
   });
@@ -2128,8 +2131,8 @@ export default function ConversationsInbox() {
     // valid rows whose match is on a field not present in the list item (e.g. a
     // WhatsApp wa_id or support-ticket number).
 
-    // Agents + Channels filtering is now server-side (the list/count API receive
-    // `users` + `channel_types`), so no client-side pass is needed here.
+    // Agents + Activities filtering is now server-side (the list/count API
+    // receive `users` + `channel_instance_ids`), so no client-side pass is needed here.
 
     // Advanced filters run server-side now (the list API receives
     // `advanced_filters`), resolved across all contacts — not just the loaded
@@ -2294,11 +2297,12 @@ export default function ConversationsInbox() {
   // Tags state per conversation (keyed by conv id, values are tag names)
   const [tagsByConv, setTagsByConv] = useState<Record<number, string[]>>({});
 
-  // Tag options
-  // Real tags (replaces hardcoded options)
+  // Tag options — /user-access/tags returns only the tags this agent is granted
+  // (Add Agent → Tags tab); owners get all of them. The Settings screens keep
+  // using /tags/list, which stays unscoped so admins can manage every tag.
   const { data: tagsData } = useQuery({
-    queryKey: ["/api/tags/list"],
-    queryFn: async () => (await apiRequest("GET", "/api/tags/list")).json(),
+    queryKey: ["/api/user-access/tags"],
+    queryFn: async () => (await apiRequest("GET", "/api/user-access/tags")).json(),
   });
   const tagOptions = (tagsData?.tags || []).map((t: any) => ({ id: String(t.id), name: t.name }));
 
@@ -2572,20 +2576,6 @@ export default function ConversationsInbox() {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showEmojiPicker]);
-
-  // Close filter popout when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
-        setShowFilter(false);
-      }
-    };
-
-    if (showFilter) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showFilter]);
 
   // Handle emoji selection from emoji-mart
   const handleEmojiSelect = (emoji: Emoji) => {
@@ -3080,32 +3070,29 @@ export default function ConversationsInbox() {
                         triggerContent={<User size={16} />}
                         popoutWidth="200px"
                         popoutAlign="left"
+                        isOpen={openToolbarDropdown === "agents"}
+                        onOpenChange={(open) => setOpenToolbarDropdown(open ? "agents" : null)}
                       />
                     </div>
 
-                    {/* Select Channels Dropdown */}
+                    {/* Select all activities (replyagent InboxActivityFilter) */}
+                    <ActivityFilterDropdown
+                      groups={activityGroups}
+                      deselected={deselectedActivities}
+                      onChange={setDeselectedActivities}
+                      isOpen={openToolbarDropdown === "activities"}
+                      onOpenChange={(open) => setOpenToolbarDropdown(open ? "activities" : null)}
+                    />
+
+                    {/* Quick filter — replyagent's modal condition builder
+                        (Quick filter → Select a condition → Configure condition). */}
                     <div className="relative">
-                      <CustomDropdown
-                        options={channelOptions}
-                        selected={selectedChannels}
-                        onChange={setSelectedChannels}
-                        placeholder={t("conversations_inbox.search.channels")}
-                        width="auto"
-                        className="h-9 w-9 px-[0.5rem] justify-center bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
-                        triggerContent={<ListFilter size={16} />}
-                        popoutWidth="200px"
-                        popoutAlign="right"
-                      />
-                    </div>
-
-                    {/* Advanced Filter Popout */}
-                    <div className="relative" ref={filterDropdownRef}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 ${showFilter ? 'bg-accent dark:bg-slate-700' : ''}`}
+                            className={`h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 ${showFilter || filters.length > 0 ? 'bg-accent dark:bg-slate-700 text-primary' : ''}`}
                             onClick={() => setShowFilter(!showFilter)}
                           >
                             <Filter size={16} />
@@ -3113,186 +3100,13 @@ export default function ConversationsInbox() {
                         </TooltipTrigger>
                         <TooltipContent>{t("conversations_inbox.search.filter")}</TooltipContent>
                       </Tooltip>
-
-                      {/* Filter Popover Content */}
-                      {showFilter && (
-                        <div className="absolute z-[10] bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 left-0" style={{
-                          minWidth: '320px',
-                          marginLeft: '-140px' // Center align somewhat or adjust to keep on screen
-                        }}>
-                          {/* Folders chip section. "+" creates; right-click renames/deletes. */}
-                          <div className="mb-3 pb-3 border-b border-border/60">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <p className="text-[10px] font-semibold uppercase text-muted-foreground">{t("conversations_inbox.folders.title")}</p>
-                              <button
-                                className="text-[10px] font-bold text-muted-foreground hover:text-foreground"
-                                onClick={() => {
-                                  setFolderEditing(null);
-                                  setFolderName("");
-                                  setFolderModalOpen(true);
-                                }}
-                                title={t("conversations_inbox.folders.create_folder_tooltip")}
-                              >
-                                {t("conversations_inbox.folders.new")}
-                              </button>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              <button
-                                className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                                  activeFolderId === null
-                                    ? "bg-primary/10 border-primary/30 text-primary"
-                                    : "border-slate-200 dark:border-slate-700 text-muted-foreground"
-                                }`}
-                                onClick={() => setActiveFolderId(null)}
-                              >
-                                {t("conversations_inbox.folders.all_folders")}
-                              </button>
-                              {folders.map((f: any) => (
-                                <button
-                                  key={String(f.id)}
-                                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                                    activeFolderId === String(f.id)
-                                      ? "bg-primary/10 border-primary/30 text-primary"
-                                      : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary/30"
-                                  }`}
-                                  onClick={() => setActiveFolderId(String(f.id))}
-                                  onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    setFolderEditing(f);
-                                    setFolderName(f.name ?? "");
-                                    setFolderModalOpen(true);
-                                  }}
-                                  title={t("conversations_inbox.folders.rename_hint", { name: f.name })}
-                                >
-                                  {f.name}
-                                  <span className="ml-1 opacity-60">({folderCountMap[String(f.id)] ?? 0})</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {filters.length === 0 ? (
-                            <div className="text-center py-6">
-                              <h3 className="font-semibold text-sm mb-1">{t("conversations_inbox.filters.no_filters_title")}</h3>
-                              <p className="text-xs text-muted-foreground mb-4">{t("conversations_inbox.filters.no_filters_desc")}</p>
-                              <Button onClick={addFilter} className="btn-outline-primary" variant="outline">{t("conversations_inbox.filters.add_filter")}</Button>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {filters.map((filter) => (
-                                <div
-                                  key={filter.id}
-                                  className="flex gap-2 items-center"
-                                  draggable
-                                  onDragStart={() => handleFilterDragStart(filter.id)}
-                                  onDragOver={handleFilterDragOver}
-                                  onDrop={() => handleFilterDrop(filter.id)}
-                                >
-                                  <div className="relative flex-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
-                                      className="w-[140px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
-                                    >
-                                      <span className="truncate text-sm font-normal">{
-                                        filter.column === "name" ? t("conversations_inbox.filters.column_full_name") :
-                                        filter.column === "firstName" ? t("conversations_inbox.filters.column_first_name") :
-                                        filter.column === "lastName" ? t("conversations_inbox.filters.column_last_name") :
-                                        filter.column === "phoneNumber" ? t("conversations_inbox.filters.column_phone_number") :
-                                        filter.column === "email" ? t("conversations_inbox.filters.column_email") :
-                                        t("conversations_inbox.filters.column_tags")
-                                      }</span>
-                                      <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                    </button>
-                                    {openFilterColumnDropdown === filter.id && (
-                                      <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                                        <ul className="py-1">
-                                          {[
-                                            { key: "name", label: t("conversations_inbox.filters.column_full_name") },
-                                            { key: "firstName", label: t("conversations_inbox.filters.column_first_name") },
-                                            { key: "lastName", label: t("conversations_inbox.filters.column_last_name") },
-                                            { key: "phoneNumber", label: t("conversations_inbox.filters.column_phone_number") },
-                                            { key: "email", label: t("conversations_inbox.filters.column_email") },
-                                            { key: "tags", label: t("conversations_inbox.filters.column_tags") },
-                                          ].map(({ key, label }) => {
-                                            const isCurrentOption = key === filter.column;
-                                            return (
-                                              <li
-                                                key={key}
-                                                className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
-                                                onClick={() => {
-                                                  if (!isCurrentOption) {
-                                                    updateFilter(filter.id, key, filter.operator, filter.value);
-                                                    setOpenFilterColumnDropdown(null);
-                                                  }
-                                                }}
-                                              >
-                                                {label}
-                                              </li>
-                                            );
-                                          })}
-                                        </ul>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="relative">
-                                    <button
-                                      type="button"
-                                      onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
-                                      className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
-                                    >
-                                      <span className="truncate text-sm font-normal">{filter.operator}</span>
-                                      <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                    </button>
-                                    {openFilterOperatorDropdown === filter.id && (
-                                      <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                                        <ul className="py-1">
-                                          {[
-                                            { value: "contains", label: t("conversations_inbox.filters.op_contains") },
-                                            { value: "does not contain", label: t("conversations_inbox.filters.op_not_contains") },
-                                            { value: "is", label: t("conversations_inbox.filters.op_is") },
-                                            { value: "is not", label: t("conversations_inbox.filters.op_is_not") },
-                                            { value: "is empty", label: t("conversations_inbox.filters.op_is_empty") },
-                                            { value: "is not empty", label: t("conversations_inbox.filters.op_is_not_empty") },
-                                          ].map(option => (
-                                            <li
-                                              key={option.value}
-                                              className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
-                                              onClick={() => {
-                                                updateFilter(filter.id, filter.column, option.value, filter.value);
-                                                setOpenFilterOperatorDropdown(null);
-                                              }}
-                                            >
-                                              {option.label}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <input
-                                    type="text"
-                                    placeholder={t("conversations_inbox.filters.value_placeholder")}
-                                    value={filter.value}
-                                    onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                                    className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none transition-colors bg-card"
-                                  />
-                                  <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
-                                  <GripVertical size={14} className="text-muted-foreground cursor-grab" />
-                                </div>
-                              ))}
-                              <div className="flex gap-2 pt-2 border-t">
-                                <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">{t("conversations_inbox.filters.add_filter")}</Button>
-                                <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">{t("conversations_inbox.filters.reset")}</Button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                     {/* Sort menu (replyagent sort_list): Latest message ↓/↑ +
                         Queue order (only on the Queue tab). Server-side sort. */}
-                    <DropdownMenu>
+                    <DropdownMenu
+                      open={openToolbarDropdown === "sort"}
+                      onOpenChange={(open) => setOpenToolbarDropdown(open ? "sort" : null)}
+                    >
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <DropdownMenuTrigger asChild>
@@ -3629,47 +3443,111 @@ export default function ConversationsInbox() {
             <Card className="flex-1 flex flex-col border-l-0 rounded-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-2">
-                  {/* Folder ▾ — move THIS conversation into / out of a folder
-                      (replyagent header Folder dropdown). */}
+                  {/* Folder ▾ — the one-stop folder control: filter the left
+                      list by folder, move THIS open conversation into one,
+                      and create new ones — all three used to be scattered
+                      (a separate bottom sidebar strip + this dropdown), now
+                      consolidated here per request. */}
                   <DropdownMenu>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm" className="hover-elevate gap-1.5" data-testid="button-folder">
-                            <FolderIcon size={16} />
-                            <span className="text-xs font-medium">{t("conversations_inbox.header.folder")}</span>
+                            <FolderIcon size={16} className={activeFolderId ? "text-primary" : undefined} />
+                            <span className="text-xs font-medium max-w-[110px] truncate">
+                              {activeFolderId
+                                ? (folders.find((f: any) => String(f.id) === activeFolderId)?.name ?? t("conversations_inbox.header.folder"))
+                                : t("conversations_inbox.header.folder")}
+                            </span>
                             <ChevronDown size={12} />
                           </Button>
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
                       <TooltipContent>{t("conversations_inbox.header.move_to_folder")}</TooltipContent>
                     </Tooltip>
-                    <DropdownMenuContent align="end" className="bg-white dark:bg-background max-h-72 overflow-auto">
-                      <DropdownMenuItem
-                        className={!selectedConvObj?.folderId ? "font-semibold text-primary" : ""}
-                        onClick={() =>
-                          selectedConversation &&
-                          moveToFolderMutation.mutate({ id: selectedConversation, folderId: null })
-                        }
-                      >
-                        {t("conversations_inbox.header.no_folder")}
-                      </DropdownMenuItem>
-                      {folders.length === 0 ? (
-                        <DropdownMenuItem disabled>{t("conversations_inbox.header.no_folders_yet")}</DropdownMenuItem>
-                      ) : (
-                        folders.map((f: any) => (
+                    <DropdownMenuContent align="start" className="bg-white dark:bg-background w-72 p-0 overflow-hidden">
+                      {/* Filter the conversation list */}
+                      <div className="px-3 pt-2.5 pb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{t("conversations_inbox.folders.filter_section_title")}</p>
+                      </div>
+                      <div className="px-1.5 pb-1.5 max-h-36 overflow-auto">
+                        <DropdownMenuItem
+                          className={cn("gap-2 justify-between", activeFolderId === null && "bg-primary/10 text-primary font-semibold")}
+                          onClick={() => setActiveFolderId(null)}
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            <ListFilter size={13} className="shrink-0" /> {t("conversations_inbox.folders.all_folders")}
+                          </span>
+                          {activeFolderId === null && <Check size={13} className="shrink-0" />}
+                        </DropdownMenuItem>
+                        {folders.map((f: any) => (
                           <DropdownMenuItem
-                            key={String(f.id)}
-                            className={selectedConvObj?.folderId === String(f.id) ? "font-semibold text-primary" : ""}
-                            onClick={() =>
-                              selectedConversation &&
-                              moveToFolderMutation.mutate({ id: selectedConversation, folderId: String(f.id) })
-                            }
+                            key={`filter-${String(f.id)}`}
+                            className={cn("gap-2 justify-between", activeFolderId === String(f.id) && "bg-primary/10 text-primary font-semibold")}
+                            onClick={() => setActiveFolderId(String(f.id))}
                           >
-                            {f.name}
+                            <span className="flex items-center gap-2 truncate">
+                              <FolderIcon size={13} className="shrink-0 text-primary/70" /> <span className="truncate">{f.name}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] opacity-60">{folderCountMap[String(f.id)] ?? 0}</span>
+                              {activeFolderId === String(f.id) && <Check size={13} />}
+                            </span>
                           </DropdownMenuItem>
-                        ))
-                      )}
+                        ))}
+                      </div>
+
+                      <DropdownMenuSeparator />
+
+                      {/* Move the currently-open conversation into a folder */}
+                      <div className="px-3 pt-2 pb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{t("conversations_inbox.folders.move_section_title")}</p>
+                      </div>
+                      <div className="px-1.5 pb-1.5 max-h-36 overflow-auto">
+                        <DropdownMenuItem
+                          className={cn("gap-2 justify-between", !selectedConvObj?.folderId && "bg-primary/10 text-primary font-semibold")}
+                          onClick={() =>
+                            selectedConversation &&
+                            moveToFolderMutation.mutate({ id: selectedConversation, folderId: null })
+                          }
+                        >
+                          {t("conversations_inbox.header.no_folder")}
+                          {!selectedConvObj?.folderId && <Check size={13} />}
+                        </DropdownMenuItem>
+                        {folders.length === 0 ? (
+                          <DropdownMenuItem disabled>{t("conversations_inbox.header.no_folders_yet")}</DropdownMenuItem>
+                        ) : (
+                          folders.map((f: any) => (
+                            <DropdownMenuItem
+                              key={`move-${String(f.id)}`}
+                              className={cn("gap-2 justify-between", selectedConvObj?.folderId === String(f.id) && "bg-primary/10 text-primary font-semibold")}
+                              onClick={() =>
+                                selectedConversation &&
+                                moveToFolderMutation.mutate({ id: selectedConversation, folderId: String(f.id) })
+                              }
+                            >
+                              <span className="truncate">{f.name}</span>
+                              {selectedConvObj?.folderId === String(f.id) && <Check size={13} className="shrink-0" />}
+                            </DropdownMenuItem>
+                          ))
+                        )}
+                      </div>
+
+                      <DropdownMenuSeparator />
+
+                      <div className="p-1.5">
+                        <DropdownMenuItem
+                          className="gap-2 text-primary font-semibold"
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setFolderEditing(null);
+                            setFolderName("");
+                            setFolderModalOpen(true);
+                          }}
+                        >
+                          <Plus size={13} /> {t("conversations_inbox.folders.new")}
+                        </DropdownMenuItem>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   {/* Message-mode filter ▾ (replyagent): Smart flow & Inbox /
@@ -5578,6 +5456,17 @@ export default function ConversationsInbox() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Quick filter modal — replyagent's 3-step condition builder. */}
+      <QuickFilterModal
+        open={showFilter}
+        onClose={() => setShowFilter(false)}
+        groups={filterFieldGroups}
+        tagOptions={tagOptions}
+        agentOptions={agentOptions.map((a: Agent) => ({ id: a.id, name: a.name }))}
+        conditions={filters}
+        onApply={setFilters}
+      />
 
       {/* Bulk assign dialog (select-all → Actions → Assign conversations). */}
       <Dialog open={bulkAssignOpen} onOpenChange={setBulkAssignOpen}>

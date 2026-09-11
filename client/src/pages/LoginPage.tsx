@@ -59,6 +59,16 @@ const LoginPage: React.FC = () => {
   const [, navigate] = useLocation();
   const { siteData } = useSite();
 
+  // Two-factor step. The password call returns a short-lived challenge token
+  // instead of a session when 2FA applies; the real token only arrives after
+  // POST /auth/2fa/challenge/verify succeeds.
+  //   'verify' — the agent already enrolled, just needs the 6-digit code
+  //   'setup'  — an admin turned on "Require 2FA"; enrol first, then verify
+  const [tfaStage, setTfaStage] = useState<'verify' | 'setup' | null>(null);
+  const [challengeToken, setChallengeToken] = useState('');
+  const [tfaSetup, setTfaSetup] = useState<{ qr_data_uri: string; tfa_code: string } | null>(null);
+  const [otp, setOtp] = useState('');
+
   // Login only makes sense on a tenant subdomain (an agency/workspace) — that's
   // how the backend resolves WHICH account to authenticate against. On the
   // central app host (app.agentawk.com) or the marketing apex there is no
@@ -70,6 +80,47 @@ const LoginPage: React.FC = () => {
     }
   }, [navigate]);
 
+  // Landed here because the agent's login policy (allowed hours / IP) closed
+  // mid-session and the API force-logged them out — show WHY. Read once, then
+  // clear, so a later manual visit to /login isn't haunted by a stale notice.
+  useEffect(() => {
+    try {
+      const reason = sessionStorage.getItem('login_blocked_reason');
+      if (reason) {
+        sessionStorage.removeItem('login_blocked_reason');
+        setErrorMessage(reason);
+      }
+    } catch {
+      /* storage disabled — the login form still works */
+    }
+  }, []);
+
+  /**
+   * Shared tail of a successful sign-in — reached either straight from the
+   * password call or, when 2FA is on, only after the code verifies.
+   */
+  const finishLogin = (data: any) => {
+    localStorage.setItem("auth_token", data.token);
+    localStorage.setItem("user_info", JSON.stringify(data.user));
+
+    setSuccessMessage(t('login_page.login_successful'));
+
+    // Trigger the "curtain opening" animation: the two panels slide apart,
+    // then we navigate once the animation has played.
+    setIsOpening(true);
+
+    setTimeout(() => {
+      if (data.redirect_to) {
+        navigate(data.redirect_to);
+      } else if (data.user?.role === 'AGENCY' || data.user?.role === 'agency') {
+        navigate('/org');
+      } else {
+        // Redirect workspace users to root for better layout stability
+        navigate('/');
+      }
+    }, 550);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -79,26 +130,24 @@ const LoginPage: React.FC = () => {
       const response = await apiRequest('POST', '/auth/login', { email, password });
 
       const data = await response.json();
-      // Save token and user info
-      localStorage.setItem("auth_token", data.token);
-      localStorage.setItem("user_info", JSON.stringify(data.user));
 
-      setSuccessMessage(t('login_page.login_successful'));
-
-      // Trigger the "curtain opening" animation: the two panels slide apart,
-      // then we navigate once the animation has played.
-      setIsOpening(true);
-
-      setTimeout(() => {
-        if (data.redirect_to) {
-          navigate(data.redirect_to);
-        } else if (data.user?.role === 'AGENCY' || data.user?.role === 'agency') {
-          navigate('/org');
-        } else {
-          // Redirect workspace users to root for better layout stability
-          navigate('/');
+      // 2FA gate — no session token in this response, only a challenge token.
+      if (data.requires_tfa) {
+        setChallengeToken(data.challenge_token);
+        setTfaStage(data.tfa_stage);
+        setOtp('');
+        if (data.tfa_stage === 'setup') {
+          // Fetch the secret + QR to enrol with before asking for a code.
+          const setupRes = await apiRequest('POST', '/auth/2fa/challenge/setup', {
+            challenge_token: data.challenge_token,
+          });
+          setTfaSetup(await setupRes.json());
         }
-      }, 550);
+        setIsLoading(false);
+        return;
+      }
+
+      finishLogin(data);
     } catch (error: any) {
       console.error('Login error:', error);
       const msg = String(error?.message ?? '');
@@ -106,6 +155,40 @@ const LoginPage: React.FC = () => {
       setErrorMessage(isInvalidCreds ? t('login_page.incorrect_password') : (msg || t('login_page.failed_to_connect')));
       setIsLoading(false);
     }
+  };
+
+  const handleTfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setIsLoading(true);
+    try {
+      const res = await apiRequest('POST', '/auth/2fa/challenge/verify', {
+        challenge_token: challengeToken,
+        otp,
+      });
+      finishLogin(await res.json());
+    } catch (error: any) {
+      const msg = String(error?.message ?? '');
+      // The challenge token is only good for 10 minutes — once it lapses the
+      // only way forward is to enter the password again.
+      if (/expired/i.test(msg)) {
+        setTfaStage(null);
+        setChallengeToken('');
+        setTfaSetup(null);
+      }
+      setErrorMessage(msg || t('login_page.failed_to_connect'));
+      setOtp('');
+      setIsLoading(false);
+    }
+  };
+
+  const cancelTfa = () => {
+    setTfaStage(null);
+    setChallengeToken('');
+    setTfaSetup(null);
+    setOtp('');
+    setErrorMessage('');
+    setPassword('');
   };
 
   return (
@@ -128,6 +211,94 @@ const LoginPage: React.FC = () => {
               isOpening && "-translate-x-full"
             )}
           >
+            {tfaStage ? (
+            /* ── Two-factor step ──────────────────────────────────────────
+               Shown in place of the password form once the backend answers
+               with a challenge token. The account is NOT signed in yet. */
+            <div className="w-full max-w-md mx-auto">
+              <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
+                {t('login_page.tfa.eyebrow')}
+              </div>
+              <h2 className="mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 32, letterSpacing: '-0.02em', color: '#0B1020', lineHeight: 1.15 }}>
+                {tfaStage === 'setup' ? t('login_page.tfa.setup_headline') : t('login_page.tfa.verify_headline')}
+              </h2>
+              <p className="mb-7" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
+                {tfaStage === 'setup' ? t('login_page.tfa.setup_sub') : t('login_page.tfa.verify_sub')}
+              </p>
+
+              {tfaStage === 'setup' && tfaSetup && (
+                <div className="mb-7 rounded-xl border border-[#e2f0e8] bg-[#f4fbf7] p-4">
+                  <div className="flex justify-center">
+                    <img
+                      src={tfaSetup.qr_data_uri}
+                      alt={t('login_page.tfa.qr_alt')}
+                      className="h-[180px] w-[180px] rounded-lg bg-white p-2"
+                    />
+                  </div>
+                  <p className="mt-3 text-center" style={{ fontFamily: "'Manrope', sans-serif", fontSize: 13, color: '#6b7482' }}>
+                    {t('login_page.tfa.manual_key')}
+                  </p>
+                  <p className="mt-1 text-center break-all" style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 600, color: '#0B1020', letterSpacing: '0.05em' }}>
+                    {tfaSetup.tfa_code}
+                  </p>
+                </div>
+              )}
+
+              <form onSubmit={handleTfaSubmit} className="flex flex-col gap-6">
+                <label className="block relative">
+                  <span className="absolute -top-[9px] left-[11px] bg-white px-1.5 z-10" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 12, color: '#33475b', lineHeight: 1 }}>
+                    <span style={{ color: '#f2545b' }}>* </span>{t('login_page.tfa.code_label')}
+                  </span>
+                  <Input
+                    id="otp"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                    placeholder="000000"
+                    className="w-full h-[46px] rounded-[8px] border-[#D7D7D7] px-4 focus-visible:ring-0 text-center"
+                    style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 20, letterSpacing: '0.4em', color: '#0B1020' }}
+                  />
+                  {errorMessage && (
+                    <p className="mt-1.5 text-sm text-red-500">{errorMessage}</p>
+                  )}
+                  {successMessage && (
+                    <p className="mt-1.5 text-sm text-[#1eb955]">{successMessage}</p>
+                  )}
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={isLoading || otp.length < 6}
+                  className="w-full h-[52px] rounded-[11px] border-none flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-70"
+                  style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontWeight: 700,
+                    fontSize: 16,
+                    background: '#22B257',
+                    boxShadow: '0 16px 34px -16px rgba(37,211,102,.7)',
+                  }}
+                >
+                  {isLoading ? t('login_page.logging_in') : (
+                    <>
+                      {t('login_page.tfa.verify_button')} <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} />
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={cancelTfa}
+                  className="text-center"
+                  style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 13, color: '#6b7482' }}
+                >
+                  {t('login_page.tfa.back_to_login')}
+                </button>
+              </form>
+            </div>
+            ) : (
             <div className="w-full max-w-md mx-auto">
               <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
                 {t('login_page.welcome_back')}
@@ -244,6 +415,7 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           {/* Right Section — slides right like a curtain on successful login */}

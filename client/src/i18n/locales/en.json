@@ -1,6 +1,11 @@
 {
   "light": "Light",
   "dark": "Dark",
+  "session_policy": {
+    "warning_title": "Your session ends in {{minutes}} min",
+    "warning_body": "You'll be signed out automatically when your allowed hours end.",
+    "warning_body_window": "Today's allowed hours are {{window}}. You'll be signed out automatically when they end."
+  },
   "sidebar": {
     "profile": "Profile",
     "sign_out": "Sign out",
@@ -5067,7 +5072,19 @@
     "verified_tech_partner": "Verified Tech Partner",
     "login_successful": "Login successful",
     "incorrect_password": "Incorrect Password",
-    "failed_to_connect": "Failed to connect to the server."
+    "failed_to_connect": "Failed to connect to the server.",
+    "tfa": {
+      "eyebrow": "Security check",
+      "verify_headline": "Two-factor authentication",
+      "verify_sub": "Enter the 6-digit code from your authenticator app to finish signing in.",
+      "setup_headline": "Set up two-factor authentication",
+      "setup_sub": "Your administrator requires 2FA on this account. Scan the QR code with an authenticator app, then enter the code it shows.",
+      "qr_alt": "Two-factor authentication QR code",
+      "manual_key": "Can't scan? Enter this key manually:",
+      "code_label": "Verification code",
+      "verify_button": "Verify",
+      "back_to_login": "Back to sign in"
+    }
   },
   "signup_page": {
     "step1_label": "STEP 1",
@@ -6040,14 +6057,32 @@
         "messenger_handle": "Messenger handle",
         "support_ticket": "Support ticket",
         "contact_id": "Contact ID"
+      },
+      "activities": {
+        "all": "All activities",
+        "select": "Select activities",
+        "select_all": "Select all activities",
+        "count": "{{count}} activities",
+        "no_channels": "No channels configured yet",
+        "types": {
+          "whatsapp": "WhatsApp",
+          "zapi": "WhatsApp QR",
+          "webchat": "Webchat",
+          "instagram": "Instagram",
+          "messenger": "Messenger",
+          "telegram": "Telegram",
+          "sms": "SMS"
+        }
       }
     },
     "folders": {
       "title": "Folders",
-      "new": "+ New",
+      "new": "New folder",
       "create_folder_tooltip": "Create folder",
       "all_folders": "All folders",
-      "rename_hint": "{{name}} — right-click to rename/delete"
+      "rename_hint": "{{name}} — right-click to rename/delete",
+      "filter_section_title": "Filter conversations",
+      "move_section_title": "Move this chat to"
     },
     "filters": {
       "no_filters_title": "No filters applied",
@@ -6061,12 +6096,27 @@
       "column_phone_number": "Phone Number",
       "column_email": "Email",
       "column_tags": "Tags",
-      "op_contains": "contains",
-      "op_not_contains": "does not contain",
-      "op_is": "is",
-      "op_is_not": "is not",
-      "op_is_empty": "is empty",
-      "op_is_not_empty": "is not empty"
+      "select_field": "Select field",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "quick_filter": {
+      "title": "Quick filter",
+      "subtitle": "Create filters to segment your results.",
+      "select_or_create": "Select or create quick filter",
+      "create_new": "Create new filter",
+      "empty": "Select an existing filter or create a new one.",
+      "add_condition": "Add a condition",
+      "select_condition": "Select a condition",
+      "select_condition_sub": "Pick a field to filter your audience.",
+      "search": "Search",
+      "configure": "Configure condition",
+      "configure_sub": "Set how this field should be matched.",
+      "where": "Where",
+      "back": "Back",
+      "close": "Close",
+      "apply": "Apply",
+      "save_condition": "Save condition"
     },
     "sort": {
       "latest_message": "Latest message",
@@ -6391,6 +6441,8 @@
       "bulk_deleted_desc": "{{count}} conversation(s) deleted.",
       "delete_failed": "Delete failed",
       "folder_updated": "Folder updated",
+      "moved_to_folder": "Moved to {{folder}}",
+      "removed_from_folder": "Removed from folder",
       "couldnt_move": "Couldn't move",
       "downloading": "Downloading...",
       "media_attached": "Media attached"
