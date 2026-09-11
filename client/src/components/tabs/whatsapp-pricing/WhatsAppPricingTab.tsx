@@ -48,7 +48,20 @@ export default function WhatsAppPricingTab() {
   );
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
-  const countryOptions = countryOptionDefs.map((c) => ({ id: c.id, name: t(`whatsapp_pricing_tab.${c.key}`) }));
+  // countryOptionDefs' `id` is already a lowercase ISO 3166-1 alpha-2 code
+  // (us, gb, de, ...) — same flagcdn.com pattern PhoneInputWithFlag.tsx
+  // already relies on elsewhere in the app.
+  const countryOptions = countryOptionDefs.map((c) => ({
+    id: c.id,
+    name: t(`whatsapp_pricing_tab.${c.key}`),
+    icon: (
+      <img
+        src={`https://flagcdn.com/w20/${c.id}.png`}
+        alt=""
+        className="w-4 h-3 rounded-[2px] object-cover"
+      />
+    ),
+  }));
 
   // Sync local state with context when context changes
   useEffect(() => {
@@ -101,6 +114,7 @@ export default function WhatsAppPricingTab() {
             onChange={setSelectedCountries}
             placeholder={t("whatsapp_pricing_tab.all_countries")}
             className="h-8 min-w-[130px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
+            popoutAlign="right"
           />
         </div>
       </div>
@@ -136,7 +150,11 @@ export default function WhatsAppPricingTab() {
 
       {/* Tab Content */}
       <div className="mt-2">
-        {whatsappPricingTab === "messages" && <MessagesSubTab />}
+        {/* The picker allows multiple countries, but pricing is a per-country
+            rate lookup — only the first selection is meaningful, matching
+            "All Countries" (undefined → backend's US default) when none is
+            picked. */}
+        {whatsappPricingTab === "messages" && <MessagesSubTab country={selectedCountries[0]} />}
         {whatsappPricingTab === "calls" && <CallsSubTab />}
       </div>
     </div>

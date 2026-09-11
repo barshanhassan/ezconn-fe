@@ -21,17 +21,19 @@ const LINES_FREE = [
 ];
 const LINES_PAID = LINES.filter(l => l.key !== "service");
 
-export default function MessagesSubTab() {
+export default function MessagesSubTab({ country }: { country?: string }) {
   const { t } = useTranslation();
   const lbl = (labelKey: string) => t(`messages_sub_tab.labels.${labelKey}`);
   const { from, to } = useDateRange().rangeFor("whatsapp");
   // Real WhatsApp Messages analytics. Backend aggregates wa_messages joined
   // with wa_templates.category, applies the Meta pricing matrix in
-  // statistics.service for approximate $ charges.
+  // statistics.service for approximate $ charges. `country` used to be
+  // accepted by the backend but never actually sent from here — the Region
+  // dropdown looked real but picking a country changed nothing.
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/whatsapp-messages", from, to],
+    queryKey: ["/api/statistics/whatsapp-messages", from, to, country],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/statistics/whatsapp-messages?from=${from}&to=${to}`);
+      const res = await apiRequest("GET", `/api/statistics/whatsapp-messages?from=${from}&to=${to}${country ? `&country=${country}` : ""}`);
       return res.json();
     },
     refetchInterval: 300_000,
