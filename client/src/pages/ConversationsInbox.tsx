@@ -3311,7 +3311,7 @@ export default function ConversationsInbox() {
                         <div className="self-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            className={`h-4 w-4 rounded border-input text-primary cursor-pointer transition-opacity ${
+                            className={`h-3.5 w-3.5 rounded border-input text-primary cursor-pointer transition-opacity ${
                               selectedInboxIds.length > 0 || selectedInboxIds.includes(conv.id)
                                 ? "opacity-100"
                                 : "opacity-0 group-hover:opacity-100"
